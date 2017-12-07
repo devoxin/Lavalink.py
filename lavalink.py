@@ -85,23 +85,11 @@ class Client:
             'connected': True
         }
         await self.send(payload)
-
-    async def send_voice_update(self, ctx):
-        payload = {
-            'op': 'voiceUpdate',
-            'guildId': str(ctx.guild.id),
-            'sessionId': ctx.voice_client.session_id,
-            'event': {
-                'endpoint': f'{ctx.voice_client.endpoint}:80',
-                'guild_id': str(ctx.guild.id),
-                'token': ctx.voice_client.token
-            }
-        }
     
     async def play_track(self, ctx, track):
         payload = {
             'op': 'play',
-            'guildId': str(ctx.guild.id),
+            'guildId': '330777295952543744',
             'track': track['track']
         }
         await self.send(payload)
