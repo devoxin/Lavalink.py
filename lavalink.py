@@ -48,6 +48,7 @@ class Player:
 
     async def play(self):
         if not self.is_connected() or not self.queue:
+            self.current = None
             return
 
         track = self.queue.pop(0)
@@ -71,7 +72,6 @@ class Player:
         await self.play()
         
     async def _on_track_end(self, data):
-        self.current = None
         if data.get('reason') == 'FINISHED':
             await self.play()
 
