@@ -13,22 +13,37 @@ class Music:
         self.state_keys = {}
         self.validator = ['op', 'guildId', 'sessionId', 'event']
 
+        #self.players = {}
+        self.player = None
+
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
+        # p = await self._get_or_create(guild_id=ctx.guild.id)
+        if not self.player:
+            await self._get_or_create(ctx.guild.id)
+        
+        if not self.player.is_connected():
+            await self.player.connect(channel_id=ctx.author.voice.channel.id)
+
         query = query.strip('<>')
 
         if not query.startswith('http'):
             query = f'ytsearch:{query}'
 
         tracks = await self.lavalink.get_tracks(query)
+        await self.player.add(track=tracks[0], play=True)
 
-        if not self.lavalink.connected:
-            await self.lavalink.join(guild_id=ctx.guild.id, channel_id=ctx.author.voice.channel.id)
-        
-        await self.lavalink.play(track=tracks[0]['track'])
-
-        embed = discord.Embed(title="Now Playing", description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
+        embed = discord.Embed(title="Enqueued", description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
         await ctx.send(embed=embed)
+
+    async def _get_or_create(self, guild_id):
+        # if guild_id not in self.players:
+        #     p = await self.lavalink.create_player(guild_id=guild_id)
+        #     self.players.update({ guild_id: p })
+        # else:
+        #     p = self.players.get(guild_id)
+        # return p
+        self.player = await self.lavalink.create_player(guild_id=guild_id)
     
     async def on_voice_server_update(self, data):
         self.state_keys.update({ 
