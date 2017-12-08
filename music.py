@@ -20,12 +20,15 @@ class Music:
         if not player.is_connected():
             await player.connect(channel_id=ctx.author.voice.channel.id)
 
-        query = query.strip('<>')
+        #query = query.strip('<>')
 
-        if not query.startswith('http'):
-            query = f'ytsearch:{query}'
+        #if not query.startswith('http'):
+            #query = f'ytsearch:{query}'
 
         tracks = await self.lavalink.get_tracks(query)
+        if not tracks:
+            return await ctx.send('Nothing found 👀')
+
         await player.add(track=tracks[0], play=True)
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
@@ -46,6 +49,11 @@ class Music:
             song = player.current.title
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Now Playing', description=song)
         await ctx.send(embed=embed)
+    
+    @commands.command(aliases=['q'])
+    async def queue(self, ctx):
+        await ctx.send("unfinished")
+
     
     async def on_voice_server_update(self, data):
         self.state_keys.update({ 
