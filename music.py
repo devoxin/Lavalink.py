@@ -29,7 +29,7 @@ class Music:
         if not tracks:
             return await ctx.send('Nothing found 👀')
 
-        await player.add(track=tracks[0], play=True)
+        await player.add(requester=ctx.author.id, track=tracks[0], play=True)
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
                               title="Track Enqueued",
@@ -52,7 +52,14 @@ class Music:
     
     @commands.command(aliases=['q'])
     async def queue(self, ctx):
-        await ctx.send("unfinished")
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id, shard_id=ctx.guild.shard_id)
+
+        queue_list = 'Nothing queued' if not player.queue else ''
+        for track in player.queue:
+            queue_list += f'[**{track.title}**]({track.uri})'
+
+        embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Queue', description=queue_list)
+        await ctx.send(embed=embed)
 
     
     async def on_voice_server_update(self, data):
