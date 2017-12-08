@@ -47,7 +47,7 @@ class Player:
             await self.play()
 
     async def play(self):
-        if not self.is_connected() or self.is_playing() or not self.queue:
+        if not self.is_connected() or not self.queue:
             return
 
         track = self.queue.pop(0)
@@ -66,10 +66,8 @@ class Player:
             'guildId': self.guild_id
         }
         await self.client.send(payload)
-        self.current = None
     
     async def skip(self):
-        await self.stop()
         await self.play()
         
     async def _on_track_end(self, data):
