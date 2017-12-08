@@ -36,8 +36,8 @@ class Client:
         while True:
             data = await self.ws.recv()
             j = json.loads(data)
-            print("=== RECEIVE ===")
-            print(j)
+            #print("=== RECEIVE ===")
+            #print(j)
 
             if 'op' in j:
                 if j.get('op') == 'validationReq':
@@ -48,8 +48,8 @@ class Client:
                     await self.bot._connection._get_websocket(330777295952543744).send(j.get('message'))
 
     async def send(self, data):
-        print("=== SEND ===")
-        print(data)
+        #print("=== SEND ===")
+        #print(data)
         payload = json.dumps(data)
         await self.ws.send(payload)
 
@@ -92,4 +92,8 @@ class Client:
             'guildId': '330777295952543744',
             'track': track['track']
         }
+        await self.send(payload)
+    
+    async def dispatch_voice_update(self, payload):
+        print(payload)
         await self.send(payload)
