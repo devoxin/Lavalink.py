@@ -31,6 +31,11 @@ class Music:
         embed = discord.Embed(title="Enqueued", description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
         await ctx.send(embed=embed)
     
+    @commands.command(aliases=['forceskip', 'fs'])
+    async def skip(self, ctx):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id, shard_id=ctx.guild.shard_id)
+        await player.skip()
+    
     async def on_voice_server_update(self, data):
         self.state_keys.update({ 
             'op': 'voiceUpdate',
