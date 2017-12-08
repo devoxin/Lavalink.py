@@ -1,14 +1,5 @@
-import asyncio
-
 from discord.ext import commands
 from utils import lavalink
-
-
-def arg(a, b, ignore_case=False):
-    if ignore_case:
-        return a.lower() == b.lower()
-    else:
-        return a == b
 
 
 class Music:
@@ -18,12 +9,6 @@ class Music:
 
         self.state_keys = {}
         self.validator = ['op', 'guildId', 'sessionId', 'event']
-        #self.voice = getattr(self.bot, '_vsu', None)
-        #self.bot.loop.create_task(self.monitor_vsu())
-
-    # @commands.command()
-    # async def test(self, ctx, a: lambda c: arg(c, 'test', True) = False):
-    #     print(a)
 
     @commands.command()
     async def play(self, ctx, *, query):
