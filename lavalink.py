@@ -59,10 +59,23 @@ class Player:
         }
         await self.client.send(payload)
         self.current = track
-        
-    async def on_track_end(self):
+    
+    async def stop(self):
+        payload = {
+            'op': 'stop',
+            'guildId': self.guild_id
+        }
+        await self.client.send(payload)
         self.current = None
+    
+    async def skip(self):
+        await self.stop()
         await self.play()
+        
+    async def _on_track_end(self, data):
+        self.current = None
+        if data.get('reason') == 'FINISHED':
+            await self.play()
 
     async def _build_track(self, track):
         try:
@@ -93,7 +106,9 @@ class Player:
 class Client:
     def __init__(self, bot, shard_count, user_id, password='', host='localhost', port=80, loop=asyncio.get_event_loop()):
         self.bot = bot
-        self.bot.players = {}
+
+        if not hasattr(self.bot, 'players'):
+            self.bot.players = {}
 
         self.loop = loop
         self.shard_count = shard_count
@@ -104,10 +119,6 @@ class Client:
         self.uri = f'ws://{host}:{port}'
 
         loop.create_task(self._connect())
-
-        self._dispatchers = {
-            'track_end': []
-        }
     
     async def _connect(self):
         headers = {
@@ -133,15 +144,21 @@ class Client:
                 elif j.get('op') == 'isConnectedReq':
                     await self._validate_shard(j)
                 elif j.get('op') == 'sendWS':
-                    await self.bot._connection._get_websocket(330777295952543744).send(j.get('message'))
+                    await self.bot._connection._get_websocket(330777295952543744).send(j.get('message')) # todo: move this to play (voice updates)
                 elif j.get('op') == 'event':
-                    await self._dispatch_event(j.get('type'))
+                    await self._dispatch_event(j)
                 #elif j.get('op') == 'playerUpdate':                
     
-    async def _dispatch_event(self, t):
+    async def _dispatch_event(self, data):
+        t = data.get('type')
+        g = int(data.get('guildId'))
+        
+        if g not in self.bot.players:
+            return
+
         if t == 'TrackEndEvent':
-            for listener in self._dispatchers['track_end']:
-                asyncio.ensure_future(listener())
+            player = self.bot.players[g]
+            asyncio.ensure_future(player._on_track_end(data))
 
     async def _dispatch_join_validator(self, data):
         if int(data.get('guildId')) in self.bot.players:
@@ -174,7 +191,6 @@ class Client:
     async def get_player(self, guild_id, shard_id):
         if guild_id not in self.bot.players:
             p = Player(client=self, guild_id=guild_id, shard_id=shard_id)
-            self._dispatchers['track_end'].append(p.on_track_end)
             self.bot.players[guild_id] = p
 
         return self.bot.players[guild_id]
