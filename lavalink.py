@@ -17,9 +17,10 @@ class AudioTrack:
         self.uri = uri
 
 class Player:
-    def __init__(self, client, guild_id):
+    def __init__(self, client, guild_id, shard_id):
         self.client = client
-        self.guild_id = guild_id
+        self.shard_id = shard_id
+        self.guild_id = str(guild_id)
         self.channel_id = None
 
         self.is_connected = lambda: self.channel_id is not None
@@ -33,7 +34,7 @@ class Player:
     async def connect(self, channel_id):
         payload = {
             'op': 'connect',
-            'guildId': str(self.guild_id),
+            'guildId': self.guild_id,
             'channelId': str(channel_id)
         }
         await self.client.send(payload)
@@ -53,7 +54,7 @@ class Player:
 
         payload = {
             'op': 'play',
-            'guildId': str(self.guild_id),
+            'guildId': self.guild_id,
             'track': track.track
         }
         await self.client.send(payload)
@@ -79,10 +80,21 @@ class Player:
         except KeyError:
             return # Raise invalid track passed
 
+    async def _validate_join(self, data):
+        payload = {
+            'op': 'validationRes',
+            'guildId': data.get('guildId'),
+            'channelId': data.get('channelId', None),
+            'valid': True
+        }
+        await self.client.send(payload)
+
 
 class Client:
     def __init__(self, bot, shard_count, user_id, password='', host='localhost', port=80, loop=asyncio.get_event_loop()):
         self.bot = bot
+        self.bot.players = {}
+
         self.loop = loop
         self.shard_count = shard_count
         self.user_id = user_id
@@ -91,13 +103,13 @@ class Client:
         self.port = port
         self.uri = f'ws://{host}:{port}'
 
-        loop.create_task(self.connect())
+        loop.create_task(self._connect())
 
         self._dispatchers = {
             'track_end': []
         }
     
-    async def connect(self):
+    async def _connect(self):
         headers = {
             'Authorization': self.password,
             'Num-Shards': self.shard_count,
@@ -105,61 +117,67 @@ class Client:
         }
         try:
             self.ws = await websockets.connect(self.uri, extra_headers=headers)
-            self.loop.create_task(self.listen())
+            self.loop.create_task(self._listen())
             print("[WS] Ready")
         except Exception as e:
             raise e from None
     
-    async def listen(self):
+    async def _listen(self):
         while True:
             data = await self.ws.recv()
             j = json.loads(data)
 
             if 'op' in j:
                 if j.get('op') == 'validationReq':
-                    await self.validate_connect(j)
+                    await self._dispatch_join_validator(j)
                 elif j.get('op') == 'isConnectedReq':
-                    await self.validate_connection(j)
+                    await self._validate_shard(j)
                 elif j.get('op') == 'sendWS':
                     await self.bot._connection._get_websocket(330777295952543744).send(j.get('message'))
                 elif j.get('op') == 'event':
-                    await self.dispatch_event(j.get('type'))
+                    await self._dispatch_event(j.get('type'))
                 #elif j.get('op') == 'playerUpdate':                
     
-    async def dispatch_event(self, t):
+    async def _dispatch_event(self, t):
         if t == 'TrackEndEvent':
             for listener in self._dispatchers['track_end']:
-                await listener()
+                asyncio.ensure_future(listener())
+
+    async def _dispatch_join_validator(self, data):
+        if int(data.get('guildId')) in self.bot.players:
+            p = self.bot.players[int(data.get('guildId'))]
+            await p._validate_join(data)
+        else:
+            payload = {
+                'op': 'validationRes',
+                'guildId': data.get('guildId'),
+                'channelId': data.get('channelId', None),
+                'valid': False
+            }
+            await self.send(payload)
+
+    async def _validate_shard(self, data):
+        payload = {
+            'op': 'isConnectedRes',
+            'shardId': data.get('shardId'),
+            'connected': True
+        }
+        await self.send(payload)
 
     async def send(self, data):
         payload = json.dumps(data)
         await self.ws.send(payload)
-
-    async def validate_connect(self, data):
-        payload = {
-            'op': 'validationRes',
-            'guildId': '330777295952543744',
-            'channelId': '376428145252761610',
-            'valid': True
-        }
-        
-        await self.send(payload)
-
-    async def validate_connection(self, data):
-        payload = {
-            'op': 'isConnectedRes',
-            'shardId': 0,
-            'connected': True
-        }
-        await self.send(payload)
     
     async def dispatch_voice_update(self, payload):
         await self.send(payload)
 
-    async def create_player(self, guild_id):
-        p = Player(client=self, guild_id=str(guild_id))
-        self._dispatchers['track_end'].append(p.on_track_end)
-        return p
+    async def get_player(self, guild_id, shard_id):
+        if guild_id not in self.bot.players:
+            p = Player(client=self, guild_id=guild_id, shard_id=shard_id)
+            self._dispatchers['track_end'].append(p.on_track_end)
+            self.bot.players[guild_id] = p
+
+        return self.bot.players[guild_id]
 
     async def get_tracks(self, query):
         headers = {
