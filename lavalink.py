@@ -4,8 +4,6 @@ import json
 import aiohttp
 import websockets
 
-#from . import webreq
-
 
 class Requests:
     def __init__(self):
