@@ -1,9 +1,28 @@
 import asyncio
 import json
 
+import aiohttp
 import websockets
 
-from . import webreq
+#from . import webreq
+
+
+class Requests:
+    def __init__(self):
+        self.pool = aiohttp.ClientSession()
+    
+    async def get(self, url, jsonify=False, *args, **kwargs):
+        try:
+            async with self.pool.get(url, *args, **kwargs) as r:
+                if r.status != 200:
+                    return None
+
+                if jsonify:
+                    return await r.json(content_type=None)
+
+                return await r.read()
+        except (aiohttp.ClientOSError, aiohttp.ClientConnectorError, asyncio.TimeoutError):
+            return None
 
 
 class AudioTrack:
@@ -124,6 +143,7 @@ class Client:
         self.port = port
         self.rest = rest
         self.uri = f'ws://{host}:{port}'
+        self.requester = Requests()
 
         loop.create_task(self._connect())
 
@@ -209,4 +229,5 @@ class Client:
             'Authorization': self.password,
             'Accept': 'application/json'
         }
-        return await webreq.get(f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
+        return await self.requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}',
+                                        jsonify=True, headers=headers)
