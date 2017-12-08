@@ -42,7 +42,7 @@ class Player:
     async def add(self, track, play=False):
         await self._build_track(track)
 
-        if play_immediately and not self.is_playing():
+        if play and not self.is_playing():
             await self.play()
 
     async def play(self):
