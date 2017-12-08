@@ -1,9 +1,10 @@
 import asyncio
 import json
 
-import discord
-from . import webreq
 import websockets
+
+from . import webreq
+
 
 class AudioTrack:
     def __init__(self, track, identifier, can_seek, author, duration, stream, title, uri, requester):
@@ -17,10 +18,11 @@ class AudioTrack:
         self.uri = uri
         self.requester = requester
 
+
 class Player:
-    def __init__(self, client, guild_id, shard_id):
+    def __init__(self, client, guild_id):
         self.client = client
-        self.shard_id = shard_id
+        self.shard_id = client.bot.get_guild(guild_id).shard_id
         self.guild_id = str(guild_id)
         self.channel_id = None
 
@@ -28,7 +30,7 @@ class Player:
         self.is_playing = lambda: self.current is not None
 
         self.state = None
-        
+
         self.queue = []
         self.current = None
 
@@ -51,7 +53,7 @@ class Player:
         if not self.is_connected() or not self.queue:
             if self.is_playing():
                 await self.stop()
-            
+
             self.current = None
             return
 
@@ -64,7 +66,7 @@ class Player:
         }
         await self.client.send(payload)
         self.current = track
-    
+
     async def stop(self):
         payload = {
             'op': 'stop',
@@ -72,10 +74,10 @@ class Player:
         }
         await self.client.send(payload)
         self.current = None
-    
+
     async def skip(self):
         await self.play()
-        
+
     async def _on_track_end(self, data):
         if data.get('reason') == 'FINISHED':
             await self.play()
@@ -95,7 +97,7 @@ class Player:
             t = AudioTrack(a, b, c, d, e, f, g, h, i)
             self.queue.append(t)
         except KeyError:
-            return # Raise invalid track passed
+            return  # Raise invalid track passed
 
     async def _validate_join(self, data):
         payload = {
@@ -124,7 +126,7 @@ class Client:
         self.uri = f'ws://{host}:{port}'
 
         loop.create_task(self._connect())
-    
+
     async def _connect(self):
         headers = {
             'Authorization': self.password,
@@ -137,7 +139,7 @@ class Client:
             print("[WS] Ready")
         except Exception as e:
             raise e from None
-    
+
     async def _listen(self):
         while True:
             data = await self.ws.recv()
@@ -149,15 +151,15 @@ class Client:
                 elif j.get('op') == 'isConnectedReq':
                     await self._validate_shard(j)
                 elif j.get('op') == 'sendWS':
-                    await self.bot._connection._get_websocket(330777295952543744).send(j.get('message')) # todo: move this to play (voice updates)
+                    await self.bot._connection._get_websocket(330777295952543744).send(j.get('message'))  # todo: move this to play (voice updates)
                 elif j.get('op') == 'event':
                     await self._dispatch_event(j)
-                #elif j.get('op') == 'playerUpdate':                
-    
+                # elif j.get('op') == 'playerUpdate':
+
     async def _dispatch_event(self, data):
         t = data.get('type')
         g = int(data.get('guildId'))
-        
+
         if g not in self.bot.players:
             return
 
@@ -191,13 +193,13 @@ class Client:
             return
         payload = json.dumps(data)
         await self.ws.send(payload)
-    
+
     async def dispatch_voice_update(self, payload):
         await self.send(payload)
 
-    async def get_player(self, guild_id, shard_id):
+    async def get_player(self, guild_id):
         if guild_id not in self.bot.players:
-            p = Player(client=self, guild_id=guild_id, shard_id=shard_id)
+            p = Player(client=self, guild_id=guild_id)
             self.bot.players[guild_id] = p
 
         return self.bot.players[guild_id]
