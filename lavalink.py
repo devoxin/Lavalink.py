@@ -108,7 +108,7 @@ class Player:
 
 
 class Client:
-    def __init__(self, bot, shard_count, user_id, password='', host='localhost', port=80, loop=asyncio.get_event_loop()):
+    def __init__(self, bot, shard_count, user_id, password='', host='localhost', port=80, rest=2333, loop=asyncio.get_event_loop()):
         self.bot = bot
 
         if not hasattr(self.bot, 'players'):
@@ -120,6 +120,7 @@ class Client:
         self.password = password
         self.host = host
         self.port = port
+        self.rest = rest
         self.uri = f'ws://{host}:{port}'
 
         loop.create_task(self._connect())
@@ -206,4 +207,4 @@ class Client:
             'Authorization': self.password,
             'Accept': 'application/json'
         }
-        return await webreq.get(f'http://{self.host}:2333/loadtracks?identifier={query}', jsonify=True, headers=headers)
+        return await webreq.get(f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
