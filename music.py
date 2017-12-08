@@ -1,3 +1,6 @@
+import asyncio
+
+import discord
 from discord.ext import commands
 from utils import lavalink
 
@@ -10,11 +13,22 @@ class Music:
         self.state_keys = {}
         self.validator = ['op', 'guildId', 'sessionId', 'event']
 
-    @commands.command()
+    @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
-        tracks = await self.lavalink.get_tracks(f'ytsearch:{query}')
-        await self.lavalink.send_connect_request(ctx)
-        await self.lavalink.play_track(ctx, tracks[0])
+        query = query.strip('<>')
+
+        if not query.startswith('http'):
+            query = f'ytsearch:{query}'
+
+        tracks = await self.lavalink.get_tracks(query)
+
+        if not self.lavalink.connected:
+            await self.lavalink.join(guild_id=ctx.guild.id, channel_id=ctx.author.voice.channel.id)
+        
+        await self.lavalink.play(track=tracks[0]['track'])
+
+        embed = discord.Embed(title="Now Playing", description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
+        await ctx.send(embed=embed)
     
     async def on_voice_server_update(self, data):
         self.state_keys.update({ 
