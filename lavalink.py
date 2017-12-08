@@ -47,7 +47,12 @@ class Player:
             await self.play()
 
     async def play(self):
+        print("called play")
         if not self.is_connected() or not self.queue:
+            if self.is_playing():
+                await self.stop()
+            
+            print("clearing")
             self.current = None
             return
 
@@ -59,6 +64,7 @@ class Player:
             'track': track.track
         }
         await self.client.send(payload)
+        print("Updating track")
         self.current = track
     
     async def stop(self):
@@ -180,6 +186,8 @@ class Client:
         await self.send(payload)
 
     async def send(self, data):
+        if not self.ws:
+            return
         payload = json.dumps(data)
         await self.ws.send(payload)
     
