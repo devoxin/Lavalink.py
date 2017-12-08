@@ -6,7 +6,7 @@ from . import webreq
 import websockets
 
 class AudioTrack:
-    def __init__(self, track, identifier, can_seek, author, duration, stream, title, uri):
+    def __init__(self, track, identifier, can_seek, author, duration, stream, title, uri, requester):
         self.track = track
         self.identifier = identifier
         self.can_seek = can_seek
@@ -15,6 +15,7 @@ class AudioTrack:
         self.stream = stream
         self.title = title
         self.uri = uri
+        self.requester = requester
 
 class Player:
     def __init__(self, client, guild_id, shard_id):
@@ -40,8 +41,8 @@ class Player:
         await self.client.send(payload)
         self.channel_id = str(channel_id)
 
-    async def add(self, track, play=False):
-        await self._build_track(track)
+    async def add(self, requester, track, play=False):
+        await self._build_track(requester, track)
 
         if play and not self.is_playing():
             await self.play()
@@ -79,7 +80,7 @@ class Player:
         if data.get('reason') == 'FINISHED':
             await self.play()
 
-    async def _build_track(self, track):
+    async def _build_track(self, requester, track):
         try:
             a = track.get('track')
             info = track.get('info')
@@ -90,7 +91,8 @@ class Player:
             f = info.get('isStream')
             g = info.get('title')
             h = info.get('uri')
-            t = AudioTrack(a, b, c, d, e, f, g, h)
+            i = requester
+            t = AudioTrack(a, b, c, d, e, f, g, h, i)
             self.queue.append(t)
         except KeyError:
             return # Raise invalid track passed
