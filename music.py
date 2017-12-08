@@ -20,10 +20,10 @@ class Music:
         if not player.is_connected():
             await player.connect(channel_id=ctx.author.voice.channel.id)
 
-        #query = query.strip('<>')
+        query = query.strip('<>')
 
-        #if not query.startswith('http'):
-            #query = f'ytsearch:{query}'
+        if not query.startswith('http'):
+            query = f'ytsearch:{query}'
 
         tracks = await self.lavalink.get_tracks(query)
         if not tracks:
