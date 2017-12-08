@@ -70,6 +70,7 @@ class Player:
             'guildId': self.guild_id
         }
         await self.client.send(payload)
+        self.current = None
     
     async def skip(self):
         await self.play()
