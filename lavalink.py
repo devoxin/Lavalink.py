@@ -8,7 +8,7 @@ import websockets
 class Requests:
     def __init__(self):
         self.pool = aiohttp.ClientSession()
-    
+
     async def get(self, url, jsonify=False, *args, **kwargs):
         try:
             async with self.pool.get(url, *args, **kwargs) as r:
