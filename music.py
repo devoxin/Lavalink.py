@@ -28,13 +28,24 @@ class Music:
         tracks = await self.lavalink.get_tracks(query)
         await player.add(track=tracks[0], play=True)
 
-        embed = discord.Embed(title="Enqueued", description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
+        embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
+                              title="Track Enqueued",
+                              description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
         await ctx.send(embed=embed)
     
     @commands.command(aliases=['forceskip', 'fs'])
     async def skip(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id, shard_id=ctx.guild.shard_id)
         await player.skip()
+
+    @commands.command(aliases=['np', 'n'])
+    async def now(self, ctx):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id, shard_id=ctx.guild.shard_id)
+        song = 'Nothing'
+        if player.current:
+            song = player.current.title
+        embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Now Playing', description=song)
+        await ctx.send(embed=embed)
     
     async def on_voice_server_update(self, data):
         self.state_keys.update({ 
