@@ -1,5 +1,3 @@
-import asyncio
-
 import discord
 from discord.ext import commands
 from utils import lavalink
@@ -15,8 +13,8 @@ class Music:
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id, shard_id=ctx.guild.shard_id)
-        
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
         if not player.is_connected():
             await player.connect(channel_id=ctx.author.voice.channel.id)
 
@@ -35,35 +33,34 @@ class Music:
                               title="Track Enqueued",
                               description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
         await ctx.send(embed=embed)
-    
+
     @commands.command(aliases=['forceskip', 'fs'])
     async def skip(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id, shard_id=ctx.guild.shard_id)
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
         await player.skip()
 
     @commands.command(aliases=['np', 'n'])
     async def now(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id, shard_id=ctx.guild.shard_id)
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
         song = 'Nothing'
         if player.current:
             song = player.current.title
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Now Playing', description=song)
         await ctx.send(embed=embed)
-    
+
     @commands.command(aliases=['q'])
     async def queue(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id, shard_id=ctx.guild.shard_id)
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
 
         queue_list = 'Nothing queued' if not player.queue else ''
         for track in player.queue:
-            queue_list += f'[**{track.title}**]({track.uri})'
+            queue_list += f'[**{track.title}**]({track.uri})\n'
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Queue', description=queue_list)
         await ctx.send(embed=embed)
 
-    
     async def on_voice_server_update(self, data):
-        self.state_keys.update({ 
+        self.state_keys.update({
             'op': 'voiceUpdate',
             'guildId': data.get('guild_id'),
             'event': data
@@ -73,14 +70,15 @@ class Music:
 
     async def on_voice_state_update(self, member, before, after):
         if member.id == self.bot.user.id:
-            self.state_keys.update({ 'sessionId': after.session_id })
-        
+            self.state_keys.update({'sessionId': after.session_id})
+
         await self.verify_and_dispatch()
 
     async def verify_and_dispatch(self):
         if all(k in self.state_keys for k in self.validator):
             await self.lavalink.dispatch_voice_update(self.state_keys)
             self.state_keys.clear()
+
 
 def setup(bot):
     bot.add_cog(Music(bot))
