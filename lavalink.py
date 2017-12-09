@@ -46,7 +46,8 @@ class Player:
         self.is_connected = lambda: self.channel_id is not None
         self.is_playing = lambda: self.current is not None
 
-        self.state = None
+        self.position = 0
+        self.position_timestamp = 0
 
         self.queue = []
         self.current = None
@@ -96,6 +97,7 @@ class Player:
         await self.play()
 
     async def _on_track_end(self, data):
+        self.position = 0
         if data.get('reason') == 'FINISHED':
             await self.play()
 
@@ -172,7 +174,8 @@ class Client:
                     await self.bot._connection._get_websocket(330777295952543744).send(j.get('message'))  # todo: move this to play (voice updates)
                 elif j.get('op') == 'event':
                     await self._dispatch_event(j)
-                # elif j.get('op') == 'playerUpdate':
+                elif j.get('op') == 'playerUpdate':
+                    await self._update_state(j)
 
     async def _dispatch_event(self, data):
         t = data.get('type')
@@ -198,6 +201,20 @@ class Client:
             }
             await self.send(payload)
 
+    async def _update_state(self, data):
+        g = int(data.get('guildId'))
+
+        if g not in self.bot.players:
+            return
+
+        p = self.bot.players[g]
+        
+        if not p.is_playing():
+            return
+
+        p.position = data['state'].get('position', 0)
+        p.position_timestamp = data['state'].get('time', 0)
+
     async def _validate_shard(self, data):
         payload = {
             'op': 'isConnectedRes',
@@ -207,7 +224,7 @@ class Client:
         await self.send(payload)
 
     async def send(self, data):
-        if not self.ws:
+        if not hasattr(self, 'ws'):
             return
         payload = json.dumps(data)
         await self.ws.send(payload)
@@ -227,5 +244,9 @@ class Client:
             'Authorization': self.password,
             'Accept': 'application/json'
         }
-        return await self.requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}',
-                                        jsonify=True, headers=headers)
+        return await self.requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
+        # data = {
+        #     'is_search': any(s in query for s in ['ytsearch', 'scsearch']),
+        #     'results': tracks
+        # }
+        # return data
