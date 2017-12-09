@@ -208,7 +208,7 @@ class Client:
             return
 
         p = self.bot.players[g]
-        
+
         if not p.is_playing():
             return
 
