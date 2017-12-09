@@ -207,9 +207,9 @@ class Client:
             }
             self.ws = await websockets.connect(self.uri, extra_headers=headers)
             self.loop.create_task(self._listen())
-            print("[WS] Established connection to lavalink")
+            print("[Lavalink.py] Established connection to lavalink")
         except OSError:
-            print('[WS] Failed to connect to lavalink')
+            print('[Lavalink.py] Failed to connect to lavalink')
 
     async def _listen(self):
         try:
@@ -229,16 +229,16 @@ class Client:
                     elif j.get('op') == 'playerUpdate':
                         await self._update_state(j)
         except websockets.ConnectionClosed:
-            print('[WS] Connection Closed... Attempting to reconnect in 30 seconds')
+            print('[Lavalink.py] Connection closed... Attempting to reconnect in 30 seconds')
             self.ws.close()
-            for a in range(1, 4):  # 3 Attempts
+            for a in [1, 2, 3]:  # 3 Attempts
                 await asyncio.sleep(30)
-                print(f'[WS] Attempting to reconnect (attempt: {a})')
+                print(f'[Lavalink.py] Attempting to reconnect (attempt: {a})')
                 await self._connect()
                 if self.ws.open:
                     return
             
-            print('[WS] Failed to re-establish a connection with lavalink.')
+            print('[Lavalink.py] Failed to re-establish a connection with lavalink.')
 
     async def _dispatch_event(self, data):
         t = data.get('type')
