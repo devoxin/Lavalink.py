@@ -66,6 +66,36 @@ class Music:
         await ctx.send(embed=embed)
     
     @commands.command()
+    async def pause(self, ctx):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not player.is_playing():
+            return
+
+        await player.set_paused(True)
+
+    @commands.command()
+    async def resume(self, ctx):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not player.is_playing():
+            return
+
+        await player.set_paused(False)
+
+    @commands.command(aliases=['vol'])
+    async def volume(self, ctx, volume):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not player.is_playing():
+            return
+
+        if not lavalink.Utils.is_number(volume):
+            return await ctx.send('You didn\'t specify a valid number!')
+
+        await player.set_volume(int(volume))
+    
+    @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
         await player.disconnect()
