@@ -65,23 +65,18 @@ class Music:
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Queue', description=queue_list)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=["resume"])
     async def pause(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
 
         if not player.is_playing():
             return
-
-        await player.set_paused(True)
-
-    @commands.command()
-    async def resume(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
-
-        if not player.is_playing():
-            return
-
-        await player.set_paused(False)
+        if player.paused:
+            await player.set_paused(False)
+            await ctx.send("Music paused `⏸`")            
+        else:
+            await player.set_paused(True)
+            await ctx.send("Music resumed `▶`")
 
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, volume=None):
