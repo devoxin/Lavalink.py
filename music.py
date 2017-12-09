@@ -64,7 +64,7 @@ class Music:
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Queue', description=queue_list)
         await ctx.send(embed=embed)
-    
+
     @commands.command()
     async def pause(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
@@ -82,18 +82,22 @@ class Music:
             return
 
         await player.set_paused(False)
-   
+
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, volume=None):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
         if volume is None:
             return await ctx.send(f"Volume: {player.volume}%")
+
         if not player.is_playing():
             return
+
         if not lavalink.Utils.is_number(volume):
             return await ctx.send('You didn\'t specify a valid number!')
-        await player.set_volume(int(volume))
-    
+
+        v = await player.set_volume(int(volume))
+        await ctx.send(f'Set player volume to {v}%')
+
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
