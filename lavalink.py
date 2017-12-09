@@ -143,7 +143,7 @@ class Player:
 
 
 class Client:
-    def __init__(self, bot, shard_count, user_id, password='', host='localhost', port=80, rest=2333, loop=asyncio.get_event_loop()):
+    def __init__(self, bot, shard_count=0, user_id, password='', host='localhost', port=80, rest=2333, loop=asyncio.get_event_loop()):
         self.bot = bot
 
         if not hasattr(self.bot, 'players'):
@@ -238,7 +238,7 @@ class Client:
         await self.send(payload)
 
     async def send(self, data):
-        if not hasattr(self, 'ws'):
+        if not hasattr(self, 'ws') or not self.ws.open:
             return
         payload = json.dumps(data)
         await self.ws.send(payload)
