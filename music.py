@@ -82,17 +82,16 @@ class Music:
             return
 
         await player.set_paused(False)
-
+   
     @commands.command(aliases=['vol'])
-    async def volume(self, ctx, volume):
+    async def volume(self, ctx, volume=None):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
-
+        if volume is None:
+            return await ctx.send(f"Volume: {player.volume}%")
         if not player.is_playing():
             return
-
         if not lavalink.Utils.is_number(volume):
             return await ctx.send('You didn\'t specify a valid number!')
-
         await player.set_volume(int(volume))
     
     @commands.command(aliases=['dc'])
