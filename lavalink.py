@@ -62,7 +62,7 @@ class Player:
         }
         await self.client.send(payload)
         self.channel_id = str(channel_id)
-    
+
     async def disconnect(self):
         if not self.is_connected():
             return
@@ -120,17 +120,17 @@ class Player:
         }
         await self.client.send(payload)
         self.paused = pause
-    
+
     async def set_volume(self, vol):
         if not Utils.is_number(vol):
             return
 
         if vol < 0:
             vol = 0
-        
+
         if vol > 150:
             vol = 150
-        
+
         payload = {
             'op': 'volume',
             'guildId': self.guild_id,
@@ -139,7 +139,7 @@ class Player:
         await self.client.send(payload)
         self.volume = vol
         return vol
-    
+
     async def seek(self, pos):
         payload = {
             'op': 'seek',
@@ -240,7 +240,7 @@ class Client:
                 await self._connect()
                 if self.ws.open:
                     return
-            
+
             print('[Lavalink.py] Failed to re-establish a connection with lavalink.')
 
     async def _dispatch_event(self, data):
@@ -316,6 +316,7 @@ class Client:
         #     'results': tracks
         # }
         # return data
+
 
 class Utils:
 
