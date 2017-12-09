@@ -44,8 +44,11 @@ class Music:
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
         song = 'Nothing'
         if player.current:
-            pos = lavalink.utils.format_time(player.position)
-            dur = lavalink.utils.format_time(player.current.duration)
+            pos = lavalink.Utils.format_time(player.position)
+            if player.current.stream:
+                dur = 'LIVE'
+            else:
+                dur = lavalink.Utils.format_time(player.current.duration)
             song = f'**[{player.current.title}]({player.current.uri})**\n({pos}/{dur})'
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Now Playing', description=song)
@@ -61,6 +64,11 @@ class Music:
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Queue', description=queue_list)
         await ctx.send(embed=embed)
+    
+    @commands.command()
+    async def disconnect(self, ctx):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        await player.disconnect()
 
     async def on_voice_server_update(self, data):
         self.state_keys.update({

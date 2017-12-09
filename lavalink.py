@@ -60,6 +60,20 @@ class Player:
         }
         await self.client.send(payload)
         self.channel_id = str(channel_id)
+    
+    async def disconnect(self):
+        if not self.is_connected():
+            return
+
+        if self.is_playing():
+            await self.stop()
+
+        payload = {
+            'op': 'disconnect',
+            'guildId': self.guild_id
+        }
+        await self.client.send(payload)
+        self.channel_id = None
 
     async def add(self, requester, track, play=False):
         await self._build_track(requester, track)
@@ -251,7 +265,7 @@ class Client:
         # }
         # return data
 
-class utils:
+class Utils:
 
     @staticmethod
     def format_time(time):
