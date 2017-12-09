@@ -52,7 +52,7 @@ class Music:
 
             pos = time_string(player.position)
             dur = time_string(player.current.duration)
-            song = f'{player.current.title} ({pos}/{dur})'
+            song = f'**[{player.current.title}]({player.current.uri})**\n({pos}/{dur})'
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Now Playing', description=song)
         await ctx.send(embed=embed)
