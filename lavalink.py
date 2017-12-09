@@ -45,9 +45,11 @@ class Player:
 
         self.is_connected = lambda: self.channel_id is not None
         self.is_playing = lambda: self.current is not None
+        self.paused = False
 
         self.position = 0
         self.position_timestamp = 0
+        self.volume = 100
 
         self.queue = []
         self.current = None
@@ -110,8 +112,43 @@ class Player:
     async def skip(self):
         await self.play()
 
+    async def set_paused(self, pause):
+        payload = {
+            'op': 'pause',
+            'guildId': self.guild_id,
+            'pause': pause
+        }
+        await self.client.send(payload)
+        self.paused = pause
+    
+    async def set_volume(self, vol):
+        if vol < 0:
+            vol = 0
+        
+        if vol > 150:
+            vol = 150
+        
+        payload = {
+            'op': 'volume',
+            'guildId': self.guild_id,
+            'volume': vol
+        }
+        await self.client.send(payload)
+        self.volume = vol
+        return vol
+    
+    async def seek(self, pos):
+        payload = {
+            'op': 'seek',
+            'guildId': self.guild_id,
+            'position': pos
+        }
+        await self.client.send(payload)
+
     async def _on_track_end(self, data):
         self.position = 0
+        self.paused = False
+
         if data.get('reason') == 'FINISHED':
             await self.play()
 
@@ -159,37 +196,49 @@ class Client:
         self.uri = f'ws://{host}:{port}'
         self.requester = Requests()
 
-        loop.create_task(self._connect())
+        asyncio.ensure_future(self._connect())
 
     async def _connect(self):
-        headers = {
-            'Authorization': self.password,
-            'Num-Shards': self.shard_count,
-            'User-Id': self.user_id
-        }
         try:
+            headers = {
+                'Authorization': self.password,
+                'Num-Shards': self.shard_count,
+                'User-Id': self.user_id
+            }
             self.ws = await websockets.connect(self.uri, extra_headers=headers)
             self.loop.create_task(self._listen())
-            print("[WS] Ready")
-        except Exception as e:
-            raise e from None
+            print("[WS] Established connection to lavalink")
+        except OSError:
+            print('[WS] Failed to connect to lavalink')
 
     async def _listen(self):
-        while True:
-            data = await self.ws.recv()
-            j = json.loads(data)
+        try:
+            while True:
+                data = await self.ws.recv()
+                j = json.loads(data)
 
-            if 'op' in j:
-                if j.get('op') == 'validationReq':
-                    await self._dispatch_join_validator(j)
-                elif j.get('op') == 'isConnectedReq':
-                    await self._validate_shard(j)
-                elif j.get('op') == 'sendWS':
-                    await self.bot._connection._get_websocket(330777295952543744).send(j.get('message'))  # todo: move this to play (voice updates)
-                elif j.get('op') == 'event':
-                    await self._dispatch_event(j)
-                elif j.get('op') == 'playerUpdate':
-                    await self._update_state(j)
+                if 'op' in j:
+                    if j.get('op') == 'validationReq':
+                        await self._dispatch_join_validator(j)
+                    elif j.get('op') == 'isConnectedReq':
+                        await self._validate_shard(j)
+                    elif j.get('op') == 'sendWS':
+                        await self.bot._connection._get_websocket(330777295952543744).send(j.get('message'))  # todo: move this to play (voice updates)
+                    elif j.get('op') == 'event':
+                        await self._dispatch_event(j)
+                    elif j.get('op') == 'playerUpdate':
+                        await self._update_state(j)
+        except websockets.ConnectionClosed:
+            print('[WS] Connection Closed... Attempting to reconnect in 30 seconds')
+            self.ws.close()
+            for a in range(1, 4):  # 3 Attempts
+                await asyncio.sleep(30)
+                print(f'[WS] Attempting to reconnect (attempt: {a})')
+                await self._connect()
+                if self.ws.open:
+                    return
+            
+            print('[WS] Failed to re-establish a connection with lavalink.')
 
     async def _dispatch_event(self, data):
         t = data.get('type')
@@ -273,3 +322,11 @@ class Utils:
         minutes = (time / (1000 * 60)) % 60
         hours = (time / (1000 * 60 * 60)) % 24
         return "%02d:%02d:%02d" % (hours, minutes, seconds)
+
+    @staticmethod
+    def is_number(num):
+        try:
+            int(num)
+            return True
+        except ValueError:
+            return False
