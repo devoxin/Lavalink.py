@@ -122,6 +122,9 @@ class Player:
         self.paused = pause
     
     async def set_volume(self, vol):
+        if not Utils.is_number(vol):
+            return
+
         if vol < 0:
             vol = 0
         
