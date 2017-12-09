@@ -73,10 +73,11 @@ class Music:
             return
         if player.paused:
             await player.set_paused(False)
-            await ctx.send("Music paused `⏸`")            
+            await ctx.send("Music resumed `▶`")
         else:
             await player.set_paused(True)
-            await ctx.send("Music resumed `▶`")
+            await ctx.send("Music paused `⏸`")            
+            
 
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, volume=None):
