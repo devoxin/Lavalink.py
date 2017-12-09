@@ -143,7 +143,7 @@ class Player:
 
 
 class Client:
-    def __init__(self, bot, shard_count=0, user_id, password='', host='localhost', port=80, rest=2333, loop=asyncio.get_event_loop()):
+    def __init__(self, bot, user_id, password='', host='localhost', port=80, rest=2333, loop=asyncio.get_event_loop(), shard_count=0):
         self.bot = bot
 
         if not hasattr(self.bot, 'players'):
