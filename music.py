@@ -44,14 +44,8 @@ class Music:
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
         song = 'Nothing'
         if player.current:
-            def time_string(time):
-                seconds = (time / 1000) % 60
-                minutes = (time / (1000 * 60)) % 60
-                hours = (time / (1000 * 60 * 60)) % 24
-                return "%02d:%02d:%02d" % (hours, minutes, seconds)
-
-            pos = time_string(player.position)
-            dur = time_string(player.current.duration)
+            pos = lavalink.utils.format_time(player.position)
+            dur = lavalink.utils.format_time(player.current.duration)
             song = f'**[{player.current.title}]({player.current.uri})**\n({pos}/{dur})'
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Now Playing', description=song)

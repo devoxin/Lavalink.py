@@ -250,3 +250,12 @@ class Client:
         #     'results': tracks
         # }
         # return data
+
+class utils:
+
+    @staticmethod
+    def format_time(time):
+        seconds = (time / 1000) % 60
+        minutes = (time / (1000 * 60)) % 60
+        hours = (time / (1000 * 60 * 60)) % 24
+        return "%02d:%02d:%02d" % (hours, minutes, seconds)
