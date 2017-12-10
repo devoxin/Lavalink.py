@@ -1,5 +1,6 @@
 import asyncio
 import json
+from random import randrange
 
 import aiohttp
 import websockets
@@ -62,6 +63,8 @@ class Player:
         self.queue = []
         self.current = None
 
+        self.shuffle = False
+
     async def connect(self, channel_id):
         payload = {
             'op': 'connect',
@@ -99,7 +102,10 @@ class Player:
             self.current = None
             return
 
-        track = self.queue.pop(0)
+        if self.shuffle:
+            track = self.queue.pop(randrange(len(self.queue)))
+        else:
+            track = self.queue.pop(0)
 
         payload = {
             'op': 'play',
