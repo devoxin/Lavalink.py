@@ -195,7 +195,7 @@ class Client:
         self.bot = bot
 
         self.loop = loop
-        self.shard_count = len(self.bot.shards) if hasattr(self.bot, 'shards') else 1
+        self.shard_count = self.bot.shard_count if hasattr(self.bot, 'shard_count') else 1
         self.user_id = self.bot.user.id
         self.password = password
         self.host = host
