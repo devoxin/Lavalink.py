@@ -300,7 +300,7 @@ class Client:
         await self.send(payload)
 
     async def send(self, data):
-        if '_ws' not in self.bot.players or not self.bot.lavalink.ws.open:
+        if not self.bot.lavalink.ws or not self.bot.lavalink.ws.open:
             return
         payload = json.dumps(data)
         await self.bot.lavalink.ws.send(payload)
