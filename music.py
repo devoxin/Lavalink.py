@@ -116,6 +116,17 @@ class Music:
 
         v = await player.set_volume(int(volume))
         await ctx.send(f'Player volume set to {v}%')
+    
+    @commands.command()
+    async def shuffle(self, ctx):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not player.is_playing():
+            return await ctx.send('Nothing playing.')
+
+        player.shuffle = not player.shuffle
+        
+        await ctx.send('Shuffle ' + ('enabled!' if player.shuffle else 'disabled.'))
 
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
