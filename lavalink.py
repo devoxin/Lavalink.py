@@ -344,3 +344,13 @@ class Utils:
             return True
         except ValueError:
             return False
+
+    @staticmethod
+    def get_number(num, default=1):
+        if num is None:
+            return default
+
+        try:
+            return int(num)
+        except ValueError:
+            return default
