@@ -73,13 +73,7 @@ class Music:
 
         items_per_page = 10
         pages = math.ceil(len(player.queue) / items_per_page)
-
-        if not page or not lavalink.Utils.is_number(page):
-            page = 1
-        elif page < 1:
-            page = 1
-        elif page > pages:
-            page = pages
+        page = lavalink.Utils.get_number(page)
 
         start = (page - 1) * items_per_page
         end = start + items_per_page
