@@ -4,6 +4,8 @@ import json
 import aiohttp
 import websockets
 
+__version__ = '1.0.1'
+
 
 class Requests:
     def __init__(self):
