@@ -16,6 +16,9 @@ class Music:
     async def play(self, ctx, *, query):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
 
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
         if not player.is_connected():
             await player.connect(channel_id=ctx.author.voice.channel.id)
 
@@ -47,6 +50,13 @@ class Music:
     @commands.command(aliases=['forceskip', 'fs'])
     async def skip(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
+        if not player.is_connected():
+            await player.connect(channel_id=ctx.author.voice.channel.id)
+
         await player.skip()
 
     @commands.command(aliases=['np', 'n'])
@@ -94,6 +104,9 @@ class Music:
         if not player.is_playing():
             return await ctx.send('Nothing playing.')
 
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
         if player.paused:
             await player.set_paused(False)
             await ctx.send("Music resumed `▶`")
@@ -111,6 +124,9 @@ class Music:
         if not player.is_playing():
             return await ctx.send('Nothing playing.')
 
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
         if not lavalink.Utils.is_number(volume):
             return await ctx.send('You didn\'t specify a valid number!')
 
@@ -124,6 +140,9 @@ class Music:
         if not player.is_playing():
             return await ctx.send('Nothing playing.')
 
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
         player.shuffle = not player.shuffle
         
         await ctx.send('Shuffle ' + ('enabled!' if player.shuffle else 'disabled.'))
@@ -131,6 +150,10 @@ class Music:
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
         await player.disconnect()
 
     async def on_voice_server_update(self, data):

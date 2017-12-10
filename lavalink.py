@@ -197,7 +197,7 @@ class Player:
 
 
 class Client:
-    def __init__(self, bot, password='', host='localhost', port=80, rest=2333, loop=asyncio.get_event_loop()):
+    def __init__(self, bot, password='', host='localhost', port=80, rest=2333, ws_retry=3, loop=asyncio.get_event_loop()):
         self.bot = bot
 
         self.loop = loop
@@ -208,6 +208,7 @@ class Client:
         self.port = port
         self.rest = rest
         self.uri = f'ws://{host}:{port}'
+        self.ws_retry = ws_retry
 
         if not hasattr(self.bot, 'players'):
             self.bot.players = {}
@@ -250,9 +251,9 @@ class Client:
         except websockets.ConnectionClosed:
             print('[Lavalink.py] Connection closed... Attempting to reconnect in 30 seconds')
             self.bot.lavalink.ws.close()
-            for a in [1, 2, 3]:  # 3 Attempts
+            for a in range(0, self.ws_retry): 
                 await asyncio.sleep(30)
-                print(f'[Lavalink.py] Attempting to reconnect (attempt: {a})')
+                print(f'[Lavalink.py] Attempting to reconnect (Attempt: {a + 1})')
                 await self._connect()
                 if self.bot.lavalink.ws.open:
                     return
@@ -320,6 +321,9 @@ class Client:
             self.bot.players[guild_id] = p
 
         return self.bot.players[guild_id]
+
+    async def get_playing(self):
+        return len([p for p in self.bot.players.values() if p.is_playing()])
 
     async def get_tracks(self, query):
         headers = {
