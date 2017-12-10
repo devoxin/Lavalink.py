@@ -28,7 +28,7 @@ class Music:
 
         if not tracks:
             return await ctx.send('Nothing found 👀')
-        
+
         if 'list' in query and 'ytsearch:' not in query:
             for track in tracks:
                 await player.add(requester=ctx.author.id, track=track, play=True)
@@ -86,37 +86,37 @@ class Music:
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Queue', description=queue_list)
         embed.set_footer(text=f'Viewing page {page}/{pages}')
         await ctx.send(embed=embed)
-    
-    @commands.command()
+
+    @commands.command(aliases=['resume'])
     async def pause(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
 
         if not player.is_playing():
-            return
+            return await ctx.send('Nothing playing.')
 
-        await player.set_paused(True)
-
-    @commands.command()
-    async def resume(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
-
-        if not player.is_playing():
-            return
-
-        await player.set_paused(False)
+        if player.paused:
+            await player.set_paused(False)
+            await ctx.send("Music resumed `▶`")
+        else:
+            await player.set_paused(True)
+            await ctx.send("Music paused `⏸`")
 
     @commands.command(aliases=['vol'])
-    async def volume(self, ctx, volume):
+    async def volume(self, ctx, volume=None):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
 
+        if not volume:
+            return await ctx.send(f'Volume: {player.volume}%')
+
         if not player.is_playing():
-            return
+            return await ctx.send('Nothing playing.')
 
         if not lavalink.Utils.is_number(volume):
             return await ctx.send('You didn\'t specify a valid number!')
 
-        await player.set_volume(int(volume))
-    
+        v = await player.set_volume(int(volume))
+        await ctx.send(f'Player volume set to {v}%')
+
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
