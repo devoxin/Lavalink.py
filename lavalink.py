@@ -190,6 +190,7 @@ class Client:
 
         if not hasattr(self.bot, 'players'):
             self.bot.players = {}
+            self.bot.players._requester = Requests()
 
         self.loop = loop
         self.shard_count = len(self.bot.shards) if hasattr(self.bot, 'shards') else 1
@@ -199,7 +200,6 @@ class Client:
         self.port = port
         self.rest = rest
         self.uri = f'ws://{host}:{port}'
-        self.requester = Requests()
 
         asyncio.ensure_future(self._connect())
 
@@ -210,7 +210,7 @@ class Client:
                 'Num-Shards': self.shard_count,
                 'User-Id': self.user_id
             }
-            self.ws = await websockets.connect(self.uri, extra_headers=headers)
+            self.bot.players._ws = await websockets.connect(self.uri, extra_headers=headers)
             self.loop.create_task(self._listen())
             print("[Lavalink.py] Established connection to lavalink")
         except OSError:
@@ -219,7 +219,7 @@ class Client:
     async def _listen(self):
         try:
             while True:
-                data = await self.ws.recv()
+                data = await self.bot.players._ws.recv()
                 j = json.loads(data)
 
                 if 'op' in j:
@@ -235,12 +235,12 @@ class Client:
                         await self._update_state(j)
         except websockets.ConnectionClosed:
             print('[Lavalink.py] Connection closed... Attempting to reconnect in 30 seconds')
-            self.ws.close()
+            self.bot.players._ws.close()
             for a in [1, 2, 3]:  # 3 Attempts
                 await asyncio.sleep(30)
                 print(f'[Lavalink.py] Attempting to reconnect (attempt: {a})')
                 await self._connect()
-                if self.ws.open:
+                if self.bot.players._ws.open:
                     return
 
             print('[Lavalink.py] Failed to re-establish a connection with lavalink.')
@@ -292,10 +292,10 @@ class Client:
         await self.send(payload)
 
     async def send(self, data):
-        if not hasattr(self, 'ws') or not self.ws.open:
+        if '_ws' not in self.bot.players or not self.bot.players._ws.open:
             return
         payload = json.dumps(data)
-        await self.ws.send(payload)
+        await self.bot.players._ws.send(payload)
 
     async def dispatch_voice_update(self, payload):
         await self.send(payload)
@@ -312,7 +312,7 @@ class Client:
             'Authorization': self.password,
             'Accept': 'application/json'
         }
-        return await self.requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
+        return await self.bot.players._requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
         # data = {
         #     'is_search': any(s in query for s in ['ytsearch', 'scsearch']),
         #     'results': tracks
