@@ -134,7 +134,7 @@ class Music:
 
         v = await player.set_volume(int(volume))
         await ctx.send(f'🔈 | Set to {v}%')
-    
+
     @commands.command()
     async def shuffle(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
@@ -146,9 +146,9 @@ class Music:
             return await ctx.send('You\'re not in my voicechannel!')
 
         player.shuffle = not player.shuffle
-        
+
         await ctx.send('🔀 | Shuffle ' + ('enabled' if player.shuffle else 'disabled'))
-    
+
     @commands.command()
     async def repeat(self, ctx):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
@@ -160,7 +160,7 @@ class Music:
             return await ctx.send('You\'re not in my voicechannel!')
 
         player.repeat = not player.repeat
-        
+
         await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
 
     @commands.command(aliases=['dc'])
