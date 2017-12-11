@@ -263,13 +263,10 @@ class Client:
 
         payload = {}
 
-        for k, v in opts:
+        for k, v in opts.items():
             payload.update({ k: v })
 
         await self.bot.lavalink.ws.send(json.dumps(payload))
-
-    async def dispatch_voice_update(self, payload):
-        await self.send(payload)
 
     async def get_player(self, guild_id):
         if guild_id not in self.bot.players:
