@@ -159,11 +159,11 @@ class Player:
 
 
 class Client:
-    def __init__(self, bot, password='', host='localhost', port=80, rest=2333, ws_retry=3, loop=asyncio.get_event_loop()):
+    def __init__(self, bot, shard_count=1, password='', host='localhost', port=80, rest=2333, ws_retry=3, loop=asyncio.get_event_loop()):
         self.bot = bot
 
         self.loop = loop
-        self.shard_count = self.bot.shard_count if hasattr(self.bot, 'shard_count') else 1
+        self.shard_count = self.bot.shard_count or shard_count
         self.user_id = self.bot.user.id
         self.password = password
         self.host = host
@@ -205,7 +205,8 @@ class Client:
                     elif j.get('op') == 'isConnectedReq':
                         await self._validate_shard(j)
                     elif j.get('op') == 'sendWS':
-                        await self.bot._connection._get_websocket(330777295952543744).send(j.get('message'))  # todo: move this to play (voice updates)
+                        m = json.loads(j['message'])
+                        await self.bot._connection._get_websocket(int(m['d'].get('guild_id', None))).send(j.get('message'))
                     elif j.get('op') == 'event':
                         await self._dispatch_event(j)
                     elif j.get('op') == 'playerUpdate':
@@ -243,13 +244,10 @@ class Client:
     async def _update_state(self, data):
         g = int(data.get('guildId'))
 
-        if g not in self.bot.players:
+        if g not in self.bot.players or not self.bot.players[g].is_playing():
             return
 
         p = self.bot.players[g]
-
-        if not p.is_playing():
-            return
 
         p.position = data['state'].get('position', 0)
         p.position_timestamp = data['state'].get('time', 0)
