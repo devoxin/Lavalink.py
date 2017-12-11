@@ -205,6 +205,10 @@ class Client:
                     elif j.get('op') == 'playerUpdate':
                         await self._update_state(j)
         except websockets.ConnectionClosed:
+            for p in self.bot.players.values():
+                p.channel_id = None
+                p.current = None
+
             print('[Lavalink.py] Connection closed... Attempting to reconnect in 30 seconds')
             self.bot.lavalink.ws.close()
             for a in range(0, self.ws_retry):
