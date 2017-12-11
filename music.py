@@ -91,8 +91,8 @@ class Music:
 
         queue_list = ''
 
-        for i, track in enumerate(player.queue[start:end]):
-            queue_list += f'`{start + (i + 1)}.` [**{track.title}**]({track.uri})\n'
+        for i, track in enumerate(player.queue[start:end], start=start):
+            queue_list += f'`{i + 1}.` [**{track.title}**]({track.uri})\n'
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
                               description=f'**{len(player.queue)} tracks**\n\n{queue_list}')
