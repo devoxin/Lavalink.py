@@ -93,8 +93,8 @@ class Music:
         for track in player.queue[start:end]:
             queue_list += f'[**{track.title}**]({track.uri})\n'
 
-        embed = discord.Embed(colour=ctx.guild.me.top_role.colour)
-        embed.add_field(name=f'{len(player.queue)} tracks', value=queue_list)
+        embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
+                              description=f'**{len(player.queue)} tracks**\n\n{queue_list}')
         embed.set_footer(text=f'Viewing page {page}/{pages}')
         await ctx.send(embed=embed)
 
