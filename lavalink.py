@@ -64,14 +64,10 @@ class Player:
         self.current = None
 
         self.shuffle = False
+        self.repeat = False
 
     async def connect(self, channel_id):
-        payload = {
-            'op': 'connect',
-            'guildId': self.guild_id,
-            'channelId': str(channel_id)
-        }
-        await self.client.send(payload)
+        await self.client.send(op='connect', guildId=self.guild_id, channelId=str(channel_id))
         self.channel_id = str(channel_id)
 
     async def disconnect(self):
@@ -81,11 +77,7 @@ class Player:
         if self.is_playing():
             await self.stop()
 
-        payload = {
-            'op': 'disconnect',
-            'guildId': self.guild_id
-        }
-        await self.client.send(payload)
+        await self.client.send(op='disconnect', guildId=self.guild_id)
         self.channel_id = None
 
     async def add(self, requester, track, play=False):
@@ -107,32 +99,18 @@ class Player:
         else:
             track = self.queue.pop(0)
 
-        payload = {
-            'op': 'play',
-            'guildId': self.guild_id,
-            'track': track.track
-        }
-        await self.client.send(payload)
+        await self.client.send(op='play', guildId=self.guild_id, track=track.track)
         self.current = track
 
     async def stop(self):
-        payload = {
-            'op': 'stop',
-            'guildId': self.guild_id
-        }
-        await self.client.send(payload)
+        await self.client.send(op='stop', guildId=self.guild_id)
         self.current = None
 
     async def skip(self):
         await self.play()
 
     async def set_paused(self, pause):
-        payload = {
-            'op': 'pause',
-            'guildId': self.guild_id,
-            'pause': pause
-        }
-        await self.client.send(payload)
+        await self.client.send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
     async def set_volume(self, vol):
@@ -145,22 +123,12 @@ class Player:
         if vol > 150:
             vol = 150
 
-        payload = {
-            'op': 'volume',
-            'guildId': self.guild_id,
-            'volume': vol
-        }
-        await self.client.send(payload)
+        await self.client.send(op='volume', guildId=self.guild_id, volume=vol)
         self.volume = vol
         return vol
 
     async def seek(self, pos):
-        payload = {
-            'op': 'seek',
-            'guildId': self.guild_id,
-            'position': pos
-        }
-        await self.client.send(payload)
+        await self.client.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def _on_track_end(self, data):
         self.position = 0
@@ -187,13 +155,7 @@ class Player:
             return  # Raise invalid track passed
 
     async def _validate_join(self, data):
-        payload = {
-            'op': 'validationRes',
-            'guildId': data.get('guildId'),
-            'channelId': data.get('channelId', None),
-            'valid': True
-        }
-        await self.client.send(payload)
+        await self.client.send(op='validationRes', guildId=data.get('guildId'), channelId=data.get('channelId', None), valid=True)
 
 
 class Client:
@@ -276,13 +238,7 @@ class Client:
             p = self.bot.players[int(data.get('guildId'))]
             await p._validate_join(data)
         else:
-            payload = {
-                'op': 'validationRes',
-                'guildId': data.get('guildId'),
-                'channelId': data.get('channelId', None),
-                'valid': False
-            }
-            await self.send(payload)
+            await self.send(op='validationRes', guildId=data.get('guildId'), channelId=data.get('channelId', None), valid=False)
 
     async def _update_state(self, data):
         g = int(data.get('guildId'))
@@ -299,18 +255,18 @@ class Client:
         p.position_timestamp = data['state'].get('time', 0)
 
     async def _validate_shard(self, data):
-        payload = {
-            'op': 'isConnectedRes',
-            'shardId': data.get('shardId'),
-            'connected': True
-        }
-        await self.send(payload)
+        await self.send(op='isConnectedRes', shardId=data.get('shardId'), connected=True)
 
-    async def send(self, data):
+    async def send(self, **opts):
         if not self.bot.lavalink.ws or not self.bot.lavalink.ws.open:
             return
-        payload = json.dumps(data)
-        await self.bot.lavalink.ws.send(payload)
+
+        payload = {}
+
+        for k, v in opts:
+            payload.update({ k: v })
+
+        await self.bot.lavalink.ws.send(json.dumps(payload))
 
     async def dispatch_voice_update(self, payload):
         await self.send(payload)

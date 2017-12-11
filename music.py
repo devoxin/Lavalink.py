@@ -93,7 +93,8 @@ class Music:
         for track in player.queue[start:end]:
             queue_list += f'[**{track.title}**]({track.uri})\n'
 
-        embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Queue', description=queue_list)
+        embed = discord.Embed(colour=ctx.guild.me.top_role.colour)
+        embed.add_field(name=f'{len(player.queue)} tracks', value=queue_list)
         embed.set_footer(text=f'Viewing page {page}/{pages}')
         await ctx.send(embed=embed)
 
@@ -146,6 +147,20 @@ class Music:
         player.shuffle = not player.shuffle
         
         await ctx.send('Shuffle ' + ('enabled!' if player.shuffle else 'disabled.'))
+    
+    @commands.command()
+    async def repeat(self, ctx):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not player.is_playing():
+            return await ctx.send('Nothing playing.')
+
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
+        player.repeat = not player.repeat
+        
+        await ctx.send('Repeat ' + ('enabled!' if player.repeat else 'disabled.'))
 
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
