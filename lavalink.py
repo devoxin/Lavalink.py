@@ -38,16 +38,6 @@ class Requests:
 
 
 class AudioTrack:
-    def __init__(self):
-        self.track = None
-        self.identifier = None
-        self.can_seek = False
-        self.author = None
-        self.duration = None
-        self.stream = False
-        self.title = None
-        self.uri = None
-        self.requester = None
     
     async def build(self, track, requester):
         try:
