@@ -58,6 +58,7 @@ class Music:
             await player.connect(channel_id=ctx.author.voice.channel.id)
 
         await player.skip()
+        await ctx.send('⏭ | Skipped.')
 
     @commands.command(aliases=['np', 'n'])
     async def now(self, ctx):
@@ -110,17 +111,17 @@ class Music:
 
         if player.paused:
             await player.set_paused(False)
-            await ctx.send("Music resumed `▶`")
+            await ctx.send('⏯ | Resumed')
         else:
             await player.set_paused(True)
-            await ctx.send("Music paused `⏸`")
+            await ctx.send(' ⏯ | Paused')
 
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, volume=None):
         player = await self.lavalink.get_player(guild_id=ctx.guild.id)
 
         if not volume:
-            return await ctx.send(f'Volume: {player.volume}%')
+            return await ctx.send(f'🔈 | {player.volume}%')
 
         if not player.is_playing():
             return await ctx.send('Nothing playing.')
@@ -132,7 +133,7 @@ class Music:
             return await ctx.send('You didn\'t specify a valid number!')
 
         v = await player.set_volume(int(volume))
-        await ctx.send(f'Player volume set to {v}%')
+        await ctx.send(f'🔈 | Set to {v}%')
     
     @commands.command()
     async def shuffle(self, ctx):
@@ -146,7 +147,7 @@ class Music:
 
         player.shuffle = not player.shuffle
         
-        await ctx.send('Shuffle ' + ('enabled!' if player.shuffle else 'disabled.'))
+        await ctx.send('🔀 | Shuffle ' + ('enabled' if player.shuffle else 'disabled'))
     
     @commands.command()
     async def repeat(self, ctx):
@@ -160,7 +161,7 @@ class Music:
 
         player.repeat = not player.repeat
         
-        await ctx.send('Repeat ' + ('enabled!' if player.repeat else 'disabled.'))
+        await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
 
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
