@@ -38,7 +38,6 @@ class Requests:
 
 
 class AudioTrack:
-    
     async def build(self, track, requester):
         try:
             self.track = track['track']
@@ -208,7 +207,7 @@ class Client:
         except websockets.ConnectionClosed:
             print('[Lavalink.py] Connection closed... Attempting to reconnect in 30 seconds')
             self.bot.lavalink.ws.close()
-            for a in range(0, self.ws_retry): 
+            for a in range(0, self.ws_retry):
                 await asyncio.sleep(30)
                 print(f'[Lavalink.py] Attempting to reconnect (Attempt: {a + 1})')
                 await self._connect()
@@ -249,16 +248,11 @@ class Client:
     async def _validate_shard(self, data):
         await self.send(op='isConnectedRes', shardId=data.get('shardId'), connected=True)
 
-    async def send(self, **opts):
+    async def send(self, **data):
         if not self.bot.lavalink.ws or not self.bot.lavalink.ws.open:
             return
 
-        payload = {}
-
-        for k, v in opts.items():
-            payload.update({ k: v })
-
-        await self.bot.lavalink.ws.send(json.dumps(payload))
+        await self.bot.lavalink.ws.send(json.dumps(data))
 
     async def get_player(self, guild_id):
         if guild_id not in self.bot.players:
@@ -290,7 +284,7 @@ class Utils:
     @staticmethod
     def is_number(num):
         if num is None:
-            return default
+            return False
 
         try:
             int(num)
