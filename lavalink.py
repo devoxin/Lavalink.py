@@ -58,7 +58,7 @@ class Player:
         self.channel_id = None
 
         self.is_connected = lambda: self.channel_id is not None
-        self.is_playing = lambda: self.channel_id and self.current
+        self.is_playing = lambda: self.channel_id is not None and self.current is not None
         self.paused = False
 
         self.position = 0
@@ -144,8 +144,8 @@ class Player:
 
     async def _build_track(self, requester, track):
         try:
-            a = track.get('track')
             info = track.get('info')
+            a = track.get('track')
             b = info.get('identifier')
             c = info.get('isSeekable')
             d = info.get('author')
