@@ -188,7 +188,7 @@ class Music:
 
     async def verify_and_dispatch(self):
         if all(k in self.state_keys for k in self.validator):
-            await self.lavalink.dispatch_voice_update(self.state_keys)
+            await self.lavalink.send(**self.state_keys)
             self.state_keys.clear()
 
 
