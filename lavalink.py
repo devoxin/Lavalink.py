@@ -10,7 +10,7 @@ __version__ = '1.0.1'
 
 class InvalidTrack(Exception):
     def __init__(self, message):
-        super(InvalidTrack, self).__init__(message)
+        super().__init__(message)
 
 
 class IGeneric:
@@ -38,16 +38,32 @@ class Requests:
 
 
 class AudioTrack:
-    def __init__(self, track, identifier, can_seek, author, duration, stream, title, uri, requester):
-        self.track = track
-        self.identifier = identifier
-        self.can_seek = can_seek
-        self.author = author
-        self.duration = duration
-        self.stream = stream
-        self.title = title
-        self.uri = uri
-        self.requester = requester
+    def __init__(self):
+        self.track = None
+        self.identifier = None
+        self.can_seek = False
+        self.author = None
+        self.duration = None
+        self.stream = False
+        self.title = None
+        self.uri = None
+        self.requester = None
+    
+    async def build(self, track, requester):
+        try:
+            self.track = track['track']
+            self.identifier = track['info']['identifier']
+            self.can_seek = track['info']['isSeekable']
+            self.author = track['info']['author']
+            self.duration = track['info']['length']
+            self.stream = track['info']['isStream']
+            self.title = track['info']['title']
+            self.uri = track['info']['uri']
+            self.requester = requester
+
+            return self
+        except KeyError:
+            raise InvalidTrack('an invalid track was passed')
 
 
 class Player:
@@ -86,7 +102,7 @@ class Player:
         self.channel_id = None
 
     async def add(self, requester, track, play=False):
-        await self._build_track(requester, track)
+        self.queue.append(await AudioTrack().build(track, requester))
 
         if play and not self.is_playing():
             await self.play()
@@ -141,23 +157,6 @@ class Player:
 
         if data.get('reason') == 'FINISHED':
             await self.play()
-
-    async def _build_track(self, requester, track):
-        try:
-            info = track.get('info')
-            a = track.get('track')
-            b = info.get('identifier')
-            c = info.get('isSeekable')
-            d = info.get('author')
-            e = info.get('length')
-            f = info.get('isStream')
-            g = info.get('title')
-            h = info.get('uri')
-            i = requester
-            t = AudioTrack(a, b, c, d, e, f, g, h, i)
-            self.queue.append(t)
-        except AttributeError:
-            raise InvalidTrack('an invalid track was passed to _build_track')
 
     async def _validate_join(self, data):
         await self.client.send(op='validationRes', guildId=data.get('guildId'), channelId=data.get('channelId', None), valid=True)
@@ -287,11 +286,6 @@ class Client:
             'Accept': 'application/json'
         }
         return await self.bot.lavalink.requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
-        # data = {
-        #     'is_search': any(s in query for s in ['ytsearch', 'scsearch']),
-        #     'results': tracks
-        # }
-        # return data
 
 
 class Utils:
@@ -305,6 +299,9 @@ class Utils:
 
     @staticmethod
     def is_number(num):
+        if num is None:
+            return default
+
         try:
             int(num)
             return True
