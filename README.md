@@ -1,6 +1,6 @@
 # Lavalink.py
 
-placeholder so i don't forget:
 - if using on linux, run lavalink.jar with sudo
 
-[Join here for help on getting Lavalink.py configured](https://discord.gg/SbJXU9s)
+[Download Lavalink.jar](https://ci.fredboat.com/viewLog.html?buildId=2298&buildTypeId=Lavalink_Build&tab=artifacts)
+[Get Support](https://discord.gg/SbJXU9s)
