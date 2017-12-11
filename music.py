@@ -182,9 +182,12 @@ class Music:
         await self.verify_and_dispatch()
 
     async def on_voice_state_update(self, member, before, after):
-        if member.id == self.bot.user.id:
-            self.state_keys.update({'sessionId': after.session_id})
+        if member.id != self.bot.user.id:
+            return
 
+        await self.lavalink._update_voice(guild_id=member.guild.id, channel_id=after.channel.id)
+
+        self.state_keys.update({'sessionId': after.session_id})
         await self.verify_and_dispatch()
 
     async def verify_and_dispatch(self):

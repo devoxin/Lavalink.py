@@ -78,7 +78,6 @@ class Player:
 
     async def connect(self, channel_id):
         await self.client.send(op='connect', guildId=self.guild_id, channelId=str(channel_id))
-        self.channel_id = str(channel_id)
 
     async def disconnect(self):
         if not self.is_connected():
@@ -88,7 +87,6 @@ class Player:
             await self.stop()
 
         await self.client.send(op='disconnect', guildId=self.guild_id)
-        self.channel_id = None
 
     async def add(self, requester, track, play=False):
         self.queue.append(await AudioTrack().build(track, requester))
@@ -248,6 +246,13 @@ class Client:
 
         p.position = data['state'].get('position', 0)
         p.position_timestamp = data['state'].get('time', 0)
+    
+    async def _update_voice(self, guild_id, channel_id):
+        if guild_id not in self.bot.players:
+            return
+        
+        p = self.bot.players[guild_id]
+        p.channel_id = None if not channel_id else str(channel_id)
 
     async def _validate_shard(self, data):
         await self.send(op='isConnectedRes', shardId=data.get('shardId'), connected=True)
