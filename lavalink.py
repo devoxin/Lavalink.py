@@ -8,6 +8,11 @@ import websockets
 __version__ = '1.0.1'
 
 
+class InvalidTrack(Exception):
+    def __init__(self, message):
+        super(InvalidTrack, self).__init__(message)
+
+
 class IGeneric:
     def __init__(self):
         self.requester = None
@@ -53,7 +58,7 @@ class Player:
         self.channel_id = None
 
         self.is_connected = lambda: self.channel_id is not None
-        self.is_playing = lambda: self.current is not None
+        self.is_playing = lambda: self.channel_id and self.current
         self.paused = False
 
         self.position = 0
@@ -151,8 +156,8 @@ class Player:
             i = requester
             t = AudioTrack(a, b, c, d, e, f, g, h, i)
             self.queue.append(t)
-        except KeyError:
-            return  # Raise invalid track passed
+        except AttributeError:
+            raise InvalidTrack('an invalid track was passed to _build_track')
 
     async def _validate_join(self, data):
         await self.client.send(op='validationRes', guildId=data.get('guildId'), channelId=data.get('channelId', None), valid=True)
