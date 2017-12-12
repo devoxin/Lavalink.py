@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='Lavalink.py',
     version='1.0.1',
-    packages=['websockets', 'aiohttp'],
+    packages=['websockets', 'aiohttp', 'asyncio'],
     url='https://github.com/Devoxin/Lavalink.py',
     license='MIT',
     author='Luke, William',

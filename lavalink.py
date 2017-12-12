@@ -1,158 +1,17 @@
 import asyncio
 import json
-from random import randrange
 
-import aiohttp
 import websockets
+from models import Player
+from utils import IGeneric, Requests
 
-__version__ = '1.0.1'
-
-
-class InvalidTrack(Exception):
-    def __init__(self, message):
-        super().__init__(message)
-
-
-class IGeneric:
-    def __init__(self):
-        self.requester = None
-        self.ws = None
-
-
-class Requests:
-    def __init__(self):
-        self.pool = aiohttp.ClientSession()
-
-    async def get(self, url, jsonify=False, *args, **kwargs):
-        try:
-            async with self.pool.get(url, *args, **kwargs) as r:
-                if r.status != 200:
-                    return None
-
-                if jsonify:
-                    return await r.json(content_type=None)
-
-                return await r.read()
-        except (aiohttp.ClientOSError, aiohttp.ClientConnectorError, asyncio.TimeoutError):
-            return None
-
-
-class AudioTrack:
-    async def build(self, track, requester):
-        try:
-            self.track = track['track']
-            self.identifier = track['info']['identifier']
-            self.can_seek = track['info']['isSeekable']
-            self.author = track['info']['author']
-            self.duration = track['info']['length']
-            self.stream = track['info']['isStream']
-            self.title = track['info']['title']
-            self.uri = track['info']['uri']
-            self.requester = requester
-
-            return self
-        except KeyError:
-            raise InvalidTrack('an invalid track was passed')
-
-
-class Player:
-    def __init__(self, client, guild_id):
-        self.client = client
-        self.shard_id = client.bot.get_guild(guild_id).shard_id
-        self.guild_id = str(guild_id)
-        self.channel_id = None
-
-        self.is_connected = lambda: self.channel_id is not None
-        self.is_playing = lambda: self.channel_id is not None and self.current is not None
-        self.paused = False
-
-        self.position = 0
-        self.position_timestamp = 0
-        self.volume = 100
-
-        self.queue = []
-        self.current = None
-
-        self.shuffle = False
-        self.repeat = False
-
-    async def connect(self, channel_id):
-        await self.client.send(op='connect', guildId=self.guild_id, channelId=str(channel_id))
-        self.channel_id = str(channel_id)  # Raceconditions
-
-    async def disconnect(self):
-        if not self.is_connected():
-            return
-
-        if self.is_playing():
-            await self.stop()
-
-        await self.client.send(op='disconnect', guildId=self.guild_id)
-
-    async def add(self, requester, track, play=False):
-        self.queue.append(await AudioTrack().build(track, requester))
-
-        if play and not self.is_playing():
-            await self.play()
-
-    async def play(self):
-        if not self.is_connected() or not self.queue:
-            if self.is_playing():
-                await self.stop()
-
-            self.current = None
-            return
-
-        if self.shuffle:
-            track = self.queue.pop(randrange(len(self.queue)))
-        else:
-            track = self.queue.pop(0)
-
-        await self.client.send(op='play', guildId=self.guild_id, track=track.track)
-        self.current = track
-
-    async def stop(self):
-        await self.client.send(op='stop', guildId=self.guild_id)
-        self.current = None
-
-    async def skip(self):
-        await self.play()
-
-    async def set_paused(self, pause):
-        await self.client.send(op='pause', guildId=self.guild_id, pause=pause)
-        self.paused = pause
-
-    async def set_volume(self, vol):
-        if not Utils.is_number(vol):
-            return
-
-        if vol < 0:
-            vol = 0
-
-        if vol > 150:
-            vol = 150
-
-        await self.client.send(op='volume', guildId=self.guild_id, volume=vol)
-        self.volume = vol
-        return vol
-
-    async def seek(self, pos):
-        await self.client.send(op='seek', guildId=self.guild_id, position=pos)
-
-    async def _on_track_end(self, data):
-        self.position = 0
-        self.paused = False
-
-        if data.get('reason') == 'FINISHED':
-            await self.play()
-
-    async def _validate_join(self, data):
-        await self.client.send(op='validationRes', guildId=data.get('guildId'), channelId=data.get('channelId', None), valid=True)
+__version__ = '1.0.2'
 
 
 class Client:
     def __init__(self, bot, shard_count=1, password='', host='localhost', port=80, rest=2333, ws_retry=3, loop=asyncio.get_event_loop()):
         self.bot = bot
+        bot._lavaclient = self
 
         self.validator = ['op', 'guildId', 'sessionId', 'event']
         self.voice_state = {}
@@ -192,7 +51,7 @@ class Client:
 
     async def _listen(self):
         try:
-            while True:
+            while self.bot.lavalink.ws.open:
                 data = await self.bot.lavalink.ws.recv()
                 j = json.loads(data)
 
@@ -252,11 +111,11 @@ class Client:
 
         p.position = data['state'].get('position', 0)
         p.position_timestamp = data['state'].get('time', 0)
-    
+
     async def _update_voice(self, guild_id, channel_id):
         if guild_id not in self.bot.players:
             return
-        
+
         p = self.bot.players[guild_id]
         p.channel_id = None if not channel_id else str(channel_id)
 
@@ -295,7 +154,7 @@ class Client:
 
         self.voice_state.update({'sessionId': after.session_id})
         await self.verify_and_dispatch()
-    
+
     async def on_voice_server_update(self, data):
         self.voice_state.update({
             'op': 'voiceUpdate',
@@ -304,38 +163,13 @@ class Client:
         })
 
         await self.verify_and_dispatch()
-    
+
     async def verify_and_dispatch(self):
         if all(k in self.voice_state for k in self.validator):
             await self.send(**self.voice_state)
             self.voice_state.clear()
 
-class Utils:
-
-    @staticmethod
-    def format_time(time):
-        seconds = (time / 1000) % 60
-        minutes = (time / (1000 * 60)) % 60
-        hours = (time / (1000 * 60 * 60)) % 24
-        return "%02d:%02d:%02d" % (hours, minutes, seconds)
-
-    @staticmethod
-    def is_number(num):
-        if num is None:
-            return False
-
-        try:
-            int(num)
-            return True
-        except ValueError:
-            return False
-
-    @staticmethod
-    def get_number(num, default=1):
-        if num is None:
-            return default
-
-        try:
-            return int(num)
-        except ValueError:
-            return default
+    def _destroy(self):
+        self.bot.remove_listener(self.on_voice_state_update)
+        self.bot.remove_listener(self.on_voice_server_update)
+        del(self.bot._lavaclient)
