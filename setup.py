@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
   name='lavalink',
   packages=['lavalink'],
-  version='1.0.1',
+  version='1.0.2',
   description='Lavalink python wrapper',
   author='Luke, William',
   author_email='atiwiex@gmail.com',
