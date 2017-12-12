@@ -1,12 +1,13 @@
 import discord
 import math
 from discord.ext import commands
-import lavalink
+import lavalink.lavalink
 
 
 class Music:
     def __init__(self, bot):
         self.bot = bot
+        lavalink.lavalink = lavalink
         self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop)
 
         self.state_keys = {}
