@@ -159,6 +159,21 @@ class Music:
         player.repeat = not player.repeat
 
         await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
+    
+    @commands.command()
+    async def stop(self, ctx):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not player.is_playing():
+            return await ctx.send('Nothing playing.')
+    
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
+        player.queue.clear()
+        await player.stop()
+
+        await ctx.send('⏹ | Stopped.')
 
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
