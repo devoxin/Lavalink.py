@@ -9,7 +9,7 @@ from lavalink.lavalink import Client, Player, Requests, Utils, AudioTrack, IGene
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        self.lavalink.lavalink = lavalink.lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop)
+        self.lavalink = Client(bot=bot, password='youshallnotpass', loop=self.bot.loop)
 
         self.state_keys = {}
         self.validator = ['op', 'guildId', 'sessionId', 'event']
