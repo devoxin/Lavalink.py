@@ -3,6 +3,8 @@ import math
 from discord.ext import commands
 import lavalink.lavalink
 
+from lavalink.lavalink import Client, Player, Requests, Utils, AudioTrack, IGeneric, InvalidTrack
+
 
 class Music:
     def __init__(self, bot):
