@@ -1,7 +1,7 @@
 import discord
 import math
 from discord.ext import commands
-from utils import lavalink
+import lavalink
 
 
 class Music:
