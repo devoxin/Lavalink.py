@@ -172,3 +172,7 @@ class Music:
 
 def setup(bot):
     bot.add_cog(Music(bot))
+
+
+def teardown(bot):
+    bot._lavaclient._destroy()
