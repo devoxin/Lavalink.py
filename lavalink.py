@@ -78,6 +78,7 @@ class Player:
 
     async def connect(self, channel_id):
         await self.client.send(op='connect', guildId=self.guild_id, channelId=str(channel_id))
+        self.channel_id = str(channel_id)  # Raceconditions
 
     async def disconnect(self):
         if not self.is_connected():
@@ -152,6 +153,11 @@ class Player:
 class Client:
     def __init__(self, bot, shard_count=1, password='', host='localhost', port=80, rest=2333, ws_retry=3, loop=asyncio.get_event_loop()):
         self.bot = bot
+
+        self.validator = ['op', 'guildId', 'sessionId', 'event']
+        self.voice_state = {}
+        self.bot.add_listener(self.on_voice_state_update)
+        self.bot.add_listener(self.on_voice_server_update)
 
         self.loop = loop
         self.shard_count = self.bot.shard_count or shard_count
@@ -280,6 +286,29 @@ class Client:
         }
         return await self.bot.lavalink.requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
 
+    # Bot Events
+    async def on_voice_state_update(self, member, before, after):
+        if member.id != self.bot.user.id:
+            return
+
+        await self._update_voice(guild_id=member.guild.id, channel_id=after.channel.id if after.channel else None)
+
+        self.voice_state.update({'sessionId': after.session_id})
+        await self.verify_and_dispatch()
+    
+    async def on_voice_server_update(self, data):
+        self.voice_state.update({
+            'op': 'voiceUpdate',
+            'guildId': data.get('guild_id'),
+            'event': data
+        })
+
+        await self.verify_and_dispatch()
+    
+    async def verify_and_dispatch(self):
+        if all(k in self.voice_state for k in self.validator):
+            await self.send(**self.voice_state)
+            self.voice_state.clear()
 
 class Utils:
 
