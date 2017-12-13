@@ -1,11 +1,7 @@
 import discord
 import math
 from discord.ext import commands
-<<<<<<< HEAD
 import lavalink
-=======
-from lavalink import lavalink
->>>>>>> pip-install
 
 
 class Music:

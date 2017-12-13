@@ -3,8 +3,8 @@ from setuptools import setup
 setup(
   name='lavalink',
   packages=['lavalink'],
-  version='1.0.2',
-  description='Lavalink python wrapper',
+  version='1.0.2.4',
+  description='A lavalink interface for python',
   author='Luke, William',
   author_email='atiwiex@gmail.com',
   url='https://github.com/Devoxin/Lavalink.py',
