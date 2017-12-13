@@ -1,7 +1,10 @@
 import discord
 import math
+import re
 from discord.ext import commands
 import lavalink
+
+time_rx = re.compile('[0-9]+')
 
 
 class Music:
@@ -159,6 +162,35 @@ class Music:
         player.repeat = not player.repeat
 
         await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
+    
+    @commands.command()
+    async def seek(self, ctx, time):
+        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+
+        if not player.is_playing():
+            return await ctx.send('Nothing playing.')
+
+        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
+        pos = '+'
+        if time.startswith('-'):
+            pos = '-'
+        
+        if not time_rx.search(time):
+            return await ctx.send('You need to specify the amount of seconds to skip!')
+
+        seconds = int(time_rx.match(time).group())
+
+        if pos == '-':
+            seconds = seconds * -1
+        
+        track_time = self.position + seconds
+
+        await player.seek(track_time)
+
+        await ctx.send(f'Moved track to **{lavalink.Utils.format_time(track_time)}**')
+
     
     @commands.command()
     async def stop(self, ctx):
