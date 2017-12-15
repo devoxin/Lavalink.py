@@ -13,6 +13,7 @@ class Client:
         self.bot = bot
         bot._lavaclient = self
 
+        self.hooks = {'track_start': [], 'track_end': []}
         self.validator = ['op', 'guildId', 'sessionId', 'event']
         self.voice_state = {}
         self.bot.add_listener(self.on_voice_state_update)
@@ -25,7 +26,7 @@ class Client:
         self.host = host
         self.port = port
         self.rest = rest
-        self.uri = f'ws://{host}:{port}'
+        self.uri = 'ws://{}:{}'.format(host, port)
         self.ws_retry = ws_retry
 
         if not hasattr(self.bot, 'players'):
@@ -35,6 +36,22 @@ class Client:
             self.bot.lavalink = IGeneric()
             self.bot.lavalink.requester = Requests()
             asyncio.ensure_future(self._connect())
+    
+    async def register_listener(self, event, func):
+        if event not in self.hooks or func in self.hooks[event]:
+            return
+
+        self.hooks[event].append(func)  
+    
+    async def unregister_listener(self, event, func):
+        if event not in self.hooks or func not in self.hooks[event]:
+            return
+
+        self.hooks[event].remove(func)
+    
+    def unregister_listeners(self):
+        for h in hooks.values():
+            h.clear()
 
     async def _connect(self):
         try:
@@ -76,7 +93,7 @@ class Client:
             self.bot.lavalink.ws.close()
             for a in range(0, self.ws_retry):
                 await asyncio.sleep(30)
-                print(f'[Lavalink.py] Attempting to reconnect (Attempt: {a + 1})')
+                print('[Lavalink.py] Attempting to reconnect (Attempt: {})'.format(a + 1))
                 await self._connect()
                 if self.bot.lavalink.ws.open:
                     return
@@ -143,7 +160,8 @@ class Client:
             'Authorization': self.password,
             'Accept': 'application/json'
         }
-        return await self.bot.lavalink.requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
+        return await self.bot.lavalink.requester.get(url='http://{}:{}/loadtracks?identifier={}'.format(self.host, self.rest, query),
+                                                     jsonify=True, headers=headers)
 
     # Bot Events
     async def on_voice_state_update(self, member, before, after):
@@ -172,4 +190,5 @@ class Client:
     def _destroy(self):
         self.bot.remove_listener(self.on_voice_state_update)
         self.bot.remove_listener(self.on_voice_server_update)
+        self.unregister_listeners()
         del(self.bot._lavaclient)

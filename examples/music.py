@@ -176,16 +176,18 @@ class Music:
         pos = '+'
         if time.startswith('-'):
             pos = '-'
-        
-        if not time_rx.search(time):
+
+        seconds = time_rx.match(time)
+
+        if not seconds:
             return await ctx.send('You need to specify the amount of seconds to skip!')
 
-        seconds = int(time_rx.match(time).group())
+        seconds = int(seconds.group())
 
         if pos == '-':
             seconds = seconds * -1
         
-        track_time = self.position + seconds
+        track_time = player.position + seconds
 
         await player.seek(track_time)
 
