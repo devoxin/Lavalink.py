@@ -38,16 +38,12 @@ class Client:
             asyncio.ensure_future(self._connect())
     
     async def register_listener(self, event, func):
-        if event not in self.hooks or func in self.hooks[event]:
-            return
-
-        self.hooks[event].append(func)  
+        if event in self.hooks and func in self.hooks[event]:
+            self.hooks[event].append(func)  
     
     async def unregister_listener(self, event, func):
-        if event not in self.hooks or func not in self.hooks[event]:
-            return
-
-        self.hooks[event].remove(func)
+        if event in self.hooks and func in self.hooks[event]:
+            self.hooks[event].remove(func)
     
     def unregister_listeners(self):
         for h in hooks.values():
@@ -63,6 +59,7 @@ class Client:
             self.bot.lavalink.ws = await websockets.connect(self.uri, extra_headers=headers)
             self.loop.create_task(self._listen())
             print("[Lavalink.py] Established connection to lavalink")
+
         except OSError:
             print('[Lavalink.py] Failed to connect to lavalink')
 
@@ -84,6 +81,7 @@ class Client:
                         await self._dispatch_event(j)
                     elif j.get('op') == 'playerUpdate':
                         await self._update_state(j)
+
         except websockets.ConnectionClosed:
             for p in self.bot.players.values():
                 p.channel_id = None
@@ -95,6 +93,7 @@ class Client:
                 await asyncio.sleep(30)
                 print('[Lavalink.py] Attempting to reconnect (Attempt: {})'.format(a + 1))
                 await self._connect()
+                # if connection has been established, stop trying
                 if self.bot.lavalink.ws.open:
                     return
 
@@ -103,11 +102,8 @@ class Client:
     async def _dispatch_event(self, data):
         t = data.get('type')
         g = int(data.get('guildId'))
-
-        if g not in self.bot.players:
-            return
-
-        if t == 'TrackEndEvent':
+        
+        if g in self.bot.players and t == "TrackEndEvent":
             player = self.bot.players[g]
             asyncio.ensure_future(player._on_track_end(data))
 
@@ -121,32 +117,28 @@ class Client:
     async def _update_state(self, data):
         g = int(data.get('guildId'))
 
-        if g not in self.bot.players or not self.bot.players[g].is_playing():
-            return
+        if g in self.bot.players and self.bot.players[g].is_playing():
+            p = self.bot.players[g]
 
-        p = self.bot.players[g]
-
-        p.position = data['state'].get('position', 0)
-        p.position_timestamp = data['state'].get('time', 0)
+            p.position = data['state'].get('position', 0)
+            p.position_timestamp = data['state'].get('time', 0)
 
     async def _update_voice(self, guild_id, channel_id):
-        if guild_id not in self.bot.players:
-            return
-
-        p = self.bot.players[guild_id]
-        p.channel_id = None if not channel_id else str(channel_id)
+        if guild_id in self.bot.players:
+            p = self.bot.players[guild_id]
+            p.channel_id = None if not channel_id else str(channel_id)
 
     async def _validate_shard(self, data):
-        await self.send(op='isConnectedRes', shardId=data.get('shardId'), connected=True)
+        await self.send(op='isConnectedRes',
+                        shardId=data.get('shardId'),
+                        connected=True)
 
     async def send(self, **data):
-        if not self.bot.lavalink.ws or not self.bot.lavalink.ws.open:
-            return
-
-        await self.bot.lavalink.ws.send(json.dumps(data))
+        if self.bot.lavalink.ws and self.bot.lavalink.ws.open:
+            await self.bot.lavalink.ws.send(json.dumps(data))
 
     async def get_player(self, guild_id):
-        if guild_id not in self.bot.players:
+        if guild_id in self.bot.players:
             p = Player(client=self, guild_id=guild_id)
             self.bot.players[guild_id] = p
 
@@ -165,13 +157,11 @@ class Client:
 
     # Bot Events
     async def on_voice_state_update(self, member, before, after):
-        if member.id != self.bot.user.id:
-            return
+        if member.id == self.bot.user.id:
+            await self._update_voice(guild_id=member.guild.id, channel_id=after.channel.id if after.channel else None)
 
-        await self._update_voice(guild_id=member.guild.id, channel_id=after.channel.id if after.channel else None)
-
-        self.voice_state.update({'sessionId': after.session_id})
-        await self.verify_and_dispatch()
+            self.voice_state.update({'sessionId': after.session_id})
+            await self.verify_and_dispatch()
 
     async def on_voice_server_update(self, data):
         self.voice_state.update({
