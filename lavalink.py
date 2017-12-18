@@ -138,7 +138,7 @@ class Client:
             await self.bot.lavalink.ws.send(json.dumps(data))
 
     async def get_player(self, guild_id):
-        if guild_id in self.bot.players:
+        if guild_id not in self.bot.players:
             p = Player(client=self, guild_id=guild_id)
             self.bot.players[guild_id] = p
 
