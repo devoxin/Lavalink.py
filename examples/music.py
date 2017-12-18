@@ -177,12 +177,12 @@ class Music:
         if time.startswith('-'):
             pos = '-'
 
-        seconds = time_rx.match(time)
+        seconds = time_rx.search(time)
 
         if not seconds:
             return await ctx.send('You need to specify the amount of seconds to skip!')
 
-        seconds = int(seconds.group())
+        seconds = int(seconds.group()) * 1000
 
         if pos == '-':
             seconds = seconds * -1
