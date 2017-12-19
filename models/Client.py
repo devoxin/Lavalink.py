@@ -5,8 +5,6 @@ import websockets
 from models import Player
 from utils import IGeneric, Requests
 
-__version__ = '1.0.2'
-
 
 class Client:
     def __init__(self, bot, shard_count=1, password='', host='localhost', port=80, rest=2333, ws_retry=3, loop=asyncio.get_event_loop()):
@@ -136,16 +134,6 @@ class Client:
     async def send(self, **data):
         if self.bot.lavalink.ws and self.bot.lavalink.ws.open:
             await self.bot.lavalink.ws.send(json.dumps(data))
-
-    async def get_player(self, guild_id):
-        if guild_id not in self.bot.players:
-            p = Player(client=self, guild_id=guild_id)
-            self.bot.players[guild_id] = p
-
-        return self.bot.players[guild_id]
-
-    async def get_playing(self):
-        return len([p for p in self.bot.players.values() if p.is_playing()])
 
     async def get_tracks(self, query):
         headers = {
