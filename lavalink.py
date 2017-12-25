@@ -22,13 +22,13 @@ class Client:
         self.user_id = self.bot.user.id
         
         # Block of kwarg getting to clean up __init__ signature
-        self.shard_count = self.bot.shard_count or kwargs.get("shard_count") or 1
-        self.password = kwargs.get("password") or ""
-        self.host = kwargs.get("host") or "localhost"
-        self.port = kwargs.get("port") or 80
-        self.rest = kwargs.get("rest") or 2333
-        self.ws_retry = kwargs.get("ws_retry") or 3
-        self.loop = kwargs.get("loop") or asyncio.get_event_loop()
+        self.shard_count = self.bot.shard_count or kwargs.get("shard_count", 1)
+        self.password = kwargs.get("password", "")
+        self.host = kwargs.get("host", "localhost")
+        self.port = kwargs.get("port", 80)
+        self.rest = kwargs.get("rest", 2333)
+        self.ws_retry = kwargs.get("ws_retry", 3)
+        self.loop = kwargs.get("loop", asyncio.get_event_loop())
         
         self.uri = 'ws://{}:{}'.format(host, port)
 
