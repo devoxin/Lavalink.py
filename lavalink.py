@@ -9,25 +9,28 @@ __version__ = '1.0.2'
 
 
 class Client:
-    def __init__(self, bot, shard_count=1, password='', host='localhost', port=80, rest=2333, ws_retry=3, loop=asyncio.get_event_loop()):
+    validator = ('op', 'guildId', 'sessionId', 'event')
+    def __init__(self, bot, **kwargs):
         self.bot = bot
         bot._lavaclient = self
 
         self.hooks = {'track_start': [], 'track_end': []}
-        self.validator = ['op', 'guildId', 'sessionId', 'event']
         self.voice_state = {}
         self.bot.add_listener(self.on_voice_state_update)
         self.bot.add_listener(self.on_voice_server_update)
 
-        self.loop = loop
-        self.shard_count = self.bot.shard_count or shard_count
         self.user_id = self.bot.user.id
-        self.password = password
-        self.host = host
-        self.port = port
-        self.rest = rest
+        
+        # Block of kwarg getting to clean up __init__ signature
+        self.shard_count = self.bot.shard_count or kwargs.get("shard_count") or 1
+        self.password = kwargs.get("password") or ""
+        self.host = kwargs.get("host") or "localhost"
+        self.port = kwargs.get("port") or 80
+        self.rest = kwargs.get("rest") or 2333
+        self.ws_retry = kwargs.get("ws_retry") or 3
+        self.loop = kwargs.get("loop") or asyncio.get_event_loop()
+        
         self.uri = 'ws://{}:{}'.format(host, port)
-        self.ws_retry = ws_retry
 
         if not hasattr(self.bot, 'players'):
             self.bot.players = {}
@@ -94,7 +97,9 @@ class Client:
                 print('[Lavalink.py] Attempting to reconnect (Attempt: {})'.format(a + 1))
                 await self._connect()
                 # if connection has been established, stop trying
-                if self.bot.lavalink.ws.open:
+                if not self.bot.lavalink.ws.open:
+                    continue
+                else:
                     return
 
             print('[Lavalink.py] Failed to re-establish a connection with lavalink.')
