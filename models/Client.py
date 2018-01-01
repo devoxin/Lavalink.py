@@ -106,7 +106,7 @@ class Client:
         t = data.get('type')
         g = int(data.get('guildId'))
         
-        if g in self.bot.lavalink.players and t == "TrackEndEvent":
+        if self.bot.lavalink.players.has(g) and t == "TrackEndEvent":
             player = self.bot.lavalink.players[g]
             self.loop.create_task(player._on_track_end(data))
 
