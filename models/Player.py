@@ -1,12 +1,9 @@
-from random import randrange
-
 from . import AudioTrack
-from utils import Utils
 
 
 class Player:
     def __init__(self, bot, guild_id):
-        bot = bot
+        self.bot = bot
 
         self.shard_id = bot.get_guild(guild_id).shard_id
         self.guild_id = str(guild_id)
@@ -27,7 +24,7 @@ class Player:
         self.repeat = False
 
     async def connect(self, channel_id):
-        await bot.lavalink.client.send(op='connect', guildId=self.guild_id, channelId=str(channel_id))
+        await self.bot.lavalink.client.send(op='connect', guildId=self.guild_id, channelId=str(channel_id))
         self.channel_id = str(channel_id)  # Raceconditions
 
     async def disconnect(self):
@@ -37,7 +34,7 @@ class Player:
         if self.is_playing():
             await self.stop()
 
-        await bot.lavalink.client.send(op='disconnect', guildId=self.guild_id)
+        await self.bot.lavalink.client.send(op='disconnect', guildId=self.guild_id)
 
     async def add(self, requester, track, play=False):
         self.queue.append(await AudioTrack().build(track, requester))
@@ -58,18 +55,18 @@ class Player:
         else:
             track = self.queue.pop(0)
 
-        await bot.lavalink.client.send(op='play', guildId=self.guild_id, track=track.track)
+        await self.bot.lavalink.client.send(op='play', guildId=self.guild_id, track=track.track)
         self.current = track
 
     async def stop(self):
-        await bot.lavalink.client.send(op='stop', guildId=self.guild_id)
+        await self.bot.lavalink.client.send(op='stop', guildId=self.guild_id)
         self.current = None
 
     async def skip(self):
         await self.play()
 
     async def set_paused(self, pause):
-        await bot.lavalink.client.send(op='pause', guildId=self.guild_id, pause=pause)
+        await self.bot.lavalink.client.send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
     async def set_volume(self, vol):
@@ -82,12 +79,12 @@ class Player:
         if vol > 150:
             vol = 150
 
-        await bot.lavalink.client.send(op='volume', guildId=self.guild_id, volume=vol)
+        await self.bot.lavalink.client.send(op='volume', guildId=self.guild_id, volume=vol)
         self.volume = vol
         return vol
 
     async def seek(self, pos):
-        await bot.lavalink.client.send(op='seek', guildId=self.guild_id, position=pos)
+        await self.bot.lavalink.client.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def _on_track_end(self, data):
         self.position = 0
@@ -97,4 +94,4 @@ class Player:
             await self.play()
 
     async def _validate_join(self, data):
-        await bot.lavalink.client.send(op='validationRes', guildId=data.get('guildId'), channelId=data.get('channelId', None), valid=True)
+        await self.bot.lavalink.client.send(op='validationRes', guildId=data.get('guildId'), channelId=data.get('channelId', None), valid=True)

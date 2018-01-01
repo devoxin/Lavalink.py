@@ -1,20 +1,19 @@
-import discord
 import math
-import re
-from discord.ext import commands
-import lavalink
 
-time_rx = re.compile('[0-9]+')
+import discord
+from utils import lavalink
+from discord.ext import commands
 
 
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop)
+        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop) 
+        # As of 2.0, lavalink.Client will be available via self.bot.lavalink.client
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
             return await ctx.send('You\'re not in my voicechannel!')
@@ -49,7 +48,7 @@ class Music:
 
     @commands.command(aliases=['forceskip', 'fs'])
     async def skip(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
             return await ctx.send('You\'re not in my voicechannel!')
@@ -62,7 +61,7 @@ class Music:
 
     @commands.command(aliases=['np', 'n'])
     async def now(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
         song = 'Nothing'
         if player.current:
             pos = lavalink.Utils.format_time(player.position)
@@ -77,7 +76,7 @@ class Music:
 
     @commands.command(aliases=['q'])
     async def queue(self, ctx, page: str=None):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         if not player.queue:
             return await ctx.send('There\'s nothing in the queue! Why not queue something?')
@@ -101,7 +100,7 @@ class Music:
 
     @commands.command(aliases=['resume'])
     async def pause(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         if not player.is_playing():
             return await ctx.send('Nothing playing.')
@@ -118,7 +117,7 @@ class Music:
 
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, volume=None):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         if not volume:
             return await ctx.send(f'🔈 | {player.volume}%')
@@ -137,7 +136,7 @@ class Music:
 
     @commands.command()
     async def shuffle(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         if not player.is_playing():
             return await ctx.send('Nothing playing.')
@@ -151,7 +150,7 @@ class Music:
 
     @commands.command()
     async def repeat(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         if not player.is_playing():
             return await ctx.send('Nothing playing.')
@@ -162,56 +161,10 @@ class Music:
         player.repeat = not player.repeat
 
         await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
-    
-    @commands.command()
-    async def seek(self, ctx, time):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
-
-        if not player.is_playing():
-            return await ctx.send('Nothing playing.')
-
-        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
-            return await ctx.send('You\'re not in my voicechannel!')
-
-        pos = '+'
-        if time.startswith('-'):
-            pos = '-'
-
-        seconds = time_rx.search(time)
-
-        if not seconds:
-            return await ctx.send('You need to specify the amount of seconds to skip!')
-
-        seconds = int(seconds.group()) * 1000
-
-        if pos == '-':
-            seconds = seconds * -1
-        
-        track_time = player.position + seconds
-
-        await player.seek(track_time)
-
-        await ctx.send(f'Moved track to **{lavalink.Utils.format_time(track_time)}**')
-
-    
-    @commands.command()
-    async def stop(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
-
-        if not player.is_playing():
-            return await ctx.send('Nothing playing.')
-    
-        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
-            return await ctx.send('You\'re not in my voicechannel!')
-
-        player.queue.clear()
-        await player.stop()
-
-        await ctx.send('⏹ | Stopped.')
 
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
-        player = await self.lavalink.get_player(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
             return await ctx.send('You\'re not in my voicechannel!')
@@ -221,7 +174,6 @@ class Music:
 
 def setup(bot):
     bot.add_cog(Music(bot))
-
 
 def teardown(bot):
     bot._lavaclient._destroy()
