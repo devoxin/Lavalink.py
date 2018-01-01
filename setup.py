@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
   name='lavalink',
   packages=['lavalink'],
-  version='1.0.2',
+  version='2.0.0',
   description='A lavalink interface for python',
   author='Luke, William',
   author_email='atiwiex@gmail.com',
