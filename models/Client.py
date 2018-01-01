@@ -107,7 +107,7 @@ class Client:
         g = int(data.get('guildId'))
         
         if self.bot.lavalink.players.has(g) and t == "TrackEndEvent":
-            player = self.bot.lavalink.players[g]
+            player = self.bot.lavalink.players.get(g)
             self.loop.create_task(player._on_track_end(data))
 
     async def _dispatch_join_validator(self, data):
