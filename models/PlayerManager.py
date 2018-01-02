@@ -12,6 +12,9 @@ class PlayerManager:
     def __getitem__(self, item):
         return self.players.get(item, None)
 
+    def __contains__(self, item):
+        return item in self.players
+
     def find(self, predicate):
         found = list(filter(predicate, self.players))
         return found[0] if found else None
