@@ -5,6 +5,19 @@ class PlayerManager:
     def __init__(self, bot):
         self.bot = bot
         self.players = {}
+    
+    def __len__(self):
+        return len(self.players)
+
+    def __getitem__(self, item):
+        return self.players.get(item, None)
+
+    def find(self, predicate):
+        found = list(filter(predicate, self.players))
+        return found[0] if found else None
+
+    def find_all(self, predicate):
+        return list(filter(predicate, self.players)) 
 
     def get(self, guild_id):
         if guild_id not in self.players:
