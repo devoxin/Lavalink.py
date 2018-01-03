@@ -27,7 +27,7 @@ class Client:
         self.host = host
         self.port = port
         self.rest = rest
-        self.uri = f'ws://{host}:{port}'
+        self.uri = 'ws://{}:{}'.format(host, port)
         self.ws_retry = ws_retry
 
         if not hasattr(self.bot, 'players'):
@@ -78,7 +78,7 @@ class Client:
             self.bot.lavalink.ws.close()
             for a in range(0, self.ws_retry):
                 await asyncio.sleep(30)
-                print(f'[Lavalink.py] Attempting to reconnect (Attempt: {a + 1})')
+                print('[Lavalink.py] Attempting to reconnect (Attempt: {})'.format(a+1)
                 await self._connect()
                 if self.bot.lavalink.ws.open:
                     return
@@ -145,7 +145,11 @@ class Client:
             'Authorization': self.password,
             'Accept': 'application/json'
         }
-        return await self.bot.lavalink.requester.get(url=f'http://{self.host}:{self.rest}/loadtracks?identifier={query}', jsonify=True, headers=headers)
+        return await self.bot.lavalink.requester.get(url='http://{}:{}/loadtracks?identifier={}'.format(self.host,
+                                                                                                        self.rest,
+                                                                                                        query),
+                                                     jsonify=True,
+                                                     headers=headers)
 
     # Bot Events
     async def on_voice_state_update(self, member, before, after):
