@@ -8,15 +8,8 @@ class Utils:
         return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
     @staticmethod
-    def is_number(num):
-        if num is None:
-            return False
-
-        try:
-            int(num)
-            return True
-        except ValueError:
-            return False
+    def is_number(obj):
+        return isinstance(obj, int)
 
     @staticmethod
     def get_number(num, default=1):
