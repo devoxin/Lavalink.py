@@ -8,7 +8,7 @@ from discord.ext import commands
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop) 
+        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop)
         # As of 2.0, lavalink.Client will be available via self.bot.lavalink.client
 
     @commands.command(aliases=['p'])
@@ -174,6 +174,7 @@ class Music:
 
 def setup(bot):
     bot.add_cog(Music(bot))
+
 
 def teardown(bot):
     bot._lavaclient._destroy()
