@@ -5,6 +5,8 @@ import websockets
 
 from . import PlayerManager
 
+query_url = 'http://{host}:{port}/loadtracks?identifier={query}'
+
 
 class _Lavalink:
     def __init__(self, bot):
@@ -37,14 +39,14 @@ class Client:
         if not hasattr(self.bot, 'lavalink'):
             self.bot.lavalink = _Lavalink(self.bot)
             self.loop.create_task(self._connect())
-        
-        if self.bot.lavalink.client is None:
+
+        if not self.bot.lavalink.client:
             self.bot.lavalink.client = self
-    
+
     async def register_listener(self, event, func):
         if event in self.hooks and func in self.hooks[event]:
-            self.hooks[event].append(func)  
-    
+            self.hooks[event].append(func)
+
     async def unregister_listener(self, event, func):
         if event in self.hooks and func in self.hooks[event]:
             self.hooks[event].remove(func)
@@ -105,7 +107,7 @@ class Client:
     async def _dispatch_event(self, data):
         t = data.get('type')
         g = int(data.get('guildId'))
-        
+
         if self.bot.lavalink.players.has(g) and t == "TrackEndEvent":
             player = self.bot.lavalink.players.get(g)
             self.loop.create_task(player._on_track_end(data))
@@ -141,9 +143,9 @@ class Client:
             await self.bot.lavalink.ws.send(json.dumps(data))
 
     async def get_tracks(self, query):
-        data = await self.http.get('http://{}:{}/loadtracks?identifier={}'.format(self.host, self.rest, query),
-                                   headers={'Authorization': self.password, 'Accept': 'application/json'})
-        return await data.json(content_type=None)
+        async with self.http.get(query_url.format(host=self.host, port=self.rest, query=query),
+                                 headers={'Authorization': self.password, 'Accept': 'application/json'}) as res:
+            return await res.json(content_type=None)
 
     # Bot Events
     async def on_voice_state_update(self, member, before, after):

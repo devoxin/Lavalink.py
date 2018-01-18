@@ -1,3 +1,5 @@
+from random import randrange
+
 from . import AudioTrack
 
 
@@ -70,7 +72,7 @@ class Player:
         self.paused = pause
 
     async def set_volume(self, vol):
-        if not Utils.is_number(vol):
+        if not isinstance(vol, int):
             return
 
         if vol < 0:
