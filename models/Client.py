@@ -52,6 +52,8 @@ class Client:
             self.hooks[event].remove(func)
 
     async def _connect(self):
+        await self.bot.wait_until_ready()
+
         try:
             headers = {
                 'Authorization': self.password,
@@ -62,32 +64,32 @@ class Client:
             self.loop.create_task(self._listen())
             print("[Lavalink.py] Established connection to lavalink")
 
-            if len(self.ws_tasks) > 0:
+            if len(self.ws_tasks):
                 print("[Lavalink.py] Replaying {} WebSocket events...".format(len(self.ws_tasks)))
                 for task in self.ws_tasks:
                     await self.send(**task)
 
         except OSError:
-            print('[Lavalink.py] Failed to connect to lavalink')
+            print('[Lavalink.py] Failed to connect to lavalink. Will not attempt to reconnect.')
 
     async def _listen(self):
         try:
             while self.bot.lavalink.ws.open:
-                data = await self.bot.lavalink.ws.recv()
-                j = json.loads(data)
+                data = json.loads(await self.bot.lavalink.ws.recv())
+                op = data.get('op', None)
 
-                if 'op' in j:
-                    if j.get('op') == 'validationReq':
-                        await self._dispatch_join_validator(j)
-                    elif j.get('op') == 'isConnectedReq':
-                        await self._validate_shard(j)
-                    elif j.get('op') == 'sendWS':
-                        m = json.loads(j['message'])
-                        await self.bot._connection._get_websocket(int(m['d'].get('guild_id', None))).send(j.get('message'))
-                    elif j.get('op') == 'event':
-                        await self._dispatch_event(j)
-                    elif j.get('op') == 'playerUpdate':
-                        await self._update_state(j)
+                if op:
+                    if op == 'validationReq':
+                        await self._dispatch_join_validator(data)
+                    elif op == 'isConnectedReq':
+                        await self._validate_shard(data)
+                    elif op == 'sendWS':
+                        m = json.loads(data['message'])
+                        await self.bot._connection._get_websocket(int(m['d'].get('guild_id', None))).send(data.get('message'))
+                    elif op == 'event':
+                        await self._dispatch_event(data)
+                    elif op == 'playerUpdate':
+                        await self._update_state(data)
 
         except websockets.ConnectionClosed:
             self.bot.lavalink.players.clear()

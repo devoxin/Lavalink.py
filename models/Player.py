@@ -4,7 +4,7 @@ from . import AudioTrack
 
 
 class Player:
-    def __init__(self, bot, guild_id):
+    def __init__(self, bot, guild_id: int):
         self.bot = bot
 
         self.shard_id = bot.get_guild(guild_id).shard_id
@@ -25,7 +25,7 @@ class Player:
         self.shuffle = False
         self.repeat = False
 
-    async def connect(self, channel_id):
+    async def connect(self, channel_id: int):
         await self.bot.lavalink.client.send(op='connect', guildId=self.guild_id, channelId=str(channel_id))
         self.channel_id = str(channel_id)  # Raceconditions
 
@@ -67,25 +67,18 @@ class Player:
     async def skip(self):
         await self.play()
 
-    async def set_paused(self, pause):
+    async def set_paused(self, pause: bool):
         await self.bot.lavalink.client.send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
-    async def set_volume(self, vol):
-        if not isinstance(vol, int):
-            return
+    async def set_volume(self, vol: int):
+        if isinstance(vol, int):
+            self.volume = max(min(vol, 150), 0)
 
-        if vol < 0:
-            vol = 0
+            await self.bot.lavalink.client.send(op='volume', guildId=self.guild_id, volume=self.volume)
+            return self.volume
 
-        if vol > 150:
-            vol = 150
-
-        await self.bot.lavalink.client.send(op='volume', guildId=self.guild_id, volume=vol)
-        self.volume = vol
-        return vol
-
-    async def seek(self, pos):
+    async def seek(self, pos: int):
         await self.bot.lavalink.client.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def _on_track_end(self, data):
