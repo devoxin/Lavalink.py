@@ -1,14 +1,12 @@
 import asyncio
 import json
 
-import websockets
-
-from . import PlayerManager
+from . import PlayerManager, WebSocket
 
 query_url = 'http://{host}:{port}/loadtracks?identifier={query}'
 
 
-class _Lavalink:
+class Lavalink:
     def __init__(self, bot):
         self.client = None
         self.players = PlayerManager(bot)
@@ -18,7 +16,6 @@ class _Lavalink:
 class Client:
     def __init__(self, bot, **kwargs):
         self.http = bot.http._session  # Let's use the bot's http session instead
-        self.ws_tasks = []
         self.voice_state = {}
         self.hooks = {'track_start': [], 'track_end': []}
 
@@ -29,16 +26,11 @@ class Client:
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
         self.shard_count = self.bot.shard_count or kwargs.get("shard_count", 1)
         self.user_id = self.bot.user.id
-        self.password = kwargs.pop('password', '')
-        self.host = kwargs.pop('host', 'localhost')
-        self.port = kwargs.pop('port', 80)
-        self.rest = kwargs.pop('rest', 2333)
-        self.uri = 'ws://{}:{}'.format(self.host, self.port)
-        self.ws_retry = kwargs.pop('ws_retry', 3)
+        self.rest_uri = query_url.format(kwargs.get('host', 'localhost'), kwargs.pop('rest', 2333))
 
         if not hasattr(self.bot, 'lavalink'):
-            self.bot.lavalink = _Lavalink(self.bot)
-            self.loop.create_task(self._connect())
+            self.bot.lavalink = Lavalink(self.bot)
+            self.bot.lavalink.ws = WebSocket(self, **kwargs)
 
         if not self.bot.lavalink.client:
             self.bot.lavalink.client = self
@@ -61,7 +53,7 @@ class Client:
                 'User-Id': self.user_id
             }
             self.bot.lavalink.ws = await websockets.connect(self.uri, extra_headers=headers)
-            self.loop.create_task(self._listen())
+            
             print("[Lavalink.py] Established connection to lavalink")
 
             if len(self.ws_tasks):
