@@ -1,5 +1,6 @@
 import asyncio
 import json
+from datetime import datetime
 
 from . import PlayerManager, WebSocket
 
@@ -21,9 +22,9 @@ class Client:
         self.bot.add_listener(self.on_socket_response)
 
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
-        self.shard_count = self.bot.shard_count or kwargs.get("shard_count", 1)
         self.user_id = self.bot.user.id
-        self.rest_uri = 'http://{host}:{port}/loadtracks?identifier='.format(kwargs.get('host', 'localhost'), kwargs.pop('rest', 2333))
+        self.rest_uri = 'http://{}:{}/loadtracks?identifier='.format(kwargs.get('host', 'localhost'), kwargs.pop('rest', 2333))
+        self.password = kwargs.get('password', '')
 
         if not hasattr(self.bot, 'lavalink'):
             self.bot.lavalink = Lavalink(self.bot)
@@ -90,3 +91,6 @@ class Client:
             h.clear()
 
         self.bot.lavalink.client = None
+    
+    def log(self, level, content):
+        print('[{}] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))
