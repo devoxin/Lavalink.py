@@ -1,8 +1,12 @@
 import math
+import re
 
 import discord
-from utils import lavalink
 from discord.ext import commands
+from utils import lavalink
+
+
+time_rx = re.compile('[0-9]+')
 
 
 class Music:
@@ -47,6 +51,30 @@ class Music:
                                   description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
 
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def seek(self, ctx, time):
+        player = self.bot.lavalink.players.get(ctx.guild.id)
+
+        pos = '+'
+        if time.startswith('-'):
+            pos = '-'
+
+        seconds = time_rx.search(time)
+
+        if not seconds:
+            return await ctx.send('You need to specify the amount of seconds to skip!')
+
+        seconds = int(seconds.group()) * 1000
+
+        if pos == '-':
+            seconds = seconds * -1
+        
+        track_time = player.position + seconds
+
+        await player.seek(track_time)
+
+        await ctx.send(f'Moved track to **{lavalink.Utils.format_time(track_time)}**')
 
     @commands.command(aliases=['forceskip', 'fs'])
     async def skip(self, ctx):
@@ -166,12 +194,13 @@ class Music:
 
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
-        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
+        pass
+        # player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
-        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
-            return await ctx.send('You\'re not in my voicechannel!')
+        # if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+        #     return await ctx.send('You\'re not in my voicechannel!')
 
-        await player.disconnect()
+        # await player.disconnect()
 
 
 def setup(bot):
