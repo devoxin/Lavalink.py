@@ -31,7 +31,7 @@ class Player:
             await self.play()
 
     async def play(self):
-        if self.current is not None:
+        if self.current is not None or not self.queue:
             return
 
         if self.shuffle:
@@ -64,6 +64,7 @@ class Player:
         await self.bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def on_track_end(self, data):
+        print('Fired')
         self.position = 0
         self.paused = False
         self.current = None

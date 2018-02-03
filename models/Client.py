@@ -55,7 +55,7 @@ class Client:
         if self.bot.lavalink.players.has(g):
             p = self.bot.lavalink.players.get(g)
             p.position = data['state']['position']
-            p.position_timestamp(data['state']['time'])
+            p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
         async with self.http.get(self.rest_uri + query,
