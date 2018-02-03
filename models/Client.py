@@ -49,10 +49,13 @@ class Client:
             player = self.bot.lavalink.players.get(g)
             await player.on_track_end(data)
 
-    async def _update_state(self, guild_id, channel_id):
-        if self.bot.lavalink.players.has(int(guild_id)):
-            p = self.bot.lavalink.players.get(int(guild_id))
-            p.channel_id = None if not channel_id else str(channel_id)
+    async def _update_state(self, data):
+        g = int(data['guildId'])
+
+        if self.bot.lavalink.players.has(g):
+            p = self.bot.lavalink.players.get(g)
+            p.position = data['state']['position']
+            p.position_timestamp(data['state']['time'])
 
     async def get_tracks(self, query):
         async with self.http.get(self.rest_uri + query,
@@ -74,7 +77,6 @@ class Client:
         else:
             if int(data['d']['user_id']) != self.bot.user.id:
                 return
-            await self._update_state(data['d']['guild_id'], data['d'].get('channel_id', None))
             self.voice_state.update({
                 'sessionId': data['d']['session_id']
             })
