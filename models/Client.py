@@ -1,5 +1,4 @@
 import asyncio
-import json
 from datetime import datetime
 
 from . import PlayerManager, WebSocket
@@ -93,6 +92,6 @@ class Client:
             h.clear()
 
         self.bot.lavalink.client = None
-    
+
     def log(self, level, content):
         print('[{}] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))

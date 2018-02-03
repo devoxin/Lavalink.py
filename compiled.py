@@ -56,7 +56,7 @@ class Client:
         if self.bot.lavalink.players.has(g):
             p = self.bot.lavalink.players.get(g)
             p.position = data['state']['position']
-            p.position_timestamp(data['state']['time'])
+            p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
         async with self.http.get(self.rest_uri + query,
@@ -94,7 +94,7 @@ class Client:
             h.clear()
 
         self.bot.lavalink.client = None
-    
+
     def log(self, level, content):
         print('[{}] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))
 
@@ -103,10 +103,10 @@ class WebSocket:
     def __init__(self, lavalink, **kwargs):
         self._lavalink = lavalink
         self.log = self._lavalink.log
-        
+
         self._ws = None
         self._queue = []
-        
+
         self._ws_retry = kwargs.pop('ws_retry', 3)
         self._password = kwargs.get('password', '')
         self._host = kwargs.get('host', 'localhost')
@@ -253,7 +253,6 @@ class Player:
 
         self.shard_id = bot.get_guild(guild_id).shard_id
         self.guild_id = str(guild_id)
-        self.channel_id = None
 
         self.is_playing = lambda: self.current is not None
         self.paused = False
@@ -268,6 +267,13 @@ class Player:
         self.shuffle = False
         self.repeat = False
 
+    @property
+    def connected_channel(self):
+        g = self.bot.get_guild(int(self.guild_id))
+        if not g or not g.voice_client:
+            return None
+        return g.voice_client.channel
+
     async def add(self, requester, track, play=False):
         self.queue.append(await AudioTrack().build(track, requester))
 
@@ -275,7 +281,7 @@ class Player:
             await self.play()
 
     async def play(self):
-        if self.current is not None:
+        if self.current is not None or not self.queue:
             return
 
         if self.shuffle:
