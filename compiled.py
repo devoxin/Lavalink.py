@@ -6,6 +6,21 @@ from random import randrange
 import websockets
 
 
+def resolve_log_level(level):
+    if level == 'verbose':
+        return 0
+    elif level == 'debug':
+        return 1
+    elif level == 'info':
+        return 2
+    elif level == 'warn':
+        return 3
+    elif level == 'error':
+        return 4
+    else:
+        return 0
+
+
 class Lavalink:
     def __init__(self, bot):
         self.client = None
@@ -18,6 +33,7 @@ class Client:
         self.http = bot.http._session  # Let's use the bot's http session instead
         self.voice_state = {}
         self.hooks = {'track_start': [], 'track_end': []}
+        self.log_level = resolve_log_level(kwargs.pop('log_level', 'info'))
 
         self.bot = bot
         self.bot.add_listener(self.on_socket_response)
@@ -96,7 +112,9 @@ class Client:
         self.bot.lavalink.client = None
 
     def log(self, level, content):
-        print('[{}] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))
+        lvl = resolve_log_level(level)
+        if lvl >= self.log_level:
+            print('[{}] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))
 
 
 class WebSocket:
