@@ -81,12 +81,9 @@ class Player:
     async def seek(self, pos: int):
         await self.bot.lavalink.client.send(op='seek', guildId=self.guild_id, position=pos)
 
-    async def _on_track_end(self, data):
+    async def on_track_end(self, data):
         self.position = 0
         self.paused = False
 
         if data.get('reason') == 'FINISHED':
             await self.play()
-
-    async def _validate_join(self, data):
-        await self.bot.lavalink.client.send(op='validationRes', guildId=data.get('guildId'), channelId=data.get('channelId', None), valid=True)

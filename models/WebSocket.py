@@ -4,7 +4,7 @@ import json
 
 
 class WebSocket:
-    def __init__(self, lavalink, **kwargs ws_retry, password, host, port, shards, user_id):
+    def __init__(self, lavalink, **kwargs):
         self.log = self._lavalink.log
         
         self._ws = None
