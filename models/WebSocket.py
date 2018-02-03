@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+import json
 
 
 class WebSocket:
@@ -57,18 +58,34 @@ class WebSocket:
             while self._ws.open:
                 data = json.loads(await self.bot.lavalink.ws.recv())
                 op = data.get('op', None)
+                self.log('verbose', 'Received websocket data\n' + str(data))
 
                 if not op:
-                    return self.log('debug', 'Received websocket message without op!\n' + str(data))
+                    return self.log('debug', 'Received websocket message without op\n' + str(data))
 
-                if op == 'validationReq':
-                    await self._dispatch_join_validator(data)
-                elif op == 'isConnectedReq':
-                    await self._validate_shard(data)
-                elif op == 'sendWS':
-                    m = json.loads(data['message'])
-                    await self.bot._connection._get_websocket(int(m['d'].get('guild_id', None))).send(data.get('message'))
-                elif op == 'event':
+                if op == 'event':
                     await self._dispatch_event(data)
                 elif op == 'playerUpdate':
                     await self._update_state(data)
+        except websockets.ConnectionClosed:
+            self.bot.lavalink.players.clear()
+
+            self.log('warn', 'Connection closed; attempting to reconnect in 30 seconds')
+            self._ws.close()
+            for a in range(0, self._ws_retry):
+                await asyncio.sleep(30)
+                self.log('info', 'Reconnecting... (Attempt {})'.format(a + 1))
+                await self.connect()
+
+                if self._ws.open:
+                    return
+
+            self.log('warn', 'Unable to reconnect to Lavalink!')
+
+    async def send(self, **data):
+        if not self._ws or not self._ws:
+            self._queue.append(data)
+            self.log('verbose', 'Websocket not ready; appending payload to queue\n' + str(data))
+        else:
+            self.log('verbose', 'Sending payload:\n' + str(data))
+            await self._ws.send(json.dumps(data))
