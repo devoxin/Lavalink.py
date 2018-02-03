@@ -7,10 +7,10 @@ class WebSocket:
     def __init__(self, lavalink, **kwargs):
         self._lavalink = lavalink
         self.log = self._lavalink.log
-        
+
         self._ws = None
         self._queue = []
-        
+
         self._ws_retry = kwargs.pop('ws_retry', 3)
         self._password = kwargs.get('password', '')
         self._host = kwargs.get('host', 'localhost')

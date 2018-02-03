@@ -9,7 +9,6 @@ class Player:
 
         self.shard_id = bot.get_guild(guild_id).shard_id
         self.guild_id = str(guild_id)
-        self.channel_id = None
 
         self.is_playing = lambda: self.current is not None
         self.paused = False
@@ -23,6 +22,13 @@ class Player:
 
         self.shuffle = False
         self.repeat = False
+
+    @property
+    def connected_channel(self):
+        g = self.bot.get_guild(int(self.guild_id))
+        if not g or not g.voice_client:
+            return None
+        return g.voice_client.channel
 
     async def add(self, requester, track, play=False):
         self.queue.append(await AudioTrack().build(track, requester))
@@ -64,7 +70,6 @@ class Player:
         await self.bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def on_track_end(self, data):
-        print('Fired')
         self.position = 0
         self.paused = False
         self.current = None
