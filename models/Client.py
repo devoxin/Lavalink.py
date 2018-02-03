@@ -43,61 +43,6 @@ class Client:
         if event in self.hooks and func in self.hooks[event]:
             self.hooks[event].remove(func)
 
-    async def _connect(self):
-        await self.bot.wait_until_ready()
-
-        try:
-            headers = {
-                'Authorization': self.password,
-                'Num-Shards': self.shard_count,
-                'User-Id': self.user_id
-            }
-            self.bot.lavalink.ws = await websockets.connect(self.uri, extra_headers=headers)
-            
-            print("[Lavalink.py] Established connection to lavalink")
-
-            if len(self.ws_tasks):
-                print("[Lavalink.py] Replaying {} WebSocket events...".format(len(self.ws_tasks)))
-                for task in self.ws_tasks:
-                    await self.send(**task)
-
-        except OSError:
-            print('[Lavalink.py] Failed to connect to lavalink. Will not attempt to reconnect.')
-
-    async def _listen(self):
-        try:
-            while self.bot.lavalink.ws.open:
-                data = json.loads(await self.bot.lavalink.ws.recv())
-                op = data.get('op', None)
-
-                if op:
-                    if op == 'validationReq':
-                        await self._dispatch_join_validator(data)
-                    elif op == 'isConnectedReq':
-                        await self._validate_shard(data)
-                    elif op == 'sendWS':
-                        m = json.loads(data['message'])
-                        await self.bot._connection._get_websocket(int(m['d'].get('guild_id', None))).send(data.get('message'))
-                    elif op == 'event':
-                        await self._dispatch_event(data)
-                    elif op == 'playerUpdate':
-                        await self._update_state(data)
-
-        except websockets.ConnectionClosed:
-            self.bot.lavalink.players.clear()
-
-            print('[Lavalink.py] Connection closed... Attempting to reconnect in 30 seconds')
-            self.bot.lavalink.ws.close()
-            for a in range(0, self.ws_retry):
-                await asyncio.sleep(30)
-                print('[Lavalink.py] Attempting to reconnect (Attempt: {})'.format(a + 1))
-                await self._connect()
-                # if connection has been established, stop trying
-                if self.bot.lavalink.ws.open:
-                    return
-
-            print('[Lavalink.py] Failed to re-establish a connection with lavalink.')
-
     async def _dispatch_event(self, data):
         t = data.get('type')
         g = int(data.get('guildId'))
