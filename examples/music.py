@@ -13,13 +13,14 @@ class Music:
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
+        await ctx.author.voice.channel.connect()
         player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
-        if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
-            return await ctx.send('You\'re not in my voicechannel!')
+        #if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
+        #    return await ctx.send('You\'re not in my voicechannel!')
 
-        if not player.is_connected():
-            await player.connect(channel_id=ctx.author.voice.channel.id)
+        #if not player.is_connected():
+        #    await player.connect(channel_id=ctx.author.voice.channel.id)
 
         query = query.strip('<>')
 
