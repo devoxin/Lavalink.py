@@ -13,7 +13,8 @@ class Music:
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
-        await ctx.author.voice.channel.connect()
+        if not ctx.guild.voice_client or not ctx.guild.voice_client.channel:
+            await ctx.author.voice.channel.connect(reconnect=False)
         player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
 
         #if not ctx.author.voice or (player.is_connected() and ctx.author.voice.channel.id != int(player.channel_id)):
