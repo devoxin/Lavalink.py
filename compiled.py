@@ -85,7 +85,7 @@ class Client:
     # Bot Events
     async def on_socket_response(self, data):
         # INTERCEPT VOICE UPDATES
-        if not data or data['op'] != 0 or not data['t'] or data['t'] not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
+        if not data or data['op'] != 0 or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
             return
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
@@ -184,9 +184,9 @@ class WebSocket:
                 elif op == 'playerUpdate':
                     await self._lavalink._update_state(data)
         except websockets.ConnectionClosed:
-            self.bot.lavalink.players.clear()
+            self._lavalink.bot.players.clear()
 
-            self.log('warn', 'Connection closed; attempting to reconnect in 30 seconds')
+            self.log('info', 'Connection closed; attempting to reconnect in 30 seconds')
             self._ws.close()
             for a in range(0, self._ws_retry):
                 await asyncio.sleep(30)
