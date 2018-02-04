@@ -1,3 +1,4 @@
+import json
 from random import randrange
 
 from . import AudioTrack
@@ -32,6 +33,24 @@ class Player:
         if not g or not g.voice_client:
             return None
         return g.voice_client.channel
+    
+    async def disconnect(self):
+        if not self.is_connected:
+            return
+        
+        await self.stop()
+
+        payload = {
+            'op': 4,
+            'd': {
+                'guild_id': self.guild_id,
+                'channel_id': None,
+                'self_mute': False,
+                'self_deaf': False
+            }
+        }
+
+        await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
 
     async def add(self, requester, track, play=False):
         self.queue.append(await AudioTrack().build(track, requester))

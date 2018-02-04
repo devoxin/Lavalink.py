@@ -1,6 +1,6 @@
 import math
 import re
-
+import json
 import discord
 from discord.ext import commands
 from utils import lavalink
@@ -187,7 +187,7 @@ class Music:
         if not player.is_connected:
             return await ctx.send('Not connected.')
 
-        await player.connected_channel.disconnect()
+        await player.disconnect()
 
 
 def setup(bot):
