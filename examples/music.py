@@ -1,10 +1,9 @@
 import math
 import re
-import json
+
 import discord
 from discord.ext import commands
 from utils import lavalink
-
 
 time_rx = re.compile('[0-9]+')
 
@@ -180,9 +179,10 @@ class Music:
 
         await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
 
+    @commands.is_owner()
     @commands.command(aliases=['dc'])
-    async def disconnect(self, ctx):
-        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
+    async def disconnect(self, ctx):  # Don't use this, it's incredibly prone to fucking up your bot
+        player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not player.is_connected:
             return await ctx.send('Not connected.')
