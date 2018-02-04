@@ -67,7 +67,7 @@ class WebSocket:
                 elif op == 'playerUpdate':
                     await self._lavalink._update_state(data)
         except websockets.ConnectionClosed:
-            self.bot.lavalink.players.clear()
+            self._lavalink.bot.players.clear()
 
             self.log('warn', 'Connection closed; attempting to reconnect in 30 seconds')
             self._ws.close()
