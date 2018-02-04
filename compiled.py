@@ -85,7 +85,7 @@ class Client:
     # Bot Events
     async def on_socket_response(self, data):
         # INTERCEPT VOICE UPDATES
-        if not data or data['op'] != 0 or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
+        if not data or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
             return
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
@@ -297,6 +297,28 @@ class Player:
         if not g or not g.voice_client:
             return None
         return g.voice_client.channel
+    
+    async def disconnect(self):
+        if not self.is_connected:
+            return
+        
+        await self.stop()
+
+        payload = {
+            'op': 4,
+            'd': {
+                'guild_id': self.guild_id,
+                'channel_id': None,
+                'self_mute': False,
+                'self_deaf': False
+            }
+        }
+
+        await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
+        # simulate voice disconnect in discord.py
+        v_client = self.connected_channel.guild.voice_client
+        key_id, _ = v_client.channel._get_voice_client_key()
+        v_client._state._remove_voice_client(key_id)
 
     async def add(self, requester, track, play=False):
         self.queue.append(await AudioTrack().build(track, requester))
