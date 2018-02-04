@@ -12,7 +12,7 @@ time_rx = re.compile('[0-9]+')
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop)
+        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='verbose')
         self.lavalink.register_listener('track_end', self.track_end)
         # As of 2.0, lavalink.Client will be available via self.bot.lavalink.client
 
@@ -27,7 +27,6 @@ class Music:
         if not player.is_connected:
             if ctx.author.voice is None or ctx.author.voice.channel is None:
                 return await ctx.send('Join a voice channel!')
-
             await ctx.author.voice.channel.connect(reconnect=False)
         else:
             if ctx.author.voice is None or ctx.author.voice.channel is None or player.connected_channel.id != ctx.author.voice.channel.id:

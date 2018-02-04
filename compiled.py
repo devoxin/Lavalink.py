@@ -102,6 +102,7 @@ class Client:
             })
 
         if {'op', 'guildId', 'sessionId', 'event'} == self.voice_state.keys():
+            await asyncio.sleep(2)
             await self.bot.lavalink.ws.send(**self.voice_state)
             self.voice_state.clear()
 
