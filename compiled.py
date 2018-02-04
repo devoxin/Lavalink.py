@@ -50,21 +50,23 @@ class Client:
         if not self.bot.lavalink.client:
             self.bot.lavalink.client = self
 
-    async def register_listener(self, event, func):
-        if event in self.hooks and func in self.hooks[event]:
+    def register_listener(self, event, func):
+        if event in self.hooks and func not in self.hooks[event]:
             self.hooks[event].append(func)
 
-    async def unregister_listener(self, event, func):
+    def unregister_listener(self, event, func):
         if event in self.hooks and func in self.hooks[event]:
             self.hooks[event].remove(func)
 
     async def _dispatch_event(self, data):
         t = data.get('type')
         g = int(data.get('guildId'))
+        p = self.bot.lavalink.players[g]
 
-        if self.bot.lavalink.players.has(g) and t == "TrackEndEvent":
-            player = self.bot.lavalink.players.get(g)
-            await player.on_track_end(data)
+        if p and t == "TrackEndEvent":
+            for event in self.hooks['track_end']:
+                await event(p)
+            await p.on_track_end(data)
 
     async def _update_state(self, data):
         g = int(data['guildId'])
@@ -75,9 +77,10 @@ class Client:
             p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
-        async with self.http.get(self.rest_uri + query,
-                                 headers={'Authorization': self.password, 'Accept': 'application/json'}) as res:
-            return await res.json(content_type=None)
+        async with self.http.get(self.rest_uri + query, headers={'Authorization': self.password}) as res:
+            js = await res.json(content_type=None)
+            res.close()
+            return js
 
     # Bot Events
     async def on_socket_response(self, data):
@@ -114,7 +117,7 @@ class Client:
     def log(self, level, content):
         lvl = resolve_log_level(level)
         if lvl >= self.log_level:
-            print('[{}] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))
+            print('[{}] [lavalink.py] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))
 
 
 class WebSocket:
@@ -268,22 +271,25 @@ class PlayerManager:
 class Player:
     def __init__(self, bot, guild_id: int):
         self.bot = bot
-
-        self.shard_id = bot.get_guild(guild_id).shard_id
         self.guild_id = str(guild_id)
 
-        self.is_playing = lambda: self.current is not None
         self.paused = False
-
         self.position = 0
         self.position_timestamp = 0
         self.volume = 100
+        self.shuffle = False
+        self.repeat = False
 
         self.queue = []
         self.current = None
 
-        self.shuffle = False
-        self.repeat = False
+    @property
+    def is_playing(self):
+        return self.connected_channel is not None and self.current is not None
+
+    @property
+    def is_connected(self):
+        return self.connected_channel is not None
 
     @property
     def connected_channel(self):
@@ -295,7 +301,7 @@ class Player:
     async def add(self, requester, track, play=False):
         self.queue.append(await AudioTrack().build(track, requester))
 
-        if play and not self.is_playing():
+        if play and not self.is_playing:
             await self.play()
 
     async def play(self):

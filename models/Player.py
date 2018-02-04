@@ -6,22 +6,25 @@ from . import AudioTrack
 class Player:
     def __init__(self, bot, guild_id: int):
         self.bot = bot
-
-        self.shard_id = bot.get_guild(guild_id).shard_id
         self.guild_id = str(guild_id)
 
-        self.is_playing = lambda: self.current is not None
         self.paused = False
-
         self.position = 0
         self.position_timestamp = 0
         self.volume = 100
+        self.shuffle = False
+        self.repeat = False
 
         self.queue = []
         self.current = None
 
-        self.shuffle = False
-        self.repeat = False
+    @property
+    def is_playing(self):
+        return self.connected_channel is not None and self.current is not None
+
+    @property
+    def is_connected(self):
+        return self.connected_channel is not None
 
     @property
     def connected_channel(self):
@@ -33,7 +36,7 @@ class Player:
     async def add(self, requester, track, play=False):
         self.queue.append(await AudioTrack().build(track, requester))
 
-        if play and not self.is_playing():
+        if play and not self.is_playing:
             await self.play()
 
     async def play(self):
