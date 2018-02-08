@@ -43,7 +43,7 @@ class WebSocket:
         try:
             self._ws = await websockets.connect(self._uri, extra_headers=headers)
         except OSError:
-            self.log('info', 'Failed to connect to Lavalink. ')
+            self.log('warn', 'Failed to connect to Lavalink. ')
         else:
             self.log('info', 'Connected to Lavalink!')
             self._loop.create_task(self.listen())
