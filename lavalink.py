@@ -337,20 +337,19 @@ class Player:
 
     def store(self, key, value):
         self._user_data.update({key: value})
-        print(key)
-        print(self._user_data)
 
     def fetch(self, key, default=None):
         return self._user_data.get(key, default)
 
-    async def add(self, requester, track, play=False):
+    async def add(self, requester, track, interrupt=False):
+        """ Plays the track if nothing is playing, otherwise adds it to the queue """
         self.queue.append(AudioTrack().build(track, requester))
 
-        if play and not self.is_playing:
+        if not self.is_playing or interrupt:
             await self.play()
 
     async def play(self):
-        if self.current is not None or not self.queue:
+        if not self.queue:
             return
 
         if self.shuffle:
