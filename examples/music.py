@@ -11,13 +11,27 @@ time_rx = re.compile('[0-9]+')
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='verbose')
+        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
         self.lavalink.register_listener('track_end', self.track_end)
+        self.lavalink.register_listener('track_start', self.track_start)
         # As of 2.0, lavalink.Client will be available via self.bot.lavalink.client
 
     async def track_end(self, player):
-        if int(player.guild_id) == 330777295952543744:
-            await self.bot.get_channel(353911657665396736).send('[event hook test] track ended')
+        c = player.fetch('channel')
+        if c:
+            c = self.bot.get_channel(player.fetch('channel'))
+            if c:
+                await c.send('Track ended!')
+
+    async def track_start(self, player):
+        print('Triggered!')
+        c = player.fetch('channel')
+        print(c)
+        if c:
+            c = self.bot.get_channel(c)
+            print(c)
+            if c:
+                await c.send('Now playing: ' + player.current.title)
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
@@ -26,7 +40,8 @@ class Music:
         if not player.is_connected:
             if ctx.author.voice is None or ctx.author.voice.channel is None:
                 return await ctx.send('Join a voice channel!')
-            await ctx.author.voice.channel.connect(reconnect=False)
+            player.store('channel', ctx.channel.id)
+            await player.connect(ctx.author.voice.channel)
         else:
             if ctx.author.voice is None or ctx.author.voice.channel is None or player.connected_channel.id != ctx.author.voice.channel.id:
                 return await ctx.send('Join my voice channel!')
@@ -49,12 +64,11 @@ class Music:
                                   title="Playlist Enqueued!",
                                   description=f"Imported {len(tracks)} tracks from the playlist :)")
         else:
-            await player.add(requester=ctx.author.id, track=tracks[0], play=True)
             embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
                                   title="Track Enqueued",
                                   description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
-
-        await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
+            await player.add(requester=ctx.author.id, track=tracks[0], play=True)
 
     @commands.command()
     async def seek(self, ctx, time):

@@ -58,15 +58,18 @@ class Client:
         if event in self.hooks and func in self.hooks[event]:
             self.hooks[event].remove(func)
 
-    async def _dispatch_event(self, data):
-        t = data.get('type')
-        g = int(data.get('guildId'))
-        p = self.bot.lavalink.players[g]
+    async def _trigger_event(self, event: str, guild_id: str, reason: str=''):
+        player = self.bot.lavalink.players[int(guild_id)]
 
-        if p and t == "TrackEndEvent":
-            for event in self.hooks['track_end']:
-                await event(p)
-            await p.on_track_end(data)
+        if player:
+            if event == 'TrackStartEvent':
+                for event in self.hooks['track_start']:
+                    await event(player)
+
+            elif event == 'TrackEndEvent':
+                for event in self.hooks['track_end']:
+                    await event(player)
+                await player.on_track_end(reason)
 
     async def _update_state(self, data):
         g = int(data['guildId'])
@@ -180,7 +183,7 @@ class WebSocket:
                     return self.log('debug', 'Received websocket message without op\n' + str(data))
 
                 if op == 'event':
-                    await self._lavalink._dispatch_event(data)
+                    await self._lavalink._trigger_event(data['type'], data['guildId'], data['reason'])
                 elif op == 'playerUpdate':
                     await self._lavalink._update_state(data)
         except websockets.ConnectionClosed:
@@ -213,7 +216,7 @@ class InvalidTrack(Exception):
 
 
 class AudioTrack:
-    async def build(self, track, requester):
+    def build(self, track, requester):
         try:
             self.track = track['track']
             self.identifier = track['info']['identifier']
@@ -272,6 +275,8 @@ class Player:
     def __init__(self, bot, guild_id: int):
         self.bot = bot
         self.guild_id = str(guild_id)
+        self.channel_id = None
+        self._user_data = {}
 
         self.paused = False
         self.position = 0
@@ -293,11 +298,24 @@ class Player:
 
     @property
     def connected_channel(self):
-        g = self.bot.get_guild(int(self.guild_id))
-        if not g or not g.voice_client:
+        if not self.channel_id:
             return None
-        return g.voice_client.channel
+
+        return self.bot.get_channel(int(self.channel_id))
     
+    async def connect(self, channel):
+        payload = {
+            'op': 4,
+            'd': {
+                'guild_id': self.guild_id,
+                'channel_id': str(channel.id),
+                'self_mute': False,
+                'self_deaf': False
+            }
+        }
+        await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
+        self.channel_id = str(channel.id)
+
     async def disconnect(self):
         if not self.is_connected:
             return
@@ -315,13 +333,18 @@ class Player:
         }
 
         await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
-        # simulate voice disconnect in discord.py
-        v_client = self.connected_channel.guild.voice_client
-        key_id, _ = v_client.channel._get_voice_client_key()
-        v_client._state._remove_voice_client(key_id)
+        self.channel_id = None
+
+    def store(self, key, value):
+        self._user_data.update({key: value})
+        print(key)
+        print(self._user_data)
+
+    def fetch(self, key, default=None):
+        return self._user_data.get(key, default)
 
     async def add(self, requester, track, play=False):
-        self.queue.append(await AudioTrack().build(track, requester))
+        self.queue.append(AudioTrack().build(track, requester))
 
         if play and not self.is_playing:
             await self.play()
@@ -335,8 +358,9 @@ class Player:
         else:
             track = self.queue.pop(0)
 
-        await self.bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
         self.current = track
+        await self.bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
+        await self.bot.lavalink.client._trigger_event('TrackStartEvent', self.guild_id)
 
     async def stop(self):
         await self.bot.lavalink.ws.send(op='stop', guildId=self.guild_id)
@@ -359,12 +383,12 @@ class Player:
     async def seek(self, pos: int):
         await self.bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
-    async def on_track_end(self, data):
+    async def on_track_end(self, reason: str):
         self.position = 0
         self.paused = False
         self.current = None
 
-        if data.get('reason') == 'FINISHED':
+        if reason == 'FINISHED':
             await self.play()
 
 
