@@ -43,7 +43,7 @@ class PlayerManager:
     def get_playing(self):
         """ Returns the amount of players that are currently playing """
         return len([p for p in self._players.values() if p.is_playing])
-    
+
     def use_player(self, player):
         """ Not implemented """
         raise NotImplementedError  # :)

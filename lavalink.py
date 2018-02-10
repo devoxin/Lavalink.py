@@ -277,7 +277,7 @@ class PlayerManager:
     def get_playing(self):
         """ Returns the amount of players that are currently playing """
         return len([p for p in self._players.values() if p.is_playing])
-    
+
     def use_player(self, player):
         """ Not implemented """
         raise NotImplementedError  # :)
@@ -317,7 +317,7 @@ class Player:
             return None
 
         return self.bot.get_channel(int(self.channel_id))
-    
+
     async def connect(self, channel):
         """ Connects to a voicechannel """
         payload = {
@@ -336,7 +336,7 @@ class Player:
         """ Disconnects from the voicechannel, if any """
         if not self.is_connected:
             return
-        
+
         await self.stop()
 
         payload = {

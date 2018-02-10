@@ -87,7 +87,7 @@ class Music:
 
         if pos == '-':
             seconds = seconds * -1
-        
+
         track_time = player.position + seconds
 
         await player.seek(track_time)
@@ -103,7 +103,7 @@ class Music:
 
         await player.skip()
         await ctx.send('⏭ | Skipped.')
-    
+
     @commands.command()
     async def stop(self, ctx):
         player = self.bot.lavalink.players.get(ctx.guild.id)
