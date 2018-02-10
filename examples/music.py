@@ -164,10 +164,10 @@ class Music:
             return await ctx.send('Not playing.')
 
         if player.paused:
-            await player.set_paused(False)
+            await player.set_pause(False)
             await ctx.send('⏯ | Resumed')
         else:
-            await player.set_paused(True)
+            await player.set_pause(True)
             await ctx.send(' ⏯ | Paused')
 
     @commands.command(aliases=['vol'])
