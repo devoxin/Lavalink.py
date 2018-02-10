@@ -4,7 +4,8 @@ class InvalidTrack(Exception):
 
 
 class AudioTrack:
-    async def build(self, track, requester):
+    def build(self, track, requester):
+        """ Returns an optional AudioTrack """
         try:
             self.track = track['track']
             self.identifier = track['info']['identifier']
