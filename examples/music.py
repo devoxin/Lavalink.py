@@ -13,7 +13,7 @@ class Music:
         self.bot = bot
         lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
 
-        self.bot.lavalink.register_hook(self.track_hook)
+        self.bot.lavalink.client.register_hook(self.track_hook)
         # As of 2.0, lavalink.Client will be available via self.bot.lavalink.client
 
     async def track_hook(self, player, event):
@@ -89,7 +89,7 @@ class Music:
 
         if pos == '-':
             seconds = seconds * -1
-        
+
         track_time = player.position + seconds
 
         await player.seek(track_time)
@@ -105,7 +105,7 @@ class Music:
 
         await ctx.send('⏭ | Skipped.')
         await player.skip()
-    
+
     @commands.command()
     async def stop(self, ctx):
         player = self.bot.lavalink.players.get(ctx.guild.id)
