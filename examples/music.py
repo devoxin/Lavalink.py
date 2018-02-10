@@ -3,7 +3,7 @@ import re
 
 import discord
 from discord.ext import commands
-import lavalink
+from utils import lavalink
 
 time_rx = re.compile('[0-9]+')
 
@@ -11,8 +11,9 @@ time_rx = re.compile('[0-9]+')
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
-        self.lavalink.register_hook(self.track_hook)
+        lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
+
+        self.bot.lavalink.register_hook(self.track_hook)
         # As of 2.0, lavalink.Client will be available via self.bot.lavalink.client
 
     async def track_hook(self, player, event):
@@ -21,7 +22,8 @@ class Music:
             if c:
                 c = self.bot.get_channel(c)
                 if c:
-                    await c.send('Now playing: ' + player.current.title)
+                    embed = discord.Embed(colour=c.guild.me.top_role.colour, title='Now Playing', description=player.current.title)
+                    await c.send(embed=embed)
         elif event == 'QueueEndEvent':
             c = player.fetch('channel')
             if c:
@@ -47,7 +49,7 @@ class Music:
         if not query.startswith('http'):
             query = f'ytsearch:{query}'
 
-        tracks = await self.lavalink.get_tracks(query)
+        tracks = await self.bot.lavalink.client.get_tracks(query)
 
         if not tracks:
             return await ctx.send('Nothing found 👀')
@@ -87,7 +89,7 @@ class Music:
 
         if pos == '-':
             seconds = seconds * -1
-
+        
         track_time = player.position + seconds
 
         await player.seek(track_time)
@@ -101,9 +103,9 @@ class Music:
         if not player.is_playing:
             return await ctx.send('Not playing.')
 
-        await player.skip()
         await ctx.send('⏭ | Skipped.')
-
+        await player.skip()
+    
     @commands.command()
     async def stop(self, ctx):
         player = self.bot.lavalink.players.get(ctx.guild.id)
@@ -216,4 +218,4 @@ def setup(bot):
 
 
 def teardown(bot):
-    bot._lavaclient._destroy()
+    bot.lavalink.client._destroy()
