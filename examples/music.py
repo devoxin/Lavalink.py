@@ -12,26 +12,16 @@ class Music:
     def __init__(self, bot):
         self.bot = bot
         self.lavalink = lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
-        self.lavalink.register_listener('track_end', self.track_end)
-        self.lavalink.register_listener('track_start', self.track_start)
+        self.lavalink.register_hook(self.track_hook)
         # As of 2.0, lavalink.Client will be available via self.bot.lavalink.client
 
-    async def track_end(self, player):
-        c = player.fetch('channel')
-        if c:
-            c = self.bot.get_channel(player.fetch('channel'))
+    async def track_hook(self, player, event):
+        if event == 'TrackStartEvent':
+            c = player.fetch('channel')
             if c:
-                await c.send('Track ended!')
-
-    async def track_start(self, player):
-        print('Triggered!')
-        c = player.fetch('channel')
-        print(c)
-        if c:
-            c = self.bot.get_channel(c)
-            print(c)
-            if c:
-                await c.send('Now playing: ' + player.current.title)
+                c = self.bot.get_channel(c)
+                if c:
+                    await c.send('Now playing: ' + player.current.title)
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
@@ -58,7 +48,7 @@ class Music:
 
         if 'list' in query and 'ytsearch:' not in query:
             for track in tracks:
-                await player.add(requester=ctx.author.id, track=track, play=True)
+                await player.add(requester=ctx.author.id, track=track)
 
             embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
                                   title="Playlist Enqueued!",
@@ -68,7 +58,7 @@ class Music:
                                   title="Track Enqueued",
                                   description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
             await ctx.send(embed=embed)
-            await player.add(requester=ctx.author.id, track=tracks[0], play=True)
+            await player.add(requester=ctx.author.id, track=tracks[0])
 
     @commands.command()
     async def seek(self, ctx, time):
@@ -106,6 +96,17 @@ class Music:
 
         await player.skip()
         await ctx.send('⏭ | Skipped.')
+    
+    @commands.command()
+    async def stop(self, ctx):
+        player = self.bot.lavalink.players.get(ctx.guild.id)
+
+        if not player.is_playing:
+            return await ctx.send('Not playing.')
+
+        player.queue.clear()
+        await player.stop()
+        await ctx.send('⏹ | Stopped.')
 
     @commands.command(aliases=['np', 'n'])
     async def now(self, ctx):
@@ -124,7 +125,7 @@ class Music:
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['q'])
-    async def queue(self, ctx, page: str=None):
+    async def queue(self, ctx, page: int=1):
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not player.queue:
@@ -132,7 +133,6 @@ class Music:
 
         items_per_page = 10
         pages = math.ceil(len(player.queue) / items_per_page)
-        page = lavalink.Utils.get_number(page)
 
         start = (page - 1) * items_per_page
         end = start + items_per_page
@@ -173,7 +173,7 @@ class Music:
 
     @commands.command()
     async def shuffle(self, ctx):
-        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not player.is_playing:
             return await ctx.send('Nothing playing.')
@@ -184,7 +184,7 @@ class Music:
 
     @commands.command()
     async def repeat(self, ctx):
-        player = self.bot.lavalink.players.get(guild_id=ctx.guild.id)
+        player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not player.is_playing:
             return await ctx.send('Nothing playing.')
@@ -195,7 +195,7 @@ class Music:
 
     @commands.is_owner()
     @commands.command(aliases=['dc'])
-    async def disconnect(self, ctx):  # Don't use this, it's incredibly prone to fucking up your bot
+    async def disconnect(self, ctx):
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not player.is_connected:
