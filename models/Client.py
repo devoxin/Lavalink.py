@@ -5,15 +5,15 @@ from . import PlayerManager, WebSocket
 
 
 def resolve_log_level(level):
-    if level == 'verbose':
+    if level == 'debug':
         return 0
-    elif level == 'debug':
-        return 1
     elif level == 'info':
-        return 2
+        return 1
     elif level == 'warn':
-        return 3
+        return 2
     elif level == 'error':
+        return 3
+    elif level == 'off':
         return 4
     else:
         return 0
@@ -30,7 +30,7 @@ class Client:
     def __init__(self, bot, **kwargs):
         self.http = bot.http._session  # Let's use the bot's http session instead
         self.voice_state = {}
-        self.hooks = {'track_start': [], 'track_end': []}
+        self.hooks = []
         self.log_level = resolve_log_level(kwargs.pop('log_level', 'info'))
 
         self.bot = bot
@@ -48,23 +48,29 @@ class Client:
         if not self.bot.lavalink.client:
             self.bot.lavalink.client = self
 
-    def register_listener(self, event, func):
-        if event in self.hooks and func not in self.hooks[event]:
-            self.hooks[event].append(func)
+    def register_hook(self, func):
+        if func not in self.hooks:
+            self.hooks.append(func)
 
-    def unregister_listener(self, event, func):
-        if event in self.hooks and func in self.hooks[event]:
-            self.hooks[event].remove(func)
+    def unregister_hook(self, func):
+        if func in self.hooks:
+            self.hooks.remove(func)
 
-    async def _dispatch_event(self, data):
-        t = data.get('type')
-        g = int(data.get('guildId'))
-        p = self.bot.lavalink.players[g]
+    async def _trigger_event(self, event: str, guild_id: str, reason: str=''):
+        player = self.bot.lavalink.players[int(guild_id)]
 
-        if p and t == "TrackEndEvent":
-            for event in self.hooks['track_end']:
-                await event(p)
-            await p.on_track_end(data)
+        if player:
+            if event == 'TrackStartEvent':
+                for hook in self.hooks:
+                    await hook(player, event)
+
+            elif event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
+                for hook in self.hooks:
+                    await hook(player, event)
+                await player.on_track_end(reason)
+
+            else:
+                self.log('warn', 'Received unknown event type ' + event)
 
     async def _update_state(self, data):
         g = int(data['guildId'])
@@ -75,6 +81,7 @@ class Client:
             p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
+        self.log('debug', 'Requesting tracks for query ' + query)
         async with self.http.get(self.rest_uri + query, headers={'Authorization': self.password}) as res:
             js = await res.json(content_type=None)
             res.close()
@@ -83,7 +90,7 @@ class Client:
     # Bot Events
     async def on_socket_response(self, data):
         # INTERCEPT VOICE UPDATES
-        if not data or data['op'] != 0 or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
+        if not data or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
             return
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
