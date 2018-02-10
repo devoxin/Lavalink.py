@@ -96,6 +96,7 @@ class Player:
 
         if not self.queue:
             await self.stop()
+            await self.bot.lavalink.client._trigger_event('QueueEndEvent', self.guild_id)
         else:
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))

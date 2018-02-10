@@ -60,17 +60,13 @@ class Client:
         player = self.bot.lavalink.players[int(guild_id)]
 
         if player:
-            if event == 'TrackStartEvent':
-                for hook in self.hooks:
-                    await hook(player, event)
+            for hook in self.hooks:
+                await hook(player, event)
 
-            elif event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
+            if event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
                 for hook in self.hooks:
                     await hook(player, event)
                 await player.on_track_end(reason)
-
-            else:
-                self.log('warn', 'Received unknown event type ' + event)
 
     async def _update_state(self, data):
         g = int(data['guildId'])

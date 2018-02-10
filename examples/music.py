@@ -22,6 +22,12 @@ class Music:
                 c = self.bot.get_channel(c)
                 if c:
                     await c.send('Now playing: ' + player.current.title)
+        elif event == 'QueueEndEvent':
+            c = player.fetch('channel')
+            if c:
+                c = self.bot.get_channel(c)
+                if c:
+                    await c.send('Queue ended! Why not queue more songs?')
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query):
@@ -53,6 +59,7 @@ class Music:
             embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
                                   title="Playlist Enqueued!",
                                   description=f"Imported {len(tracks)} tracks from the playlist :)")
+            await ctx.send(embed=embed)
         else:
             embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
                                   title="Track Enqueued",

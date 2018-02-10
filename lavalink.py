@@ -62,17 +62,13 @@ class Client:
         player = self.bot.lavalink.players[int(guild_id)]
 
         if player:
-            if event == 'TrackStartEvent':
-                for hook in self.hooks:
-                    await hook(player, event)
+            for hook in self.hooks:
+                await hook(player, event)
 
-            elif event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
+            if event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
                 for hook in self.hooks:
                     await hook(player, event)
                 await player.on_track_end(reason)
-
-            else:
-                self.log('warn', 'Received unknown event type ' + event)
 
     async def _update_state(self, data):
         g = int(data['guildId'])
@@ -187,8 +183,7 @@ class WebSocket:
                     return self.log('debug', 'Received websocket message without op\n' + str(data))
 
                 if op == 'event':
-                    print(data)
-                    await self._lavalink._trigger_event(data['type'], data['guildId'], data.get('reason', ''))
+                    await self._lavalink._trigger_event(data['type'], data['guildId'], data.get('reason', 'FINISHED'))
                 elif op == 'playerUpdate':
                     await self._lavalink._update_state(data)
         except websockets.ConnectionClosed:
@@ -380,6 +375,7 @@ class Player:
 
         if not self.queue:
             await self.stop()
+            await self.bot.lavalink.client._trigger_event('QueueEndEvent', self.guild_id)
         else:
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
