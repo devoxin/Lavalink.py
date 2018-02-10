@@ -38,7 +38,7 @@ class Player:
             return None
 
         return self.bot.get_channel(int(self.channel_id))
-    
+
     async def connect(self, channel):
         """ Connects to a voicechannel """
         payload = {
@@ -57,7 +57,7 @@ class Player:
         """ Disconnects from the voicechannel, if any """
         if not self.is_connected:
             return
-        
+
         await self.stop()
 
         payload = {
