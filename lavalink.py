@@ -7,15 +7,15 @@ import websockets
 
 
 def resolve_log_level(level):
-    if level == 'verbose':
+    if level == 'debug':
         return 0
-    elif level == 'debug':
-        return 1
     elif level == 'info':
-        return 2
+        return 1
     elif level == 'warn':
-        return 3
+        return 2
     elif level == 'error':
+        return 3
+    elif level == 'off':
         return 4
     else:
         return 0
@@ -32,7 +32,7 @@ class Client:
     def __init__(self, bot, **kwargs):
         self.http = bot.http._session  # Let's use the bot's http session instead
         self.voice_state = {}
-        self.hooks = {'track_start': [], 'track_end': []}
+        self.hooks = []
         self.log_level = resolve_log_level(kwargs.pop('log_level', 'info'))
 
         self.bot = bot
@@ -50,26 +50,29 @@ class Client:
         if not self.bot.lavalink.client:
             self.bot.lavalink.client = self
 
-    def register_listener(self, event, func):
-        if event in self.hooks and func not in self.hooks[event]:
-            self.hooks[event].append(func)
+    def register_hook(self, func):
+        if func not in self.hooks:
+            self.hooks.append(func)
 
-    def unregister_listener(self, event, func):
-        if event in self.hooks and func in self.hooks[event]:
-            self.hooks[event].remove(func)
+    def unregister_hook(self, func):
+        if func in self.hooks:
+            self.hooks.remove(func)
 
     async def _trigger_event(self, event: str, guild_id: str, reason: str=''):
         player = self.bot.lavalink.players[int(guild_id)]
 
         if player:
             if event == 'TrackStartEvent':
-                for event in self.hooks['track_start']:
-                    await event(player)
+                for hook in self.hooks:
+                    await hook(player, event)
 
-            elif event == 'TrackEndEvent':
-                for event in self.hooks['track_end']:
-                    await event(player)
+            elif event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
+                for hook in self.hooks:
+                    await hook(player, event)
                 await player.on_track_end(reason)
+
+            else:
+                self.log('warn', 'Received unknown event type ' + event)
 
     async def _update_state(self, data):
         g = int(data['guildId'])
@@ -80,6 +83,7 @@ class Client:
             p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
+        self.log('debug', 'Requesting tracks for query ' + query)
         async with self.http.get(self.rest_uri + query, headers={'Authorization': self.password}) as res:
             js = await res.json(content_type=None)
             res.close()
@@ -155,15 +159,15 @@ class WebSocket:
             'Num-Shards': self._shards,
             'User-Id': self._user_id
         }
-        self.log('verbose', 'Preparing to connect to Lavalink')
-        self.log('verbose', '    with URI: {}'.format(self._uri))
-        self.log('verbose', '    with headers: {}'.format(str(headers)))
+        self.log('debug', 'Preparing to connect to Lavalink')
+        self.log('debug', '    with URI: {}'.format(self._uri))
+        self.log('debug', '    with headers: {}'.format(str(headers)))
         self.log('info', 'Connecting to Lavalink...')
 
         try:
             self._ws = await websockets.connect(self._uri, extra_headers=headers)
         except OSError:
-            self.log('info', 'Failed to connect to Lavalink. ')
+            self.log('error', 'Failed to connect to Lavalink. ')
         else:
             self.log('info', 'Connected to Lavalink!')
             self._loop.create_task(self.listen())
@@ -177,13 +181,14 @@ class WebSocket:
             while self._ws.open:
                 data = json.loads(await self._ws.recv())
                 op = data.get('op', None)
-                self.log('verbose', 'Received websocket data\n' + str(data))
+                self.log('debug', 'Received websocket data\n' + str(data))
 
                 if not op:
                     return self.log('debug', 'Received websocket message without op\n' + str(data))
 
                 if op == 'event':
-                    await self._lavalink._trigger_event(data['type'], data['guildId'], data['reason'])
+                    print(data)
+                    await self._lavalink._trigger_event(data['type'], data['guildId'], data.get('reason', ''))
                 elif op == 'playerUpdate':
                     await self._lavalink._update_state(data)
         except websockets.ConnectionClosed:
@@ -205,9 +210,9 @@ class WebSocket:
         """ Sends data to lavalink """
         if not self._ws or not self._ws:
             self._queue.append(data)
-            self.log('verbose', 'Websocket not ready; appending payload to queue\n' + str(data))
+            self.log('debug', 'Websocket not ready; appending payload to queue\n' + str(data))
         else:
-            self.log('verbose', 'Sending payload:\n' + str(data))
+            self.log('debug', 'Sending payload:\n' + str(data))
             await self._ws.send(json.dumps(data))
 
 
@@ -369,17 +374,21 @@ class Player:
 
     async def play(self):
         """ Plays the first track in the queue, if any """
+        self.current = None
+        self.position = 0
+        self.paused = False
+
         if not self.queue:
-            return
-
-        if self.shuffle:
-            track = self.queue.pop(randrange(len(self.queue)))
+            await self.stop()
         else:
-            track = self.queue.pop(0)
+            if self.shuffle:
+                track = self.queue.pop(randrange(len(self.queue)))
+            else:
+                track = self.queue.pop(0)
 
-        self.current = track
-        await self.bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
-        await self.bot.lavalink.client._trigger_event('TrackStartEvent', self.guild_id)
+            self.current = track
+            await self.bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
+            await self.bot.lavalink.client._trigger_event('TrackStartEvent', self.guild_id)
 
     async def stop(self):
         """ Stops the player, if playing """
@@ -407,12 +416,9 @@ class Player:
         """ Seeks to a given position in the track """
         await self.bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
-    async def on_track_end(self):
-        self.position = 0
-        self.paused = False
-        self.current = None
-
-        await self.play()
+    async def on_track_end(self, reason):
+        if reason == 'FINISHED':
+            await self.play()
 
 
 class Utils:
