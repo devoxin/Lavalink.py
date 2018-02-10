@@ -1,4 +1,4 @@
-from . import Player
+from .Player import *
 
 
 class PlayerManager:
