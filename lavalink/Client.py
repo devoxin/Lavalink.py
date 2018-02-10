@@ -1,7 +1,8 @@
 import asyncio
 from datetime import datetime
 
-from . import PlayerManager, WebSocket
+from .PlayerManager import *
+from .WebSocket import *
 
 
 def resolve_log_level(level):

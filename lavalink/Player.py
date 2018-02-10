@@ -1,7 +1,7 @@
 import json
 from random import randrange
 
-from . import AudioTrack
+from .AudioTrack import *
 
 
 class Player:
