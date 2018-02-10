@@ -109,12 +109,8 @@ class Client:
             self.voice_state.clear()
 
     def _destroy(self):
-        self.bot.remove_listener(self.on_voice_state_update)
-        self.bot.remove_listener(self.on_voice_server_update)
-
-        for h in self.hooks.values():
-            h.clear()
-
+        self.bot.remove_listener(self.on_socket_response)
+        self.hooks.clear()
         self.bot.lavalink.client = None
 
     def log(self, level, content):
