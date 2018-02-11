@@ -193,14 +193,52 @@ class Music:
 
     @commands.command()
     async def repeat(self, ctx):
+        await ctx.send('Command pending rewrite.')
+
+        # player = self.bot.lavalink.players.get(ctx.guild.id)
+
+        # if not player.is_playing:
+        #     return await ctx.send('Nothing playing.')
+
+        # player.repeat = not player.repeat
+
+        # await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
+
+    @commands.command()
+    async def remove(self, ctx, index: int):
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
-        if not player.is_playing:
-            return await ctx.send('Nothing playing.')
+        if not player.queue:
+            return await ctx.send('Nothing queued.')
 
-        player.repeat = not player.repeat
+        if index > len(player.queue) or index < 1:
+            return await ctx.send('Index has to be >=1 and <=queue size')
 
-        await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
+        index = index - 1
+        removed = player.queue.pop(index)
+
+        await ctx.send('Removed **' + removed.title + '** from the queue.')
+
+    @commands.command()
+    async def find(self, ctx, *, query):
+        if not query.startswith('ytsearch:') and not query.startswith('scsearch:'):
+            query = 'ytsearch:' + query
+
+        tracks = await self.bot.lavalink.client.get_tracks(query)
+
+        if not tracks:
+            return await ctx.send('Nothing found')
+
+        tracks = tracks[:10]  # First 10 results
+
+        o = ''
+        for i, t in enumerate(tracks, start=1):
+            o += f'`{i}.` [{t["info"]["title"]}]({t["info"]["uri"]})\n'
+
+        embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
+                              description=o)
+
+        await ctx.send(embed=embed)
 
     @commands.is_owner()
     @commands.command(aliases=['dc'])
@@ -211,6 +249,7 @@ class Music:
             return await ctx.send('Not connected.')
 
         await player.disconnect()
+        await ctx.send('*⃣ | Disconnected.')
 
 
 def setup(bot):
