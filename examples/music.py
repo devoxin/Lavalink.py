@@ -177,8 +177,8 @@ class Music:
         if not volume:
             return await ctx.send(f'🔈 | {player.volume}%')
 
-        v = await player.set_volume(volume)
-        await ctx.send(f'🔈 | Set to {v}%')
+        await player.set_volume(volume)
+        await ctx.send(f'🔈 | Set to {player.volume}%')
 
     @commands.command()
     async def shuffle(self, ctx):
@@ -257,4 +257,4 @@ def setup(bot):
 
 
 def teardown(bot):
-    bot.lavalink.client._destroy()
+    bot.lavalink.client.destroy()
