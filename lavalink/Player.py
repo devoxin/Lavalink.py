@@ -134,5 +134,5 @@ class Player:
         await self.bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def on_track_end(self, reason):
-        if reason == 'FINISHED':
+        if reason in ['FINISHED', 'TrackStuckEvent', 'TrackExceptionEvent']:
             await self.play()
