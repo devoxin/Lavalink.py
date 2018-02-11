@@ -2,6 +2,18 @@ import json
 from random import randrange
 
 from .AudioTrack import *
+from abc import ABC, abstractmethod
+
+
+class AbstractPlayer(ABC):
+
+    @abstractmethod
+    async def _on_track_end(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def _on_track_start(self):
+        raise NotImplementedError
 
 
 class Player:
@@ -83,7 +95,7 @@ class Player:
 
     def add(self, requester: int, track: dict) -> None:
         """ Adds a track to the queue """
-        self.queue.append(AudioTrack().build(track, requester))
+        self.queue.append(AudioTrack(track, requester))
 
     async def add_and_play(self, requester: int, track: dict) -> None:
         """ Adds a track to the queue and then starts playing if nothing else is playing """

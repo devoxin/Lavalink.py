@@ -4,7 +4,7 @@ class InvalidTrack(Exception):
 
 
 class AudioTrack:
-    def build(self, track, requester):
+    def __init__(self, track, requester):
         """ Returns an optional AudioTrack """
         try:
             self.track = track['track']
@@ -16,7 +16,5 @@ class AudioTrack:
             self.title = track['info']['title']
             self.uri = track['info']['uri']
             self.requester = requester
-
-            return self
         except KeyError:
             raise InvalidTrack('an invalid track was passed')
