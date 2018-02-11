@@ -39,7 +39,7 @@ class Player:
 
         return self.bot.get_channel(int(self.channel_id))
 
-    async def connect(self, channel):
+    async def connect(self, channel) -> None:
         """ Connects to a voicechannel """
         payload = {
             'op': 4,
@@ -53,7 +53,7 @@ class Player:
         await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
         self.channel_id = str(channel.id)
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """ Disconnects from the voicechannel, if any """
         if not self.is_connected:
             return
@@ -73,22 +73,22 @@ class Player:
         await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
         self.channel_id = None
 
-    def store(self, key, value):
+    def store(self, key: object, value: object) -> None:
         """ Stores custom user data """
         self._user_data.update({key: value})
 
-    def fetch(self, key, default=None):
+    def fetch(self, key: object, default=None) -> object:
         """ Retrieves the related value from the stored user data """
         return self._user_data.get(key, default)
 
-    async def add(self, requester, track, interrupt=False):
+    async def add(self, requester: int, track: dict, interrupt: bool=False) -> None:
         """ Adds a track to the queue, and plays it immediately if not playing """
         self.queue.append(AudioTrack().build(track, requester))
 
         if not self.is_playing or interrupt:
             await self.play()
 
-    async def play(self):
+    async def play(self) -> None:
         """ Plays the first track in the queue, if any """
         self.current = None
         self.position = 0
@@ -107,32 +107,30 @@ class Player:
             await self.bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
             await self.bot.lavalink.client._trigger_event('TrackStartEvent', self.guild_id)
 
-    async def stop(self):
+    async def stop(self) -> None:
         """ Stops the player, if playing """
         await self.bot.lavalink.ws.send(op='stop', guildId=self.guild_id)
         self.current = None
 
-    async def skip(self):
+    async def skip(self) -> None:
         """ Moves the player onto the next track in the queue """
         await self.play()
 
-    async def set_pause(self, pause: bool):
+    async def set_pause(self, pause: bool) -> None:
         """ Sets the player's paused state """
         await self.bot.lavalink.ws.send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
-    async def set_volume(self, vol: int):
+    async def set_volume(self, vol: int) -> None:
         """ Sets the player's volume (150% limit imposed by lavalink) """
-        if isinstance(vol, int):
-            self.volume = max(min(vol, 150), 0)
+        self.volume = max(min(vol, 150), 0)
 
-            await self.bot.lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
-            return self.volume
+        await self.bot.lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
 
-    async def seek(self, pos: int):
+    async def seek(self, pos: int) -> None:
         """ Seeks to a given position in the track """
         await self.bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
-    async def on_track_end(self, reason):
+    async def _on_track_end(self, reason: str):
         if reason in ['FINISHED', 'TrackStuckEvent', 'TrackExceptionEvent']:
             await self.play()

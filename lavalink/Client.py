@@ -65,7 +65,7 @@ class Client:
                 await hook(player, event)
 
             if event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
-                await player.on_track_end(reason)
+                await player._on_track_end(reason)
 
     async def _update_state(self, data):
         g = int(data['guildId'])
@@ -105,7 +105,7 @@ class Client:
             await self.bot.lavalink.ws.send(**self.voice_state)
             self.voice_state.clear()
 
-    def _destroy(self):
+    def destroy(self):
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
         self.bot.lavalink.client = None
