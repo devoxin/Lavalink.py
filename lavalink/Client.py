@@ -65,8 +65,6 @@ class Client:
                 await hook(player, event)
 
             if event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
-                for hook in self.hooks:
-                    await hook(player, event)
                 await player.on_track_end(reason)
 
     async def _update_state(self, data):
