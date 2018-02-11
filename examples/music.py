@@ -56,7 +56,7 @@ class Music:
 
         if 'list' in query and 'ytsearch:' not in query:
             for track in tracks:
-                await player.add(requester=ctx.author.id, track=track)
+                await player.add_and_play(requester=ctx.author.id, track=tracks)
 
             embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
                                   title="Playlist Enqueued!",
@@ -67,7 +67,7 @@ class Music:
                                   title="Track Enqueued",
                                   description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
             await ctx.send(embed=embed)
-            await player.add(requester=ctx.author.id, track=tracks[0])
+            await player.add_and_play(requester=ctx.author.id, track=tracks[0])
 
     @commands.command()
     async def seek(self, ctx, time):

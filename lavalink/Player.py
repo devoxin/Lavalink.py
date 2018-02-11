@@ -81,11 +81,15 @@ class Player:
         """ Retrieves the related value from the stored user data """
         return self._user_data.get(key, default)
 
-    async def add(self, requester: int, track: dict, interrupt: bool=False) -> None:
-        """ Adds a track to the queue, and plays it immediately if not playing """
+    def add(self, requester: int, track: dict) -> None:
+        """ Adds a track to the queue """
         self.queue.append(AudioTrack().build(track, requester))
 
-        if not self.is_playing or interrupt:
+    async def add_and_play(self, requester: int, track: dict) -> None:
+        """ Adds a track to the queue and then starts playing if nothing else is playing """
+        self.add(requester, track)
+
+        if not self.is_playing:
             await self.play()
 
     async def play(self) -> None:
