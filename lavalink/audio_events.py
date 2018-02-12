@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from collections import deque
 
+from .audio_track import AudioTrack
+
 
 class Event(ABC):
     @abstractmethod
@@ -76,18 +78,18 @@ class AbstractPlayerEventAdapter(ABC):
     async def on_event(self, event):
         if not issubclass(event.__class__, Event):
             raise TypeError
-        if isinstance(event.__class__, TrackPauseEvent):
-            self.track_pause(event)
-        elif isinstance(event.__class__, TrackResumeEvent):
-            self.track_resume(event)
-        elif isinstance(event.__class__, TrackStartEvent):
-            self.track_start(event)
-        elif isinstance(event.__class__, TrackEndEvent):
-            self.track_end(event)
-        elif isinstance(event.__class__, TrackExceptionEvent):
-            self.track_exception(event)
-        elif isinstance(event.__class__, TrackStuckEvent):
-            self.track_stuck(event)
+        if isinstance(event, TrackPauseEvent):
+            await self.track_pause(event)
+        elif isinstance(event, TrackResumeEvent):
+            await self.track_resume(event)
+        elif isinstance(event, TrackStartEvent):
+            await self.track_start(event)
+        elif isinstance(event, TrackEndEvent):
+            await self.track_end(event)
+        elif isinstance(event, TrackExceptionEvent):
+            await self.track_exception(event)
+        elif isinstance(event, TrackStuckEvent):
+            await self.track_stuck(event)
 
 
 class DefaultEventAdapter(AbstractPlayerEventAdapter):
@@ -101,21 +103,38 @@ class DefaultEventAdapter(AbstractPlayerEventAdapter):
         self.bot = ctx.bot
         self.queue = deque()
 
-    def track_resume(self, event: TrackResumeEvent):
+    async def track_resume(self, event: TrackResumeEvent):
         pass
 
-    def track_exception(self, event: TrackExceptionEvent):
+    async def track_exception(self, event: TrackExceptionEvent):
         pass
 
-    def track_start(self, event: TrackStartEvent):
+    async def track_start(self, event: TrackStartEvent):
+        track = event.track
+        await self.ctx.send(str(track))
+
+    async def track_pause(self, event: TrackPauseEvent):
         pass
 
-    def track_pause(self, event: TrackPauseEvent):
+    async def track_end(self, event: TrackEndEvent):
+        track = event.track
+        await self.ctx.send(str(track))
+        await self.play()
+
+    async def track_stuck(self, event: TrackStuckEvent):
         pass
 
-    def track_end(self, event: TrackEndEvent):
-        pass
+    async def add_track(self, track, requester):
+        audio_track = AudioTrack(track, requester)
+        if not self.queue and not self.player.current:
+            await self.player.play(audio_track)
+            return
+        self.queue.append(audio_track)
 
-    def track_stuck(self, event: TrackStuckEvent):
-        pass
+    async def play(self):
+        if not self.queue:
+            return
+        track = self.queue.pop()
+        await self.player.play(track)
+
 

@@ -1,7 +1,7 @@
 import json
 from time import time
 
-from.audio_events import TrackStartEvent, TrackPauseEvent, TrackResumeEvent
+from .audio_events import TrackStartEvent, TrackPauseEvent, TrackResumeEvent
 
 
 class Player:
@@ -122,7 +122,7 @@ class Player:
         if not self.event_adapters:
             return
         for i in self.event_adapters:
-            i.on_event(event)
+            await i.on_event(event)
 
 
 class PlayerManager:
@@ -148,9 +148,8 @@ class PlayerManager:
         """ Returns a list of players based on the given filter predicate """
         return list(filter(predicate, self._players))
 
-    def get(self, ctx):
+    def get(self, guild_id):
         """ Returns a player from the cache, or creates one if it does not exist """
-        guild_id = ctx.guild.id
         if guild_id not in self._players:
             p = Player(bot=self.bot, guild_id=guild_id)
             self._players[guild_id] = p
