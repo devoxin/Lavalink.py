@@ -1,45 +1,35 @@
 import json
-from random import randrange
+from time import time
 
-from .audio_track import *
-from abc import ABC, abstractmethod
-
-
-class AbstractPlayer(ABC):
-
-    @abstractmethod
-    async def _on_track_end(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    async def _on_track_start(self):
-        raise NotImplementedError
+from.audio_events import TrackStartEvent, TrackPauseEvent, TrackResumeEvent
 
 
 class Player:
-    def __init__(self, bot, guild_id: int):
+    def __init__(self, bot, guild_id):
         self.bot = bot
+        self.event_adapters = []
         self.guild_id = str(guild_id)
         self.channel_id = None
         self._user_data = {}
-
         self.paused = False
-        self.position = 0
-        self.position_timestamp = 0
+        self._position = -1
+        self._position_timestamp = -1
         self.volume = 100
-        self.shuffle = False
-        self.repeat = False
-
-        self.queue = []
         self.current = None
 
     @property
-    def is_playing(self) -> bool:
+    def position(self):
+        if not self.paused:
+            diff = time() - self._position_timestamp
+            return min(self._position + diff, self.current)
+    
+    @property
+    def is_playing(self):
         """ Returns the player's track state """
         return self.connected_channel is not None and self.current is not None
 
     @property
-    def is_connected(self) -> bool:
+    def is_connected(self):
         """ Returns the player's connection state """
         return self.connected_channel is not None
 
@@ -51,8 +41,8 @@ class Player:
 
         return self.bot.get_channel(int(self.channel_id))
 
-    async def connect(self, channel) -> None:
-        """ Connects to a voicechannel """
+    async def connect(self, channel):
+        """ Connects to a voice channel. This is sending directly to discord, not to the lavalink node"""
         payload = {
             'op': 4,
             'd': {
@@ -65,13 +55,11 @@ class Player:
         await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
         self.channel_id = str(channel.id)
 
-    async def disconnect(self) -> None:
-        """ Disconnects from the voicechannel, if any """
+    async def disconnect(self):
+        """ Disconnects from the voice channel, if any. This is sending directly to discord, not to the lavalink node"""
         if not self.is_connected:
             return
-
         await self.stop()
-
         payload = {
             'op': 4,
             'd': {
@@ -81,75 +69,61 @@ class Player:
                 'self_deaf': False
             }
         }
-
         await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
         self.channel_id = None
 
-    def store(self, key: object, value: object) -> None:
+    def store(self, key, value):
         """ Stores custom user data """
         self._user_data.update({key: value})
 
-    def fetch(self, key: object, default=None) -> object:
+    def fetch(self, key, default=None):
         """ Retrieves the related value from the stored user data """
         return self._user_data.get(key, default)
 
-    def add(self, requester: int, track: dict) -> None:
-        """ Adds a track to the queue """
-        self.queue.append(AudioTrack(track, requester))
+    async def play(self, track):
+        """ Plays a requested track"""
+        await self.bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
+        self.current = track
+        await self.trigger_event(TrackStartEvent(self, track))
 
-    async def add_and_play(self, requester: int, track: dict) -> None:
-        """ Adds a track to the queue and then starts playing if nothing else is playing """
-        self.add(requester, track)
-
-        if not self.is_playing:
-            await self.play()
-
-    async def play(self) -> None:
-        """ Plays the first track in the queue, if any """
-        self.current = None
-        self.position = 0
-        self.paused = False
-
-        if not self.queue:
-            await self.stop()
-            await self.bot.lavalink.client._trigger_event('QueueEndEvent', self.guild_id)
-        else:
-            if self.shuffle:
-                track = self.queue.pop(randrange(len(self.queue)))
-            else:
-                track = self.queue.pop(0)
-
-            self.current = track
-            await self.bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
-            await self.bot.lavalink.client._trigger_event('TrackStartEvent', self.guild_id)
-
-    async def stop(self) -> None:
+    async def stop(self):
         """ Stops the player, if playing """
         await self.bot.lavalink.ws.send(op='stop', guildId=self.guild_id)
         self.current = None
 
-    async def skip(self) -> None:
-        """ Moves the player onto the next track in the queue """
-        await self.play()
+    async def destroy(self):
+        """ Stops the player, if playing """
+        await self.bot.lavalink.ws.send(op='destroy', guildId=self.guild_id)
+        self.current = None
 
-    async def set_pause(self, pause: bool) -> None:
+    async def set_pause(self, pause: bool):
         """ Sets the player's paused state """
+        if pause == self.paused:
+            return
         await self.bot.lavalink.ws.send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
+        if pause:
+            await self.trigger_event(TrackPauseEvent(self))
+        else:
+            await self.trigger_event(TrackResumeEvent(self))
 
-    async def set_volume(self, vol: int) -> None:
+    async def set_volume(self, vol: int):
         """ Sets the player's volume (150% limit imposed by lavalink) """
         self.volume = max(min(vol, 150), 0)
 
         await self.bot.lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
 
-    async def seek(self, pos: int) -> None:
+    async def seek(self, pos: int):
         """ Seeks to a given position in the track """
         await self.bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
-    async def _on_track_end(self, reason: str):
-        if reason in ['FINISHED', 'TrackStuckEvent', 'TrackExceptionEvent']:
-            await self.play()
+    async def trigger_event(self, event):
+        """ Triggering an an event, using event adapters"""
+        if not self.event_adapters:
+            return
+        for i in self.event_adapters:
+            i.on_event(event)
+
 
 class PlayerManager:
     def __init__(self, bot):
@@ -174,15 +148,16 @@ class PlayerManager:
         """ Returns a list of players based on the given filter predicate """
         return list(filter(predicate, self._players))
 
-    def get(self, guild_id):
+    def get(self, ctx):
         """ Returns a player from the cache, or creates one if it does not exist """
+        guild_id = ctx.guild.id
         if guild_id not in self._players:
             p = Player(bot=self.bot, guild_id=guild_id)
             self._players[guild_id] = p
 
         return self._players[guild_id]
 
-    def has(self, guild_id) -> bool:
+    def has(self, guild_id):
         """ Returns the presence of a player in the cache """
         return guild_id in self._players
 
@@ -194,6 +169,3 @@ class PlayerManager:
         """ Returns the amount of players that are currently playing """
         return len([p for p in self._players.values() if p.is_playing])
 
-    def use_player(self, player):
-        """ Not implemented """
-        raise NotImplementedError  # :)

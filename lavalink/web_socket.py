@@ -63,9 +63,9 @@ class WebSocket:
                     return self.log('debug', 'Received websocket message without op\n' + str(data))
 
                 if op == 'event':
-                    await self._lavalink._trigger_event(data['type'], data['guildId'], data.get('reason', data['type']))
+                    await self._lavalink.trigger_event(data)
                 elif op == 'playerUpdate':
-                    await self._lavalink._update_state(data)
+                    await self._lavalink.update_state(data)
         except websockets.ConnectionClosed:
             self._lavalink.bot.lavalink.players.clear()
 

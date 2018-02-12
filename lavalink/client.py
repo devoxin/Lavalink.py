@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 
+from .audio_events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
 from .players import *
 from .web_socket import *
 
@@ -31,7 +32,6 @@ class Client:
     def __init__(self, bot, **kwargs):
         self.http = bot.http._session  # Let's use the bot's http session instead
         self.voice_state = {}
-        self.hooks = []
         self.log_level = resolve_log_level(kwargs.pop('log_level', 'info'))
 
         self.bot = bot
@@ -49,31 +49,30 @@ class Client:
         if not self.bot.lavalink.client:
             self.bot.lavalink.client = self
 
-    def register_hook(self, func):
-        if func not in self.hooks:
-            self.hooks.append(func)
-
-    def unregister_hook(self, func):
-        if func in self.hooks:
-            self.hooks.remove(func)
-
-    async def _trigger_event(self, event: str, guild_id: str, reason: str=''):
-        player = self.bot.lavalink.players[int(guild_id)]
+    async def trigger_event(self, data):
+        g = int(data['guildId'])
+        event_name = data['type']
+        player = self.bot.lavalink.players[g]
+        track = player.current  # Dunno how to decode the base64 encoded track item
 
         if player:
-            for hook in self.hooks:
-                await hook(player, event)
+            event = None
+            if event_name == 'TrackEndEvent':
+                event = TrackEndEvent(player, track, data['reason'])
+            elif event_name == 'TrackExceptionEvent':
+                event = TrackExceptionEvent(player, track, data['error'])
+            elif event_name == 'TrackStuckEvent':
+                event = TrackStuckEvent(player, track, data['thresholdMs'])
+            if event:
+                await player.trigger_event(event)
 
-            if event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
-                await player._on_track_end(reason)
-
-    async def _update_state(self, data):
+    async def update_state(self, data):
         g = int(data['guildId'])
 
         if self.bot.lavalink.players.has(g):
             p = self.bot.lavalink.players.get(g)
-            p.position = data['state']['position']
-            p.position_timestamp = data['state']['time']
+            p._position = data['state']['position']
+            p._position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
         self.log('debug', 'Requesting tracks for query ' + query)
@@ -107,7 +106,6 @@ class Client:
 
     def destroy(self):
         self.bot.remove_listener(self.on_socket_response)
-        self.hooks.clear()
         self.bot.lavalink.client = None
 
     def log(self, level, content):
