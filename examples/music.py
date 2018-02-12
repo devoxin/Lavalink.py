@@ -4,9 +4,57 @@ import re
 import discord
 from discord.ext import commands
 import lavalink
-from lavalink.audio_events import DefaultEventAdapter
+from lavalink.audio_events import TrackResumeEvent, TrackExceptionEvent, TrackStartEvent, TrackPauseEvent, TrackEndEvent, \
+    TrackStuckEvent, AudioTrack, AbstractPlayerEventAdapter
 
 time_rx = re.compile('[0-9]+')
+
+
+class DefaultEventAdapter(AbstractPlayerEventAdapter):
+    """
+    The default event adapter
+    TODO: Add more shit to this class
+    """
+
+    def __init__(self, player, ctx):
+        super().__init__(player)
+        self.ctx = ctx
+        self.bot = ctx.bot
+        self.queue = []
+
+    async def track_resume(self, event: TrackResumeEvent):
+        pass
+
+    async def track_exception(self, event: TrackExceptionEvent):
+        pass
+
+    async def track_start(self, event: TrackStartEvent):
+        track = event.track
+        await self.ctx.send('Now playing: '+track.title)
+
+    async def track_pause(self, event: TrackPauseEvent):
+        pass
+
+    async def track_end(self, event: TrackEndEvent):
+        track = event.track
+        await self.ctx.send('Track finished: '+track.title)
+        await self.play()
+
+    async def track_stuck(self, event: TrackStuckEvent):
+        pass
+
+    async def add_track(self, track, requester):
+        audio_track = AudioTrack(track, requester)
+        if not self.queue and not self.player.current:
+            await self.player.play(audio_track)
+            return
+        self.queue.append(audio_track)
+
+    async def play(self):
+        if not self.queue:
+            return
+        track = self.queue.pop(0)
+        await self.player.play(track)
 
 
 class Music:
