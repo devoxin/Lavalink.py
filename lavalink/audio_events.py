@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections import deque
 
 from .audio_track import AudioTrack
 
@@ -92,16 +91,38 @@ class AbstractPlayerEventAdapter(ABC):
             await self.track_stuck(event)
 
 
+class InternalEventAdapter(AbstractPlayerEventAdapter):
+    async def track_pause(self, event: TrackPauseEvent):
+        pass
+
+    async def track_resume(self, event: TrackResumeEvent):
+        pass
+
+    async def track_start(self, event: TrackStartEvent):
+        pass
+
+    async def track_end(self, event: TrackEndEvent):
+        #if event.reason != 'REPLACED' and event.reason != 'STOPPED':
+        self.player.current = None
+
+    async def track_exception(self, event: TrackExceptionEvent):
+        pass
+
+    async def track_stuck(self, event: TrackStuckEvent):
+        pass
+
+
 class DefaultEventAdapter(AbstractPlayerEventAdapter):
     """
     The default event adapter
     TODO: Add more shit to this class
     """
+
     def __init__(self, player, ctx):
         super().__init__(player)
         self.ctx = ctx
         self.bot = ctx.bot
-        self.queue = deque()
+        self.queue = []
 
     async def track_resume(self, event: TrackResumeEvent):
         pass
@@ -111,14 +132,14 @@ class DefaultEventAdapter(AbstractPlayerEventAdapter):
 
     async def track_start(self, event: TrackStartEvent):
         track = event.track
-        await self.ctx.send(str(track))
+        await self.ctx.send('Now playing: '+track.title)
 
     async def track_pause(self, event: TrackPauseEvent):
         pass
 
     async def track_end(self, event: TrackEndEvent):
         track = event.track
-        await self.ctx.send(str(track))
+        await self.ctx.send('Track finished: '+track.title)
         await self.play()
 
     async def track_stuck(self, event: TrackStuckEvent):
@@ -134,7 +155,5 @@ class DefaultEventAdapter(AbstractPlayerEventAdapter):
     async def play(self):
         if not self.queue:
             return
-        track = self.queue.pop()
+        track = self.queue.pop(0)
         await self.player.play(track)
-
-

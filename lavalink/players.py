@@ -1,13 +1,13 @@
 import json
 from time import time
 
-from .audio_events import TrackStartEvent, TrackPauseEvent, TrackResumeEvent
+from .audio_events import TrackStartEvent, TrackPauseEvent, TrackResumeEvent, InternalEventAdapter
 
 
 class Player:
     def __init__(self, bot, guild_id):
         self.bot = bot
-        self.event_adapters = []
+        self.event_adapters = [InternalEventAdapter(self)]
         self.guild_id = str(guild_id)
         self.channel_id = None
         self._user_data = {}
@@ -20,8 +20,9 @@ class Player:
     @property
     def position(self):
         if not self.paused:
-            diff = time() - self._position_timestamp
-            return min(self._position + diff, self.current)
+            diff = time()*1000 - self._position_timestamp
+            return min(self._position + diff, self.current.duration)
+        return min(self._position, self.current.duration)
     
     @property
     def is_playing(self):
@@ -89,7 +90,6 @@ class Player:
     async def stop(self):
         """ Stops the player, if playing """
         await self.bot.lavalink.ws.send(op='stop', guildId=self.guild_id)
-        self.current = None
 
     async def destroy(self):
         """ Stops the player, if playing """

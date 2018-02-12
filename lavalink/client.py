@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime
 
 from .audio_events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
