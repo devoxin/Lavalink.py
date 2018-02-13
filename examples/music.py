@@ -10,7 +10,7 @@ from lavalink import TrackResumeEvent, TrackExceptionEvent, TrackStartEvent, Tra
 time_rx = re.compile('[0-9]+')
 
 
-class DefaultEventAdapter(AbstractPlayerEventAdapter):
+class ExampleEventAdapter(AbstractPlayerEventAdapter):
     """
     The default event adapter
     TODO: Add more shit to this class
@@ -68,7 +68,7 @@ class Music:
         player = self.bot.lavalink.players.get(ctx.guild.id)
         player_adapters = player.event_adapters
         if ctx.guild.id not in self.adapters:
-            adapter = DefaultEventAdapter(player, ctx)
+            adapter = ExampleEventAdapter(player, ctx)
             self.adapters[ctx.guild.id] = adapter
             player_adapters.append(adapter)
         if not player.is_connected:
