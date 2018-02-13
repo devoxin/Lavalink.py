@@ -4,8 +4,8 @@ import re
 import discord
 from discord.ext import commands
 import lavalink
-from lavalink.audio_events import TrackResumeEvent, TrackExceptionEvent, TrackStartEvent, TrackPauseEvent, TrackEndEvent, \
-    TrackStuckEvent, AudioTrack, AbstractPlayerEventAdapter
+from lavalink import TrackResumeEvent, TrackExceptionEvent, TrackStartEvent, TrackPauseEvent, TrackEndEvent, \
+    TrackStuckEvent, AbstractPlayerEventAdapter, AudioTrack
 
 time_rx = re.compile('[0-9]+')
 
@@ -17,7 +17,7 @@ class DefaultEventAdapter(AbstractPlayerEventAdapter):
     """
 
     def __init__(self, player, ctx):
-        super().__init__(player)
+        self.player = player
         self.ctx = ctx
         self.bot = ctx.bot
         self.queue = []

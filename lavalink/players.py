@@ -5,9 +5,11 @@ from .audio_events import TrackStartEvent, TrackPauseEvent, TrackResumeEvent, In
 
 
 class Player:
+    internal_event_adapter = InternalEventAdapter()
+
     def __init__(self, bot, guild_id):
         self.bot = bot
-        self.event_adapters = [InternalEventAdapter(self)]
+        self.event_adapters = [Player.internal_event_adapter]
         self.guild_id = str(guild_id)
         self.channel_id = None
         self._user_data = {}

@@ -5,6 +5,7 @@ __copyright__ = 'Copyright 2018 Luke & William'
 __version__ = '2.0.2.3'
 
 from .audio_track import *
+from .audio_events import *
 from .client import *
 from .players import *
 from .utils import *
