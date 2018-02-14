@@ -3,7 +3,7 @@ import re
 
 import discord
 from discord.ext import commands
-from utils import lavalink
+import lavalink
 
 time_rx = re.compile('[0-9]+')
 
@@ -39,7 +39,7 @@ class Music:
             if ctx.author.voice is None or ctx.author.voice.channel is None:
                 return await ctx.send('Join a voice channel!')
             player.store('channel', ctx.channel.id)
-            await player.connect(ctx.author.voice.channel)
+            await player.connect(ctx.author.voice.channel.id)
         else:
             if ctx.author.voice is None or ctx.author.voice.channel is None or player.connected_channel.id != ctx.author.voice.channel.id:
                 return await ctx.send('Join my voice channel!')
