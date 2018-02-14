@@ -39,19 +39,19 @@ class Player:
 
         return self.bot.get_channel(int(self.channel_id))
 
-    async def connect(self, channel) -> None:
+    async def connect(self, channel_id: int) -> None:
         """ Connects to a voicechannel """
         payload = {
             'op': 4,
             'd': {
                 'guild_id': self.guild_id,
-                'channel_id': str(channel.id),
+                'channel_id': str(channel_id),
                 'self_mute': False,
                 'self_deaf': False
             }
         }
         await self.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
-        self.channel_id = str(channel.id)
+        self.channel_id = str(channel_id)
 
     async def disconnect(self) -> None:
         """ Disconnects from the voicechannel, if any """
