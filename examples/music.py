@@ -3,7 +3,7 @@ import re
 
 import discord
 from discord.ext import commands
-from utils import lavalink
+import lavalink
 
 time_rx = re.compile('[0-9]+')
 
