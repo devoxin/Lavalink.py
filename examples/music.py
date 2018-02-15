@@ -56,7 +56,7 @@ class Music:
 
         if 'list' in query and 'ytsearch:' not in query:
             for track in tracks:
-                await player.add_and_play(requester=ctx.author.id, track=tracks)
+                await player.add_and_play(requester=ctx.author.id, track=track)
 
             embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
                                   title="Playlist Enqueued!",
