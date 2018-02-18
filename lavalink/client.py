@@ -1,23 +1,9 @@
 from datetime import datetime
 
+from .utils import LogLevel
 from .audio_events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
 from .players import *
 from .web_socket import *
-
-
-def resolve_log_level(level):
-    if level == 'debug':
-        return 0
-    elif level == 'info':
-        return 1
-    elif level == 'warn':
-        return 2
-    elif level == 'error':
-        return 3
-    elif level == 'off':
-        return 4
-    else:
-        return 0
 
 
 class Lavalink:
@@ -31,7 +17,7 @@ class Client:
     def __init__(self, bot, **kwargs):
         self.http = bot.http._session  # Let's use the bot's http session instead
         self.voice_state = {}
-        self.log_level = resolve_log_level(kwargs.pop('log_level', 'info'))
+        self.log_level = kwargs.pop('log_level', LogLevel.debug).value
 
         self.bot = bot
         self.bot.add_listener(self.on_socket_response)
@@ -108,6 +94,6 @@ class Client:
         self.bot.lavalink.client = None
 
     def log(self, level, content):
-        lvl = resolve_log_level(level)
+        lvl = LogLevel[level].value
         if lvl >= self.log_level:
             print('[{}] [lavalink.py] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))

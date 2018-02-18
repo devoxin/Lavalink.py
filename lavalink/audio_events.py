@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from .audio_track import AudioTrack
+
 
 class Event(ABC):
     @abstractmethod
@@ -45,7 +47,6 @@ class TrackStuckEvent(Event):
 
 
 class AbstractPlayerEventAdapter(ABC):
-
     @abstractmethod
     async def track_pause(self, event: TrackPauseEvent):
         pass
@@ -106,4 +107,3 @@ class InternalEventAdapter(AbstractPlayerEventAdapter):
 
     async def track_stuck(self, event: TrackStuckEvent):
         pass
-

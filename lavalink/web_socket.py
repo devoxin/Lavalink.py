@@ -77,15 +77,32 @@ class WebSocket:
                 await self.connect()
 
                 if self._ws.open:
+                    self.log('info', 'Connected!')
                     return
 
             self.log('warn', 'Unable to reconnect to Lavalink!')
 
     async def send(self, **data):
         """ Sends data to lavalink """
-        if not self._ws or not self._ws:
-            self._queue.append(data)
-            self.log('debug', 'Websocket not ready; appending payload to queue\n' + str(data))
-        else:
-            self.log('debug', 'Sending payload:\n' + str(data))
-            await self._ws.send(json.dumps(data))
+        try:
+            if not self._ws or not self._ws:
+                self._queue.append(data)
+                self.log('debug', 'Websocket not ready; appending payload to queue\n' + str(data))
+            else:
+                self.log('debug', 'Sending payload:\n' + str(data))
+                await self._ws.send(json.dumps(data))
+        except websockets.ConnectionClosed:
+            self._lavalink.bot.lavalink.players.clear()
+
+            self.log('info', 'Connection closed; attempting to reconnect in 30 seconds')
+            self._ws.close()
+            for a in range(0, self._ws_retry):
+                await asyncio.sleep(30)
+                self.log('info', 'Reconnecting... (Attempt {})'.format(a + 1))
+                await self.connect()
+
+                if self._ws.open:
+                    self.log('info', 'Connected!')
+                    await self._ws.send(json.dumps(data))
+                    return
+            self.log('warn', 'Unable to reconnect to Lavalink!')

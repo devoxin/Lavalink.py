@@ -9,7 +9,7 @@ class Player:
 
     def __init__(self, bot, guild_id):
         self.bot = bot
-        self.event_adapters = [Player.internal_event_adapter]
+        self.event_adapter = None
         self.guild_id = str(guild_id)
         self.channel_id = None
         self._user_data = {}
@@ -29,7 +29,7 @@ class Player:
     @property
     def is_playing(self):
         """ Returns the player's track state """
-        return self.connected_channel is not None and self.current is not None
+        return self.is_connected and self.current is not None
 
     @property
     def is_connected(self):
@@ -94,9 +94,8 @@ class Player:
         await self.bot.lavalink.ws.send(op='stop', guildId=self.guild_id)
 
     async def destroy(self):
-        """ Stops the player, if playing """
+        """ Destroys the player, disconnects at the same time but this is handled by the LP node """
         await self.bot.lavalink.ws.send(op='destroy', guildId=self.guild_id)
-        self.current = None
 
     async def set_pause(self, pause: bool):
         """ Sets the player's paused state """
@@ -121,10 +120,9 @@ class Player:
 
     async def trigger_event(self, event):
         """ Triggering an an event, using event adapters"""
-        if not self.event_adapters:
-            return
-        for i in self.event_adapters:
-            await i.on_event(event)
+        await Player.internal_event_adapter.on_event(event)
+        if self.event_adapter:
+            await self.event_adapter.on_event(event)
 
 
 class PlayerManager:
