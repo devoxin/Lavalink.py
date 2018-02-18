@@ -16,10 +16,9 @@ class WebSocket:
         self._host = kwargs.get('host', 'localhost')
         self._port = kwargs.pop('port', 80)
         self._uri = 'ws://{}:{}'.format(self._host, self._port)
-        self._shards = self._lavalink.bot.shard_count or kwargs.pop("shard_count", 1)
-        self._user_id = self._lavalink.bot.user.id
+        self._shards = kwargs.pop('shard_count', 1)
 
-        self._loop = self._lavalink.bot.loop
+        self._loop = self._lavalink.loop
         self._loop.create_task(self.connect())
 
     async def connect(self):
@@ -30,10 +29,13 @@ class WebSocket:
             self.log('debug', 'Websocket still open, closing...')
             self._ws.close()
 
+        user_id = self._lavalink.bot.user.id
+        shard_count = self._lavalink.bot.shard_count or self._shards
+
         headers = {
             'Authorization': self._password,
-            'Num-Shards': self._shards,
-            'User-Id': self._user_id
+            'Num-Shards': shard_count,
+            'User-Id': user_id
         }
         self.log('debug', 'Preparing to connect to Lavalink')
         self.log('debug', '    with URI: {}'.format(self._uri))

@@ -38,7 +38,6 @@ class Client:
         self.bot.add_listener(self.on_socket_response)
 
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
-        self.user_id = self.bot.user.id
         self.rest_uri = 'http://{}:{}/loadtracks?identifier='.format(kwargs.get('host', 'localhost'), kwargs.pop('rest', 2333))
         self.password = kwargs.get('password', '')
 
