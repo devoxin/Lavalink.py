@@ -1,6 +1,6 @@
 import json
 from random import randrange
-
+from collections import deque
 from .AudioTrack import *
 
 
@@ -18,7 +18,7 @@ class Player:
         self.shuffle = False
         self.repeat = False
 
-        self.queue = []
+        self.queue = deque()
         self.current = None
 
     @property
@@ -85,14 +85,7 @@ class Player:
         """ Adds a track to the queue """
         self.queue.append(AudioTrack().build(track, requester))
 
-    async def add_and_play(self, requester: int, track: dict) -> None:
-        """ Adds a track to the queue and then starts playing if nothing else is playing """
-        self.add(requester, track)
-
-        if not self.is_playing:
-            await self.play()
-
-    async def play(self) -> None:
+    async def play(self, interrupt: bool=False) -> None:
         """ Plays the first track in the queue, if any """
         self.current = None
         self.position = 0
@@ -105,7 +98,7 @@ class Player:
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
             else:
-                track = self.queue.pop(0)
+                track = self.queue.popleft()
 
             self.current = track
             await self.bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
@@ -128,7 +121,6 @@ class Player:
     async def set_volume(self, vol: int) -> None:
         """ Sets the player's volume (150% limit imposed by lavalink) """
         self.volume = max(min(vol, 150), 0)
-
         await self.bot.lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
 
     async def seek(self, pos: int) -> None:
