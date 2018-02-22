@@ -37,12 +37,12 @@ class Music:
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not player.is_connected:
-            if ctx.author.voice is None or ctx.author.voice.channel is None:
+            if not ctx.author.voice or not ctx.author.voice.channel:
                 return await ctx.send('Join a voice channel!')
             player.store('channel', ctx.channel.id)
             await player.connect(ctx.author.voice.channel.id)
         else:
-            if ctx.author.voice is None or ctx.author.voice.channel is None or player.connected_channel.id != ctx.author.voice.channel.id:
+            if not ctx.author.voice or not ctx.author.voice.channel or player.connected_channel.id != ctx.author.voice.channel.id:
                 return await ctx.send('Join my voice channel!')
 
         query = query.strip('<>')
@@ -55,20 +55,23 @@ class Music:
         if not tracks:
             return await ctx.send('Nothing found 👀')
 
+        embed = discord.Embed(colour=ctx.guild.me.top_role.colour)
+
         if 'list' in query and 'ytsearch:' not in query:
             for track in tracks:
-                await player.add_and_play(requester=ctx.author.id, track=track)
+                player.add(requester=ctx.author.id, track=track)
 
-            embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
-                                  title="Playlist Enqueued!",
-                                  description=f"Imported {len(tracks)} tracks from the playlist :)")
+            embed.title = "Playlist Enqueued!"
+            embed.description = f"Imported {len(tracks)} tracks from the playlist :)"
             await ctx.send(embed=embed)
         else:
-            embed = discord.Embed(colour=ctx.guild.me.top_role.colour,
-                                  title="Track Enqueued",
-                                  description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
+            embed.title="Track Enqueued",
+            embed.description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
             await ctx.send(embed=embed)
-            await player.add_and_play(requester=ctx.author.id, track=tracks[0])
+            player.add(requester=ctx.author.id, track=tracks[0])
+        
+        if not player.is_playing:
+            await player.play()
 
     @commands.command()
     async def seek(self, ctx, time):
@@ -169,7 +172,7 @@ class Music:
             await ctx.send('⏯ | Resumed')
         else:
             await player.set_pause(True)
-            await ctx.send(' ⏯ | Paused')
+            await ctx.send('⏯ | Paused')
 
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, volume: int=None):
