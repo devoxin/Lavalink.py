@@ -12,9 +12,7 @@ class Music:
     def __init__(self, bot):
         self.bot = bot
         lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
-
         self.bot.lavalink.client.register_hook(self.track_hook)
-        # As of 2.0, lavalink.Client will be available via self.bot.lavalink.client
 
     async def track_hook(self, player, event):
         if event == 'TrackStartEvent':
@@ -65,11 +63,11 @@ class Music:
             embed.description = f"Imported {len(tracks)} tracks from the playlist :)"
             await ctx.send(embed=embed)
         else:
-            embed.title="Track Enqueued",
-            embed.description=f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})')
+            embed.title = "Track Enqueued"
+            embed.description = f'[{tracks[0]["info"]["title"]}]({tracks[0]["info"]["uri"]})'
             await ctx.send(embed=embed)
             player.add(requester=ctx.author.id, track=tracks[0])
-        
+
         if not player.is_playing:
             await player.play()
 
