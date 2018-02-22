@@ -25,6 +25,6 @@ class AudioTrack:
     def thumbnail(self):
         """ Returns the video thumbnail. Could be an empty string. """
         if 'youtube' in self.uri:
-            return "https://img.youtube.com/vi/{}/maxresdefault.jpg".format(self.identifier)
+            return "https://img.youtube.com/vi/{}/default.jpg".format(self.identifier)
 
         return ""
