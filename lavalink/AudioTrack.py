@@ -22,5 +22,9 @@ class AudioTrack:
             raise InvalidTrack('an invalid track was passed')
 
     @property
-    def hq_thumbnail(self):
-        return "https://img.youtube.com/vi/{}/hqdefault.jpg".format(self.identifier)
+    def track_thumbnail(self):
+        """ Returns the video thumbnail. Could be an empty string. """
+        if 'youtube' in self.uri:
+            return "https://img.youtube.com/vi/{}/maxresdefault.jpg".format(self.identifier)
+
+        return ""
