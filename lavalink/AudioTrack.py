@@ -20,3 +20,7 @@ class AudioTrack:
             return self
         except KeyError:
             raise InvalidTrack('an invalid track was passed')
+
+    @property
+    def hq_thumbnail(self):
+        return "https://img.youtube.com/vi/{}/hqdefault.jpg".format(self.identifier)
