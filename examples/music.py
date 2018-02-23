@@ -21,7 +21,7 @@ class Music:
                 c = self.bot.get_channel(c)
                 if c:
                     embed = discord.Embed(colour=c.guild.me.top_role.colour, title='Now Playing', description=player.current.title)
-                    embed.set_thumbnail(url=player.current.track_thumbnail)
+                    embed.set_thumbnail(url=player.current.thumbnail)
                     await c.send(embed=embed)
         elif event == 'QueueEndEvent':
             c = player.fetch('channel')
