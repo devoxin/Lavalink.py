@@ -56,17 +56,14 @@ class PlayerManager:
 
 
 class BasePlayer(ABC):
-    def __init__(self):
-        self.node = None
-        self.guild_id = None
+    def __init__(self, guild_id: int):
+        self.node = None  # later
+        self.guild_id = str(guild_id)
 
     @property
+    @abstractmethod
     def is_playing(self):
         return False
-
-    @abstractmethod
-    async def play(self):
-        raise NotImplementedError
 
     @abstractmethod
     async def _handle_event(self, event):
