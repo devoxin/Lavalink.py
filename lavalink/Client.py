@@ -96,9 +96,13 @@ class Client:
         else:
             if int(data['d']['user_id']) != self.bot.user.id:
                 return
-            self.voice_state.update({
-                'sessionId': data['d']['session_id']
-            })
+
+            self.voice_state.update({'sessionId': data['d']['session_id']})
+
+            guild_id = int(data['d']['guild_id'])
+
+            if self.bot.lavalink.players[guild_id]:
+                self.bot.lavalink.players[guild_id].channel_id = data['d']['channel_id']
 
         if {'op', 'guildId', 'sessionId', 'event'} == self.voice_state.keys():
             await self.bot.lavalink.ws.send(**self.voice_state)
