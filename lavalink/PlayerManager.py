@@ -66,11 +66,11 @@ class BasePlayer(ABC):
 
     @abstractmethod
     async def play(self):
-        raise NotImplementedError('play has not been implemented')
+        raise NotImplementedError
 
     @abstractmethod
     async def _handle_event(self, event):
-        raise NotImplementedError('_handle_event has not been implemented')
+        raise NotImplementedError
 
 
 class DefaultPlayer(BasePlayer):
