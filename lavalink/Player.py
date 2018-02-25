@@ -50,7 +50,6 @@ class Player:
             }
         }
         await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
-        self.channel_id = str(channel_id)
 
     async def disconnect(self):
         """ Disconnects from the voicechannel, if any """
@@ -70,7 +69,6 @@ class Player:
         }
 
         await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
-        self.channel_id = None
 
     def store(self, key: object, value: object):
         """ Stores custom user data """
