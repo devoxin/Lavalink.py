@@ -82,7 +82,7 @@ class Player:
         """ Adds a track to the queue """
         self.queue.append(AudioTrack().build(track, requester))
 
-    async def play(self, interrupt: bool=False):
+    async def play(self):
         """ Plays the first track in the queue, if any """
         if self.repeat and self.current is not None:
             self.queue.append(self.current)
