@@ -195,16 +195,14 @@ class Music:
 
     @commands.command()
     async def repeat(self, ctx):
-        await ctx.send('Command pending rewrite.')
+        player = self.bot.lavalink.players.get(ctx.guild.id)
 
-        # player = self.bot.lavalink.players.get(ctx.guild.id)
+        if not player.is_playing:
+            return await ctx.send('Nothing playing.')
 
-        # if not player.is_playing:
-        #     return await ctx.send('Nothing playing.')
+        player.repeat = not player.repeat
 
-        # player.repeat = not player.repeat
-
-        # await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
+        await ctx.send('🔁 | Repeat ' + ('enabled' if player.repeat else 'disabled'))
 
     @commands.command()
     async def remove(self, ctx, index: int):
