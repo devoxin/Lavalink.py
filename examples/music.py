@@ -37,6 +37,10 @@ class Music:
         if not player.is_connected:
             if not ctx.author.voice or not ctx.author.voice.channel:
                 return await ctx.send('Join a voice channel!')
+
+            if not permissions.connect or not permissions.speak:
+                return await ctx.send('Missing permissions `CONNECT` and/or `SPEAK`.')
+
             player.store('channel', ctx.channel.id)
             await player.connect(ctx.author.voice.channel.id)
         else:
