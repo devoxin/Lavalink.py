@@ -38,6 +38,8 @@ class Music:
             if not ctx.author.voice or not ctx.author.voice.channel:
                 return await ctx.send('Join a voice channel!')
 
+            permissions = ctx.author.voice.channel.permissions_for(ctx.me)
+
             if not permissions.connect or not permissions.speak:
                 return await ctx.send('Missing permissions `CONNECT` and/or `SPEAK`.')
 
