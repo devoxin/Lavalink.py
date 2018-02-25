@@ -95,7 +95,7 @@ class Player:
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
             else:
-                track = self.queue.pop()
+                track = self.queue.pop(0)
 
             self.current = track
             await self._bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
