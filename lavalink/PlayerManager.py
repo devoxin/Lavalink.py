@@ -22,7 +22,7 @@ class PlayerManager:
 
     def find_all(self, predicate):
         """ Returns a list of players based on the given filter predicate """
-        return list(filter(predicate, self._players))
+        return list(filter(predicate, self._players.values()))
 
     def get(self, guild_id):
         """ Returns a player from the cache, or creates one if it does not exist """
