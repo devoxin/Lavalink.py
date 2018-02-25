@@ -84,6 +84,9 @@ class Player:
 
     async def play(self, interrupt: bool=False):
         """ Plays the first track in the queue, if any """
+        if self.repeat and self.current is not None:
+            self.queue.append(self.current)
+
         self.current = None
         self.position = 0
         self.paused = False
