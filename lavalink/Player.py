@@ -71,12 +71,19 @@ class Player:
         await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
 
     def store(self, key: object, value: object):
-        """ Stores custom user data """
+        """ Stores the key and value in the internal storage """
         self._user_data.update({key: value})
 
     def fetch(self, key: object, default=None):
-        """ Retrieves the related value from the stored user data """
+        """ Retrieves the related value from the internal storage """
         return self._user_data.get(key, default)
+    
+    def delete(self, key: object):
+        """ Removes an item from the internal storage """
+        try:
+            del self._user_data[key]
+        except KeyError:
+            pass
 
     def add(self, requester: int, track: dict):
         """ Adds a track to the queue """
