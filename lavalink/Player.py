@@ -136,6 +136,7 @@ class Player:
 
     async def seek(self, pos: int):
         """ Seeks to a given position in the track """
+        pos = max(pos, 0)  # Prevent seeking before start of track
         await self._bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def _on_track_end(self, reason: str):
