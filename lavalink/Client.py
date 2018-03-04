@@ -97,5 +97,6 @@ class Client:
             self.voice_state.clear()
 
     def destroy(self):
+        self.ws.destroy()
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
