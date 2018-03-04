@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import aiohttp
 
 from .PlayerManager import *
 from .WebSocket import *
@@ -12,17 +13,10 @@ def set_log_level(log_level):
     root_log.setLevel(log_level)
 
 
-class Lavalink:
-    def __init__(self, bot):
-        self.client = None
-        self.players = PlayerManager(bot)
-        self.ws = None
-
-
 class Client:
     def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
                  rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1):
-        self.http = bot.http._session  # Let's use the bot's http session instead
+        self.http = aiohttp.ClientSession(loop=loop)
         self.voice_state = {}
         self.hooks = []
 
@@ -35,14 +29,10 @@ class Client:
         self.rest_uri = 'http://{}:{}/loadtracks?identifier='.format(host, rest_port)
         self.password = password
 
-        if not hasattr(self.bot, 'lavalink'):
-            self.bot.lavalink = Lavalink(self.bot)
-            self.bot.lavalink.ws = WebSocket(
-                self, host, password, ws_port, ws_retry, shard_count
-            )
-
-        if not self.bot.lavalink.client:
-            self.bot.lavalink.client = self
+        self.ws = WebSocket(
+            self, host, password, ws_port, ws_retry, shard_count
+        )
+        self.players = PlayerManager(self)
 
     def register_hook(self, func):
         if func not in self.hooks:
@@ -52,8 +42,8 @@ class Client:
         if func in self.hooks:
             self.hooks.remove(func)
 
-    async def _trigger_event(self, event: str, guild_id: str, reason: str=''):
-        player = self.bot.lavalink.players[int(guild_id)]
+    async def dispatch_event(self, event: str, guild_id: str, reason: str= ''):
+        player = self.players[int(guild_id)]
 
         if player:
             for hook in self.hooks:
@@ -62,11 +52,11 @@ class Client:
             if event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
                 await player._on_track_end(reason)
 
-    async def _update_state(self, data):
+    async def update_state(self, data):
         g = int(data['guildId'])
 
-        if self.bot.lavalink.players.has(g):
-            p = self.bot.lavalink.players.get(g)
+        if self.players.has(g):
+            p = self.players.get(g)
             p.position = data['state']['position']
             p.position_timestamp = data['state']['time']
 
@@ -97,14 +87,14 @@ class Client:
 
             guild_id = int(data['d']['guild_id'])
 
-            if self.bot.lavalink.players[guild_id]:
-                self.bot.lavalink.players[guild_id].channel_id = data['d']['channel_id']
+            if self.players[guild_id]:
+                self.players[guild_id].channel_id = data['d']['channel_id']
 
         if {'op', 'guildId', 'sessionId', 'event'} == self.voice_state.keys():
-            await self.bot.lavalink.ws.send(**self.voice_state)
+            await self.ws.send(**self.voice_state)
             self.voice_state.clear()
 
     def destroy(self):
+        self.ws.destroy()
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
-        self.bot.lavalink.client = None

@@ -4,8 +4,8 @@ from .AudioTrack import *
 
 
 class Player:
-    def __init__(self, bot, guild_id: int):
-        self._bot = bot
+    def __init__(self, lavalink, guild_id: int):
+        self._lavalink = lavalink
         self._user_data = {}
         self.guild_id = str(guild_id)
         self.channel_id = None
@@ -36,20 +36,12 @@ class Player:
         if not self.channel_id:
             return None
 
-        return self._bot.get_channel(int(self.channel_id))
+        return self._lavalink.bot.get_channel(int(self.channel_id))
 
     async def connect(self, channel_id: int):
         """ Connects to a voicechannel """
-        payload = {
-            'op': 4,
-            'd': {
-                'guild_id': self.guild_id,
-                'channel_id': str(channel_id),
-                'self_mute': False,
-                'self_deaf': False
-            }
-        }
-        await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
+        ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
+        await ws.voice_state(self.guild_id, str(channel_id))
 
     async def disconnect(self):
         """ Disconnects from the voicechannel, if any """
@@ -58,17 +50,8 @@ class Player:
 
         await self.stop()
 
-        payload = {
-            'op': 4,
-            'd': {
-                'guild_id': self.guild_id,
-                'channel_id': None,
-                'self_mute': False,
-                'self_deaf': False
-            }
-        }
-
-        await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
+        ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
+        await ws.voice_state(self.guild_id, None)
 
     def store(self, key: object, value: object):
         """ Stores the key and value in the internal storage """
@@ -104,7 +87,7 @@ class Player:
 
         if not self.queue:
             await self.stop()
-            await self._bot.lavalink.client._trigger_event('QueueEndEvent', self.guild_id)
+            await self._lavalink.dispatch_event('QueueEndEvent', self.guild_id)
         else:
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
@@ -112,12 +95,12 @@ class Player:
                 track = self.queue.pop(0)
 
             self.current = track
-            await self._bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
-            await self._bot.lavalink.client._trigger_event('TrackStartEvent', self.guild_id)
+            await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
+            await self._lavalink.dispatch_event('TrackStartEvent', self.guild_id)
 
     async def stop(self):
         """ Stops the player, if playing """
-        await self._bot.lavalink.ws.send(op='stop', guildId=self.guild_id)
+        await self._lavalink.ws.send(op='stop', guildId=self.guild_id)
         self.current = None
 
     async def skip(self):
@@ -126,18 +109,18 @@ class Player:
 
     async def set_pause(self, pause: bool):
         """ Sets the player's paused state """
-        await self._bot.lavalink.ws.send(op='pause', guildId=self.guild_id, pause=pause)
+        await self._lavalink.ws.send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
     async def set_volume(self, vol: int):
         """ Sets the player's volume (150% limit imposed by lavalink) """
         self.volume = max(min(vol, 150), 0)
-        await self._bot.lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
+        await self._lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
 
     async def seek(self, pos: int):
         """ Seeks to a given position in the track """
         pos = max(pos, 0)  # Prevent seeking before start of track
-        await self._bot.lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
+        await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def _on_track_end(self, reason: str):
         if reason in ['FINISHED', 'TrackStuckEvent', 'TrackExceptionEvent']:
