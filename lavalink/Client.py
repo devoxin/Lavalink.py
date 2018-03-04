@@ -34,7 +34,7 @@ class Client:
         self.ws = WebSocket(
             self, host, password, ws_port, ws_retry, shard_count
         )
-        self.players = PlayerManager(bot)
+        self.players = PlayerManager(bot, self)
 
     def register_hook(self, func):
         if func not in self.hooks:
