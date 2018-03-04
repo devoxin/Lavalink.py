@@ -77,7 +77,7 @@ class Player:
     def fetch(self, key: object, default=None):
         """ Retrieves the related value from the internal storage """
         return self._user_data.get(key, default)
-    
+
     def delete(self, key: object):
         """ Removes an item from the internal storage """
         try:
