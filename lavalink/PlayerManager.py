@@ -156,7 +156,7 @@ class DefaultPlayer(BasePlayer):
 
         if not self.queue:
             await self.stop()
-            await self._bot.lavalink.client._trigger_event('QueueEndEvent', self.guild_id)
+            await self._bot.lavalink.client.dispatch_event('QueueEndEvent', self.guild_id)
         else:
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
@@ -165,7 +165,7 @@ class DefaultPlayer(BasePlayer):
 
             self.current = track
             await self._bot.lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
-            await self._bot.lavalink.client._trigger_event('TrackStartEvent', self.guild_id)
+            await self._bot.lavalink.client.dispatch_event('TrackStartEvent', self.guild_id)
 
     async def stop(self):
         """ Stops the player, if playing """
