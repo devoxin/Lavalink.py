@@ -1,23 +1,14 @@
-import asyncio
-from datetime import datetime
-
 from .PlayerManager import *
 from .WebSocket import *
 
+import logging
 
-def resolve_log_level(level):
-    if level == 'debug':
-        return 0
-    elif level == 'info':
-        return 1
-    elif level == 'warn':
-        return 2
-    elif level == 'error':
-        return 3
-    elif level == 'off':
-        return 4
-    else:
-        return 0
+log = logging.getLogger(__name__)
+
+
+def set_log_level(log_level):
+    root_log = logging.getLogger(__name__.split('.')[0])
+    root_log.setLevel(log_level)
 
 
 class Lavalink:
@@ -34,6 +25,8 @@ class Client:
         self.voice_state = {}
         self.hooks = []
         self.log_level = resolve_log_level(log_level)
+
+        set_log_level(kwargs.pop('log_level', logging.INFO))
 
         self.bot = bot
         self.bot.add_listener(self.on_socket_response)
@@ -78,7 +71,7 @@ class Client:
             p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
-        self.log('debug', 'Requesting tracks for query ' + query)
+        log.debug('Requesting tracks for query ' + query)
         async with self.http.get(self.rest_uri + query, headers={'Authorization': self.password}) as res:
             js = await res.json(content_type=None)
             res.close()
@@ -116,7 +109,3 @@ class Client:
         self.hooks.clear()
         self.bot.lavalink.client = None
 
-    def log(self, level, content):
-        lvl = resolve_log_level(level)
-        if lvl >= self.log_level:
-            print('[{}] [lavalink.py] [{}] {}'.format(datetime.utcnow().strftime('%H:%M:%S'), level, content))
