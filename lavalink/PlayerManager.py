@@ -8,8 +8,7 @@ from .Player import *
 
 
 class PlayerManager:
-    def __init__(self, bot, lavalink):
-        self.bot = bot
+    def __init__(self, lavalink):
         self.lavalink = lavalink
         self._players = {}
 
@@ -34,7 +33,7 @@ class PlayerManager:
     def get(self, guild_id):
         """ Returns a player from the cache, or creates one if it does not exist """
         if guild_id not in self._players:
-            p = Player(bot=self.bot, lavalink=self.lavalink, guild_id=guild_id)
+            p = Player(lavalink=self.lavalink, guild_id=guild_id)
             self._players[guild_id] = p
 
         return self._players[guild_id]
@@ -68,8 +67,8 @@ class BasePlayer(ABC):
 
 
 class DefaultPlayer(BasePlayer):
-    def __init__(self, bot, lavalink, guild_id: int):
-        self._bot = bot
+    def __init__(self, lavalink, guild_id: int):
+        super().__init__(guild_id)
         self._lavalink = lavalink
         self._user_data = {}
         self.guild_id = str(guild_id)
@@ -101,7 +100,7 @@ class DefaultPlayer(BasePlayer):
         if not self.channel_id:
             return None
 
-        return self._bot.get_channel(int(self.channel_id))
+        return self._lavalink.bot.get_channel(int(self.channel_id))
 
     async def connect(self, channel_id: int):
         """ Connects to a voicechannel """
@@ -114,7 +113,7 @@ class DefaultPlayer(BasePlayer):
                 'self_deaf': False
             }
         }
-        await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
+        await self._lavalink.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
 
     async def disconnect(self):
         """ Disconnects from the voicechannel, if any """
@@ -133,7 +132,7 @@ class DefaultPlayer(BasePlayer):
             }
         }
 
-        await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
+        await self._lavalink.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
 
     def store(self, key: object, value: object):
         """ Stores custom user data """
