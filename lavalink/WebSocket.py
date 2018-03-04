@@ -20,7 +20,7 @@ class WebSocket:
         self._uri = 'ws://{}:{}'.format(self._host, self._port)
         self._shards = shard_count
 
-        self._shutdown = asyncio.Event()
+        self._shutdown = False
 
         self._loop = self._lavalink.loop
         self._loop.create_task(self.connect())
@@ -29,9 +29,9 @@ class WebSocket:
         """ Establishes a connection to the Lavalink server """
         await self._lavalink.bot.wait_until_ready()
 
-        if self._ws and self._ws.open:
+        if self._ws is not None and self._ws.open:
             log.debug('Websocket still open, closing...')
-            self._ws.close()
+            await self._ws.close()
 
         user_id = self._lavalink.bot.user.id
         shard_count = self._lavalink.bot.shard_count or self._shards
@@ -67,7 +67,6 @@ class WebSocket:
         bool
             ``True`` if the reconnection attempt was successful.
         """
-        await self._ws.close()
         log.info('Connection closed; attempting to reconnect in 30 seconds')
         for a in range(0, self._ws_retry):
             await asyncio.sleep(30)
@@ -79,15 +78,15 @@ class WebSocket:
         return False
 
     async def listen(self):
-        while not self._shutdown.is_set():
+        while self._shutdown is False:
             try:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed:
-                if self._shutdown.is_set():
+                self._lavalink.players.clear()
+
+                if self._shutdown is True:
                     # Exit gracefully
                     break
-
-                self._lavalink.players.clear()
 
                 if await self._attempt_reconnect():
                     # self.connect will spawn another listen task, exit cleanly here
@@ -116,7 +115,7 @@ class WebSocket:
 
     async def send(self, **data):
         """ Sends data to lavalink """
-        if self._ws.open:
+        if self._ws is not None and self._ws.open:
             log.debug('Sending payload:\n' + str(data))
             await self._ws.send(json.dumps(data))
         else:
@@ -125,4 +124,4 @@ class WebSocket:
 
 
     def destroy(self):
-        self._shutdown.set()
+        self._shutdown = False
