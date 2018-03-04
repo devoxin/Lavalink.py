@@ -20,13 +20,13 @@ class Lavalink:
 
 
 class Client:
-    def __init__(self, bot, log_level='info', loop=asyncio.get_event_loop(), host='localhost',
+    def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
                  rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1):
         self.http = bot.http._session  # Let's use the bot's http session instead
         self.voice_state = {}
         self.hooks = []
 
-        set_log_level('log_level', logging.INFO)
+        set_log_level(log_level)
 
         self.bot = bot
         self.bot.add_listener(self.on_socket_response)
