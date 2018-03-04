@@ -1,7 +1,8 @@
+import asyncio
+import logging
+
 from .PlayerManager import *
 from .WebSocket import *
-
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -24,9 +25,8 @@ class Client:
         self.http = bot.http._session  # Let's use the bot's http session instead
         self.voice_state = {}
         self.hooks = []
-        self.log_level = resolve_log_level(log_level)
 
-        set_log_level(kwargs.pop('log_level', logging.INFO))
+        set_log_level('log_level', logging.INFO)
 
         self.bot = bot
         self.bot.add_listener(self.on_socket_response)
@@ -108,4 +108,3 @@ class Client:
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
         self.bot.lavalink.client = None
-
