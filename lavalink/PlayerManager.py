@@ -18,6 +18,11 @@ class PlayerManager:
     def __getitem__(self, item):
         return self._players.get(item, None)
 
+    def __iter__(self):
+        """ Returns a tuple of (guild_id, player)"""
+        for guild_id, player in self._players.items():
+            yield guild_id, player
+
     def __contains__(self, item):
         return item in self._players
 
