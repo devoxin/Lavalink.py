@@ -104,7 +104,8 @@ class DefaultPlayer(BasePlayer):
 
     async def connect(self, channel_id: int):
         """ Connects to a voicechannel """
-        await self._lavalink.bot.ws.voice_state(self.guild_id, str(channel_id))
+        ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
+        await ws.voice_state(self.guild_id, str(channel_id))
 
     async def disconnect(self):
         """ Disconnects from the voicechannel, if any """
@@ -113,7 +114,8 @@ class DefaultPlayer(BasePlayer):
 
         await self.stop()
 
-        await self._lavalink.bot.ws.voice_state(self.guild_id, None)
+        ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
+        await ws.voice_state(self.guild_id, None)
 
     def store(self, key: object, value: object):
         """ Stores custom user data """
