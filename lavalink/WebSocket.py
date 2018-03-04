@@ -20,6 +20,8 @@ class WebSocket:
         self._uri = 'ws://{}:{}'.format(self._host, self._port)
         self._shards = shard_count
 
+        self._shutdown = asyncio.Event()
+
         self._loop = self._lavalink.loop
         self._loop.create_task(self.connect())
 
@@ -56,42 +58,71 @@ class WebSocket:
                 for task in self._queue:
                     await self.send(**task)
 
+    async def _attempt_reconnect(self) -> bool:
+        """
+        Attempts to reconnect to the lavalink server.
+
+        Returns
+        -------
+        bool
+            ``True`` if the reconnection attempt was successful.
+        """
+        await self._ws.close()
+        log.info('Connection closed; attempting to reconnect in 30 seconds')
+        for a in range(0, self._ws_retry):
+            await asyncio.sleep(30)
+            log.info('Reconnecting... (Attempt {})'.format(a + 1))
+            await self.connect()
+
+            if self._ws.open:
+                return True
+        return False
+
     async def listen(self):
-        try:
-            while self._ws.open:
+        while not self._shutdown.is_set():
+            try:
                 data = json.loads(await self._ws.recv())
-                op = data.get('op', None)
-                log.debug('Received websocket data\n' + str(data))
+            except websockets.ConnectionClosed:
+                if self._shutdown.is_set():
+                    # Exit gracefully
+                    break
 
-                if not op:
-                    return log.debug('Received websocket message without op\n' + str(data))
+                self._lavalink.players.clear()
 
-                if op == 'event':
-                    await self._lavalink.dispatch_event(
-                        data['type'], data['guildId'], data.get('reason', data['type'])
-                    )
-                elif op == 'playerUpdate':
-                    await self._lavalink.update_state(data)
-        except websockets.ConnectionClosed:
-            self._lavalink.players.clear()
-
-            log.info('Connection closed; attempting to reconnect in 30 seconds')
-            self._ws.close()
-            for a in range(0, self._ws_retry):
-                await asyncio.sleep(30)
-                log.info('Reconnecting... (Attempt {})'.format(a + 1))
-                await self.connect()
-
-                if self._ws.open:
+                if await self._attempt_reconnect():
+                    # self.connect will spawn another listen task, exit cleanly here
+                    # without hitting the ws.close() down below.
                     return
+                else:
+                    log.warning('Unable to reconnect to Lavalink!')
+                    # Ensure the ws is closed
+                    break
 
-            log.warning('Unable to reconnect to Lavalink!')
+            op = data.get('op', None)
+            log.debug('Received websocket data\n' + str(data))
+
+            if not op:
+                return log.debug('Received websocket message without op\n' + str(data))
+
+            if op == 'event':
+                await self._lavalink.dispatch_event(
+                    data['type'], data['guildId'], data.get('reason', data['type'])
+                )
+            elif op == 'playerUpdate':
+                await self._lavalink.update_state(data)
+
+        log.debug("Shutting down web socket.")
+        await self._ws.close()
 
     async def send(self, **data):
         """ Sends data to lavalink """
-        if not self._ws or not self._ws:
-            self._queue.append(data)
-            log.debug('Websocket not ready; appending payload to queue\n' + str(data))
-        else:
+        if self._ws.open:
             log.debug('Sending payload:\n' + str(data))
             await self._ws.send(json.dumps(data))
+        else:
+            self._queue.append(data)
+            log.debug('Websocket not ready; appending payload to queue\n' + str(data))
+
+
+    def destroy(self):
+        self._shutdown.set()
