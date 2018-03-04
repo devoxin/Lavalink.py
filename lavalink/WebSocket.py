@@ -67,11 +67,13 @@ class WebSocket:
                     return log.debug('Received websocket message without op\n' + str(data))
 
                 if op == 'event':
-                    await self._lavalink._trigger_event(data['type'], data['guildId'], data.get('reason', data['type']))
+                    await self._lavalink.dispatch_event(
+                        data['type'], data['guildId'], data.get('reason', data['type'])
+                    )
                 elif op == 'playerUpdate':
-                    await self._lavalink._update_state(data)
+                    await self._lavalink.update_state(data)
         except websockets.ConnectionClosed:
-            self._lavalink.bot.lavalink.players.clear()
+            self._lavalink.players.clear()
 
             log.info('Connection closed; attempting to reconnect in 30 seconds')
             self._ws.close()
@@ -83,7 +85,7 @@ class WebSocket:
                 if self._ws.open:
                     return
 
-            log.warn('Unable to reconnect to Lavalink!')
+            log.warning('Unable to reconnect to Lavalink!')
 
     async def send(self, **data):
         """ Sends data to lavalink """
