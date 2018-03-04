@@ -7,18 +7,18 @@ log = logging.getLogger(__name__)
 
 
 class WebSocket:
-    def __init__(self, lavalink, **kwargs):
+    def __init__(self, lavalink, host, password, ws_port, ws_retry, shard_count):
         self._lavalink = lavalink
 
         self._ws = None
         self._queue = []
 
-        self._ws_retry = kwargs.pop('ws_retry', 3)
-        self._password = kwargs.get('password', '')
-        self._host = kwargs.get('host', 'localhost')
-        self._port = kwargs.pop('port', 80)
+        self._ws_retry = ws_retry
+        self._password = password
+        self._host = host
+        self._port = ws_port
         self._uri = 'ws://{}:{}'.format(self._host, self._port)
-        self._shards = kwargs.pop('shard_count', 1)
+        self._shards = shard_count
 
         self._loop = self._lavalink.loop
         self._loop.create_task(self.connect())

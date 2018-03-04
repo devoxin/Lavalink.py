@@ -19,23 +19,27 @@ class Lavalink:
 
 
 class Client:
-    def __init__(self, bot, **kwargs):
+    def __init__(self, bot, log_level='info', loop=asyncio.get_event_loop(), host='localhost',
+                 rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1):
         self.http = bot.http._session  # Let's use the bot's http session instead
         self.voice_state = {}
         self.hooks = []
+        self.log_level = resolve_log_level(log_level)
 
         set_log_level(kwargs.pop('log_level', logging.INFO))
 
         self.bot = bot
         self.bot.add_listener(self.on_socket_response)
 
-        self.loop = kwargs.pop('loop', asyncio.get_event_loop())
-        self.rest_uri = 'http://{}:{}/loadtracks?identifier='.format(kwargs.get('host', 'localhost'), kwargs.pop('rest', 2333))
-        self.password = kwargs.get('password', '')
+        self.loop = loop
+        self.rest_uri = 'http://{}:{}/loadtracks?identifier='.format(host, rest_port)
+        self.password = password
 
         if not hasattr(self.bot, 'lavalink'):
             self.bot.lavalink = Lavalink(self.bot)
-            self.bot.lavalink.ws = WebSocket(self, **kwargs)
+            self.bot.lavalink.ws = WebSocket(
+                self, host, password, ws_port, ws_retry, shard_count
+            )
 
         if not self.bot.lavalink.client:
             self.bot.lavalink.client = self
