@@ -11,3 +11,19 @@ from .PlayerManager import *
 from .Utils import *
 from .WebSocket import *
 from .Events import *
+
+import logging
+import sys
+
+log = logging.getLogger(__name__)
+
+fmt = logging.Formatter(
+    '[%(asctime)s] [lavalink.py] [%(levelname)s] %(message)s',
+    datefmt="%H:%M:%S"
+)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(fmt)
+log.addHandler(handler)
+
+log.setLevel(logging.INFO)
