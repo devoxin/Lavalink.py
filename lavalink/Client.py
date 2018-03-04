@@ -16,7 +16,7 @@ def set_log_level(log_level):
 class Client:
     def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
                  rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1):
-        self.http = aiohttp.ClientSession(loop=bot.loop)
+        self.http = aiohttp.ClientSession(loop=loop)
         self.voice_state = {}
         self.hooks = []
 
@@ -24,8 +24,6 @@ class Client:
 
         self.bot = bot
         self.bot.add_listener(self.on_socket_response)
-
-        self.user_id = self.bot.user.id
 
         self.loop = loop
         self.rest_uri = 'http://{}:{}/loadtracks?identifier='.format(host, rest_port)
@@ -82,7 +80,7 @@ class Client:
                 'event': data['d']
             })
         else:
-            if int(data['d']['user_id']) != self.user_id:
+            if int(data['d']['user_id']) != self.bot.user.id:
                 return
 
             self.voice_state.update({'sessionId': data['d']['session_id']})
