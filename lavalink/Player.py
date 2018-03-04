@@ -4,8 +4,7 @@ from .AudioTrack import *
 
 
 class Player:
-    def __init__(self, bot, lavalink, guild_id: int):
-        self._bot = bot
+    def __init__(self, lavalink, guild_id: int):
         self._lavalink = lavalink
         self._user_data = {}
         self.guild_id = str(guild_id)
@@ -37,7 +36,7 @@ class Player:
         if not self.channel_id:
             return None
 
-        return self._bot.get_channel(int(self.channel_id))
+        return self._lavalink.bot.get_channel(int(self.channel_id))
 
     async def connect(self, channel_id: int):
         """ Connects to a voicechannel """
@@ -50,7 +49,7 @@ class Player:
                 'self_deaf': False
             }
         }
-        await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
+        await self._lavalink.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
 
     async def disconnect(self):
         """ Disconnects from the voicechannel, if any """
@@ -69,7 +68,7 @@ class Player:
             }
         }
 
-        await self._bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
+        await self._lavalink.bot._connection._get_websocket(int(self.guild_id)).send(json.dumps(payload))
 
     def store(self, key: object, value: object):
         """ Stores the key and value in the internal storage """
