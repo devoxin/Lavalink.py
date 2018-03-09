@@ -1,3 +1,8 @@
+__all__ = [
+    "QueueEndEvent", "TrackStuckEvent", "TrackExceptionEvent", "TrackEndEvent",
+    "TrackStartEvent"
+]
+
 class QueueEndEvent:
     def __init__(self, player):
         self.player = player

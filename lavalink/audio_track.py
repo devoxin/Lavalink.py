@@ -1,3 +1,5 @@
+__all__ = ["InvalidTrack", "AudioTrack"]
+
 class InvalidTrack(Exception):
     def __init__(self, message):
         super().__init__(message)

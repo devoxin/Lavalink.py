@@ -5,6 +5,8 @@ import aiohttp
 from .player_manager import PlayerManager, DefaultPlayer
 from .websocket import WebSocket
 
+__all__ = ["Client",]
+
 log = logging.getLogger(__name__)
 
 
