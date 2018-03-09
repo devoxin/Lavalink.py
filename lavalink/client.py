@@ -2,8 +2,8 @@ import asyncio
 import logging
 import aiohttp
 
-from .PlayerManager import PlayerManager, DefaultPlayer
-from .WebSocket import WebSocket
+from .player_manager import PlayerManager, DefaultPlayer
+from .websocket import WebSocket
 
 log = logging.getLogger(__name__)
 

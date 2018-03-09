@@ -4,12 +4,12 @@ __license__ = 'MIT'
 __copyright__ = 'Copyright 2018 Luke & William'
 __version__ = '2.0.2.9'
 
-from .AudioTrack import *
-from .Client import *
-from .PlayerManager import *
-from .Utils import *
-from .WebSocket import *
-from .Events import *
+from .audio_track import *
+from .client import *
+from .player_manager import *
+from .utils import *
+from .websocket import *
+from .events import *
 
 import logging
 import sys
