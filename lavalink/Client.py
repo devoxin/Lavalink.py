@@ -2,8 +2,8 @@ import asyncio
 import logging
 import aiohttp
 
-from .PlayerManager import *
-from .WebSocket import *
+from .PlayerManager import PlayerManager, DefaultPlayer
+from .WebSocket import WebSocket
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ def set_log_level(log_level):
 
 class Client:
     def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
-                 rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1):
+                 rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1, player=DefaultPlayer):
         self.http = aiohttp.ClientSession(loop=loop)
         self.voice_state = {}
         self.hooks = []
@@ -32,7 +32,7 @@ class Client:
         self.ws = WebSocket(
             self, host, password, ws_port, ws_retry, shard_count
         )
-        self.players = PlayerManager(self)
+        self.players = PlayerManager(self, player=player)
 
     def register_hook(self, func):
         if func not in self.hooks:
@@ -50,7 +50,7 @@ class Client:
                 await hook(player, event)
 
             if event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
-                await player._on_track_end(reason)
+                await player.handle_event(reason)
 
     async def update_state(self, data):
         g = int(data['guildId'])
