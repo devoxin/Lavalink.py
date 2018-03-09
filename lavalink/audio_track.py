@@ -6,22 +6,36 @@ class InvalidTrack(Exception):
 
 
 class AudioTrack:
-    def build(self, track, requester):
+    def __init__(self, track, identifier, can_seek, author, duration, stream,
+                 title, uri, requester):
+        self.track = track
+        self.identifier = identifier
+        self.can_seek = can_seek
+        self.author = author
+        self.duration = duration
+        self.stream = stream
+        self.title = title
+        self.uri = uri
+        self.requester = requester
+
+    @classmethod
+    def build(cls, track, requester):
         """ Returns an optional AudioTrack """
         try:
-            self.track = track['track']
-            self.identifier = track['info']['identifier']
-            self.can_seek = track['info']['isSeekable']
-            self.author = track['info']['author']
-            self.duration = track['info']['length']
-            self.stream = track['info']['isStream']
-            self.title = track['info']['title']
-            self.uri = track['info']['uri']
-            self.requester = requester
-
-            return self
+            _track = track['track']
+            identifier = track['info']['identifier']
+            can_seek = track['info']['isSeekable']
+            author = track['info']['author']
+            duration = track['info']['length']
+            stream = track['info']['isStream']
+            title = track['info']['title']
+            uri = track['info']['uri']
+            requester = requester
         except KeyError:
             raise InvalidTrack('an invalid track was passed')
+
+        return cls(_track, identifier, can_seek, author, duration, stream, title,
+                   uri, requester)
 
     @property
     def thumbnail(self):
