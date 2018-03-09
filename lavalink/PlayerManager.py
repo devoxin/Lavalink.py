@@ -1,64 +1,14 @@
-import json
 from abc import ABC, abstractmethod
-from random import randrange
-
-from .AudioTrack import *
 from .Events import *
-from .Player import *
 
 
-class PlayerManager:
-    def __init__(self, lavalink):
-        self.lavalink = lavalink
-        self._players = {}
-
-    def __len__(self):
-        return len(self._players)
-
-    def __getitem__(self, item):
-        return self._players.get(item, None)
-
-    def __iter__(self):
-        """ Returns a tuple of (guild_id, player)"""
-        for guild_id, player in self._players.items():
-            yield guild_id, player
-
-    def __contains__(self, item):
-        return item in self._players
-
-    def find(self, predicate):
-        """ Returns the first player in the list based on the given filter predicate. Could be None """
-        found = self.find_all(predicate)
-        return found[0] if found else None
-
-    def find_all(self, predicate):
-        """ Returns a list of players based on the given filter predicate """
-        return list(filter(predicate, self._players.values()))
-
-    def get(self, guild_id):
-        """ Returns a player from the cache, or creates one if it does not exist """
-        if guild_id not in self._players:
-            p = Player(lavalink=self.lavalink, guild_id=guild_id)
-            self._players[guild_id] = p
-
-        return self._players[guild_id]
-
-    def has(self, guild_id) -> bool:
-        """ Returns the presence of a player in the cache """
-        return guild_id in self._players
-
-    def clear(self):
-        """ Removes all of the players from the cache """
-        self._players.clear()
-
-    def use_player(self, player):
-        """ Not implemented """
-        raise NotImplementedError  # :)
+__all__ = ["PlayerManager", "BasePlayer", "DefaultPlayer"]
 
 
 class BasePlayer(ABC):
-    def __init__(self, guild_id: int):
+    def __init__(self, lavalink, guild_id: int):
         self.node = None  # later
+        self._lavalink = lavalink
         self.guild_id = str(guild_id)
 
     @property
@@ -67,16 +17,15 @@ class BasePlayer(ABC):
         return False
 
     @abstractmethod
-    async def _handle_event(self, event):
+    async def handle_event(self, event):
         raise NotImplementedError
 
 
 class DefaultPlayer(BasePlayer):
     def __init__(self, lavalink, guild_id: int):
-        super().__init__(guild_id)
-        self._lavalink = lavalink
+        super().__init__(lavalink, guild_id)
+
         self._user_data = {}
-        self.guild_id = str(guild_id)
         self.channel_id = None
 
         self.paused = False
@@ -179,7 +128,61 @@ class DefaultPlayer(BasePlayer):
         """ Seeks to a given position in the track """
         await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
-    async def _handle_event(self, event):
+    async def handle_event(self, event):
         if isinstance(event, (TrackStartEvent, TrackExceptionEvent)) or \
                 isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':
                 await self.play()
+
+
+class PlayerManager:
+    def __init__(self, lavalink, player=DefaultPlayer):
+        """
+        Instantiates a Player Manager.
+
+        :param lavalink:
+            Must be a lavalink.Client object.
+        :param player:
+            Must implement lavalink.BasePlayer.
+        """
+        self.lavalink = lavalink
+        self._player_class = player
+        self._players = {}
+
+    def __len__(self):
+        return len(self._players)
+
+    def __getitem__(self, item):
+        return self._players.get(item, None)
+
+    def __iter__(self):
+        """ Returns a tuple of (guild_id, player)"""
+        for guild_id, player in self._players.items():
+            yield guild_id, player
+
+    def __contains__(self, item):
+        return item in self._players
+
+    def find(self, predicate):
+        """ Returns the first player in the list based on the given filter predicate. Could be None """
+        found = self.find_all(predicate)
+        return found[0] if found else None
+
+    def find_all(self, predicate):
+        """ Returns a list of players based on the given filter predicate """
+        return list(filter(predicate, self._players.values()))
+
+    def get(self, guild_id):
+        """ Returns a player from the cache, or creates one if it does not exist """
+        if guild_id not in self._players:
+            p = self._player_class(lavalink=self.lavalink, guild_id=guild_id)
+            self._players[guild_id] = p
+
+        return self._players[guild_id]
+
+    def has(self, guild_id) -> bool:
+        """ Returns the presence of a player in the cache """
+        return guild_id in self._players
+
+    def clear(self):
+        """ Removes all of the players from the cache """
+        self._players.clear()
