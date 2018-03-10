@@ -11,7 +11,9 @@ time_rx = re.compile('[0-9]+')
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
+        lavalink.Client.persistent(
+            bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug'
+        )
         self.bot.lavalink.register_hook(self.track_hook)
 
     async def track_hook(self, player, event):
