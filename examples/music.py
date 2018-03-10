@@ -12,7 +12,7 @@ class Music:
     def __init__(self, bot):
         self.bot = bot
         lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
-        self.bot.lavalink.client.register_hook(self.track_hook)
+        self.bot.lavalink.register_hook(self.track_hook)
 
     async def track_hook(self, player, event):
         if event == 'TrackStartEvent':
@@ -54,7 +54,7 @@ class Music:
         if not query.startswith('http'):
             query = f'ytsearch:{query}'
 
-        tracks = await self.bot.lavalink.client.get_tracks(query)
+        tracks = await self.bot.lavalink.get_tracks(query)
 
         if not tracks:
             return await ctx.send('Nothing found 👀')
@@ -230,7 +230,7 @@ class Music:
         if not query.startswith('ytsearch:') and not query.startswith('scsearch:'):
             query = 'ytsearch:' + query
 
-        tracks = await self.bot.lavalink.client.get_tracks(query)
+        tracks = await self.bot.lavalink.get_tracks(query)
 
         if not tracks:
             return await ctx.send('Nothing found')
@@ -263,4 +263,4 @@ def setup(bot):
 
 
 def teardown(bot):
-    bot.lavalink.client.destroy()
+    bot.lavalink.destroy()

@@ -17,7 +17,8 @@ def set_log_level(log_level):
 
 class Client:
     def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
-                 rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1, player=DefaultPlayer):
+                 rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1, player=DefaultPlayer,
+                 persist=True):
         self.http = aiohttp.ClientSession(loop=loop)
         self.voice_state = {}
         self.hooks = []
@@ -35,6 +36,9 @@ class Client:
             self, host, password, ws_port, ws_retry, shard_count
         )
         self.players = PlayerManager(self, player=player)
+
+        if persist is True and not hasattr(self.bot, 'lavalink'):
+            self.bot.lavalink = self
 
     def register_hook(self, func):
         if func not in self.hooks:
@@ -100,3 +104,6 @@ class Client:
         self.ws.destroy()
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
+
+        if hasattr(self.bot, 'lavalink'):
+            delattr(self.bot, 'lavalink')
