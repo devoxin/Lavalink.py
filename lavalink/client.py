@@ -2,8 +2,10 @@ import asyncio
 import logging
 import aiohttp
 
-from .PlayerManager import PlayerManager, DefaultPlayer
-from .WebSocket import WebSocket
+from .player_manager import PlayerManager, DefaultPlayer
+from .websocket import WebSocket
+
+__all__ = ["Client",]
 
 log = logging.getLogger(__name__)
 
@@ -33,6 +35,14 @@ class Client:
             self, host, password, ws_port, ws_retry, shard_count
         )
         self.players = PlayerManager(self, player=player)
+
+    @classmethod
+    def persistent(cls, bot, *args, **kwargs):
+        try:
+            return bot.lavalink
+        except AttributeError:
+            bot.lavalink = cls(bot, *args, **kwargs)
+            return bot.lavalink
 
     def register_hook(self, func):
         if func not in self.hooks:
@@ -94,7 +104,14 @@ class Client:
             await self.ws.send(**self.voice_state)
             self.voice_state.clear()
 
-    def destroy(self):
+    async def destroy(self):
         self.ws.destroy()
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
+
+        await self.http.close()
+        await self.players.destroy()
+
+        if hasattr(self.bot, 'lavalink'):
+            # If we're not persisting
+            delattr(self.bot, 'lavalink')

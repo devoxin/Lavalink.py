@@ -11,8 +11,10 @@ time_rx = re.compile('[0-9]+')
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
-        self.bot.lavalink.client.register_hook(self.track_hook)
+        lavalink.Client.persistent(
+            bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug'
+        )
+        self.bot.lavalink.register_hook(self.track_hook)
 
     async def track_hook(self, player, event):
         if event == 'TrackStartEvent':
@@ -54,7 +56,7 @@ class Music:
         if not query.startswith('http'):
             query = f'ytsearch:{query}'
 
-        tracks = await self.bot.lavalink.client.get_tracks(query)
+        tracks = await self.bot.lavalink.get_tracks(query)
 
         if not tracks:
             return await ctx.send('Nothing found 👀')
@@ -102,7 +104,7 @@ class Music:
 
         await player.seek(track_time)
 
-        await ctx.send(f'Moved track to **{lavalink.Utils.format_time(track_time)}**')
+        await ctx.send(f'Moved track to **{lavalink.format_time(track_time)}**')
 
     @commands.command(aliases=['forceskip', 'fs'])
     async def skip(self, ctx):
@@ -131,11 +133,11 @@ class Music:
         song = 'Nothing'
 
         if player.current:
-            pos = lavalink.Utils.format_time(player.position)
+            pos = lavalink.format_time(player.position)
             if player.current.stream:
                 dur = 'LIVE'
             else:
-                dur = lavalink.Utils.format_time(player.current.duration)
+                dur = lavalink.format_time(player.current.duration)
             song = f'**[{player.current.title}]({player.current.uri})**\n({pos}/{dur})'
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour, title='Now Playing', description=song)
@@ -230,7 +232,7 @@ class Music:
         if not query.startswith('ytsearch:') and not query.startswith('scsearch:'):
             query = 'ytsearch:' + query
 
-        tracks = await self.bot.lavalink.client.get_tracks(query)
+        tracks = await self.bot.lavalink.get_tracks(query)
 
         if not tracks:
             return await ctx.send('Nothing found')
@@ -262,5 +264,5 @@ def setup(bot):
     bot.add_cog(Music(bot))
 
 
-def teardown(bot):
-    bot.lavalink.client.destroy()
+async def teardown(bot):
+    await bot.lavalink.destroy()
