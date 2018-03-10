@@ -189,3 +189,7 @@ class PlayerManager:
     def clear(self):
         """ Removes all of the players from the cache """
         self._players.clear()
+
+    async def destroy(self):
+        for _, player in self:
+            await player.disconnect()

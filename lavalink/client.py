@@ -100,10 +100,14 @@ class Client:
             await self.ws.send(**self.voice_state)
             self.voice_state.clear()
 
-    def destroy(self):
+    async def destroy(self):
         self.ws.destroy()
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
 
+        await self.http.close()
+        await self.players.destroy()
+
         if hasattr(self.bot, 'lavalink'):
+            # If we're not persisting
             delattr(self.bot, 'lavalink')

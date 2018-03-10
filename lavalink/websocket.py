@@ -124,4 +124,4 @@ class WebSocket:
 
 
     def destroy(self):
-        self._shutdown = False
+        self._shutdown = True

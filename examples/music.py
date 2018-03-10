@@ -262,5 +262,5 @@ def setup(bot):
     bot.add_cog(Music(bot))
 
 
-def teardown(bot):
-    bot.lavalink.destroy()
+async def teardown(bot):
+    await bot.lavalink.destroy()
