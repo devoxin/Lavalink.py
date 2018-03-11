@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+from random import randrange
 from .Events import *
+from .AudioTrack import *
 
 
 __all__ = ["PlayerManager", "BasePlayer", "DefaultPlayer"]
