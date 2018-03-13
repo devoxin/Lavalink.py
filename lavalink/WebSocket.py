@@ -47,14 +47,14 @@ class WebSocket:
         log.info('Connecting to Lavalink...')
 
         try:
-            self._ws = await websockets.connect(self._uri, extra_headers=headers)
-        except OSError:
-            log.exception('Failed to connect to Lavalink. ')
+            self._ws = await websockets.connect(self._uri, loop=self._loop, extra_headers=headers)
+        except OSError as error:
+            log.exception('Failed to connect to Lavalink\n\t', str(error))
         else:
             log.info('Connected to Lavalink!')
             self._loop.create_task(self.listen())
             if self._queue:
-                log.info('Replaying {} queued events...'.format(len(self._queue)))
+                log.info('Replaying %d queued events...', len(self._queue))
                 for task in self._queue:
                     await self.send(**task)
 
@@ -81,27 +81,24 @@ class WebSocket:
         while self._shutdown is False:
             try:
                 data = json.loads(await self._ws.recv())
-            except websockets.ConnectionClosed:
+            except websockets.ConnectionClosed as error:
+                log.warning('Disconnected from Lavalink\n\t', str(error))
                 self._lavalink.players.clear()
 
                 if self._shutdown is True:
-                    # Exit gracefully
                     break
 
                 if await self._attempt_reconnect():
-                    # self.connect will spawn another listen task, exit cleanly here
-                    # without hitting the ws.close() down below.
                     return
                 else:
                     log.warning('Unable to reconnect to Lavalink!')
-                    # Ensure the ws is closed
                     break
 
             op = data.get('op', None)
-            log.debug('Received websocket data\n' + str(data))
+            log.debug('Received websocket data\n\t', str(data))
 
             if not op:
-                return log.debug('Received websocket message without op\n' + str(data))
+                return log.debug('Received websocket message without op\n\t', str(data))
 
             if op == 'event':
                 await self._lavalink.dispatch_event(
@@ -110,17 +107,17 @@ class WebSocket:
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
 
-        log.debug("Shutting down web socket.")
+        log.debug("Closing Websocket...")
         await self._ws.close()
 
     async def send(self, **data):
         """ Sends data to lavalink """
         if self._ws is not None and self._ws.open:
-            log.debug('Sending payload:\n' + str(data))
+            log.debug('Sending payload:\n\t', str(data))
             await self._ws.send(json.dumps(data))
         else:
             self._queue.append(data)
-            log.debug('Websocket not ready; appending payload to queue\n' + str(data))
+            log.debug('Send called before websocket ready; queueing payload\n\t', str(data))
 
 
     def destroy(self):
