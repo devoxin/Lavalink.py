@@ -113,7 +113,7 @@ class WebSocket:
                 elif data['type'] == 'TrackStuckEvent':
                     event = TrackStuckEvent(player, data['track'], data['thresholdMs'])
 
-                if data is not None:
+                if event is not None:
                     await self._lavalink.dispatch_event(event)
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
