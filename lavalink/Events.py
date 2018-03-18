@@ -4,20 +4,21 @@ class QueueEndEvent:
 
 
 class TrackStuckEvent:
-    def __init__(self, player, track):
+    def __init__(self, player, track, threshold):
         self.player = player
         self.track = track
+        self.threshold = threshold
 
 
 class TrackExceptionEvent:
-    def __init__(self, exception, player, track):
+    def __init__(self, player, track, exception):
         self.exception = exception
         self.player = player
         self.track = track
 
 
 class TrackEndEvent:
-    def __init__(self, reason, player, track):
+    def __init__(self, player, track, reason):
         self.reason = reason
         self.player = player
         self.track = track

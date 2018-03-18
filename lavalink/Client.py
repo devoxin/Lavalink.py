@@ -4,6 +4,8 @@ import aiohttp
 
 from .PlayerManager import PlayerManager, DefaultPlayer
 from .WebSocket import WebSocket
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
+
 
 log = logging.getLogger(__name__)
 
@@ -16,6 +18,8 @@ def set_log_level(log_level):
 class Client:
     def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
                  rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1, player=DefaultPlayer):
+
+        bot.lavalink = self
         self.http = aiohttp.ClientSession(loop=loop)
         self.voice_state = {}
         self.hooks = []
@@ -32,7 +36,7 @@ class Client:
         self.ws = WebSocket(
             self, host, password, ws_port, ws_retry, shard_count
         )
-        self.players = PlayerManager(self, player=player)
+        self.players = PlayerManager(self, player)
 
     def register_hook(self, func):
         if func not in self.hooks:
@@ -42,15 +46,12 @@ class Client:
         if func in self.hooks:
             self.hooks.remove(func)
 
-    async def dispatch_event(self, event: str, guild_id: str, reason: str= ''):
-        player = self.players[int(guild_id)]
+    async def dispatch_event(self, event):
+        for hook in self.hooks:
+            await hook(event)
 
-        if player:
-            for hook in self.hooks:
-                await hook(player, event)
-
-            if event in ['TrackEndEvent', 'TrackExceptionEvent', 'TrackStuckEvent']:
-                await player.handle_event(reason)
+        if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player is not None:
+            await event.player.handle_event(event)
 
     async def update_state(self, data):
         g = int(data['guildId'])
@@ -61,7 +62,7 @@ class Client:
             p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
-        log.debug('Requesting tracks for query ' + query)
+        log.debug('Requesting tracks for query ', query)
         async with self.http.get(self.rest_uri + query, headers={'Authorization': self.password}) as res:
             js = await res.json(content_type=None)
             res.close()
