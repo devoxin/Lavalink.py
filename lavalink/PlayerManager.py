@@ -138,7 +138,7 @@ class PlayerManager:
         :param player:
             Must implement lavalink.BasePlayer.
         """
-        if not isinstance(player, BasePlayer):
+        if not issubclass(player, BasePlayer):
             raise ValueError('player must implement baseplayer')
 
         self.lavalink = lavalink
