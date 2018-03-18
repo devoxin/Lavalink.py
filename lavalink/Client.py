@@ -56,7 +56,7 @@ class Client:
     async def update_state(self, data):
         g = int(data['guildId'])
 
-        if self.players.has(g):
+        if g in self.players:
             p = self.players.get(g)
             p.position = data['state']['position']
             p.position_timestamp = data['state']['time']

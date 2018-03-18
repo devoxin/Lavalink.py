@@ -7,12 +7,13 @@ __version__ = '2.1'
 from .AudioTrack import *
 from .Client import *
 from .PlayerManager import *
-from .Utils import *
 from .WebSocket import *
-from .Events import *
+from . import Events
+from . import Utils
 
 import logging
 import sys
+
 
 log = logging.getLogger(__name__)
 
