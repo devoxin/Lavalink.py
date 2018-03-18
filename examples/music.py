@@ -13,7 +13,7 @@ class Music:
     def __init__(self, bot):
         self.bot = bot
         lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level=logging.DEBUG)
-        self.bot.lavalink.client.register_hook(self.track_hook)
+        self.bot.lavalink.register_hook(self.track_hook)
 
     async def track_hook(self, event):
         if isinstance(event, lavalink.Events.TrackStartEvent):
