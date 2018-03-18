@@ -1,9 +1,10 @@
+import logging
 import math
 import re
 
 import discord
-from discord.ext import commands
 import lavalink
+from discord.ext import commands
 
 time_rx = re.compile('[0-9]+')
 
@@ -11,7 +12,7 @@ time_rx = re.compile('[0-9]+')
 class Music:
     def __init__(self, bot):
         self.bot = bot
-        lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
+        lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level=logging.DEBUG)
         self.bot.lavalink.client.register_hook(self.track_hook)
 
     async def track_hook(self, event):
