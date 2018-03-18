@@ -4,9 +4,6 @@ from .Events import QueueEndEvent, TrackExceptionEvent, TrackEndEvent, TrackStar
 from .AudioTrack import AudioTrack
 
 
-__all__ = ['PlayerManager', 'BasePlayer', 'DefaultPlayer']
-
-
 class BasePlayer(ABC):
     def __init__(self, lavalink, guild_id: int):
         self.node = None  # later
