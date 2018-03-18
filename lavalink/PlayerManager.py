@@ -73,6 +73,13 @@ class DefaultPlayer(BasePlayer):
         """ Retrieves the related value from the stored user data """
         return self._user_data.get(key, default)
 
+    def delete(self, key: object):
+        """ Removes an item from the internal storage """
+        try:
+            del self._user_data[key]
+        except KeyError:
+            pass
+
     def add(self, requester: int, track: dict):
         """ Adds a track to the queue """
         self.queue.append(AudioTrack().build(track, requester))
