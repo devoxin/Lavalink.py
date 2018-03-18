@@ -14,17 +14,17 @@ class Music:
         lavalink.Client(bot=bot, password='youshallnotpass', loop=self.bot.loop, log_level='debug')
         self.bot.lavalink.client.register_hook(self.track_hook)
 
-    async def track_hook(self, player, event):
-        if event == 'TrackStartEvent':
-            c = player.fetch('channel')
+    async def track_hook(self, event):
+        if isinstance(event, lavalink.Events.TrackStartEvent):
+            c = event.player.fetch('channel')
             if c:
                 c = self.bot.get_channel(c)
                 if c:
-                    embed = discord.Embed(colour=c.guild.me.top_role.colour, title='Now Playing', description=player.current.title)
-                    embed.set_thumbnail(url=player.current.thumbnail)
+                    embed = discord.Embed(colour=c.guild.me.top_role.colour, title='Now Playing', description=event.track.title)
+                    embed.set_thumbnail(url=event.track.thumbnail)
                     await c.send(embed=embed)
-        elif event == 'QueueEndEvent':
-            c = player.fetch('channel')
+        elif isinstance(event, lavalink.Events.QueueEndEvent):
+            c = event.player.fetch('channel')
             if c:
                 c = self.bot.get_channel(c)
                 if c:

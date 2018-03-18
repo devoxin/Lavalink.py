@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from random import randrange
-from .Events import *
-from .AudioTrack import *
+from .Events import QueueEndEvent, TrackExceptionEvent, TrackEndEvent, TrackStartEvent
+from .AudioTrack import AudioTrack
 
 
-__all__ = ["PlayerManager", "BasePlayer", "DefaultPlayer"]
+__all__ = ['PlayerManager', 'BasePlayer', 'DefaultPlayer']
 
 
 class BasePlayer(ABC):
@@ -12,11 +12,6 @@ class BasePlayer(ABC):
         self.node = None  # later
         self._lavalink = lavalink
         self.guild_id = str(guild_id)
-
-    @property
-    @abstractmethod
-    def is_playing(self):
-        return False
 
     @abstractmethod
     async def handle_event(self, event):
@@ -96,7 +91,7 @@ class DefaultPlayer(BasePlayer):
 
         if not self.queue:
             await self.stop()
-            await self._lavalink.dispatch_event('QueueEndEvent', self.guild_id)
+            await self._lavalink.dispatch_event(QueueEndEvent(self))
         else:
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
@@ -105,7 +100,7 @@ class DefaultPlayer(BasePlayer):
 
             self.current = track
             await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
-            await self._lavalink.dispatch_event('TrackStartEvent', self.guild_id)
+            await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
         """ Stops the player, if playing """
@@ -137,7 +132,7 @@ class DefaultPlayer(BasePlayer):
 
 
 class PlayerManager:
-    def __init__(self, lavalink, player=DefaultPlayer):
+    def __init__(self, lavalink, player):
         """
         Instantiates a Player Manager.
 
@@ -147,7 +142,7 @@ class PlayerManager:
             Must implement lavalink.BasePlayer.
         """
         self.lavalink = lavalink
-        self._player_class = player
+        self._player = player
         self._players = {}
 
     def __len__(self):
@@ -162,6 +157,7 @@ class PlayerManager:
             yield guild_id, player
 
     def __contains__(self, item):
+        """ Returns the presence of a player in the cache """
         return item in self._players
 
     def find(self, predicate):
@@ -176,14 +172,10 @@ class PlayerManager:
     def get(self, guild_id):
         """ Returns a player from the cache, or creates one if it does not exist """
         if guild_id not in self._players:
-            p = self._player_class(lavalink=self.lavalink, guild_id=guild_id)
+            p = self._player(lavalink=self.lavalink, guild_id=guild_id)
             self._players[guild_id] = p
 
         return self._players[guild_id]
-
-    def has(self, guild_id) -> bool:
-        """ Returns the presence of a player in the cache """
-        return guild_id in self._players
 
     def clear(self):
         """ Removes all of the players from the cache """

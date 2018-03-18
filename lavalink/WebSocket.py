@@ -2,6 +2,8 @@ import asyncio
 import websockets
 import json
 import logging
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
+
 
 log = logging.getLogger(__name__)
 
@@ -101,9 +103,18 @@ class WebSocket:
                 return log.debug('Received websocket message without op\n\t', str(data))
 
             if op == 'event':
-                await self._lavalink.dispatch_event(
-                    data['type'], data['guildId'], data.get('reason', data['type'])
-                )
+                player = self._lavalink.players[int(data['guildId'])]
+                event = None
+
+                if data['type'] == 'TrackEndEvent':
+                    event = TrackEndEvent(player, data['track'], data['reason'])
+                elif data['type'] == 'TrackExceptionEvent':
+                    event = TrackExceptionEvent(player, data['track'], data['error'])
+                elif data['type'] == 'TrackStuckEvent':
+                    event = TrackStuckEvent(player, data['track'], data['thresholdMs'])
+
+                if data is not None:
+                    await self._lavalink.dispatch_event(event)
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
 
@@ -118,7 +129,6 @@ class WebSocket:
         else:
             self._queue.append(data)
             log.debug('Send called before websocket ready; queueing payload\n\t', str(data))
-
 
     def destroy(self):
         self._shutdown = False
