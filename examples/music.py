@@ -254,6 +254,9 @@ class Music:
     async def disconnect(self, ctx):
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
+        if not ctx.author.voice or (player.is_connected and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
         if not player.is_connected:
             return await ctx.send('Not connected.')
 
