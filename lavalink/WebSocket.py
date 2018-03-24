@@ -51,7 +51,7 @@ class WebSocket:
         try:
             self._ws = await websockets.connect(self._uri, loop=self._loop, extra_headers=headers)
         except OSError as error:
-            log.exception('Failed to connect to Lavalink\n\t', str(error))
+            log.exception('Failed to connect to Lavalink %s', str(error))
         else:
             log.info('Connected to Lavalink!')
             self._loop.create_task(self.listen())
@@ -84,7 +84,7 @@ class WebSocket:
             try:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
-                log.warning('Disconnected from Lavalink\n\t', str(error))
+                log.warning('Disconnected from Lavalink %s', str(error))
                 self._lavalink.players.clear()
 
                 if self._shutdown is True:
@@ -97,10 +97,10 @@ class WebSocket:
                     break
 
             op = data.get('op', None)
-            log.debug('Received websocket data\n\t', str(data))
+            log.debug('Received websocket data %s', str(data))
 
             if not op:
-                return log.debug('Received websocket message without op\n\t', str(data))
+                return log.debug('Received websocket message without op %s', str(data))
 
             if op == 'event':
                 log.debug('Received event of type %s', data['type'])
@@ -125,11 +125,11 @@ class WebSocket:
     async def send(self, **data):
         """ Sends data to lavalink """
         if self._ws is not None and self._ws.open:
-            log.debug('Sending payload:\n\t', str(data))
+            log.debug('Sending payload %s', str(data))
             await self._ws.send(json.dumps(data))
         else:
             self._queue.append(data)
-            log.debug('Send called before websocket ready; queueing payload\n\t', str(data))
+            log.debug('Send called before websocket ready; queueing payload %s', str(data))
 
     def destroy(self):
         self._shutdown = False

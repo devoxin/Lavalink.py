@@ -63,7 +63,7 @@ class Client:
             p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
-        log.debug('Requesting tracks for query ', query)
+        log.debug('Requesting tracks for query %s', query)
         async with self.http.get(self.rest_uri + query, headers={'Authorization': self.password}) as res:
             js = await res.json(content_type=None)
             res.close()
