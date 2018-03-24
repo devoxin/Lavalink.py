@@ -2,7 +2,7 @@ __title__ = 'Lavalink'
 __author__ = 'Luke & William'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2018 Luke & William'
-__version__ = '2.1.1'
+__version__ = '2.1.2'
 
 from .AudioTrack import *
 from .Client import *
