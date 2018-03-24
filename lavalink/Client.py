@@ -47,6 +47,7 @@ class Client:
             self.hooks.remove(func)
 
     async def dispatch_event(self, event):
+        log.debug('Dispatching event of type %s to %d hooks', event.__class__.__name__, len(self.hooks))
         for hook in self.hooks:
             await hook(event)
 
