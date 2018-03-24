@@ -103,6 +103,7 @@ class WebSocket:
                 return log.debug('Received websocket message without op\n\t', str(data))
 
             if op == 'event':
+                log.debug('Received event of type %s', data['type'])
                 player = self._lavalink.players[int(data['guildId'])]
                 event = None
 
