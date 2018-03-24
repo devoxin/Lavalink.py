@@ -130,8 +130,8 @@ class DefaultPlayer(BasePlayer):
         await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def handle_event(self, event):
-        if isinstance(event, (TrackStartEvent, TrackExceptionEvent)) or \
-                isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':
+        if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
+                (isinstance(event, TrackEndEvent) and event.reason == 'FINISHED'):
                 await self.play()
 
 
