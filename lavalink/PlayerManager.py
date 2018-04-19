@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from random import randrange
-from .Events import QueueEndEvent, TrackExceptionEvent, TrackEndEvent, TrackStartEvent, TrackStuckEvent
+
 from .AudioTrack import AudioTrack
+from .Events import QueueEndEvent, TrackExceptionEvent, TrackEndEvent, TrackStartEvent, TrackStuckEvent
 
 
 class BasePlayer(ABC):
@@ -31,6 +32,7 @@ class DefaultPlayer(BasePlayer):
 
         self.queue = []
         self.current = None
+        self.previous = None
 
     @property
     def is_playing(self):
@@ -80,15 +82,24 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: dict):
+    def add(self, requester: int, track: dict, is_ad: bool = False, enable_msg: bool = True,
+            quit_after_empty: bool = False):
         """ Adds a track to the queue """
-        self.queue.append(AudioTrack().build(track, requester))
+        self.queue.append(
+            AudioTrack().build(track, requester, is_ad=is_ad, enable_msg=enable_msg, quit_after_empty=quit_after_empty))
+
+    def add_next(self, requester: int, track: dict, is_ad: bool = False, enable_msg: bool = True,
+                 quit_after_empty: bool = False):
+        """ Adds a track to beginning of the queue """
+        self.queue.insert(0, AudioTrack().build(track, requester, is_ad=is_ad, enable_msg=enable_msg,
+                                                quit_after_empty=quit_after_empty))
 
     async def play(self):
         """ Plays the first track in the queue, if any """
         if self.repeat and self.current is not None:
             self.queue.append(self.current)
 
+        self.previous = self.current
         self.current = None
         self.position = 0
         self.paused = False
@@ -103,6 +114,8 @@ class DefaultPlayer(BasePlayer):
                 track = self.queue.pop(0)
 
             self.current = track
+            if not self.previous:
+                self.previous = self.current
             await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
             await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
@@ -132,7 +145,7 @@ class DefaultPlayer(BasePlayer):
     async def handle_event(self, event):
         if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
                 (isinstance(event, TrackEndEvent) and event.reason == 'FINISHED'):
-                await self.play()
+            await self.play()
 
 
 class PlayerManager:
