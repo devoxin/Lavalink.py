@@ -5,6 +5,7 @@ import aiohttp
 from .PlayerManager import PlayerManager, DefaultPlayer
 from .WebSocket import WebSocket
 from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
+from .Stats import Stats
 
 
 log = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ class Client:
             self, host, password, ws_port, ws_retry, shard_count
         )
         self.players = PlayerManager(self, player)
+        self.stats = Stats()
 
     def register_hook(self, func):
         if func not in self.hooks:
