@@ -61,6 +61,7 @@ class DefaultPlayer(BasePlayer):
         """ Disconnects from the voicechannel, if any """
         if not self.is_connected:
             return
+        self.channel_id = None
 
         await self.stop()
 
@@ -196,6 +197,14 @@ class PlayerManager:
             self._players[guild_id] = p
 
         return self._players[guild_id]
+
+    async def clear_guild(self, guild_id):
+        """ Removes the player and clears the cache. """
+        try:
+            await self._players[guild_id].disconnect()
+            del self._players[guild_id]
+        except KeyError:
+            pass
 
     def clear(self):
         """ Removes all of the players from the cache """

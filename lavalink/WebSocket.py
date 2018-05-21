@@ -69,9 +69,9 @@ class WebSocket:
         bool
             ``True`` if the reconnection attempt was successful.
         """
-        log.info('Connection closed; attempting to reconnect in 30 seconds')
+        log.info('Connection closed; attempting to reconnect in 10 seconds')
         for a in range(0, self._ws_retry):
-            await asyncio.sleep(30)
+            await asyncio.sleep(10)
             log.info('Reconnecting... (Attempt {})'.format(a + 1))
             await self.connect()
 
@@ -101,6 +101,9 @@ class WebSocket:
 
             if not op:
                 return log.debug('Received websocket message without op %s', str(data))
+
+            if op == "stats":
+                log.info(data)
 
             if op == 'event':
                 log.debug('Received event of type %s', data['type'])
