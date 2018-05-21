@@ -28,3 +28,8 @@ class TrackStartEvent:
     def __init__(self, player, track):
         self.player = player
         self.track = track
+
+
+class RawStatusUpdateEvent:
+    def __init__(self, data):
+        self.data = data

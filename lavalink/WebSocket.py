@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json
 import logging
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, RawStatusUpdateEvent
 
 
 log = logging.getLogger(__name__)
@@ -85,6 +85,8 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
+                for p in self._lavalink.players:
+                    await self._lavalink.bot.ws
                 self._lavalink.players.clear()
 
                 if self._shutdown is True:
@@ -102,9 +104,6 @@ class WebSocket:
             if not op:
                 return log.debug('Received websocket message without op %s', str(data))
 
-            if op == "stats":
-                log.info(data)
-
             if op == 'event':
                 log.debug('Received event of type %s', data['type'])
                 player = self._lavalink.players[int(data['guildId'])]
@@ -121,6 +120,9 @@ class WebSocket:
                     await self._lavalink.dispatch_event(event)
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
+            elif op == 'stats':
+                self._lavalink.stats._update(data)
+                await self._lavalink.dispatch_event(RawStatusUpdateEvent(data))
 
         log.debug("Closing Websocket...")
         await self._ws.close()
