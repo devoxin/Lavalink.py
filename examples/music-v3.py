@@ -232,12 +232,12 @@ class Music:
         if not query.startswith('ytsearch:') and not query.startswith('scsearch:'):
             query = 'ytsearch:' + query
 
-        tracks = await self.bot.lavalink.get_tracks(query)
+        results = await self.bot.lavalink.get_tracks(query)
 
-        if not tracks:
+        if not results or not results['tracks']:
             return await ctx.send('Nothing found')
 
-        tracks = tracks[:10]  # First 10 results
+        tracks = results['tracks'][:10]  # First 10 results
 
         o = ''
         for i, t in enumerate(tracks, start=1):
