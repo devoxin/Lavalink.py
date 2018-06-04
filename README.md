@@ -20,6 +20,6 @@ For Lavalink V2 users, check [examples/music-v2.py](https://github.com/Devoxin/L
 
 # Links
 
-[Head here for instructions on getting lavalink.py configured](https://github.com/Devoxin/Lavalink.py/wiki)
+[Lavalink Wiki](https://github.com/Devoxin/Lavalink.py/wiki)
 
 [Get Support](https://discord.gg/SbJXU9s)
