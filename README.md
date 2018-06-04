@@ -14,9 +14,9 @@ Lavalink.py serves to be an interface with various utilities to make interacting
 
 There aren't currently any docs for Lavalink.py at the time of writing (sorry!). We recommend that you check out the example music cogs, or check out the source itself!
 
-If you're using Lavalink V3, check out [examples/music-v3.py](https://github.com/Devoxin/Lavalink.py/blob/v2/examples/music-v3.py)
+If you're using Lavalink V3, check out [examples/music-v3.py](https://github.com/Devoxin/Lavalink.py/blob/master/examples/music-v3.py)
 
-For Lavalink V2 users, check [examples/music-v2.py](https://github.com/Devoxin/Lavalink.py/blob/v2/examples/music-v2.py)
+For Lavalink V2 users, check [examples/music-v2.py](https://github.com/Devoxin/Lavalink.py/blob/master/examples/music-v2.py)
 
 # Links
 
