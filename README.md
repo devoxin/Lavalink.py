@@ -1,3 +1,5 @@
+<img align="left" src="https://its-called-hentai-and-its.art/9e83af1581.png" height="150" width="150">
+
 # Lavalink.py
 
 - if using on linux, run lavalink.jar with sudo
