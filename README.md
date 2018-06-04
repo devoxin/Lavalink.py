@@ -2,8 +2,7 @@
 
 # Lavalink.py
 
-- if using on linux, run lavalink.jar with sudo
-- Note to self: VC Disconnects after connecting are caused by websockets<4.0        *fml*
+Lavalink.py serves to be an interface with various utilities to make interacting with Lavalink easier!
 
 [Head here for instructions on getting lavalink.py configured](https://github.com/Devoxin/Lavalink.py/wiki)
 
