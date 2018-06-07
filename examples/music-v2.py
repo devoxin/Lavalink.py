@@ -87,10 +87,6 @@ class Music:
         if not player.is_playing:
             return await ctx.send('Not playing.')
 
-        pos = '+'
-        if time.startswith('-'):
-            pos = '-'
-
         seconds = time_rx.search(time)
 
         if not seconds:
@@ -98,7 +94,7 @@ class Music:
 
         seconds = int(seconds.group()) * 1000
 
-        if pos == '-':
+        if time.startswith('-'):
             seconds = seconds * -1
 
         track_time = player.position + seconds
