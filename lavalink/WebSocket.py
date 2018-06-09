@@ -41,7 +41,7 @@ class WebSocket:
         headers = {
             'Authorization': self._password,
             'Num-Shards': shard_count,
-            'User-Id': user_id
+            'User-Id': str(user_id)
         }
         log.debug('Preparing to connect to Lavalink')
         log.debug('    with URI: {}'.format(self._uri))
