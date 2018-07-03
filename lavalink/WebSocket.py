@@ -8,6 +8,9 @@ from datetime import datetime
 
 log = logging.getLogger(__name__)
 
+class DiscordConnectionError(Exception):
+    pass
+
 
 class WebSocket:
     def __init__(self, lavalink, host, password, ws_port, ws_retry, shard_count):
@@ -113,8 +116,21 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
+                closed_sockets = []
                 for g, p in self._lavalink.players:
-                    await self._lavalink.bot._connection._get_websocket(int(g))
+                    w = self._lavalink.bot._connection._get_websocket(int(g))
+                    if not w.open:
+                        for t in range(60):
+                            log.warning("Discord websocket is closed. Waiting 60 seconds to reopen.")
+                            if w.open:
+                                break
+                            await asyncio.sleep(1)
+                        if not w.open:
+                            closed_sockets.append(w.session_id)
+                            log.error("Discord websocket is still closed.")
+                if len(closed_sockets) > 0:
+                    log.error("Lavalink is exiting. Could not get all Discord websockets alive.")
+                    raise DiscordConnectionError
                 self._lavalink.players.clear()
 
                 if self._shutdown is True:
