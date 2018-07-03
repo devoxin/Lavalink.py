@@ -81,6 +81,9 @@ class WebSocket:
                         break
                     log.info("Waiting for WebSocket to open... [{}/{}]".format(x, self._ws_retry + 1))
                     await asyncio.sleep(10)
+            except websockets.ConnectionClosed as e:
+                while not self._ws.open:
+                    await asyncio.sleep(1)
             else:
                 self.last_ack = datetime.utcnow().timestamp()
             await asyncio.sleep(2)
@@ -110,22 +113,8 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
-                bot_ws_fail = False
-                for p in self._lavalink.players:
-                    retry_count = 1
-                    while self._lavalink.bot.ws is None:
-                        if retry_count == 6:
-                            break
-                        log.warning("Waiting 5 seconds for bot's WS to reconnect. Try [{}/5]".format(retry_count))
-                        await asyncio.sleep(5)
-                        retry_count += 1
-                    if self._lavalink.bot.ws is None:
-                        bot_ws_fail = True
-                        break
-                    await self._lavalink.bot.ws
-                if bot_ws_fail is True:
-                    log.error("Bot failed to reconnect to the WS. Lavalink has exited.")
-                    break
+                for g, p in self._lavalink.players:
+                    await self._lavalink.bot._connection._get_websocket(int(g))
                 self._lavalink.players.clear()
 
                 if self._shutdown is True:
