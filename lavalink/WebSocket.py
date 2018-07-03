@@ -3,6 +3,7 @@ import websockets
 import json
 import logging
 from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, RawStatusUpdateEvent
+from datetime import datetime
 
 
 log = logging.getLogger(__name__)
@@ -11,6 +12,7 @@ log = logging.getLogger(__name__)
 class WebSocket:
     def __init__(self, lavalink, host, password, ws_port, ws_retry, shard_count):
         self._lavalink = lavalink
+        self.last_ack = datetime.utcfromtimestamp(0).timestamp()
 
         self._ws = None
         self._queue = []
@@ -67,7 +69,20 @@ class WebSocket:
         Experimental fix to attempt to solve issues where nothing is sent via the websocket after a certain amount of time
         """
         while self._shutdown is False:
-            await self._ws.ping()
+            wait_pong = await self._ws.ping()
+            try:
+                await asyncio.wait_for(wait_pong, timeout=5.0)
+            except asyncio.TimeoutError:
+                log.warning("WS Ping Timeout! Lavalink WS did not respond after 5 seconds.")
+                log.warning("Closing WS connection...")
+                await self._ws.close()
+                for x in range(0, self._ws_retry + 1):
+                    if self._ws.open:
+                        break
+                    log.info("Waiting for WebSocket to open... [{}/{}]".format(x, self._ws_retry + 1))
+                    await asyncio.sleep(10)
+            else:
+                self.last_ack = datetime.utcnow().timestamp()
             await asyncio.sleep(2)
 
     async def _attempt_reconnect(self) -> bool:
@@ -95,8 +110,22 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
+                bot_ws_fail = False
                 for p in self._lavalink.players:
+                    retry_count = 1
+                    while self._lavalink.bot.ws is None:
+                        if retry_count == 6:
+                            break
+                        log.warning("Waiting 5 seconds for bot's WS to reconnect. Try [{}/5]".format(retry_count))
+                        await asyncio.sleep(5)
+                        retry_count += 1
+                    if self._lavalink.bot.ws is None:
+                        bot_ws_fail = True
+                        break
                     await self._lavalink.bot.ws
+                if bot_ws_fail is True:
+                    log.error("Bot failed to reconnect to the WS. Lavalink has exited.")
+                    break
                 self._lavalink.players.clear()
 
                 if self._shutdown is True:
@@ -110,6 +139,7 @@ class WebSocket:
 
             op = data.get('op', None)
             log.debug('Received websocket data %s', str(data))
+            self.last_ack = datetime.utcnow().timestamp()
 
             if not op:
                 return log.debug('Received websocket message without op %s', str(data))
