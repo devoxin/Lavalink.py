@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class WebSocket:
     def __init__(self, lavalink, host, password, ws_port, ws_retry, shard_count):
         self._lavalink = lavalink
-        self.last_ack = datetime.utcfromtimestamp(0).timestamp()
+        self.last_ack = 0
 
         self._ws = None
         self._queue = []
