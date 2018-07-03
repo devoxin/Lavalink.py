@@ -1,12 +1,14 @@
 import asyncio
-import websockets
 import json
 import logging
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, RawStatusUpdateEvent
 from datetime import datetime
 
+import websockets
+
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, RawStatusUpdateEvent
 
 log = logging.getLogger(__name__)
+
 
 class DiscordConnectionError(Exception):
     pass
@@ -79,11 +81,6 @@ class WebSocket:
                 log.warning("WS Ping Timeout! Lavalink WS did not respond after 5 seconds.")
                 log.warning("Closing WS connection...")
                 await self._ws.close()
-                for x in range(0, self._ws_retry + 1):
-                    if self._ws.open:
-                        break
-                    log.info("Waiting for WebSocket to open... [{}/{}]".format(x, self._ws_retry + 1))
-                    await asyncio.sleep(10)
             except websockets.ConnectionClosed as e:
                 while not self._ws.open:
                     await asyncio.sleep(1)
