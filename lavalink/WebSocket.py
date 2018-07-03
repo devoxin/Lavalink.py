@@ -69,8 +69,8 @@ class WebSocket:
         Experimental fix to attempt to solve issues where nothing is sent via the websocket after a certain amount of time
         """
         while self._shutdown is False:
-            wait_pong = await self._ws.ping()
             try:
+                wait_pong = await self._ws.ping()
                 await asyncio.wait_for(wait_pong, timeout=5.0)
             except asyncio.TimeoutError:
                 log.warning("WS Ping Timeout! Lavalink WS did not respond after 5 seconds.")
