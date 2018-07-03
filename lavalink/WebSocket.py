@@ -117,8 +117,11 @@ class WebSocket:
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
                 closed_sockets = []
+                closed_guilds = []
                 for g, p in self._lavalink.players:
                     w = self._lavalink.bot._connection._get_websocket(int(g))
+                    await w.voice_state(int(g), None)
+                    closed_guilds.append(int(g))
                     if not w.open:
                         for t in range(60):
                             log.warning("Discord websocket is closed. Waiting 60 seconds to reopen.")
