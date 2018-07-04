@@ -112,7 +112,7 @@ class DefaultPlayer(BasePlayer):
         self.current = None
 
     async def skip(self):
-        """ Moves the player onto the next track in the queue """
+        """ Plays the next track in the queue, if any """
         await self.play()
 
     async def set_pause(self, pause: bool):
