@@ -78,8 +78,8 @@ class WebSocket:
                 wait_pong = await self._ws.ping()
                 await asyncio.wait_for(wait_pong, timeout=5.0)
             except asyncio.TimeoutError:
-                log.warning("WS Ping Timeout! Lavalink WS did not respond after 5 seconds.")
-                log.warning("Closing WS connection...")
+                log.warning('WS Ping Timeout! Lavalink WS did not respond after 5 seconds.')
+                log.warning('Closing WS connection...')
                 await self._ws.close()
             except websockets.ConnectionClosed as e:
                 while not self._ws.open:
