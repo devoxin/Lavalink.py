@@ -1,9 +1,10 @@
 import asyncio
-import websockets
 import json
 import logging
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
 
+import websockets
+
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
 
 log = logging.getLogger(__name__)
 
@@ -67,13 +68,21 @@ class WebSocket:
         Experimental fix to attempt to solve issues where nothing is sent via the websocket after a certain amount of time
         """
         while self._shutdown is False:
-            await self._ws.ping()
+            try:
+                wait_pong = await self._ws.ping()
+                await asyncio.wait_for(wait_pong, timeout=5.0)
+            except asyncio.TimeoutError:
+                log.warning('WS Ping Timeout! Lavalink WS did not respond after 5 seconds.')
+                log.warning('Closing WS connection...')
+                await self._ws.close()
+            except websockets.ConnectionClosed as e:
+                while not self._ws.open:
+                    await asyncio.sleep(1)
             await asyncio.sleep(2)
 
     async def _attempt_reconnect(self) -> bool:
         """
         Attempts to reconnect to the lavalink server.
-
         Returns
         -------
         bool
@@ -95,6 +104,10 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
+                for g in self._lavalink.players._players.copy().keys():
+                    w = self._lavalink.bot._connection._get_websocket(int(g))
+                    await w.voice_state(int(g), None)
+
                 self._lavalink.players.clear()
 
                 if self._shutdown is True:
@@ -129,7 +142,7 @@ class WebSocket:
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
 
-        log.debug("Closing Websocket...")
+        log.debug('Closing Websocket...')
         await self._ws.close()
 
     async def send(self, **data):
