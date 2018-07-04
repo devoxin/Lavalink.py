@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-from datetime import datetime
 
 import websockets
 
@@ -13,7 +12,6 @@ log = logging.getLogger(__name__)
 class WebSocket:
     def __init__(self, lavalink, host, password, ws_port, ws_retry, shard_count):
         self._lavalink = lavalink
-        self.last_response = 0
 
         self._ws = None
         self._queue = []
@@ -74,14 +72,12 @@ class WebSocket:
                 wait_pong = await self._ws.ping()
                 await asyncio.wait_for(wait_pong, timeout=5.0)
             except asyncio.TimeoutError:
-                log.warning("WS Ping Timeout! Lavalink WS did not respond after 5 seconds.")
-                log.warning("Closing WS connection...")
+                log.warning('WS Ping Timeout! Lavalink WS did not respond after 5 seconds.')
+                log.warning('Closing WS connection...')
                 await self._ws.close()
             except websockets.ConnectionClosed as e:
                 while not self._ws.open:
                     await asyncio.sleep(1)
-            else:
-                self.last_response = datetime.utcnow().timestamp()
             await asyncio.sleep(2)
 
     async def _attempt_reconnect(self) -> bool:
@@ -108,7 +104,7 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
-                for g, p in self._lavalink.players:
+                for g in self._lavalink.players._players.copy().keys():
                     w = self._lavalink.bot._connection._get_websocket(int(g))
                     await w.voice_state(int(g), None)
 
@@ -125,7 +121,6 @@ class WebSocket:
 
             op = data.get('op', None)
             log.debug('Received websocket data %s', str(data))
-            self.last_response = datetime.utcnow().timestamp()
 
             if not op:
                 return log.debug('Received websocket message without op %s', str(data))
@@ -147,7 +142,7 @@ class WebSocket:
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
 
-        log.debug("Closing Websocket...")
+        log.debug('Closing Websocket...')
         await self._ws.close()
 
     async def send(self, **data):
