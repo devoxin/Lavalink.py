@@ -98,7 +98,7 @@ class Music:
         seconds = int(seconds.group()) * 1000
 
         if time.startswith('-'):
-            seconds = seconds * -1
+            seconds *= -1
 
         track_time = player.position + seconds
 
