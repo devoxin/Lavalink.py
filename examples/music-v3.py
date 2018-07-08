@@ -64,7 +64,7 @@ class Music:
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour)
 
-        if results['isPlaylist']:
+        if results['playlistInfo']:
             tracks = results['tracks']
 
             for track in tracks:
