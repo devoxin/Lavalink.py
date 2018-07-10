@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+<<<<<<< HEAD
 from datetime import datetime
 
 import websockets
@@ -84,6 +85,7 @@ class WebSocket:
             except websockets.ConnectionClosed as e:
                 while not self._ws.open:
                     await asyncio.sleep(1)
+<<<<<<< HEAD
             else:
                 self.last_ack = datetime.utcnow().timestamp()
             await asyncio.sleep(2)
@@ -113,6 +115,7 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
+<<<<<<< HEAD
                 closed_sockets = []
                 closed_guilds = []
                 for g, p in self._lavalink.players:
