@@ -64,7 +64,7 @@ class Music:
 
         embed = discord.Embed(colour=ctx.guild.me.top_role.colour)
 
-        if results['isPlaylist']:
+        if results['loadType'] == "PLAYLIST_LOADED":
             tracks = results['tracks']
 
             for track in tracks:
@@ -98,7 +98,7 @@ class Music:
         seconds = int(seconds.group()) * 1000
 
         if time.startswith('-'):
-            seconds = seconds * -1
+            seconds *= -1
 
         track_time = player.position + seconds
 
@@ -222,7 +222,7 @@ class Music:
         if index > len(player.queue) or index < 1:
             return await ctx.send('Index has to be >=1 and <=queue size')
 
-        index = index - 1
+        index -= 1
         removed = player.queue.pop(index)
 
         await ctx.send('Removed **' + removed.title + '** from the queue.')
@@ -258,6 +258,7 @@ class Music:
         if not ctx.author.voice or (player.is_connected and ctx.author.voice.channel.id != int(player.channel_id)):
             return await ctx.send('You\'re not in my voicechannel!')
 
+        player.queue.clear()
         await player.disconnect()
         await ctx.send('*⃣ | Disconnected.')
 
