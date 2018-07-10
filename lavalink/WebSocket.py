@@ -1,8 +1,6 @@
 import asyncio
 import json
 import logging
-<<<<<<< HEAD
-from datetime import datetime
 
 import websockets
 
@@ -11,14 +9,9 @@ from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, RawStat
 log = logging.getLogger(__name__)
 
 
-class DiscordConnectionError(Exception):
-    pass
-
-
 class WebSocket:
     def __init__(self, lavalink, host, password, ws_port, ws_retry, shard_count):
         self._lavalink = lavalink
-        self.last_ack = 0
 
         self._ws = None
         self._queue = []
@@ -85,23 +78,19 @@ class WebSocket:
             except websockets.ConnectionClosed as e:
                 while not self._ws.open:
                     await asyncio.sleep(1)
-<<<<<<< HEAD
-            else:
-                self.last_ack = datetime.utcnow().timestamp()
             await asyncio.sleep(2)
 
     async def _attempt_reconnect(self) -> bool:
         """
         Attempts to reconnect to the lavalink server.
-
         Returns
         -------
         bool
             ``True`` if the reconnection attempt was successful.
         """
-        log.info('Connection closed; attempting to reconnect in 10 seconds')
+        log.info('Connection closed; attempting to reconnect in 30 seconds')
         for a in range(0, self._ws_retry):
-            await asyncio.sleep(10)
+            await asyncio.sleep(30)
             log.info('Reconnecting... (Attempt {})'.format(a + 1))
             await self.connect()
 
@@ -115,25 +104,10 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink %s', str(error))
-<<<<<<< HEAD
-                closed_sockets = []
-                closed_guilds = []
-                for g, p in self._lavalink.players:
+                for g in self._lavalink.players._players.copy().keys():
                     w = self._lavalink.bot._connection._get_websocket(int(g))
                     await w.voice_state(int(g), None)
-                    closed_guilds.append(int(g))
-                    if not w.open:
-                        for t in range(60):
-                            log.warning("Discord websocket is closed. Waiting 60 seconds to reopen.")
-                            if w.open:
-                                break
-                            await asyncio.sleep(1)
-                        if not w.open:
-                            closed_sockets.append(w.session_id)
-                            log.error("Discord websocket is still closed.")
-                if len(closed_sockets) > 0:
-                    log.error("Lavalink is exiting. Could not get all Discord websockets alive.")
-                    raise DiscordConnectionError
+
                 self._lavalink.players.clear()
 
                 if self._shutdown is True:
@@ -147,7 +121,6 @@ class WebSocket:
 
             op = data.get('op', None)
             log.debug('Received websocket data %s', str(data))
-            self.last_ack = datetime.utcnow().timestamp()
 
             if not op:
                 return log.debug('Received websocket message without op %s', str(data))
@@ -172,7 +145,7 @@ class WebSocket:
                 self._lavalink.stats._update(data)
                 await self._lavalink.dispatch_event(RawStatusUpdateEvent(data))
 
-        log.debug("Closing Websocket...")
+        log.debug('Closing Websocket...')
         await self._ws.close()
 
     async def send(self, **data):
