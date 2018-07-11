@@ -183,6 +183,14 @@ class PlayerManager:
             self._players[guild_id] = p
 
         return self._players[guild_id]
+    
+    def remove(self, guild_id):
+        """ Removes a player from the current players """
+        if guild_id in self._players:
+            p = self._player(lavalink=self.lavalink, guild_id=guild_id)
+            del self._players[guild_id]     
+            return True 
+        return False      
 
     def clear(self):
         """ Removes all of the players from the cache """
