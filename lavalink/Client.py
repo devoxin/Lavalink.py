@@ -59,7 +59,7 @@ class Client:
 
         if g in self.players:
             p = self.players.get(g)
-            p.position = data['state']['position']
+            p.position = data['state'].get('position', 0)
             p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
