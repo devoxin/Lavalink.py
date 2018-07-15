@@ -197,6 +197,11 @@ class PlayerManager:
             self._players[guild_id] = p
 
         return self._players[guild_id]
+    
+    def remove(self, guild_id):
+        """ Removes a player from the current players """
+        if guild_id in self._players:
+            del self._players[guild_id]        
 
     async def clear_guild(self, guild_id):
         """ Removes the player and clears the cache. """
