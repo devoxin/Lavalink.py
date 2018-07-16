@@ -49,7 +49,10 @@ class Client:
     async def dispatch_event(self, event):
         log.debug('Dispatching event of type %s to %d hooks', event.__class__.__name__, len(self.hooks))
         for hook in self.hooks:
-            await hook(event)
+            try:
+                await hook(event)
+            except Exception as exc:  # Catch generic exception thrown by user hooks
+                log.warn('Encountered exception while dispatching an event to hook `%s` (%s)', hook.__name__, str(exc))
 
         if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player is not None:
             await event.player.handle_event(event)
