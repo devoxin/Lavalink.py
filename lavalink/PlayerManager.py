@@ -14,6 +14,10 @@ class BasePlayer(ABC):
     async def handle_event(self, event):
         raise NotImplementedError
 
+    @abstractmethod
+    async def cleanup(self):
+        pass
+
 
 class DefaultPlayer(BasePlayer):
     def __init__(self, lavalink, guild_id: int):
@@ -187,6 +191,7 @@ class PlayerManager:
     def remove(self, guild_id):
         """ Removes a player from the current players """
         if guild_id in self._players:
+            self._players[guild_id].cleanup()
             del self._players[guild_id]
 
     def clear(self):
