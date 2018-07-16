@@ -14,7 +14,6 @@ class BasePlayer(ABC):
     async def handle_event(self, event):
         raise NotImplementedError
 
-    @abstractmethod
     async def cleanup(self):
         pass
 
