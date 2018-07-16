@@ -56,29 +56,10 @@ class WebSocket:
         else:
             log.info('Connected to Lavalink!')
             self._loop.create_task(self.listen())
-            self._loop.create_task(self._keep_alive())
             if self._queue:
                 log.info('Replaying %d queued events...', len(self._queue))
                 for task in self._queue:
                     await self.send(**task)
-
-    async def _keep_alive(self):
-        """
-        Sends a ping to the Lavalink server every 2 seconds
-        Experimental fix to attempt to solve issues where nothing is sent via the websocket after a certain amount of time
-        """
-        while self._shutdown is False:
-            try:
-                wait_pong = await self._ws.ping()
-                await asyncio.wait_for(wait_pong, timeout=5.0)
-            except asyncio.TimeoutError:
-                log.warning('WS Ping Timeout! Lavalink WS did not respond after 5 seconds.')
-                log.warning('Closing WS connection...')
-                await self._ws.close()
-            except websockets.ConnectionClosed as e:
-                while not self._ws.open:
-                    await asyncio.sleep(1)
-            await asyncio.sleep(2)
 
     async def _attempt_reconnect(self) -> bool:
         """
