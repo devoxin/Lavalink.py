@@ -53,8 +53,10 @@ class Music:
                 return await ctx.send('Join my voice channel!')
 
         query = query.strip('<>')
-
-        if not query.startswith('http'):
+        linksRegex = '((http(s):[/][/]|www.)([a-z]|[A-Z]|[0-9]|[/.]|[~]))'
+        pattern = re.compile(linksRegex)   
+        
+        if not pattern.match(query): 
             query = f'ytsearch:{query}'
 
         tracks = await self.bot.lavalink.get_tracks(query)
