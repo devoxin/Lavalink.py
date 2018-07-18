@@ -28,6 +28,10 @@ class WebSocket:
         self._loop = self._lavalink.loop
         self._loop.create_task(self.connect())
 
+    @property
+    def connected(self):
+        return self._ws is not None and self._ws.open
+
     async def connect(self):
         """ Establishes a connection to the Lavalink server """
         await self._lavalink.bot.wait_until_ready()
