@@ -1,11 +1,12 @@
 import asyncio
 import logging
+from urllib.parse import quote
+
 import aiohttp
 
-from .PlayerManager import PlayerManager, DefaultPlayer
+from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
+from .PlayerManager import DefaultPlayer, PlayerManager
 from .WebSocket import WebSocket
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
-
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class Client:
 
     async def get_tracks(self, query):
         log.debug('Requesting tracks for query %s', query)
-        async with self.http.get(self.rest_uri + query, headers={'Authorization': self.password}) as res:
+        async with self.http.get(self.rest_uri + quote(query), headers={'Authorization': self.password}) as res:
             return await res.json(content_type=None)
 
     # Bot Events
