@@ -15,6 +15,9 @@ class BasePlayer(ABC):
     async def handle_event(self, event):
         raise NotImplementedError
 
+    def cleanup(self):
+        pass
+
 
 class DefaultPlayer(BasePlayer):
     def __init__(self, lavalink, guild_id: int):
@@ -198,7 +201,6 @@ class PlayerManager:
 
         return self._players[guild_id]
 
-<<<<<<< HEAD
     async def clear_guild(self, guild_id):
         """ Removes the player and clears the cache. """
         try:
@@ -206,8 +208,12 @@ class PlayerManager:
             del self._players[guild_id]
         except KeyError:
             pass
-=======
->>>>>>> pr/7
+
+    def remove(self, guild_id):
+        """ Removes a player from the current players """
+        if guild_id in self._players:
+            self._players[guild_id].cleanup()
+            del self._players[guild_id]
 
     def clear(self):
         """ Removes all of the players from the cache """

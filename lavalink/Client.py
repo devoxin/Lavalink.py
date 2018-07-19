@@ -1,15 +1,14 @@
 import asyncio
 import logging
+from urllib.parse import quote
+
 import aiohttp
 
-from .PlayerManager import PlayerManager, DefaultPlayer
+from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
+from .PlayerManager import DefaultPlayer, PlayerManager
 from .WebSocket import WebSocket
-<<<<<<< HEAD
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
 from .Stats import Stats
 
-=======
->>>>>>> pr/7
 
 log = logging.getLogger(__name__)
 
@@ -54,7 +53,10 @@ class Client:
     async def dispatch_event(self, event):
         log.debug('Dispatching event of type %s to %d hooks', event.__class__.__name__, len(self.hooks))
         for hook in self.hooks:
-            await hook(event)
+            try:
+                await hook(event)
+            except Exception as exc:  # Catch generic exception thrown by user hooks
+                log.warning('Encountered exception while dispatching an event to hook `%s` (%s)', hook.__name__, str(exc))
 
         if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player is not None:
             await event.player.handle_event(event)
@@ -64,12 +66,12 @@ class Client:
 
         if g in self.players:
             p = self.players.get(g)
-            p.position = data['state']['position']
+            p.position = data['state'].get('position', 0)
             p.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
         log.debug('Requesting tracks for query %s', query)
-        async with self.http.get(self.rest_uri + query, headers={'Authorization': self.password}) as res:
+        async with self.http.get(self.rest_uri + quote(query), headers={'Authorization': self.password}) as res:
             return await res.json(content_type=None)
 
     # Bot Events
