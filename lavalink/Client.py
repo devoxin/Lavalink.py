@@ -4,9 +4,12 @@ import aiohttp
 
 from .PlayerManager import PlayerManager, DefaultPlayer
 from .WebSocket import WebSocket
+<<<<<<< HEAD
 from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent
 from .Stats import Stats
 
+=======
+>>>>>>> pr/7
 
 log = logging.getLogger(__name__)
 

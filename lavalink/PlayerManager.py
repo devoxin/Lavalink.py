@@ -198,6 +198,7 @@ class PlayerManager:
 
         return self._players[guild_id]
 
+<<<<<<< HEAD
     async def clear_guild(self, guild_id):
         """ Removes the player and clears the cache. """
         try:
@@ -205,6 +206,8 @@ class PlayerManager:
             del self._players[guild_id]
         except KeyError:
             pass
+=======
+>>>>>>> pr/7
 
     def clear(self):
         """ Removes all of the players from the cache """
