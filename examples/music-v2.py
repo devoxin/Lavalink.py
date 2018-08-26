@@ -7,7 +7,7 @@ import lavalink
 from discord.ext import commands
 
 time_rx = re.compile('[0-9]+')
-url_rx = re.compile('((http(s):[/][/]|www.)([a-z]|[A-Z]|[0-9]|[/.]|[~]))')  
+url_rx = re.compile('https?:\/\/(?:www\.)?.+')
 
 
 class Music:
@@ -54,8 +54,8 @@ class Music:
                 return await ctx.send('Join my voice channel!')
 
         query = query.strip('<>')
-        
-        if not url_rx.match(query): 
+
+        if not url_rx.match(query):
             query = f'ytsearch:{query}'
 
         tracks = await self.bot.lavalink.get_tracks(query)
