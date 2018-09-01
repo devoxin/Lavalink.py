@@ -19,6 +19,31 @@ def set_log_level(log_level):
 class Client:
     def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
                  rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1, player=DefaultPlayer):
+        """
+        Creates a new Lavalink client.
+        -----------------
+        :param bot:
+            The bot to attach the Client to.
+        :param log_level:
+            The log_level to set the client to. Defaults to ``INFO``
+        :param loop:
+            The event loop for the client.
+        :param host:
+            Your Lavalink server's host address.
+        :param rest_port:
+            The port over which the HTTP requests should be made.
+        :param password:
+            The password for your Lavalink server. The default password is ``youshallnotpass``.
+        :param ws_retry:
+            How often the client should attempt to reconnect to the Lavalink server.
+        :param ws_port:
+            The port on which a WebSocket connection to the Lavalink server should be established.
+        :param shard_count:
+            The bot's shard count. Defaults to ``1``.
+        :param player:
+            The class that should be used for the player. Defaults to ``DefaultPlayer``.
+            Do not change this unless you know what you are doing!
+        """
 
         bot.lavalink = self
         self.http = aiohttp.ClientSession(loop=loop)
@@ -40,39 +65,76 @@ class Client:
         self.players = PlayerManager(self, player)
 
     def register_hook(self, func):
+        """
+        Registers a hook. Since this probably is a bit difficult, I'll explain it in detail.
+        A hook basically is an object of function you pass. This will append that object to a list and whenever
+        an event from the Lavalink server is dispatched, the function will be called internally. For declaring the
+        function that should become a hook, pass ``event` as its sole parameter.
+        Important: MUST BE A COROUTINE!
+
+        Example for a method declaration inside a class:
+        ---------------
+            await self.bot.lavalink.register_hook(my_hook)
+
+            async def my_hook(self, event):
+                channel = self.bot.get_channel(event.player.fetch('channel'))
+                if not channel:
+                    return
+
+                if isinstance(event, lavalink.Events.TrackStartEvent):
+                    await channel.send(embed=discord.Embed(title='Now playing:',
+                                                           description=event.track.title,
+                                                           color=discord.Color.blurple()))
+        ---------------
+        :param func:
+            The coroutine that should be registered as a hook.
+        """
         if func not in self.hooks:
             self.hooks.append(func)
 
     def unregister_hook(self, func):
+        """ Unregisters a hook. For further explanation, please have a look at ``register_hook``. """
         if func in self.hooks:
             self.hooks.remove(func)
 
     async def dispatch_event(self, event):
-        log.debug('Dispatching event of type %s to %d hooks', event.__class__.__name__, len(self.hooks))
+        """ Dispatches an event to all registered hooks. """
+        log.debug('Dispatching event of type {} to {} hooks'.format(event.__class__.__name__, len(self.hooks)))
         for hook in self.hooks:
             try:
                 await hook(event)
-            except Exception as exc:  # Catch generic exception thrown by user hooks
-                log.warn('Encountered exception while dispatching an event to hook `%s` (%s)', hook.__name__, str(exc))
+            except Exception as e:  # Catch generic exception thrown by user hooks
+                log.warning('Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
 
         if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player is not None:
             await event.player.handle_event(event)
 
     async def update_state(self, data):
-        g = int(data['guildId'])
+        """ Updates a player's state when a payload with opcode ``playerUpdate`` is received. """
+        guild_id = int(data['guildId'])
 
-        if g in self.players:
-            p = self.players.get(g)
-            p.position = data['state'].get('position', 0)
-            p.position_timestamp = data['state']['time']
+        if guild_id in self.players:
+            player = self.players.get(guild_id)
+            player.position = data['state'].get('position', 0)
+            player.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
-        log.debug('Requesting tracks for query %s', query)
+        """ Returns a Dictionary containing search results for a given query. """
+        log.debug('Requesting tracks for query {}'.format(query))
+
         async with self.http.get(self.rest_uri + quote(query), headers={'Authorization': self.password}) as res:
             return await res.json(content_type=None)
 
     # Bot Events
     async def on_socket_response(self, data):
+        """
+        This coroutine will be called every time an event from the Lavalink server will be dispatched.
+        It is used to update a player's voice state through sending a payload via the WebSocket connection.
+        -------------
+        :param data:
+            The payload received from the Lavalink server.
+        """
+
         # INTERCEPT VOICE UPDATES
         if not data or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
             return
@@ -99,6 +161,7 @@ class Client:
             self.voice_state.clear()
 
     def destroy(self):
+        """ Destroys the Lavalink client. """
         self.ws.destroy()
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
