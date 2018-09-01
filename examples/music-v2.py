@@ -2,9 +2,7 @@
 
 """
 This is an example code that shows how you would setup a simple music bot for Lavalink v2.
-Lavalink.py is only compatible with the discord.py rewrite branch.
-Though Lavalink.py supports all Python versions that also support discord.py rewrite, this example requires you
-to have Python 3.6+ installed on your machine.
+This example is only compatible with the discord.py rewrite branch. You also must have Python 3.6 or higher installed.
 """
 
 import logging
