@@ -31,8 +31,6 @@ class Music:
             all to let users invoke music-related commands in DM channels. """
         if ctx.guild is None:
             await ctx.send('Music commands can\'t be invoked in DM channels.')
-            raise commands.NoPrivateMessage('Music commands can\'t be invoked in DM channels.')
-        return True
 
     def __unload(self):
         for guild_id, player in self.bot.lavalink.players:
