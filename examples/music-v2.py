@@ -34,7 +34,7 @@ class Music:
 
     def __unload(self):
         for guild_id, player in self.bot.lavalink.players:
-            player.disconnect()
+            self.bot.loop.create_task(player.disconnect())
             player.cleanup()
 
         # Clears the players from Lavalink's internal cache
