@@ -166,7 +166,7 @@ class Music:
         await ctx.send(embed=embed)
 
     @commands.command(name='queue', aliases=['q'])
-    async def _queue(self, ctx, page: int = 1):
+    async def _queue(self, ctx, page: int=1):
         """ Shows the player's queue. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
         
@@ -204,7 +204,7 @@ class Music:
             await ctx.send('⏯ | Paused')
 
     @commands.command(name='volume', aliases=['vol'])
-    async def _volume(self, ctx, volume: int = None):
+    async def _volume(self, ctx, volume: int=None):
         """ Changes the player's volume. Must be between 0 and 150. Error Handling for that is done by Lavalink. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
