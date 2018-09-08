@@ -67,10 +67,10 @@ class Client:
     def register_hook(self, func):
         """
         Registers a hook. Since this probably is a bit difficult, I'll explain it in detail.
-        A hook basically is an object of function you pass. This will append that object to a list and whenever
+        A hook basically is an object of a function you pass. This will append that object to a list and whenever
         an event from the Lavalink server is dispatched, the function will be called internally. For declaring the
         function that should become a hook, pass ``event` as its sole parameter.
-        Important: MUST BE A COROUTINE!
+        Can be a function but also a coroutine.
 
         Example for a method declaration inside a class:
         ---------------
@@ -87,8 +87,9 @@ class Client:
                                                            color=discord.Color.blurple()))
         ---------------
         :param func:
-            The coroutine that should be registered as a hook.
+            The function that should be registered as a hook.
         """
+
         if func not in self.hooks:
             self.hooks.append(func)
 
@@ -102,7 +103,10 @@ class Client:
         log.debug('Dispatching event of type {} to {} hooks'.format(event.__class__.__name__, len(self.hooks)))
         for hook in self.hooks:
             try:
-                await hook(event)
+                if asyncio.iscoroutinefunction(hook):
+                    await hook(event)
+                else:
+                    hook(event)
             except Exception as e:  # Catch generic exception thrown by user hooks
                 log.warning('Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
 
