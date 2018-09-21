@@ -140,4 +140,4 @@ class WebSocket:
             log.debug('Send called before websocket ready; queueing payload %s', str(data))
 
     def destroy(self):
-        self._shutdown = False
+        self._shutdown = True
