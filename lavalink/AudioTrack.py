@@ -1,11 +1,11 @@
 class InvalidTrack(Exception):
-    def __init__(self, message):
-        super().__init__(message)
+    """ This exception will be raised when an invalid track was passed. """
+    pass
 
 
 class AudioTrack:
     def build(self, track, requester):
-        """ Returns an optional AudioTrack """
+        """ Returns an optional AudioTrack. """
         try:
             self.track = track['track']
             self.identifier = track['info']['identifier']
@@ -19,7 +19,7 @@ class AudioTrack:
 
             return self
         except KeyError:
-            raise InvalidTrack('an invalid track was passed')
+            raise InvalidTrack('An invalid track was passed.')
 
     @property
     def thumbnail(self):

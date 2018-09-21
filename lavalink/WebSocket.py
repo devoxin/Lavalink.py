@@ -30,14 +30,15 @@ class WebSocket:
 
     @property
     def connected(self):
+        """ Returns whether there is a valid WebSocket connection to the Lavalink server or not. """
         return self._ws is not None and self._ws.open
 
     async def connect(self):
-        """ Establishes a connection to the Lavalink server """
+        """ Establishes a connection to the Lavalink server. """
         await self._lavalink.bot.wait_until_ready()
 
         if self._ws is not None and self._ws.open:
-            log.debug('Websocket still open, closing...')
+            log.debug('WebSocket still open, closing...')
             await self._ws.close()
 
         user_id = self._lavalink.bot.user.id
@@ -56,18 +57,18 @@ class WebSocket:
         try:
             self._ws = await websockets.connect(self._uri, loop=self._loop, extra_headers=headers)
         except OSError as error:
-            log.exception('Failed to connect to Lavalink %s', str(error))
+            log.exception('Failed to connect to Lavalink: {}'.format(str(error)))
         else:
             log.info('Connected to Lavalink!')
             self._loop.create_task(self.listen())
             if self._queue:
-                log.info('Replaying %d queued events...', len(self._queue))
+                log.info('Replaying {} queued events...'.format(len(self._queue)))
                 for task in self._queue:
                     await self.send(**task)
 
     async def _attempt_reconnect(self) -> bool:
         """
-        Attempts to reconnect to the lavalink server.
+        Attempts to reconnect to the Lavalink server.
         Returns
         -------
         bool
@@ -84,14 +85,15 @@ class WebSocket:
         return False
 
     async def listen(self):
+        """ Waits to receive a payload from the Lavalink server and processes it. """
         while self._shutdown is False:
             try:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
-                log.warning('Disconnected from Lavalink %s', str(error))
+                log.warning('Disconnected from Lavalink: {}'.format(str(error)))
                 for g in self._lavalink.players._players.copy().keys():
-                    w = self._lavalink.bot._connection._get_websocket(int(g))
-                    await w.voice_state(int(g), None)
+                    ws = self._lavalink.bot._connection._get_websocket(int(g))
+                    await ws.voice_state(int(g), None)
 
                 self._lavalink.players.clear()
 
@@ -105,13 +107,13 @@ class WebSocket:
                     break
 
             op = data.get('op', None)
-            log.debug('Received websocket data %s', str(data))
+            log.debug('Received WebSocket data {}'.format(str(data)))
 
             if not op:
-                return log.debug('Received websocket message without op %s', str(data))
+                return log.debug('Received WebSocket message without op {}'.format(str(data)))
 
             if op == 'event':
-                log.debug('Received event of type %s', data['type'])
+                log.debug('Received event of type {}'.format(data['type']))
                 player = self._lavalink.players[int(data['guildId'])]
                 event = None
 
@@ -127,17 +129,17 @@ class WebSocket:
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
 
-        log.debug('Closing Websocket...')
+        log.debug('Closing WebSocket...')
         await self._ws.close()
 
     async def send(self, **data):
-        """ Sends data to lavalink """
+        """ Sends data to the Lavalink server. """
         if self._ws is not None and self._ws.open:
-            log.debug('Sending payload %s', str(data))
+            log.debug('Sending payload {}'.format(str(data)))
             await self._ws.send(json.dumps(data))
         else:
             self._queue.append(data)
-            log.debug('Send called before websocket ready; queueing payload %s', str(data))
+            log.debug('Send called before WebSocket ready; queueing payload {}'.format(str(data)))
 
     def destroy(self):
         self._shutdown = True
