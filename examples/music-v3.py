@@ -2,7 +2,7 @@
 
 """
 This is an example code that shows how you would setup a simple music bot for Lavalink v3.
-This example is only compatible with the discord.py rewrite branch. 
+This example is only compatible with the discord.py rewrite branch.
 Because of the F-Strings, you also must have Python 3.6 or higher installed.
 """
 
