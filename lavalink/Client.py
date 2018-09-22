@@ -136,7 +136,7 @@ class Client:
         It is used to update a player's voice state through forwarding a payload via the WebSocket connection to Lavalink.
         -------------
         :param data:
-            The payload received from the Lavalink server.
+            The payload received from Discord.
         """
 
         # INTERCEPT VOICE UPDATES
