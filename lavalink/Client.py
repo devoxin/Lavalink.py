@@ -74,7 +74,7 @@ class Client:
 
         Example for a method declaration inside a class:
         ---------------
-            await self.bot.lavalink.register_hook(my_hook)
+            self.bot.lavalink.register_hook(my_hook)
 
             async def my_hook(self, event):
                 channel = self.bot.get_channel(event.player.fetch('channel'))
@@ -132,8 +132,8 @@ class Client:
     # Bot Events
     async def on_socket_response(self, data):
         """
-        This coroutine will be called every time an event from the Lavalink server will be dispatched.
-        It is used to update a player's voice state through sending a payload via the WebSocket connection.
+        This coroutine will be called every time an event from Discord is received.
+        It is used to update a player's voice state through forwarding a payload via the WebSocket connection to Lavalink.
         -------------
         :param data:
             The payload received from the Lavalink server.
