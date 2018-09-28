@@ -31,6 +31,7 @@ class DefaultPlayer(BasePlayer):
         self.volume = 100
         self.shuffle = False
         self.repeat = False
+        self.karaoke = False
 
         self.queue = []
         self.current = None
@@ -135,6 +136,9 @@ class DefaultPlayer(BasePlayer):
     async def seek(self, pos: int):
         """ Seeks to a given position in the track. """
         await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
+    
+    def toggle_karaoke(self, state)
+        self.karaoke = not self.karaoke
 
     async def handle_event(self, event):
         """ Makes the player play the next song from the queue if a song has finished or an issue occurred. """
