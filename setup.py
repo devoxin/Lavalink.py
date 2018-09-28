@@ -9,7 +9,7 @@ setup(
     author='Devoxin',
     author_email='luke@serux.pro',
     url='https://github.com/Devoxin/Lavalink.py',
-    download_url='https://github.com/Devoxin/Lavalink.py/archive/2.1.9.tar.gz',
+    download_url='https://github.com/Devoxin/Lavalink.py/archive/2.2.0.tar.gz',
     keywords=['lavalink'],
     include_package_data=True,
     install_requires=['websockets!=5.0.0', 'aiohttp']
