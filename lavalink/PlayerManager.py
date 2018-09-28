@@ -86,6 +86,10 @@ class DefaultPlayer(BasePlayer):
     def add(self, requester: int, track: dict):
         """ Adds a track to the queue. """
         self.queue.append(AudioTrack().build(track, requester))
+        
+    def add_to_top(self, requester: int, track: dict):
+        """ Adds a track to the queue. """
+        self.queue = [AudioTrack().build(track, requester)] + self.queue
 
     async def play(self):
         """ Plays the first track in the queue, if any. """
