@@ -137,7 +137,7 @@ class DefaultPlayer(BasePlayer):
         """ Seeks to a given position in the track. """
         await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
     
-    def toggle_karaoke(self, state):
+    def toggle_karaoke(self):
         self.karaoke = not self.karaoke
 
     async def handle_event(self, event):
