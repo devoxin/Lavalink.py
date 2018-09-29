@@ -125,6 +125,8 @@ class DefaultPlayer(BasePlayer):
         
         track = AudioTrack().build(track, requester)
         
+        self.current = track
+        
         await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
         await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
