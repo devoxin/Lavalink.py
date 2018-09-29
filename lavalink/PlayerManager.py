@@ -39,29 +39,29 @@ class DefaultPlayer(BasePlayer):
 
     @property
     def is_playing(self):
-        """ Returns the player's track state """
+        """ Returns the player's track state. """
         return self.connected_channel is not None and self.current is not None
 
     @property
     def is_connected(self):
-        """ Returns the player's connection state """
+        """ Returns the player's connection state. """
         return self.connected_channel is not None
 
     @property
     def connected_channel(self):
-        """ Returns the voicechannel the player is connected to """
+        """ Returns the voice channel the player is connected to. """
         if not self.channel_id:
             return None
 
         return self._lavalink.bot.get_channel(int(self.channel_id))
 
     async def connect(self, channel_id: int):
-        """ Connects to a voicechannel """
+        """ Connects to a voice channel. """
         ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
         await ws.voice_state(self.guild_id, str(channel_id))
 
     async def disconnect(self):
-        """ Disconnects from the voicechannel, if any """
+        """ Disconnects from the voice channel, if any. """
         if not self.is_connected:
             return
         self.channel_id = None
@@ -72,25 +72,23 @@ class DefaultPlayer(BasePlayer):
         await ws.voice_state(self.guild_id, None)
 
     def store(self, key: object, value: object):
-        """ Stores custom user data """
+        """ Stores custom user data. """
         self._user_data.update({key: value})
 
     def fetch(self, key: object, default=None):
-        """ Retrieves the related value from the stored user data """
+        """ Retrieves the related value from the stored user data. """
         return self._user_data.get(key, default)
 
     def delete(self, key: object):
-        """ Removes an item from the internal storage """
+        """ Removes an item from the the stored user data. """
         try:
             del self._user_data[key]
         except KeyError:
             pass
 
-    def add(self, requester: int, track: dict, is_ad: bool = False, enable_msg: bool = True,
-            quit_after_empty: bool = False):
-        """ Adds a track to the queue """
-        self.queue.append(
-            AudioTrack().build(track, requester, is_ad=is_ad, enable_msg=enable_msg, quit_after_empty=quit_after_empty))
+    def add(self, requester: int, track: dict):
+        """ Adds a track to the queue. """
+        self.queue.append(AudioTrack().build(track, requester))
 
     def add_next(self, requester: int, track: dict, is_ad: bool = False, enable_msg: bool = True,
                  quit_after_empty: bool = False):
@@ -99,7 +97,7 @@ class DefaultPlayer(BasePlayer):
                                                 quit_after_empty=quit_after_empty))
 
     async def play(self):
-        """ Plays the first track in the queue, if any """
+        """ Plays the first track in the queue, if any. """
         if self.repeat and self.current is not None:
             self.queue.append(self.current)
 
@@ -124,16 +122,16 @@ class DefaultPlayer(BasePlayer):
             await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
-        """ Stops the player, if playing """
+        """ Stops the player, if playing. """
         await self._lavalink.ws.send(op='stop', guildId=self.guild_id)
         self.current = None
 
     async def skip(self):
-        """ Plays the next track in the queue, if any """
+        """ Plays the next track in the queue, if any. """
         await self.play()
 
     async def set_pause(self, pause: bool):
-        """ Sets the player's paused state """
+        """ Sets the player's paused state. """
         await self._lavalink.ws.send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
@@ -143,12 +141,12 @@ class DefaultPlayer(BasePlayer):
         await self._lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
 
     async def seek(self, pos: int):
-        """ Seeks to a given position in the track """
+        """ Seeks to a given position in the track. """
         await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def handle_event(self, event):
-        if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
-                (isinstance(event, TrackEndEvent) and event.reason == 'FINISHED'):
+        """ Makes the player play the next song from the queue if a song has finished or an issue occurred. """
+        if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':
             await self.play()
 
 
@@ -163,7 +161,7 @@ class PlayerManager:
             Must implement lavalink.BasePlayer.
         """
         if not issubclass(player, BasePlayer):
-            raise ValueError('player must implement baseplayer')
+            raise ValueError('player must implement lavalink.BasePlayer.')
 
         self.lavalink = lavalink
         self._player = player
@@ -176,25 +174,25 @@ class PlayerManager:
         return self._players.get(item, None)
 
     def __iter__(self):
-        """ Returns a tuple of (guild_id, player)"""
+        """ Returns a tuple of (guild_id, player). """
         for guild_id, player in self._players.items():
             yield guild_id, player
 
     def __contains__(self, item):
-        """ Returns the presence of a player in the cache """
+        """ Returns the presence of a player in the cache. """
         return item in self._players
 
     def find(self, predicate):
-        """ Returns the first player in the list based on the given filter predicate. Could be None """
+        """ Returns the first player in the list based on the given filter predicate. Could be None. """
         found = self.find_all(predicate)
         return found[0] if found else None
 
     def find_all(self, predicate):
-        """ Returns a list of players based on the given filter predicate """
+        """ Returns a list of players based on the given filter predicate. """
         return list(filter(predicate, self._players.values()))
 
     def get(self, guild_id):
-        """ Returns a player from the cache, or creates one if it does not exist """
+        """ Returns a player from the cache, or creates one if it does not exist. """
         if guild_id not in self._players:
             p = self._player(lavalink=self.lavalink, guild_id=guild_id)
             self._players[guild_id] = p
@@ -210,11 +208,11 @@ class PlayerManager:
             pass
 
     def remove(self, guild_id):
-        """ Removes a player from the current players """
+        """ Removes a player from the current players. """
         if guild_id in self._players:
             self._players[guild_id].cleanup()
             del self._players[guild_id]
 
     def clear(self):
-        """ Removes all of the players from the cache """
+        """ Removes all of the players from the cache. """
         self._players.clear()
