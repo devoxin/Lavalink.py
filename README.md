@@ -11,7 +11,8 @@ Lavalink.py serves to be an interface with various utilities to make interacting
 [Lavalink V3](https://ci.fredboat.com/viewType.html?buildTypeId=Lavalink_Build&branch_Lavalink=refs%2Fheads%2Fv3&tab=buildTypeStatusDiv)
 
 # Getting Started
-
+Lavalink.py was built as an interface for Lavalink that you can use with discord.py.   
+  
 There aren't currently any docs for Lavalink.py at the time of writing (sorry!). We recommend that you check out the example music cogs, or check out the source itself!
 
 If you're using Lavalink V3, check out [examples/music-v3.py](https://github.com/Devoxin/Lavalink.py/blob/master/examples/music-v3.py)
