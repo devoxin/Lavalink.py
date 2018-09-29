@@ -114,7 +114,7 @@ class DefaultPlayer(BasePlayer):
             await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
             await self._lavalink.dispatch_event(TrackStartEvent(self, track))
             
-    async def playnow(self, requester:int, track):
+    async def play_now(self, requester:int, track):
         """ Plays the first track in the queue, if any. """
         if self.repeat and self.current is not None:
             self.queue.append(self.current)
@@ -124,6 +124,22 @@ class DefaultPlayer(BasePlayer):
         self.paused = False
         
         track = AudioTrack().build(track, requester)
+        
+        self.current = track
+        
+        await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
+        await self._lavalink.dispatch_event(TrackStartEvent(self, track))
+        
+    async def play_now_from_queue(self, index):
+        """ Plays the first track in the queue, if any. """
+        if self.repeat and self.current is not None:
+            self.queue.append(self.current)
+
+        self.current = None
+        self.position = 0
+        self.paused = False
+        
+        track = self.queue.pop(index)
         
         self.current = track
         
