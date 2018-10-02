@@ -4,7 +4,7 @@ class InvalidTrack(Exception):
 
 
 class AudioTrack:
-    def build(self, track, requester):
+    def build(self, track, requester, **kwargs):
         """ Returns an optional AudioTrack. """
         try:
             self.track = track['track']
@@ -16,9 +16,7 @@ class AudioTrack:
             self.title = track['info']['title']
             self.uri = track['info']['uri']
             self.requester = requester
-            self.enable_msg = enable_msg
-            self.is_ad = is_ad
-            self.quit_after_empty = quit_after_empty
+            self.preferences = kwargs
 
             return self
         except KeyError:
