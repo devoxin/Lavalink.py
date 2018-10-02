@@ -1,3 +1,5 @@
+# flake8: noqa
+
 __title__ = 'Lavalink'
 __author__ = 'Devoxin'
 __license__ = 'MIT'
