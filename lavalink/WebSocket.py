@@ -136,7 +136,7 @@ class WebSocket:
                 await self._lavalink.update_state(data)
             elif op == 'stats':
                 self._lavalink.stats._update(data)
-                await self._lavalink.dispatch_event(StatsUpdateEvent(data))
+                await self._lavalink.dispatch_event(StatsUpdateEvent(self._lavalink.stats))
 
         log.debug('Closing WebSocket...')
         await self._ws.close()

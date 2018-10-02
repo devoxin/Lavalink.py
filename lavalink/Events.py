@@ -1,6 +1,3 @@
-from .Stats import Stats
-
-
 class QueueEndEvent:
     """ This event will be dispatched when there are no more songs in the queue. """
     def __init__(self, player):
@@ -41,4 +38,4 @@ class TrackStartEvent:
 class StatsUpdateEvent:
     """ This event will be dispatched when the websocket receives a statistics update. """
     def __init__(self, data):
-        self.stats = Stats()._update(data)
+        self.stats = data
