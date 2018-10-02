@@ -4,7 +4,7 @@ import logging
 
 import websockets
 
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, RawStatsUpdateEvent
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, StatsUpdateEvent
 
 log = logging.getLogger(__name__)
 
@@ -136,7 +136,7 @@ class WebSocket:
                 await self._lavalink.update_state(data)
             elif op == 'stats':
                 self._lavalink.stats._update(data)
-                await self._lavalink.dispatch_event(RawStatsUpdateEvent(data))
+                await self._lavalink.dispatch_event(StatsUpdateEvent(data))
 
         log.debug('Closing WebSocket...')
         await self._ws.close()
