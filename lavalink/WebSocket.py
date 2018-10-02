@@ -10,8 +10,9 @@ log = logging.getLogger(__name__)
 
 
 class WebSocket:
-    def __init__(self, lavalink, host, password, ws_port, ws_retry, shard_count):
+    def __init__(self, lavalink, node, host, password, ws_port, ws_retry, shard_count):
         self._lavalink = lavalink
+        self._node = node
 
         self._ws = None
         self._queue = []
@@ -76,7 +77,7 @@ class WebSocket:
         """
         log.info('Connection closed; attempting to reconnect in 30 seconds')
         for a in range(0, self._ws_retry):
-            await asyncio.sleep(30)
+            await asyncio.sleep(10)
             log.info('Reconnecting... (Attempt {})'.format(a + 1))
             await self.connect()
 
@@ -129,7 +130,7 @@ class WebSocket:
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
             elif op == 'stats':
-                self._lavalink.stats._update(data)
+                self._node.stats._update(data)
                 await self._lavalink.dispatch_event(RawStatusUpdateEvent(data))
 
         log.debug('Closing WebSocket...')

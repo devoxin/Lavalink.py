@@ -6,8 +6,8 @@ from .Events import QueueEndEvent, TrackExceptionEvent, TrackEndEvent, TrackStar
 
 
 class BasePlayer(ABC):
-    def __init__(self, lavalink, guild_id: int):
-        self.node = None  # later
+    def __init__(self, node, lavalink, guild_id: int):
+        self.node = node
         self._lavalink = lavalink
         self.guild_id = str(guild_id)
 
@@ -20,8 +20,8 @@ class BasePlayer(ABC):
 
 
 class DefaultPlayer(BasePlayer):
-    def __init__(self, lavalink, guild_id: int):
-        super().__init__(lavalink, guild_id)
+    def __init__(self, node, lavalink, guild_id: int):
+        super().__init__(node, lavalink, guild_id)
 
         self._user_data = {}
         self.channel_id = None
@@ -90,11 +90,13 @@ class DefaultPlayer(BasePlayer):
         """ Adds a track to the queue. """
         self.queue.append(AudioTrack().build(track, requester))
 
-    def add_next(self, requester: int, track: dict, is_ad: bool = False, enable_msg: bool = True,
-                 quit_after_empty: bool = False):
+    def add_next(self, requester: int, track: dict):
         """ Adds a track to beginning of the queue """
-        self.queue.insert(0, AudioTrack().build(track, requester, is_ad=is_ad, enable_msg=enable_msg,
-                                                quit_after_empty=quit_after_empty))
+        self.queue.insert(0, AudioTrack().build(track, requester))
+
+    def add_at(self, index: int, requester: int, track: dict):
+        """ Adds a track at a specific index in the queue. """
+        self.queue.insert(min(index, len(self.queue) - 1), AudioTrack().build(track, requester))
 
     async def play(self):
         """ Plays the first track in the queue, if any. """
@@ -120,6 +122,22 @@ class DefaultPlayer(BasePlayer):
                 self.previous = self.current
             await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
             await self._lavalink.dispatch_event(TrackStartEvent(self, track))
+
+    async def play_now(self, requester: int, track: dict):
+        """ Add track and play it. """
+        self.add_next(requester, track)
+        await self.play()
+
+    async def play_from_queue(self, index: int):
+        """ Plays the track from a specific index in the queue. """
+        track = self.queue.pop(min(index, len(self.queue) - 1))
+        self.queue.insert(0, track)
+        await self.play()
+
+    async def play_at(self, index: int):
+        """ Play the queue from a specific point. Disregards tracks before the index. """
+        self.queue = self.queue[min(index, len(self.queue) - 1):len(self.queue)]
+        await self.play()
 
     async def stop(self):
         """ Stops the player, if playing. """

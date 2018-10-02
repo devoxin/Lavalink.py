@@ -6,9 +6,8 @@ import aiohttp
 
 from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
 from .PlayerManager import DefaultPlayer, PlayerManager
-from .WebSocket import WebSocket
 from .Stats import Stats
-
+from .WebSocket import WebSocket
 
 log = logging.getLogger(__name__)
 
@@ -19,8 +18,8 @@ def set_log_level(log_level):
 
 
 class Client:
-    def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
-                 rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1, player=DefaultPlayer):
+    def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), default_node: int = 0,
+                 player=DefaultPlayer, rest_round_robin: bool = False):
         """
         Creates a new Lavalink client.
         -----------------
@@ -58,14 +57,10 @@ class Client:
         self.bot.add_listener(self.on_socket_response)
 
         self.loop = loop
-        self.rest_uri = 'http://{}:{}/loadtracks?identifier='.format(host, rest_port)
-        self.password = password
-
-        self.ws = WebSocket(
-            self, host, password, ws_port, ws_retry, shard_count
-        )
         self.players = PlayerManager(self, player)
-        self.stats = Stats()
+
+    def add_node(self, host='localhost', rest_port=2333, password='', ws_retry=10, ws_port=80, shard_count=1):
+        pass
 
     def register_hook(self, func):
         """
@@ -111,7 +106,8 @@ class Client:
                 else:
                     hook(event)
             except Exception as e:  # Catch generic exception thrown by user hooks
-                log.warning('Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
+                log.warning(
+                    'Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
 
         if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player is not None:
             await event.player.handle_event(event)
