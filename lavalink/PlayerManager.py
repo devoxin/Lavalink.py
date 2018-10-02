@@ -36,6 +36,7 @@ class DefaultPlayer(BasePlayer):
         self.volume = 100
         self.shuffle = False
         self.repeat = False
+        self.karaoke = False
 
         self.queue = []
         self.current = None
@@ -92,6 +93,10 @@ class DefaultPlayer(BasePlayer):
     def add(self, requester: int, track: dict):
         """ Adds a track to the queue. """
         self.queue.append(AudioTrack().build(track, requester))
+        
+    def add_next(self, requester: int, track: dict):
+        """ Adds a track to the queue. """
+        self.queue.insert(0, AudioTrack().build(track, requester))
 
     def add_next(self, requester: int, track: dict):
         """ Adds a track to beginning of the queue """
@@ -123,6 +128,38 @@ class DefaultPlayer(BasePlayer):
             self.current = track
             await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
             await self._lavalink.dispatch_event(TrackStartEvent(self, track))
+            
+    async def play_now(self, requester:int, track):
+        """ Plays the first track in the queue, if any. """
+        if self.repeat and self.current is not None:
+            self.queue.append(self.current)
+
+        self.current = None
+        self.position = 0
+        self.paused = False
+        
+        track = AudioTrack().build(track, requester)
+        
+        self.current = track
+        
+        await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
+        await self._lavalink.dispatch_event(TrackStartEvent(self, track))
+        
+    async def play_now_from_queue(self, index):
+        """ Plays the first track in the queue, if any. """
+        if self.repeat and self.current is not None:
+            self.queue.append(self.current)
+
+        self.current = None
+        self.position = 0
+        self.paused = False
+        
+        track = self.queue.pop(index)
+        
+        self.current = track
+        
+        await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
+        await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
     async def play_now(self, requester: int, track: dict):
         """ Add track and play it. """
@@ -166,6 +203,9 @@ class DefaultPlayer(BasePlayer):
     async def seek(self, pos: int):
         """ Seeks to a given position in the track. """
         await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
+    
+    def toggle_karaoke(self):
+        self.karaoke = not self.karaoke
 
     async def handle_event(self, event):
         """ Makes the player play the next song from the queue if a song has finished or an issue occurred. """
