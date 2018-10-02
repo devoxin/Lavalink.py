@@ -33,3 +33,9 @@ class TrackStartEvent:
     def __init__(self, player, track):
         self.player = player
         self.track = track
+
+
+class RawStatsUpdateEvent:
+    """ This event will be dispatched when the websocket receives a statistics update. """
+    def __init__(self, data):
+        self.data = data

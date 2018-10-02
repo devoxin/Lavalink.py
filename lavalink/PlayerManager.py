@@ -4,6 +4,10 @@ from .Events import QueueEndEvent, TrackExceptionEvent, TrackEndEvent, TrackStar
 from .AudioTrack import AudioTrack
 
 
+class NoPreviousTrack(Exception):
+    pass
+
+
 class BasePlayer(ABC):
     def __init__(self, lavalink, guild_id: int):
         self.node = None  # later
@@ -34,6 +38,7 @@ class DefaultPlayer(BasePlayer):
 
         self.queue = []
         self.current = None
+        self.previous = None
 
     @property
     def is_playing(self):
@@ -87,11 +92,20 @@ class DefaultPlayer(BasePlayer):
         """ Adds a track to the queue. """
         self.queue.append(AudioTrack().build(track, requester))
 
+    def add_next(self, requester: int, track: dict):
+        """ Adds a track to beginning of the queue """
+        self.queue.insert(0, AudioTrack().build(track, requester))
+
+    def add_at(self, index: int, requester: int, track: dict):
+        """ Adds a track at a specific index in the queue. """
+        self.queue.insert(min(index, len(self.queue) - 1), AudioTrack().build(track, requester))
+
     async def play(self):
         """ Plays the first track in the queue, if any. """
         if self.repeat and self.current is not None:
             self.queue.append(self.current)
 
+        self.previous = self.current
         self.current = None
         self.position = 0
         self.paused = False
@@ -109,6 +123,29 @@ class DefaultPlayer(BasePlayer):
             await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
             await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
+    async def play_now(self, requester: int, track: dict):
+        """ Add track and play it. """
+        self.add_next(requester, track)
+        await self.play()
+
+    async def play_from_queue(self, index: int):
+        """ Plays the track from a specific index in the queue (moves it to first position). """
+        track = self.queue.pop(min(index, len(self.queue) - 1))
+        self.queue.insert(0, track)
+        await self.play()
+
+    async def play_at(self, index: int):
+        """ Play the queue from a specific point. Disregards tracks before the index. """
+        self.queue = self.queue[min(index, len(self.queue) - 1):len(self.queue)]
+        await self.play()
+        
+    async def play_previous(self):
+        """ Plays previous track if it exist, if it doesn't raises a NoPreviousTrack error. """
+        if self.previous is None:
+            raise NoPreviousTrack
+        self.queue.insert(0, self.previous)
+        await self.play()
+
     async def stop(self):
         """ Stops the player, if playing. """
         await self._lavalink.ws.send(op='stop', guildId=self.guild_id)
@@ -124,8 +161,11 @@ class DefaultPlayer(BasePlayer):
         self.paused = pause
 
     async def set_volume(self, vol: int):
-        """ Sets the player's volume (150% limit imposed by lavalink). """
-        self.volume = max(min(vol, 150), 0)
+        """ Sets the player's volume (150% or 1000% limit imposed by lavalink depending on the version). """
+        if self._lavalink._server_version <= 2:
+            self.volume = max(min(vol, 150), 0)
+        else:
+            self.volume = max(min(vol, 1000), 0)
         await self._lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
 
     async def seek(self, pos: int):

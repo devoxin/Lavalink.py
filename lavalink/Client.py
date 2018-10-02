@@ -6,6 +6,7 @@ import aiohttp
 
 from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
 from .PlayerManager import DefaultPlayer, PlayerManager
+from .Stats import Stats
 from .WebSocket import WebSocket
 
 log = logging.getLogger(__name__)
@@ -62,6 +63,9 @@ class Client:
         self.ws = WebSocket(
             self, host, password, ws_port, ws_retry, shard_count
         )
+        self._server_version = 2
+        self.stats = Stats()
+
         self.players = PlayerManager(self, player)
 
     def register_hook(self, func):
@@ -108,7 +112,8 @@ class Client:
                 else:
                     hook(event)
             except Exception as e:  # Catch generic exception thrown by user hooks
-                log.warning('Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
+                log.warning(
+                    'Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
 
         if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player is not None:
             await event.player.handle_event(event)
