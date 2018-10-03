@@ -6,8 +6,7 @@ import aiohttp
 
 from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
 from .PlayerManager import DefaultPlayer, PlayerManager
-from .Stats import Stats
-from .WebSocket import WebSocket
+from .NodeManager import NodeManager
 
 log = logging.getLogger(__name__)
 
@@ -58,10 +57,7 @@ class Client:
 
         self.loop = loop
         self._server_version = 2
-        self.players = PlayerManager(self, player)
-
-    def add_node(self, host='localhost', rest_port=2333, password='', ws_retry=10, ws_port=80, shard_count=1):
-        pass
+        self.nodes = NodeManager(self, default_node, rest_round_robin)
 
     def register_hook(self, func):
         """
@@ -117,17 +113,29 @@ class Client:
         """ Updates a player's state when a payload with opcode ``playerUpdate`` is received. """
         guild_id = int(data['guildId'])
 
-        if guild_id in self.players:
-            player = self.players.get(guild_id)
-            player.position = data['state'].get('position', 0)
-            player.position_timestamp = data['state']['time']
+        for node in self.nodes:
+            if guild_id in node.players:
+                player = node.players.get(guild_id)
+                player.position = data['state'].get('position', 0)
+                player.position_timestamp = data['state']['time']
 
     async def get_tracks(self, query):
         """ Returns a Dictionary containing search results for a given query. """
         log.debug('Requesting tracks for query {}'.format(query))
-
-        async with self.http.get(self.rest_uri + quote(query), headers={'Authorization': self.password}) as res:
+        await self.nodes.ready.wait()
+        node = self.nodes.get_rest()
+        async with self.http.get(node.rest_uri + quote(query), headers={'Authorization': node.password}) as res:
             return await res.json(content_type=None)
+
+    async def get_player(self, guild_id: int):
+        await self.nodes.ready.wait()
+        for node in self.nodes:
+            if guild_id in node.players:
+                return node.players[guild_id]
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            return self.nodes.nodes[0].players.get(guild_id)
+        return self.nodes.get_by_region(str(guild.region))
 
     # Bot Events
     async def on_socket_response(self, data):
@@ -138,6 +146,8 @@ class Client:
         :param data:
             The payload received from Discord.
         """
+
+        await self.nodes.ready.wait()
 
         # INTERCEPT VOICE UPDATES
         if not data or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
@@ -157,15 +167,20 @@ class Client:
 
             guild_id = int(data['d']['guild_id'])
 
-            if self.players[guild_id]:
-                self.players[guild_id].channel_id = data['d']['channel_id']
+            for node in self.nodes:
+                if node.players[guild_id]:
+                    node.players[guild_id].channel_id = data['d']['channel_id']
 
         if {'op', 'guildId', 'sessionId', 'event'} == self.voice_state.keys():
-            await self.ws.send(**self.voice_state)
+            guild_id = int(data['d']['guild_id'])
+            for node in self.nodes:
+                if node.players[guild_id]:
+                    await node.ws.send(**self.voice_state)
             self.voice_state.clear()
 
     def destroy(self):
         """ Destroys the Lavalink client. """
-        self.ws.destroy()
+        for node in self.nodes:
+            node.ws.destroy()
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
