@@ -12,6 +12,7 @@ from .PlayerManager import *
 from .WebSocket import *
 from . import Events
 from . import Utils
+from .NodeManager import Regions
 
 import logging
 import sys
