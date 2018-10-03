@@ -135,7 +135,7 @@ class Client:
         guild = self.bot.get_guild(guild_id)
         if guild is None:
             return self.nodes.nodes[0].players.get(guild_id)
-        return self.nodes.get_by_region(str(guild.region))
+        return self.nodes.get_by_region(guild)
 
     # Bot Events
     async def on_socket_response(self, data):
