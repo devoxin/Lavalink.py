@@ -313,7 +313,8 @@ class Music:
         player.queue.clear()
         await player.disconnect()
         await ctx.send('*⃣ | Disconnected.')
-    
+        
+    @_playnow.before_invoke
     @_previous.before_invoke
     @_play.before_invoke
     async def ensure_voice(self, ctx):
