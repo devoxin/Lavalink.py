@@ -131,10 +131,14 @@ class Client:
         await self.nodes.ready.wait()
         for node in self.nodes:
             if guild_id in node.players:
+                log.debug("Found player in cache.")
                 return node.players[guild_id]
+        log.debug("Player not in cache")
         guild = self.bot.get_guild(guild_id)
         if guild is None:
+            log.debug("Couldn't find the guild.")
             return self.nodes.nodes[0].players.get(guild_id)
+        log.debug("Getting new player from geo.")
         return self.nodes.get_by_region(guild)
 
     # Bot Events
