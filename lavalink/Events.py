@@ -37,5 +37,6 @@ class TrackStartEvent:
 
 class StatsUpdateEvent:
     """ This event will be dispatched when the websocket receives a statistics update. """
-    def __init__(self, data):
-        self.stats = data
+    def __init__(self, node):
+        self.stats = node.stats
+        self.node = node
