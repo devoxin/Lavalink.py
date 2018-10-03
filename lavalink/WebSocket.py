@@ -4,7 +4,7 @@ import logging
 
 import websockets
 
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, RawStatusUpdateEvent
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, StatsUpdateEvent
 
 log = logging.getLogger(__name__)
 
@@ -62,6 +62,12 @@ class WebSocket:
         else:
             log.info('Connected to Lavalink!')
             self._loop.create_task(self.listen())
+            version = self._ws.response_headers.get('Lavalink-Major-Version', 2)
+            try:
+                self._lavalink._server_version = int(version)
+            except ValueError:
+                self._lavalink._server_version = 2
+            log.info('Lavalink server version is {}'.format(version))
             if self._queue:
                 log.info('Replaying {} queued events...'.format(len(self._queue)))
                 for task in self._queue:
@@ -130,8 +136,8 @@ class WebSocket:
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
             elif op == 'stats':
+                await self._lavalink.dispatch_event(StatsUpdateEvent(self._lavalink.stats))
                 self._node.stats._update(data)
-                await self._lavalink.dispatch_event(RawStatusUpdateEvent(data))
 
         log.debug('Closing WebSocket...')
         await self._ws.close()
