@@ -23,7 +23,8 @@ class Music:
         self.bot = bot
 
         if not hasattr(bot, 'lavalink'):
-            lavalink.Client(bot=bot, password='youshallnotpass', loop=bot.loop, log_level=logging.DEBUG)
+            lavalink.Client(bot=bot, password='youshallnotpass',
+                            loop=bot.loop, log_level=logging.DEBUG)
             self.bot.lavalink.register_hook(self._track_hook)
 
     def __unload(self):
@@ -85,7 +86,7 @@ class Music:
 
         if not player.is_playing:
             await player.play()
-            
+
     @commands.command(name='previous', aliases=['pv'])
     @commands.guild_only()
     async def _previous(self, ctx):
@@ -93,10 +94,10 @@ class Music:
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         try:
-            await player.play_previous()  
+            await player.play_previous()
         except lavalink.NoPreviousTrack:
-            await ctx.send('There is no previous song to play.')      
-            
+            await ctx.send('There is no previous song to play.')
+
     @commands.command(name='playnow', aliases=['pn'])
     @commands.guild_only()
     async def _playnow(self, ctx, *, query: str):
@@ -105,7 +106,7 @@ class Music:
 
         if not player.queue and not player.is_playing:
             return await ctx.invoke(self._play, query=query)
-        
+
         query = query.strip('<>')
 
         if not url_rx.match(query):
@@ -116,31 +117,29 @@ class Music:
         if not results or not results['tracks']:
             return await ctx.send('Nothing found!')
 
-        embed = discord.Embed(color=discord.Color.blurple())
-
-        tracks = results['tracks']       
+        tracks = results['tracks']
         track = tracks.pop(0)
-        
+
         if results['loadType'] == 'PLAYLIST_LOADED':
             for _track in tracks:
-                player.add(requester=ctx.author.id, track=_track)          
-        
+                player.add(requester=ctx.author.id, track=_track)
+
         await player.play_now(requester=ctx.author.id, track=track)
-  
+
     @commands.command(name='playat', aliases=['pa'])
     @commands.guild_only()
     async def _playat(self, ctx, index: int):
         """ Plays the queue from a specific point. Disregards tracks before the index. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
-        
+
         if index < 1:
             return await ctx.send('Invalid specified index.')
-        
+
         if len(player.queue) < index:
             return await ctx.send('This index exceeds the queue\'s length.')
-        
-        await player.play_at(index-1)            
-        
+
+        await player.play_at(index-1)
+
     @commands.command(name='seek')
     @commands.guild_only()
     async def _seek(self, ctx, *, time: str):
@@ -203,7 +202,8 @@ class Music:
                 duration = lavalink.Utils.format_time(player.current.duration)
             song = f'**[{player.current.title}]({player.current.uri})**\n({position}/{duration})'
 
-        embed = discord.Embed(color=discord.Color.blurple(), title='Now Playing', description=song)
+        embed = discord.Embed(color=discord.Color.blurple(),
+                              title='Now Playing', description=song)
         await ctx.send(embed=embed)
 
     @commands.command(name='queue', aliases=['q'])
@@ -337,7 +337,7 @@ class Music:
         player.queue.clear()
         await player.disconnect()
         await ctx.send('*⃣ | Disconnected.')
-        
+
     @_playnow.before_invoke
     @_previous.before_invoke
     @_play.before_invoke
@@ -348,13 +348,15 @@ class Music:
         if not player.is_connected:
             if not ctx.author.voice or not ctx.author.voice.channel:
                 await ctx.send('You aren\'t connected to any voice channel.')
-                raise commands.CommandInvokeError('Author not connected to voice channel.')
+                raise commands.CommandInvokeError(
+                    'Author not connected to voice channel.')
 
             permissions = ctx.author.voice.channel.permissions_for(ctx.me)
 
             if not permissions.connect or not permissions.speak:
                 await ctx.send('Missing permissions `CONNECT` and/or `SPEAK`.')
-                raise commands.CommandInvokeError('Bot has no permissions CONNECT and/or SPEAK')
+                raise commands.CommandInvokeError(
+                    'Bot has no permissions CONNECT and/or SPEAK')
 
             player.store('channel', ctx.channel.id)
             await player.connect(ctx.author.voice.channel.id)
