@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This is an example code that shows how you would setup a simple music bot for Lavalink v2.
+This is an example code that shows how you would setup a simple music bot for Lavalink v3.
 This example is only compatible with the discord.py rewrite branch.
 Because of the F-Strings, you also must have Python 3.6 or higher installed.
 """
@@ -30,8 +30,7 @@ class Music:
         for guild_id, player in self.bot.lavalink.players:
             self.bot.loop.create_task(player.disconnect())
             player.cleanup()
-
-        # Clears the players from Lavalink's internal cache
+        # Clear the players from Lavalink's internal cache
         self.bot.lavalink.players.clear()
         self.bot.lavalink.unregister_hook(self._track_hook)
 
@@ -52,7 +51,7 @@ class Music:
 
     @commands.command(name='play', aliases=['p'])
     @commands.guild_only()
-    async def _play(self, ctx, *, query: str):
+    async def _play(self, ctx, *, query: str, now=False):
         """ Searches and plays a song from a given query. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
@@ -61,31 +60,63 @@ class Music:
         if not url_rx.match(query):
             query = f'ytsearch:{query}'
 
-        tracks = await self.bot.lavalink.get_tracks(query)
+        results = await self.bot.lavalink.get_tracks(query)
 
-        if not tracks:
+        if not results or not results['tracks']:
             return await ctx.send('Nothing found!')
 
         embed = discord.Embed(color=discord.Color.blurple())
 
-        if 'list' in query and 'ytsearch:' not in query:
+        if results['loadType'] == 'PLAYLIST_LOADED':
+            tracks = results['tracks']
+
             for track in tracks:
                 player.add(requester=ctx.author.id, track=track)
 
-            embed.title = 'Playlist enqueued!'
-            embed.description = f'Imported {len(tracks)} tracks from the playlist!'
+            embed.title = 'Playlist Enqueued!'
+            embed.description = f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks'
             await ctx.send(embed=embed)
         else:
-            track_title = tracks[0]["info"]["title"]
-            track_uri = tracks[0]["info"]["uri"]
+            track = results['tracks'][0]
+            embed.title = 'Track Enqueued'
+            embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
+            await ctx.send(embed=embed)
+            player.add(requester=ctx.author.id, track=track)
 
-            embed.title = "Track enqueued!"
-            embed.description = f'[{track_title}]({track_uri})'
-            player.add(requester=ctx.author.id, track=tracks[0])
-
-        if not player.is_playing:
+        if not player.is_playing or now:
             await player.play()
+            
+    @commands.command(name='previous', aliases=['pv'])
+    @commands.guild_only()
+    async def _previous(self, ctx):
+        """ Plays the previous song. """
+        player = self.bot.lavalink.players.get(ctx.guild.id)
 
+        try:
+            await player.play_previous()  
+        except lavalink.NoPreviousTrack:
+            await ctx.send('There is no previous song to play.')      
+            
+    @commands.command(name='playnow', aliases=['pn'])
+    @commands.guild_only()
+    async def _playnow(self, ctx, *, query: str):
+        """ Plays immediately a song. """
+        await ctx.invoke(self._play, query=query, now=True)
+  
+    @commands.command(name='playat', aliases=['pa'])
+    @commands.guild_only()
+    async def _playat(self, ctx, index: int):
+        """ Plays the queue from a specific point. Disregards tracks before the index. """
+        player = self.bot.lavalink.players.get(ctx.guild.id)
+        
+        if index < 1:
+            return await ctx.send('Invalid specified index.')
+        
+        if len(player.queue) < index:
+            return await ctx.send('This index exceeds the queue\'s length.')
+        
+        await player.play_at(index-1)            
+        
     @commands.command(name='seek')
     @commands.guild_only()
     async def _seek(self, ctx, *, time: str):
@@ -194,7 +225,7 @@ class Music:
     @commands.command(name='volume', aliases=['vol'])
     @commands.guild_only()
     async def _volume(self, ctx, volume: int = None):
-        """ Changes the player's volume. Must be between 0 and 150. Error Handling for that is done by Lavalink. """
+        """ Changes the player's volume. Must be between 0 and 1000. Error Handling for that is done by Lavalink. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not volume:
@@ -208,7 +239,6 @@ class Music:
     async def _shuffle(self, ctx):
         """ Shuffles the player's queue. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
-
         if not player.is_playing:
             return await ctx.send('Nothing playing.')
 
@@ -251,12 +281,12 @@ class Music:
         if not query.startswith('ytsearch:') and not query.startswith('scsearch:'):
             query = 'ytsearch:' + query
 
-        tracks = await self.bot.lavalink.get_tracks(query)
+        results = await self.bot.lavalink.get_tracks(query)
 
-        if not tracks:
+        if not results or not results['tracks']:
             return await ctx.send('Nothing found')
 
-        tracks = tracks[:10]  # First 10 results
+        tracks = results['tracks'][:10]  # First 10 results
 
         o = ''
         for index, track in enumerate(tracks, start=1):
@@ -283,7 +313,9 @@ class Music:
         player.queue.clear()
         await player.disconnect()
         await ctx.send('*⃣ | Disconnected.')
-
+    
+    @_playnow.before_invoke
+    @_previous.before_invoke
     @_play.before_invoke
     async def ensure_voice(self, ctx):
         """ A few checks to make sure the bot can join a voice channel. """
