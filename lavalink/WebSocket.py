@@ -40,6 +40,7 @@ class WebSocket:
 
         if self._ws is not None and self._ws.open:
             log.debug('WebSocket still open, closing...')
+            self._node.set_offline()
             await self._ws.close()
 
         user_id = self._lavalink.bot.user.id
@@ -60,7 +61,8 @@ class WebSocket:
         except OSError as error:
             log.exception('Failed to connect to Lavalink: {}'.format(str(error)))
         else:
-            log.info('Connected to Lavalink!')
+            self._node.set_online()
+            log.info('Connected to Lavalink! Server index: {}'.format(self._node.manager.nodes.index(self._node)))
             self._loop.create_task(self.listen())
             version = self._ws.response_headers.get('Lavalink-Major-Version', 2)
             try:
@@ -81,7 +83,8 @@ class WebSocket:
         bool
             ``True`` if the reconnection attempt was successful.
         """
-        log.info('Connection closed; attempting to reconnect in 30 seconds')
+        self._node.set_offline()
+        log.info('Connection closed; attempting to reconnect in 10 seconds')
         for a in range(0, self._ws_retry):
             await asyncio.sleep(10)
             log.info('Reconnecting... (Attempt {})'.format(a + 1))
@@ -98,11 +101,11 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink: {}'.format(str(error)))
-                for g in self._lavalink.players._players.copy().keys():
+                for g in self._node.players._players.copy().keys():
                     ws = self._lavalink.bot._connection._get_websocket(int(g))
                     await ws.voice_state(int(g), None)
 
-                self._lavalink.players.clear()
+                self._node.players.clear()
 
                 if self._shutdown is True:
                     break
@@ -121,7 +124,7 @@ class WebSocket:
 
             if op == 'event':
                 log.debug('Received event of type {}'.format(data['type']))
-                player = self._lavalink.players[int(data['guildId'])]
+                player = self._node.players[int(data['guildId'])]
                 event = None
 
                 if data['type'] == 'TrackEndEvent':
@@ -141,6 +144,7 @@ class WebSocket:
 
         log.debug('Closing WebSocket...')
         await self._ws.close()
+        self._node.ready.clear()
 
     async def send(self, **data):
         """ Sends data to the Lavalink server. """
