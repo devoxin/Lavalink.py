@@ -111,7 +111,8 @@ class Client:
                     await hook(event)
                 else:
                     hook(event)
-            except Exception as e:  # Catch generic exception thrown by user hooks
+            except Exception as e:  # pylint: disable=broad-except
+                # Catch generic exception thrown by user hooks
                 log.warning(
                     'Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
 
