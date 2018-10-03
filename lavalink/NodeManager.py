@@ -186,4 +186,4 @@ class NodeManager:
         node = self.nodes_by_region.get(str(guild.region), None)
         if node is None:
             node = self.nodes[0]
-        return node.players[guild.id]
+        return node.players.get(guild.id)
