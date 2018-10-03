@@ -1,14 +1,15 @@
 import asyncio
 import logging
+import copy
 
 from .PlayerManager import PlayerManager, DefaultPlayer
 from .Stats import Stats
 from .WebSocket import WebSocket
 
 log = logging.getLogger(__name__)
-DISCORD_REGIONS = ["amsterdam", "brazil", "eu_central", "eu_west", "frankfurt", "hongkong", "japan", "london", "russia",
-                   "singapore", "southafrica", "sydney", "us_central", "us_east", "us_south", "us_west",
-                   "vip_amsterdam", "vip_us_east", "vip_us_west"]
+DISCORD_REGIONS = ["amsterdam", "brazil", "eu-central", "eu-west", "frankfurt", "hongkong", "japan", "london", "russia",
+                   "singapore", "southafrica", "sydney", "us-central", "us-east", "us-south", "us-west",
+                   "vip-amsterdam", "vip-us-east", "vip-us-west"]
 
 
 class RegionNotFound(Exception):
@@ -37,17 +38,17 @@ class Regions:
     @classmethod
     def eu(cls):
         """ All servers in Europe including Russia, because majority of population is closer to EU. """
-        return cls(["amsterdam", "eu_central", "eu_west", "frankfurt", "london", "russia", "vip_amsterdam"])
+        return cls(["amsterdam", "eu-central", "eu-west", "frankfurt", "london", "russia", "vip-amsterdam"])
 
     @classmethod
     def us(cls):
         """ All servers located in United States """
-        return cls(["us_central", "us_east", "us_south", "us_west", "vip_us_east", "vip_us_west"])
+        return cls(["us-central", "us-east", "us-south", "us-west", "vip-us-east", "vip-us-west"])
 
     @classmethod
     def america(cls):
         """ All servers in North and South America. """
-        return cls(["us_central", "us_east", "us_south", "us_west", "vip_us_east", "vip_us_west", "brazil"])
+        return cls(["us-central", "us-east", "us-south", "us-west", "vip-us-east", "vip-us-west", "brazil"])
 
     @classmethod
     def africa(cls):
@@ -67,20 +68,20 @@ class Regions:
     @classmethod
     def half_one(cls):
         """ EU, Africa, Brazil and East US """
-        return cls(["amsterdam", "brazil", "eu_central", "eu_west", "frankfurt", "london", "southafrica",
-                    "us_east", "vip_amsterdam", "vip_us_east"])
+        return cls(["amsterdam", "brazil", "eu-central", "eu-west", "frankfurt", "london", "southafrica",
+                    "us-east", "vip-amsterdam", "vip-us-east"])
 
     @classmethod
     def half_two(cls):
         """ West US, Asia and Oceania """
-        return cls(["hongkong", "japan", "russia", "singapore", "sydney", "us_central", "us_south", "us_west",
-                    "vip_us_west"])
+        return cls(["hongkong", "japan", "russia", "singapore", "sydney", "us-central", "us-south", "us-west",
+                    "vip-us-west"])
 
     @classmethod
     def third_one(cls):
         """ EU, Russia and Africa """
-        return cls(["amsterdam", "eu_central", "eu_west", "frankfurt", "london", "russia", "southafrica",
-                    "vip_amsterdam"])
+        return cls(["amsterdam", "eu-central", "eu-west", "frankfurt", "london", "russia", "southafrica",
+                    "vip-amsterdam"])
 
     @classmethod
     def third_two(cls):
@@ -90,7 +91,7 @@ class Regions:
     @classmethod
     def third_three(cls):
         """ North and South America """
-        return cls(["us_central", "us_east", "us_south", "us_west", "vip_us_east", "vip_us_west"])
+        return cls(["us-central", "us-east", "us-south", "us-west", "vip-us-east", "vip-us-west"])
 
 
 class LavalinkNode:
@@ -117,6 +118,25 @@ class LavalinkNode:
 
     def set_offline(self):
         self.manager.on_node_disabled(self)
+
+    async def manage_failover(self):
+        if self.manager.nodes:
+            new_node = self.manager.nodes[0]
+            for g in list(self.players._players):
+                new_player = self.players._players.pop(g)
+                new_player.node = new_node
+                log.info(new_player.is_playing)
+                is_playing = bool(new_player.is_playing)
+                current_track = copy.copy(new_player.current)
+                current_posit = copy.copy(new_player.position)
+                new_node.players._players.update({g: new_player})
+                ws = self._lavalink.bot._connection._get_websocket(int(g))
+                await ws.voice_state(int(g), None)
+                if is_playing is True:
+                    await new_player.connect(new_player.channel_id)
+                    new_player.queue.insert(0, current_track)
+                    await new_player.play()
+                    await new_player.seek(current_posit)
 
 
 class NodeManager:
@@ -185,5 +205,6 @@ class NodeManager:
     def get_by_region(self, guild):
         node = self.nodes_by_region.get(str(guild.region), None)
         if node is None:
+            log.info("Unknown region: {}".format(str(guild.region)))
             node = self.nodes[0]
         return node.players.get(guild.id)

@@ -101,9 +101,13 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink: {}'.format(str(error)))
-                for g in self._node.players._players.copy().keys():
-                    ws = self._lavalink.bot._connection._get_websocket(int(g))
-                    await ws.voice_state(int(g), None)
+                self._node.set_offline()
+                if not self._node.manager.nodes:
+                    for g in self._node.players._players.copy().keys():
+                        ws = self._lavalink.bot._connection._get_websocket(int(g))
+                        await ws.voice_state(int(g), None)
+                else:
+                    await self._node.manage_failover()
 
                 self._node.players.clear()
 
