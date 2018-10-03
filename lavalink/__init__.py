@@ -6,15 +6,15 @@ __license__ = 'MIT'
 __copyright__ = 'Copyright 2018 Devoxin'
 __version__ = '2.1.10'
 
+import logging
+import sys
+
 from .AudioTrack import *
 from .Client import *
 from .PlayerManager import *
 from .WebSocket import *
 from . import Events
 from . import Utils
-
-import logging
-import sys
 
 
 log = logging.getLogger(__name__)
