@@ -182,8 +182,8 @@ class NodeManager:
                 self._rr_pos = 0
         return node
 
-    def get_by_region(self, region):
-        node = self.nodes_by_region.get(region, None)
+    def get_by_region(self, guild):
+        node = self.nodes_by_region.get(str(guild.region), None)
         if node is None:
             node = self.nodes[0]
-        return node
+        return node.players[guild.id]
