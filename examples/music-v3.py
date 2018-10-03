@@ -51,7 +51,7 @@ class Music:
 
     @commands.command(name='play', aliases=['p'])
     @commands.guild_only()
-    async def _play(self, ctx, *, query: str):
+    async def _play(self, ctx, *, query: str, now=False):
         """ Searches and plays a song from a given query. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
@@ -83,7 +83,7 @@ class Music:
             await ctx.send(embed=embed)
             player.add(requester=ctx.author.id, track=track)
 
-        if not player.is_playing:
+        if not player.is_playing or now:
             await player.play()
             
     @commands.command(name='previous', aliases=['pv'])
@@ -101,29 +101,7 @@ class Music:
     @commands.guild_only()
     async def _playnow(self, ctx, *, query: str):
         """ Plays immediately a song. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
-
-        if not player.queue and not player.is_playing:
-            return await ctx.invoke(self._play, query=query)
-        
-        query = query.strip('<>')
-
-        if not url_rx.match(query):
-            query = f'ytsearch:{query}'
-
-        results = await self.bot.lavalink.get_tracks(query)
-
-        if not results or not results['tracks']:
-            return await ctx.send('Nothing found!')
-
-        embed = discord.Embed(color=discord.Color.blurple())
-
-        if results['loadType'] == 'PLAYLIST_LOADED':
-            return await ctx.send('Can\'t playnow a playlist!') 
-            
-        track = results['tracks'][0]
-        
-        await player.play_now(requester=ctx.author.id, track=track)
+        await ctx.invoke(self._play, query=query, now=True)
   
     @commands.command(name='playat', aliases=['pa'])
     @commands.guild_only()
@@ -336,7 +314,6 @@ class Music:
         await player.disconnect()
         await ctx.send('*⃣ | Disconnected.')
     
-    @_playnow.before_invoke
     @_previous.before_invoke
     @_play.before_invoke
     async def ensure_voice(self, ctx):
