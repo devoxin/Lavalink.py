@@ -141,8 +141,8 @@ class NodeManager:
         if node not in self.offline_nodes:
             return
         node_index = self.offline_nodes.index(node)
-        log.info("Node {} is ready for use.".format(node_index))
         self.nodes.append(self.offline_nodes.pop(node_index))
+        log.info("Node {} is ready for use.".format(self.nodes.index(node)))
         node.ready.set()
         self.ready.set()
         for region in node.regions:
