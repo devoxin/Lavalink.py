@@ -57,6 +57,7 @@ class Client:
         self.bot.add_listener(self.on_socket_response)
 
         self.loop = loop
+        self._server_version = 2
         self.players = PlayerManager(self, player)
 
     def add_node(self, host='localhost', rest_port=2333, password='', ws_retry=10, ws_port=80, shard_count=1):

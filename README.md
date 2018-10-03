@@ -6,9 +6,7 @@ Lavalink.py serves to be an interface with various utilities to make interacting
 
 # Download Lavalink
 
-[Lavalink V2](https://ci.fredboat.com/viewType.html?buildTypeId=Lavalink_Build&branch_Lavalink=%3Cdefault%3E&tab=buildTypeStatusDiv)
-
-[Lavalink V3](https://ci.fredboat.com/viewType.html?buildTypeId=Lavalink_Build&branch_Lavalink=refs%2Fheads%2Fv3&tab=buildTypeStatusDiv)
+[Lavalink V3](https://ci.fredboat.com/guestAuth/repository/download/Lavalink_Build/.lastSuccessful/Lavalink.jar?branch=refs%2Fheads%2Fmaster)
 
 # Getting Started
 Lavalink.py was built as an interface for Lavalink that you can use with discord.py.   
