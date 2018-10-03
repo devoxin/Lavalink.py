@@ -51,7 +51,7 @@ class Music:
 
     @commands.command(name='play', aliases=['p'])
     @commands.guild_only()
-    async def _play(self, ctx, *, query: str, now=False):
+    async def _play(self, ctx, *, query: str):
         """ Searches and plays a song from a given query. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
@@ -83,7 +83,7 @@ class Music:
             await ctx.send(embed=embed)
             player.add(requester=ctx.author.id, track=track)
 
-        if not player.is_playing or now:
+        if not player.is_playing:
             await player.play()
             
     @commands.command(name='previous', aliases=['pv'])
@@ -101,7 +101,31 @@ class Music:
     @commands.guild_only()
     async def _playnow(self, ctx, *, query: str):
         """ Plays immediately a song. """
-        await ctx.invoke(self._play, query=query, now=True)
+        player = self.bot.lavalink.players.get(ctx.guild.id)
+
+        if not player.queue and not player.is_playing:
+            return await ctx.invoke(self._play, query=query)
+        
+        query = query.strip('<>')
+
+        if not url_rx.match(query):
+            query = f'ytsearch:{query}'
+
+        results = await self.bot.lavalink.get_tracks(query)
+
+        if not results or not results['tracks']:
+            return await ctx.send('Nothing found!')
+
+        embed = discord.Embed(color=discord.Color.blurple())
+
+        tracks = results['tracks']       
+        track = tracks.pop(0)
+        
+        if results['loadType'] == 'PLAYLIST_LOADED':
+            for _track in tracks:
+                player.add(requester=ctx.author.id, track=_track)          
+        
+        await player.play_now(requester=ctx.author.id, track=track)
   
     @commands.command(name='playat', aliases=['pa'])
     @commands.guild_only()
