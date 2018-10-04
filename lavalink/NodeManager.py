@@ -2,7 +2,8 @@ import asyncio
 import logging
 import copy
 
-from .PlayerManager import PlayerManager, DefaultPlayer
+from .PlayerManager import PlayerManager
+from .Events import NodeReadyEvent, NodeDisabledEvent
 from .Stats import Stats
 from .WebSocket import WebSocket
 
@@ -16,7 +17,7 @@ class RegionNotFound(Exception):
     pass
 
 
-class UnreachableNodes(Exception):
+class NoNodesAvailable(Exception):
     pass
 
 
@@ -111,7 +112,7 @@ class LavalinkNode:
 
         self.ready = asyncio.Event(loop=self._lavalink.loop)
 
-        self.players = PlayerManager(self._lavalink, self, DefaultPlayer)
+        self.players = PlayerManager(self._lavalink, self, self.manager.default_player)
 
     def set_online(self):
         self.manager.on_node_ready(self)
@@ -125,7 +126,6 @@ class LavalinkNode:
             for g in list(self.players._players):
                 new_player = self.players._players.pop(g)
                 new_player.node = new_node
-                log.info(new_player.is_playing)
                 is_playing = bool(new_player.is_playing)
                 current_track = copy.copy(new_player.previous)
                 current_posit = copy.copy(new_player._prev_position)
@@ -140,8 +140,9 @@ class LavalinkNode:
 
 
 class NodeManager:
-    def __init__(self, lavalink, default_node, round_robin):
+    def __init__(self, lavalink, default_node, round_robin, player):
         self._lavalink = lavalink  # lavalink client
+        self.default_player = player
 
         self.default_node_index = default_node  # index of the default node for REST
         self.round_robin = round_robin  # enable round robin load balancing
@@ -151,11 +152,37 @@ class NodeManager:
         self.offline_nodes = []  # list of nodes (offline or not set-up yet)
         self.nodes_by_region = {}  # dictionary of nodes with region keys
 
+        self._hooks = []
+
         self.ready = asyncio.Event(loop=self._lavalink.loop)
 
     def __iter__(self):
         for node in self.nodes:
             yield node
+
+    async def _dispatch_node_event(self, event):
+        """ Dispatches a node event to all registered hooks. """
+        log.debug('Dispatching event of type {} to {} hooks'.format(event.__class__.__name__, len(self._hooks)))
+        for hook in self._hooks:
+            try:
+                if asyncio.iscoroutinefunction(hook):
+                    await hook(event)
+                else:
+                    hook(event)
+            except Exception as e:  # pylint: disable=broad-except
+                # Catch generic exception thrown by user hooks
+                log.warning(
+                    'Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
+
+    def register_node_hook(self, func):
+        """ Register a hook for receiving node updates. """
+        if func not in self._hooks:
+            self._hooks.append(func)
+
+    def unregister_node_hook(self, func):
+        """ Unregister a hook for receiving node updated. """
+        if func in self._hooks:
+            self._hooks.remove(func)
 
     def on_node_ready(self, node):
         if node not in self.offline_nodes:
@@ -167,6 +194,7 @@ class NodeManager:
         self.ready.set()
         for region in node.regions:
             self.nodes_by_region.update({region: node})
+        asyncio.ensure_future(self._dispatch_node_event(NodeReadyEvent(node)), loop=self._lavalink.loop)
 
     def on_node_disabled(self, node):
         if node not in self.nodes:
@@ -183,6 +211,7 @@ class NodeManager:
         default_node = self.nodes[0]
         for region in node.regions:
             self.nodes_by_region.update({region: default_node})
+        asyncio.ensure_future(self._dispatch_node_event(NodeDisabledEvent(node)), loop=self._lavalink.loop)
 
     def add(self, regions: Regions, host='localhost', rest_port=2333, password='', ws_retry=10, ws_port=80,
             shard_count=1):
@@ -191,7 +220,7 @@ class NodeManager:
 
     def get_rest(self):
         if not self.nodes:
-            raise UnreachableNodes
+            raise NoNodesAvailable
         node = self.nodes[self.default_node_index] if self.default_node_index < len(self.nodes) else None
         if node is None and self.round_robin is False:
             node = self.nodes[0]

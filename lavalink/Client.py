@@ -5,8 +5,8 @@ from urllib.parse import quote
 import aiohttp
 
 from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
-from .PlayerManager import DefaultPlayer, PlayerManager
-from .NodeManager import NodeManager
+from .PlayerManager import DefaultPlayer
+from .NodeManager import NodeManager, NoNodesAvailable
 
 log = logging.getLogger(__name__)
 
@@ -56,8 +56,11 @@ class Client:
         self.bot.add_listener(self.on_socket_response)
 
         self.loop = loop
+        self.new_loop = asyncio.new_event_loop()
+        print(self.loop)
+        print(self.new_loop)
         self._server_version = 2
-        self.nodes = NodeManager(self, default_node, rest_round_robin)
+        self.nodes = NodeManager(self, default_node, rest_round_robin, player)
 
     def register_hook(self, func):
         """
@@ -119,17 +122,20 @@ class Client:
                 player = node.players.get(guild_id)
                 player.position = data['state'].get('position', 0)
                 player.position_timestamp = data['state']['time']
+                break
 
     async def get_tracks(self, query):
         """ Returns a Dictionary containing search results for a given query. """
         log.debug('Requesting tracks for query {}'.format(query))
-        await self.nodes.ready.wait()
         node = self.nodes.get_rest()
         async with self.http.get(node.rest_uri + quote(query), headers={'Authorization': node.password}) as res:
             return await res.json(content_type=None)
 
     async def get_player(self, guild_id: int):
-        await self.nodes.ready.wait()
+        try:
+            await asyncio.wait_for(self.nodes.ready.wait(), timeout=10.0)
+        except asyncio.TimeoutError:
+            raise NoNodesAvailable
         for node in self.nodes:
             if guild_id in node.players:
                 log.debug("Found player in cache.")
