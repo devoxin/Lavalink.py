@@ -32,6 +32,7 @@ class DefaultPlayer(BasePlayer):
 
         self.paused = False
         self.position = 0
+        self._prev_position = 0
         self.position_timestamp = 0
         self.volume = 100
         self.shuffle = False
@@ -108,6 +109,7 @@ class DefaultPlayer(BasePlayer):
             self.queue.append(self.current)
 
         self.previous = self.current
+        self._prev_position = self.position
         self.current = None
         self.position = 0
         self.paused = False
