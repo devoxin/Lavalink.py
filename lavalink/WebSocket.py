@@ -75,7 +75,7 @@ class WebSocket:
                 for task in self._queue:
                     await self.send(**task)
 
-    async def _attempt_reconnect(self) -> bool:
+    async def _attempt_reconnect(self):
         """
         Attempts to reconnect to the Lavalink server.
         Returns
@@ -116,9 +116,9 @@ class WebSocket:
 
                 if await self._attempt_reconnect():
                     return
-                else:
-                    log.warning('Unable to reconnect to Lavalink!')
-                    break
+
+                log.warning('Unable to reconnect to Lavalink!')
+                break
 
             op = data.get('op', None)
             log.debug('Received WebSocket data {}'.format(str(data)))
