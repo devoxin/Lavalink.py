@@ -85,13 +85,17 @@ class WebSocket:
         """
         self._node.set_offline()
         log.info('Connection closed; attempting to reconnect in 10 seconds')
-        for a in range(0, self._ws_retry):
-            await asyncio.sleep(10)
-            log.info('Reconnecting... (Attempt {})'.format(a + 1))
+        backoff_range = [min(max(x, 1), 30) for x in range(0, self._ws_retry * 5, 5)]
+        recon_try = 1
+        for a in backoff_range:
+            log.info('Reconnecting failed, retrying in {} seconds ...'.format(a))
+            await asyncio.sleep(a)
+            log.info('Reconnecting... (Attempt {})'.format(recon_try))
             await self.connect()
 
             if self._ws.open:
                 return True
+            recon_try += 1
         return False
 
     async def listen(self):
@@ -144,7 +148,7 @@ class WebSocket:
                 await self._lavalink.update_state(data)
             elif op == 'stats':
                 self._node.stats._update(data)
-                await self._lavalink.dispatch_event(StatsUpdateEvent(self._node))
+                await self._node.manager._dispatch_node_event(StatsUpdateEvent(self._node))
 
         log.debug('Closing WebSocket...')
         await self._ws.close()

@@ -232,16 +232,16 @@ class PlayerManager:
     async def clear_guild(self, guild_id):
         """ Removes the player and clears the cache. """
         try:
-            await self._players[guild_id].disconnect()
-            del self._players[guild_id]
+            player = self._players.pop(guild_id)
+            await player.disconnect()
         except KeyError:
             pass
 
-    def remove(self, guild_id):
+    async def remove(self, guild_id):
         """ Removes a player from the current players. """
         if guild_id in self._players:
-            self._players[guild_id].cleanup()
-            del self._players[guild_id]
+            player = self._players.pop(guild_id)
+            await player.disconnect()
 
     def clear(self):
         """ Removes all of the players from the cache. """
