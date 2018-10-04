@@ -29,3 +29,6 @@ class AudioTrack:
             return "https://img.youtube.com/vi/{}/default.jpg".format(self.identifier)
 
         return ""
+
+    def __repr__(self):
+        return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)

@@ -127,8 +127,8 @@ class LavalinkNode:
                 new_player.node = new_node
                 log.info(new_player.is_playing)
                 is_playing = bool(new_player.is_playing)
-                current_track = copy.copy(new_player.current)
-                current_posit = copy.copy(new_player.position)
+                current_track = copy.copy(new_player.previous)
+                current_posit = copy.copy(new_player._prev_position)
                 new_node.players._players.update({g: new_player})
                 ws = self._lavalink.bot._connection._get_websocket(int(g))
                 await ws.voice_state(int(g), None)
