@@ -25,7 +25,7 @@ class Regions:
         self.regions = region_list or DISCORD_REGIONS
         for r in self.regions:
             if r not in DISCORD_REGIONS:
-                raise RegionNotFound
+                raise RegionNotFound("Invalid region: {}".format(r))
 
     def __iter__(self):
         for r in self.regions:
