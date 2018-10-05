@@ -85,7 +85,7 @@ class WebSocket:
         """
         self._node.set_offline()
         log.info('Connection closed; attempting to reconnect in 10 seconds')
-        backoff_range = [min(max(x, 1), 30) for x in range(0, self._ws_retry * 5, 5)]
+        backoff_range = [min(max(x, 3), 30) for x in range(0, self._ws_retry * 5, 5)]
         recon_try = 1
         for a in backoff_range:
             log.info('Reconnecting failed, retrying in {} seconds ...'.format(a))
