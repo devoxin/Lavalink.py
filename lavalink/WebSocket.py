@@ -10,8 +10,9 @@ log = logging.getLogger(__name__)
 
 
 class WebSocket:
-    def __init__(self, lavalink, host, password, ws_port, ws_retry, shard_count):
+    def __init__(self, lavalink, node, host, password, ws_port, ws_retry, shard_count):
         self._lavalink = lavalink
+        self._node = node
 
         self._ws = None
         self._queue = []
@@ -39,6 +40,7 @@ class WebSocket:
 
         if self._ws is not None and self._ws.open:
             log.debug('WebSocket still open, closing...')
+            self._node.set_offline()
             await self._ws.close()
 
         user_id = self._lavalink.bot.user.id
@@ -59,7 +61,8 @@ class WebSocket:
         except OSError as error:
             log.exception('Failed to connect to Lavalink: {}'.format(str(error)))
         else:
-            log.info('Connected to Lavalink!')
+            self._node.set_online()
+            log.info('Connected to Lavalink! Server index: {}'.format(self._node.manager.nodes.index(self._node)))
             self._loop.create_task(self.listen())
             version = self._ws.response_headers.get('Lavalink-Major-Version', 2)
             try:
@@ -80,14 +83,19 @@ class WebSocket:
         bool
             ``True`` if the reconnection attempt was successful.
         """
-        log.info('Connection closed; attempting to reconnect in 30 seconds')
-        for a in range(0, self._ws_retry):
-            await asyncio.sleep(30)
-            log.info('Reconnecting... (Attempt {})'.format(a + 1))
+        self._node.set_offline()
+        log.info('Connection closed; attempting to reconnect in 10 seconds')
+        backoff_range = [min(max(x, 3), 30) for x in range(0, self._ws_retry * 5, 5)]
+        recon_try = 1
+        for a in backoff_range:
+            log.info('Reconnecting failed, retrying in {} seconds ...'.format(a))
+            await asyncio.sleep(a)
+            log.info('Reconnecting... (Attempt {})'.format(recon_try))
             await self.connect()
 
             if self._ws.open:
                 return True
+            recon_try += 1
         return False
 
     async def listen(self):
@@ -97,13 +105,17 @@ class WebSocket:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
                 log.warning('Disconnected from Lavalink: {}'.format(str(error)))
-                for g in self._lavalink.players._players.copy().keys():
-                    ws = self._lavalink.bot._connection._get_websocket(int(g))
-                    await ws.voice_state(int(g), None)
+                self._node.set_offline()
+                if not self._node.manager.nodes:
+                    for g in self._node.players._players.copy().keys():
+                        ws = self._lavalink.bot._connection._get_websocket(int(g))
+                        await ws.voice_state(int(g), None)
+                else:
+                    await self._node.manage_failover()
 
-                self._lavalink.players.clear()
+                self._node.players.clear()
 
-                if self._shutdown is True:
+                if self._shutdown:
                     break
 
                 if await self._attempt_reconnect():
@@ -120,7 +132,7 @@ class WebSocket:
 
             if op == 'event':
                 log.debug('Received event of type {}'.format(data['type']))
-                player = self._lavalink.players[int(data['guildId'])]
+                player = self._node.players[int(data['guildId'])]
                 event = None
 
                 if data['type'] == 'TrackEndEvent':
@@ -135,11 +147,12 @@ class WebSocket:
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
             elif op == 'stats':
-                self._lavalink.stats._update(data)
-                await self._lavalink.dispatch_event(StatsUpdateEvent(self._lavalink.stats))
+                self._node.stats._update(data)
+                await self._node.manager._dispatch_node_event(StatsUpdateEvent(self._node))
 
         log.debug('Closing WebSocket...')
         await self._ws.close()
+        self._node.ready.clear()
 
     async def send(self, **data):
         """ Sends data to the Lavalink server. """

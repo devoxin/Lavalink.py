@@ -10,8 +10,8 @@ class NoPreviousTrack(Exception):
 
 
 class BasePlayer(ABC):
-    def __init__(self, lavalink, guild_id: int):
-        self.node = None  # later
+    def __init__(self, node, lavalink, guild_id: int):
+        self.node = node
         self._lavalink = lavalink
         self.guild_id = str(guild_id)
 
@@ -24,14 +24,15 @@ class BasePlayer(ABC):
 
 
 class DefaultPlayer(BasePlayer):
-    def __init__(self, lavalink, guild_id: int):
-        super().__init__(lavalink, guild_id)
+    def __init__(self, node, lavalink, guild_id: int):
+        super().__init__(node, lavalink, guild_id)
 
         self._user_data = {}
         self.channel_id = None
 
         self.paused = False
         self.position = 0
+        self._prev_position = 0
         self.position_timestamp = 0
         self.volume = 100
         self.shuffle = False
@@ -68,6 +69,7 @@ class DefaultPlayer(BasePlayer):
         """ Disconnects from the voice channel, if any. """
         if not self.is_connected:
             return
+        self.channel_id = None
 
         await self.stop()
 
@@ -107,6 +109,7 @@ class DefaultPlayer(BasePlayer):
             self.queue.append(self.current)
 
         self.previous = self.current
+        self._prev_position = self.position
         self.current = None
         self.position = 0
         self.paused = False
@@ -121,7 +124,9 @@ class DefaultPlayer(BasePlayer):
                 track = self.queue.pop(min(track_index, len(self.queue) - 1))
 
             self.current = track
-            await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
+            if not self.previous:
+                self.previous = self.current
+            await self.node.ws.send(op='play', guildId=self.guild_id, track=track.track)
             await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
     async def play_now(self, requester: int, track: dict):
@@ -143,7 +148,7 @@ class DefaultPlayer(BasePlayer):
 
     async def stop(self):
         """ Stops the player, if playing. """
-        await self._lavalink.ws.send(op='stop', guildId=self.guild_id)
+        await self.node.ws.send(op='stop', guildId=self.guild_id)
         self.current = None
 
     async def skip(self):
@@ -152,7 +157,7 @@ class DefaultPlayer(BasePlayer):
 
     async def set_pause(self, pause: bool):
         """ Sets the player's paused state. """
-        await self._lavalink.ws.send(op='pause', guildId=self.guild_id, pause=pause)
+        await self.node.ws.send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
     async def set_volume(self, vol: int):
@@ -161,11 +166,11 @@ class DefaultPlayer(BasePlayer):
             self.volume = max(min(vol, 150), 0)
         else:
             self.volume = max(min(vol, 1000), 0)
-        await self._lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
+        await self.node.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
 
     async def seek(self, pos: int):
         """ Seeks to a given position in the track. """
-        await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
+        await self.node.ws.send(op='seek', guildId=self.guild_id, position=pos)
 
     async def handle_event(self, event):
         """ Makes the player play the next song from the queue if a song has finished or an issue occurred. """
@@ -175,7 +180,7 @@ class DefaultPlayer(BasePlayer):
 
 
 class PlayerManager:
-    def __init__(self, lavalink, player):
+    def __init__(self, lavalink, node, player):
         """
         Instantiates a Player Manager.
 
@@ -188,6 +193,7 @@ class PlayerManager:
             raise ValueError('player must implement lavalink.BasePlayer.')
 
         self.lavalink = lavalink
+        self.node = node
         self._player = player
         self._players = {}
 
@@ -218,16 +224,18 @@ class PlayerManager:
     def get(self, guild_id):
         """ Returns a player from the cache, or creates one if it does not exist. """
         if guild_id not in self._players:
-            p = self._player(lavalink=self.lavalink, guild_id=guild_id)
+            p = self._player(node=self.node, lavalink=self.lavalink, guild_id=guild_id)
             self._players[guild_id] = p
 
         return self._players[guild_id]
 
-    def remove(self, guild_id):
+    async def remove(self, guild_id, call_cleanup: bool=True):
         """ Removes a player from the current players. """
         if guild_id in self._players:
-            self._players[guild_id].cleanup()
-            del self._players[guild_id]
+            player = self._players.pop(guild_id)
+            if call_cleanup:
+                player.cleanup()
+            await player.disconnect()
 
     def clear(self):
         """ Removes all of the players from the cache. """

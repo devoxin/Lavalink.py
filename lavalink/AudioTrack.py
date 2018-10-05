@@ -4,7 +4,7 @@ class InvalidTrack(Exception):
 
 
 class AudioTrack:
-    def build(self, track, requester):
+    def build(self, track, requester, **kwargs):
         """ Returns an optional AudioTrack. """
         try:
             self.track = track['track']
@@ -16,6 +16,7 @@ class AudioTrack:
             self.title = track['info']['title']
             self.uri = track['info']['uri']
             self.requester = requester
+            self.preferences = kwargs
 
             return self
         except KeyError:
@@ -28,3 +29,6 @@ class AudioTrack:
             return "https://img.youtube.com/vi/{}/default.jpg".format(self.identifier)
 
         return ""
+
+    def __repr__(self):
+        return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
