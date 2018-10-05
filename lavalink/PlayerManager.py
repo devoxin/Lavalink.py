@@ -221,7 +221,7 @@ class PlayerManager:
         """ Returns a list of players based on the given filter predicate. """
         return list(filter(predicate, self._players.values()))
 
-    def get(self, guild_id):
+    def get(self, guild_id: int):
         """ Returns a player from the cache, or creates one if it does not exist. """
         if guild_id not in self._players:
             p = self._player(node=self.node, lavalink=self.lavalink, guild_id=guild_id)
@@ -229,7 +229,7 @@ class PlayerManager:
 
         return self._players[guild_id]
 
-    async def remove(self, guild_id, call_cleanup: bool = True):
+    async def remove(self, guild_id: int, call_cleanup: bool = True):
         """ Removes a player from the current players. """
         if guild_id in self._players:
             player = self._players.pop(guild_id)
