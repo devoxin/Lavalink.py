@@ -1,9 +1,9 @@
 import asyncio
-import logging
 import copy
+import logging
 
-from .PlayerManager import PlayerManager
 from .Events import NodeReadyEvent, NodeDisabledEvent
+from .PlayerManager import PlayerManager
 from .Stats import Stats
 from .WebSocket import WebSocket
 
@@ -152,37 +152,11 @@ class NodeManager:
         self.offline_nodes = []  # list of nodes (offline or not set-up yet)
         self.nodes_by_region = {}  # dictionary of nodes with region keys
 
-        self._hooks = []
-
         self.ready = asyncio.Event(loop=self._lavalink.loop)
 
     def __iter__(self):
         for node in self.nodes:
             yield node
-
-    async def _dispatch_node_event(self, event):
-        """ Dispatches a node event to all registered hooks. """
-        log.debug('Dispatching event of type {} to {} hooks'.format(event.__class__.__name__, len(self._hooks)))
-        for hook in self._hooks:
-            try:
-                if asyncio.iscoroutinefunction(hook):
-                    await hook(event)
-                else:
-                    hook(event)
-            except Exception as e:  # pylint: disable=broad-except
-                # Catch generic exception thrown by user hooks
-                log.warning(
-                    'Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
-
-    def register_node_hook(self, func):
-        """ Register a hook for receiving node updates. """
-        if func not in self._hooks:
-            self._hooks.append(func)
-
-    def unregister_node_hook(self, func):
-        """ Unregister a hook for receiving node updated. """
-        if func in self._hooks:
-            self._hooks.remove(func)
 
     def on_node_ready(self, node):
         if node not in self.offline_nodes:
@@ -194,7 +168,7 @@ class NodeManager:
         self.ready.set()
         for region in node.regions:
             self.nodes_by_region.update({region: node})
-        self._lavalink.loop.create_task(self._dispatch_node_event(NodeReadyEvent(node)))
+        self._lavalink.loop.create_task(self._lavalink.dispatch_event(NodeReadyEvent(node)))
 
     def on_node_disabled(self, node):
         if node not in self.nodes:
@@ -211,7 +185,7 @@ class NodeManager:
         default_node = self.nodes[0]
         for region in node.regions:
             self.nodes_by_region.update({region: default_node})
-        self._lavalink.loop.create_task(self._dispatch_node_event(NodeDisabledEvent(node)))
+        self._lavalink.loop.create_task(self._lavalink.dispatch_event(NodeDisabledEvent(node)))
 
     def add(self, regions: Regions, host='localhost', rest_port=2333, password='', ws_retry=10, ws_port=80,
             shard_count=1):
