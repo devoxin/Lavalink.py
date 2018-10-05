@@ -152,8 +152,6 @@ class NodeManager:
         self.offline_nodes = []  # list of nodes (offline or not set-up yet)
         self.nodes_by_region = {}  # dictionary of nodes with region keys
 
-        self._hooks = []
-
         self.ready = asyncio.Event(loop=self._lavalink.loop)
 
     def __iter__(self):
