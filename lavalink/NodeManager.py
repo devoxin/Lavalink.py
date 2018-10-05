@@ -194,7 +194,7 @@ class NodeManager:
         self.ready.set()
         for region in node.regions:
             self.nodes_by_region.update({region: node})
-        asyncio.ensure_future(self._dispatch_node_event(NodeReadyEvent(node)), loop=self._lavalink.loop)
+        self._lavalink.loop.create_task(self._dispatch_node_event(NodeReadyEvent(node)), loop=self._lavalink.loop)
 
     def on_node_disabled(self, node):
         if node not in self.nodes:
@@ -211,7 +211,7 @@ class NodeManager:
         default_node = self.nodes[0]
         for region in node.regions:
             self.nodes_by_region.update({region: default_node})
-        asyncio.ensure_future(self._dispatch_node_event(NodeDisabledEvent(node)), loop=self._lavalink.loop)
+        self._lavalink.loop.create_task(self._dispatch_node_event(NodeDisabledEvent(node)), loop=self._lavalink.loop)
 
     def add(self, regions: Regions, host='localhost', rest_port=2333, password='', ws_retry=10, ws_port=80,
             shard_count=1):
