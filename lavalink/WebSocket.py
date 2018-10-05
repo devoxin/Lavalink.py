@@ -115,7 +115,7 @@ class WebSocket:
 
                 self._node.players.clear()
 
-                if self._shutdown is True:
+                if self._shutdown:
                     break
 
                 if await self._attempt_reconnect():

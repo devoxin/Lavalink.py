@@ -233,7 +233,7 @@ class PlayerManager:
         """ Removes a player from the current players. """
         if guild_id in self._players:
             player = self._players.pop(guild_id)
-            if call_cleanup is True:
+            if call_cleanup:
                 player.cleanup()
             await player.disconnect()
 

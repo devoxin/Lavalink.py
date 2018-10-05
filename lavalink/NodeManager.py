@@ -132,7 +132,7 @@ class LavalinkNode:
                 new_node.players._players.update({g: new_player})
                 ws = self._lavalink.bot._connection._get_websocket(int(g))
                 await ws.voice_state(int(g), None)
-                if is_playing is True:
+                if is_playing:
                     await new_player.connect(new_player.channel_id)
                     new_player.queue.insert(0, current_track)
                     await new_player.play()
@@ -194,7 +194,7 @@ class NodeManager:
         self.ready.set()
         for region in node.regions:
             self.nodes_by_region.update({region: node})
-        self._lavalink.loop.create_task(self._dispatch_node_event(NodeReadyEvent(node)), loop=self._lavalink.loop)
+        self._lavalink.loop.create_task(self._dispatch_node_event(NodeReadyEvent(node)))
 
     def on_node_disabled(self, node):
         if node not in self.nodes:
@@ -211,7 +211,7 @@ class NodeManager:
         default_node = self.nodes[0]
         for region in node.regions:
             self.nodes_by_region.update({region: default_node})
-        self._lavalink.loop.create_task(self._dispatch_node_event(NodeDisabledEvent(node)), loop=self._lavalink.loop)
+        self._lavalink.loop.create_task(self._dispatch_node_event(NodeDisabledEvent(node)))
 
     def add(self, regions: Regions, host='localhost', rest_port=2333, password='', ws_retry=10, ws_port=80,
             shard_count=1):
@@ -224,7 +224,7 @@ class NodeManager:
         node = self.nodes[self.default_node_index] if self.default_node_index < len(self.nodes) else None
         if node is None and self.round_robin is False:
             node = self.nodes[0]
-        if self.round_robin is True:
+        if self.round_robin:
             node = self.nodes[min(self._rr_pos, len(self.nodes) - 1)]
             self._rr_pos += 1
             if self._rr_pos > len(self.nodes):
