@@ -229,7 +229,7 @@ class PlayerManager:
 
         return self._players[guild_id]
 
-    async def remove(self, guild_id, call_cleanup: bool=True):
+    async def remove(self, guild_id, call_cleanup: bool = True):
         """ Removes a player from the current players. """
         if guild_id in self._players:
             player = self._players.pop(guild_id)

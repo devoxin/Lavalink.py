@@ -5,8 +5,8 @@ from urllib.parse import quote
 import aiohttp
 
 from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
-from .PlayerManager import DefaultPlayer
 from .NodeManager import NodeManager, NoNodesAvailable
+from .PlayerManager import DefaultPlayer
 
 log = logging.getLogger(__name__)
 

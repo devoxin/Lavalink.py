@@ -1,9 +1,9 @@
 import asyncio
-import logging
 import copy
+import logging
 
-from .PlayerManager import PlayerManager
 from .Events import NodeReadyEvent, NodeDisabledEvent
+from .PlayerManager import PlayerManager
 from .Stats import Stats
 from .WebSocket import WebSocket
 
