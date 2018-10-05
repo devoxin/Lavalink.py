@@ -5,8 +5,8 @@ from urllib.parse import quote
 import aiohttp
 
 from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
-from .PlayerManager import DefaultPlayer
 from .NodeManager import NodeManager, NoNodesAvailable
+from .PlayerManager import DefaultPlayer
 
 log = logging.getLogger(__name__)
 
@@ -57,8 +57,6 @@ class Client:
 
         self.loop = loop
         self.new_loop = asyncio.new_event_loop()
-        print(self.loop)
-        print(self.new_loop)
         self._server_version = 2
         self.nodes = NodeManager(self, default_node, rest_round_robin, player)
 
