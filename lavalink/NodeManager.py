@@ -92,7 +92,7 @@ class Regions:
     @classmethod
     def third_three(cls):
         """ North and South America """
-        return cls(["us-central", "us-east", "us-south", "us-west", "vip-us-east", "vip-us-west"])
+        return cls(["us-central", "us-east", "us-south", "us-west", "vip-us-east", "vip-us-west", "brazil"])
 
 
 class LavalinkNode:
