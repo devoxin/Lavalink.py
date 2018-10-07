@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 import aiohttp
 
-from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
+from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, PlayerStatusUpdate
 from .NodeManager import NodeManager, NoNodesAvailable
 from .PlayerManager import DefaultPlayer
 
@@ -120,6 +120,7 @@ class Client:
                 player = node.players.get(guild_id)
                 player.position = data['state'].get('position', 0)
                 player.position_timestamp = data['state']['time']
+                await self.dispatch_event(PlayerStatusUpdate(player, player.current))
                 break
 
     async def get_tracks(self, query):
