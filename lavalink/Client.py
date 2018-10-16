@@ -49,6 +49,7 @@ class Client:
         bot.lavalink = self
         self.http = aiohttp.ClientSession(loop=loop)
         self.voice_state = {}
+        self.last_session_id = None
         self.hooks = []
 
         set_log_level(log_level)
@@ -153,13 +154,16 @@ class Client:
             self.voice_state.update({
                 'op': 'voiceUpdate',
                 'guildId': data['d']['guild_id'],
-                'event': data['d']
+                'event': data['d'],
+                'sessionId': self.last_session_id
             })
         else:
             if int(data['d']['user_id']) != self.bot.user.id:
                 return
 
             self.voice_state.update({'sessionId': data['d']['session_id']})
+
+            self.last_session_id = data['d']['session_id']
 
             guild_id = int(data['d']['guild_id'])
 
