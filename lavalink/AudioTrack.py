@@ -9,8 +9,8 @@ class TrackNotBuilt(Exception):
 
 
 class AudioTrack:
-    __slots__ = ["track", "identifier", "can_seek", "author", "duration", "stream", "title", "uri", "requester",
-                 "preferences"]
+    __slots__ = ("track", "identifier", "can_seek", "author", "duration", "stream", "title", "uri", "requester",
+                 "preferences")
 
     def __init__(self, requester, **kwargs):
         self.requester = requester
