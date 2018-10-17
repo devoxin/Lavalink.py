@@ -47,7 +47,8 @@ class Client:
 
         bot.lavalink = self
         self.http = aiohttp.ClientSession(loop=loop)
-        self.voice_state = {}
+        self.voice_states = {}
+        self.voice_wait_locks = {}
         self.hooks = []
 
         set_log_level(log_level)
@@ -59,6 +60,8 @@ class Client:
         self.new_loop = asyncio.new_event_loop()
         self._server_version = 2
         self.nodes = NodeManager(self, default_node, rest_round_robin, player)
+
+        self.bot.loop.create_task(self.garbage_collection())
 
     def register_hook(self, func):
         """
@@ -137,15 +140,27 @@ class Client:
             raise NoNodesAvailable
         for node in self.nodes:
             if guild_id in node.players:
-                log.debug("Found player in cache.")
+                log.debug('Found player in cache.')
                 return node.players[guild_id]
-        log.debug("Player not in cache")
+        log.debug('Player not in cache')
         guild = self.bot.get_guild(guild_id)
         if guild is None:
-            log.debug("Couldn't find the guild.")
+            log.debug('Couldn\'t find the guild.')
             return self.nodes.nodes[0].players.get(guild_id)
-        log.debug("Getting new player from geo.")
+        log.debug('Getting new player from geo.')
         return self.nodes.get_by_region(guild)
+
+    async def garbage_collection(self):
+        await self.bot.wait_until_ready()
+        while not self.bot.is_closed():
+            try:
+                for node in self.nodes:
+                    for player in node.players.find_all(lambda x: not x.is_connected):
+                        await node.players.remove(player.guild_id)
+                        self.voice_states.pop(player.guild_id, None)
+            except Exception as e:  # pylint: disable=broad-except
+                log.info('There was an exception during GC: {}'.format(str(e)))
+            await asyncio.sleep(100)
 
     # Bot Events
     async def on_socket_response(self, data):
@@ -164,29 +179,48 @@ class Client:
             return
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
-            self.voice_state.update({
-                'op': 'voiceUpdate',
-                'guildId': data['d']['guild_id'],
-                'event': data['d']
-            })
+            try:
+                self.voice_states[int(data['d']['guild_id'])].update({
+                    'op': 'voiceUpdate',
+                    'guildId': data['d']['guild_id'],
+                    'event': data['d']
+                })
+            except KeyError:
+                self.voice_states[int(data['d']['guild_id'])] = {
+                    'op': 'voiceUpdate',
+                    'guildId': data['d']['guild_id'],
+                    'event': data['d']
+                }
+
+            log.debug('Voice server update: {}'.format(str(data)))
         else:
             if int(data['d']['user_id']) != self.bot.user.id:
                 return
 
-            self.voice_state.update({'sessionId': data['d']['session_id']})
+            try:
+                self.voice_states[int(data['d']['guild_id'])].update({'sessionId': data['d']['session_id']})
+            except KeyError:
+                self.voice_states[int(data['d']['guild_id'])] = {'sessionId': data['d']['session_id']}
 
             guild_id = int(data['d']['guild_id'])
 
             for node in self.nodes:
                 if node.players[guild_id]:
                     node.players[guild_id].channel_id = data['d']['channel_id']
+                    break
 
-        if {'op', 'guildId', 'sessionId', 'event'} == self.voice_state.keys():
-            guild_id = int(data['d']['guild_id'])
+            log.debug("Voice state update: {}".format(str(data)))
+
+        guild_id = int(data['d']['guild_id'])
+        if {'op', 'guildId', 'sessionId', 'event'} == self.voice_states.get(guild_id, {}).keys():
+            log.debug('Sending voice update to lavalink: {}'.format(str(self.voice_states.get(guild_id))))
             for node in self.nodes:
                 if node.players[guild_id]:
-                    await node.ws.send(**self.voice_state)
-            self.voice_state.clear()
+                    await node.ws.send(**self.voice_states.get(guild_id))
+                    break
+            lock = self.voice_wait_locks.get(guild_id, None)
+            if lock:
+                lock.set()
 
     def destroy(self):
         """ Destroys the Lavalink client. """

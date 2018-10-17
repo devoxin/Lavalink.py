@@ -93,15 +93,15 @@ class DefaultPlayer(BasePlayer):
 
     def add(self, requester: int, track: dict):
         """ Adds a track to the queue. """
-        self.queue.append(AudioTrack().build(track, requester))
+        self.queue.append(AudioTrack.build(track, requester))
 
     def add_next(self, requester: int, track: dict):
         """ Adds a track to beginning of the queue """
-        self.queue.insert(0, AudioTrack().build(track, requester))
+        self.queue.insert(0, AudioTrack.build(track, requester))
 
     def add_at(self, index: int, requester: int, track: dict):
         """ Adds a track at a specific index in the queue. """
-        self.queue.insert(min(index, len(self.queue) - 1), AudioTrack().build(track, requester))
+        self.queue.insert(min(index, len(self.queue) - 1), AudioTrack.build(track, requester))
 
     async def play(self, track_index: int = 0, ignore_shuffle: bool = False):
         """ Plays the first track in the queue, if any or plays a track from the specified index in the queue. """
@@ -239,4 +239,6 @@ class PlayerManager:
 
     def clear(self):
         """ Removes all of the players from the cache. """
+        for guild_id in self._players:
+            self.lavalink.voice_states.pop(int(guild_id), None)
         self._players.clear()

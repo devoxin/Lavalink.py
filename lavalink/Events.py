@@ -48,6 +48,16 @@ class PlayerStatusUpdate:
         self.track = track
 
 
+class WebSocketClosedEvent:
+    """ This event is dispatched every time when lavalink get disconnected from the discord WS. """
+
+    def __init__(self, player, code, reason, by_remote):
+        self.player = player
+        self.code = code
+        self.reason = reason
+        self.by_remote = by_remote
+
+
 class StatsUpdateEvent:
     """ This event will be dispatched when the websocket receives a statistics update. """
 
