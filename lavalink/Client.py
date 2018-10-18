@@ -61,7 +61,7 @@ class Client:
         self._server_version = 2
         self.nodes = NodeManager(self, default_node, rest_round_robin, player)
 
-        self.bot.loop.create_task(self.garbage_collection())
+        # self.bot.loop.create_task(self.garbage_collection())
 
     def register_hook(self, func):
         """
