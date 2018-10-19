@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABC, abstractmethod
 from random import randrange
 
@@ -20,6 +21,10 @@ class BasePlayer(ABC):
         raise NotImplementedError
 
     def cleanup(self):
+        pass
+
+    async def ws_reset_handler(self):
+        """ This method is called when WS receives a WebSocketClosedEvent with status code 4006 """
         pass
 
 
@@ -75,6 +80,37 @@ class DefaultPlayer(BasePlayer):
 
         ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
         await ws.voice_state(self.guild_id, None)
+        self._lavalink.voice_states.pop(int(self.guild_id), None)
+
+    async def ws_reset_handler(self):
+        """ This method is called when WS receives a WebSocketClosedEvent with status code 4006 """
+        current_channel = int(self.channel_id)
+        current_position = int(self.position)
+        ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
+        self._lavalink.voice_wait_locks.update({int(self.guild_id): asyncio.Event(loop=self._lavalink.loop)})
+        await ws.voice_state(int(self.guild_id), None)
+        try:
+            lock = self._lavalink.voice_wait_locks.get(int(self.guild_id), None)
+            await asyncio.wait_for(lock.wait(), timeout=10.0)
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            self._lavalink.voice_states.pop(int(self.guild_id))
+            self._lavalink.voice_wait_locks.pop(int(self.guild_id), None)
+        if current_channel:
+            self._lavalink.voice_wait_locks.update({int(self.guild_id): asyncio.Event(loop=self._lavalink.loop)})
+            await ws.voice_state(int(self.guild_id), str(current_channel))
+            try:
+                lock = self._lavalink.voice_wait_locks.get(int(self.guild_id), None)
+                await asyncio.wait_for(lock.wait(), timeout=10.0)
+            except asyncio.TimeoutError:
+                self.channel_id = None
+            else:
+                self.queue.insert(0, self.current)
+                await self.play()
+                await self.seek(current_position)
+            finally:
+                self._lavalink.voice_wait_locks.pop(int(self.guild_id), None)
 
     def store(self, key: object, value: object):
         """ Stores custom user data. """
@@ -236,6 +272,13 @@ class PlayerManager:
             if call_cleanup:
                 player.cleanup()
             await player.disconnect()
+
+    async def safe_clear(self):
+        """ Safely clears all players, by disconnecting them from Discord WS. """
+        for player in self._players.values():
+            player.cleanup()
+            await player.disconnect()
+        self._players.clear()
 
     def clear(self):
         """ Removes all of the players from the cache. """
