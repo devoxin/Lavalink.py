@@ -53,7 +53,7 @@ class WebSocketClosedEvent:
 
     def __init__(self, player, code, reason, by_remote):
         self.player = player
-        self.code = code
+        self.code = int(code)
         self.reason = reason
         self.by_remote = by_remote
 
