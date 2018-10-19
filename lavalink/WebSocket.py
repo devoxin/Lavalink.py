@@ -4,7 +4,7 @@ import logging
 
 import websockets
 
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, StatsUpdateEvent, WebSocketClosedEvent
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, StatsUpdateEvent, VoiceWebSocketClosedEvent
 
 log = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ class WebSocket:
                 elif data['type'] == 'TrackStuckEvent':
                     event = TrackStuckEvent(player, data['track'], data['thresholdMs'])
                 elif data['type'] == 'WebSocketClosedEvent':
-                    event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
+                    event = VoiceWebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
                     if event.code == 4006:
                         self._lavalink.loop.create_task(player.ws_reset_handler())
 
