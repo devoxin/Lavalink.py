@@ -133,7 +133,7 @@ class Client:
         async with self.http.get(node.rest_uri + quote(query), headers={'Authorization': node.password}) as res:
             return await res.json(content_type=None)
 
-    async def get_player(self, guild_id: int, no_create: bool=False):
+    async def get_player(self, guild_id: int, create: bool=True):
         try:
             await asyncio.wait_for(self.nodes.ready.wait(), timeout=10.0)
         except asyncio.TimeoutError:
@@ -143,7 +143,7 @@ class Client:
                 log.debug('Found player in cache.')
                 return node.players[guild_id]
         log.debug('Player not in cache')
-        if no_create:
+        if not create:
             return None
         guild = self.bot.get_guild(guild_id)
         if guild is None:
