@@ -61,8 +61,6 @@ class Client:
         self._server_version = 2
         self.nodes = NodeManager(self, default_node, rest_round_robin, player)
 
-        # self.bot.loop.create_task(self.garbage_collection())
-
     def register_hook(self, func):
         """
         Registers a hook. Since this probably is a bit difficult, I'll explain it in detail.
@@ -152,18 +150,6 @@ class Client:
         log.debug('Getting new player from geo.')
         return self.nodes.get_by_region(guild)
 
-    async def garbage_collection(self):
-        await self.bot.wait_until_ready()
-        while not self.bot.is_closed():
-            try:
-                for node in self.nodes:
-                    for player in node.players.find_all(lambda x: not x.is_connected):
-                        await node.players.remove(player.guild_id)
-                        self.voice_states.pop(player.guild_id, None)
-            except Exception as e:  # pylint: disable=broad-except
-                log.info('There was an exception during GC: {}'.format(str(e)))
-            await asyncio.sleep(100)
-
     # Bot Events
     async def on_socket_response(self, data):
         """
@@ -209,7 +195,7 @@ class Client:
                     node.players[guild_id].channel_id = data['d']['channel_id']
                     break
 
-            log.debug("Voice state update: {}".format(str(data)))
+            log.debug('Voice state update: {}'.format(str(data)))
 
         guild_id = int(data['d']['guild_id'])
         if {'op', 'guildId', 'sessionId', 'event'} == self.voice_states.get(guild_id, {}).keys():
