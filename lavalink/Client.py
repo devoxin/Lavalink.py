@@ -133,7 +133,7 @@ class Client:
         async with self.http.get(node.rest_uri + quote(query), headers={'Authorization': node.password}) as res:
             return await res.json(content_type=None)
 
-    async def get_player(self, guild_id: int, create: bool=True):
+    async def get_player(self, guild_id: int, create: bool = True):
         try:
             await asyncio.wait_for(self.nodes.ready.wait(), timeout=10.0)
         except asyncio.TimeoutError:
@@ -181,28 +181,26 @@ class Client:
             return
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
+            voice_server_package = {
+                'op': 'voiceUpdate',
+                'guildId': data['d']['guild_id'],
+                'event': data['d']
+            }
             try:
-                self.voice_states[int(data['d']['guild_id'])].update({
-                    'op': 'voiceUpdate',
-                    'guildId': data['d']['guild_id'],
-                    'event': data['d']
-                })
+                self.voice_states[int(data['d']['guild_id'])].update(voice_server_package)
             except KeyError:
-                self.voice_states[int(data['d']['guild_id'])] = {
-                    'op': 'voiceUpdate',
-                    'guildId': data['d']['guild_id'],
-                    'event': data['d']
-                }
+                self.voice_states[int(data['d']['guild_id'])] = voice_server_package
 
             log.debug('Voice server update: {}'.format(str(data)))
         else:
             if int(data['d']['user_id']) != self.bot.user.id:
                 return
 
+            voice_state_package = {'sessionId': data['d']['session_id']}
             try:
-                self.voice_states[int(data['d']['guild_id'])].update({'sessionId': data['d']['session_id']})
+                self.voice_states[int(data['d']['guild_id'])].update(voice_state_package)
             except KeyError:
-                self.voice_states[int(data['d']['guild_id'])] = {'sessionId': data['d']['session_id']}
+                self.voice_states[int(data['d']['guild_id'])] = voice_state_package
 
             guild_id = int(data['d']['guild_id'])
 
