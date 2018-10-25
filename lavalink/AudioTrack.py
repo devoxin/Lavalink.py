@@ -9,8 +9,8 @@ class TrackNotBuilt(Exception):
 
 
 class AudioTrack:
-    __slots__ = ("track", "identifier", "can_seek", "author", "duration", "stream", "title", "uri", "requester",
-                 "preferences")
+    __slots__ = ('track', 'identifier', 'can_seek', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
+                 'preferences')
 
     def __init__(self, requester, **kwargs):
         self.requester = requester
@@ -37,7 +37,7 @@ class AudioTrack:
     @property
     def thumbnail(self):
         """ Returns the video thumbnail. Could be an empty string. """
-        if not hasattr(self, "track"):
+        if not hasattr(self, 'track'):
             raise TrackNotBuilt
         if 'youtube' in self.uri:
             return "https://img.youtube.com/vi/{}/default.jpg".format(self.identifier)
@@ -45,6 +45,6 @@ class AudioTrack:
         return ""
 
     def __repr__(self):
-        if not hasattr(self, "track"):
+        if not hasattr(self, 'track'):
             raise TrackNotBuilt
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
