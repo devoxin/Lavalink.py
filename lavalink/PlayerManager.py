@@ -16,6 +16,9 @@ class BasePlayer(ABC):
         self._lavalink = lavalink
         self.guild_id = str(guild_id)
 
+        self._voice_state = {}
+        self._voice_lock = asyncio.Event(loop=self._lavalink.loop)
+
     @abstractmethod
     async def handle_event(self, event):
         raise NotImplementedError
@@ -80,29 +83,28 @@ class DefaultPlayer(BasePlayer):
 
         ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
         await ws.voice_state(self.guild_id, None)
-        self._lavalink.voice_states.pop(int(self.guild_id), None)
+        self._voice_state = {}
+        self._voice_lock.clear()
 
     async def ws_reset_handler(self):
         """ This method is called when WS receives a WebSocketClosedEvent with status code 4006 """
         current_channel = int(self.channel_id)
         current_position = int(self.position)
         ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
-        self._lavalink.voice_wait_locks.update({int(self.guild_id): asyncio.Event(loop=self._lavalink.loop)})
+        self._voice_lock.clear()
         await ws.voice_state(int(self.guild_id), None)
         try:
-            lock = self._lavalink.voice_wait_locks.get(int(self.guild_id), None)
-            await asyncio.wait_for(lock.wait(), timeout=10.0)
+            await asyncio.wait_for(self._voice_lock.wait(), timeout=10.0)
         except asyncio.TimeoutError:
             pass
         finally:
-            self._lavalink.voice_states.pop(int(self.guild_id))
-            self._lavalink.voice_wait_locks.pop(int(self.guild_id), None)
+            self._voice_state = {}
+            self._voice_lock.clear()
         if current_channel:
-            self._lavalink.voice_wait_locks.update({int(self.guild_id): asyncio.Event(loop=self._lavalink.loop)})
+            self._voice_lock.clear()
             await ws.voice_state(int(self.guild_id), str(current_channel))
             try:
-                lock = self._lavalink.voice_wait_locks.get(int(self.guild_id), None)
-                await asyncio.wait_for(lock.wait(), timeout=10.0)
+                await asyncio.wait_for(self._voice_lock.wait(), timeout=10.0)
             except asyncio.TimeoutError:
                 self.channel_id = None
             else:
@@ -110,7 +112,7 @@ class DefaultPlayer(BasePlayer):
                 await self.play()
                 await self.seek(current_position)
             finally:
-                self._lavalink.voice_wait_locks.pop(int(self.guild_id), None)
+                self._voice_lock.clear()
 
     def store(self, key: object, value: object):
         """ Stores custom user data. """
@@ -216,7 +218,7 @@ class DefaultPlayer(BasePlayer):
 
 
 class PlayerManager:
-    def __init__(self, lavalink, node, player):
+    def __init__(self, lavalink, player):
         """
         Instantiates a Player Manager.
 
@@ -229,7 +231,6 @@ class PlayerManager:
             raise ValueError('player must implement lavalink.BasePlayer.')
 
         self.lavalink = lavalink
-        self.node = node
         self._player = player
         self._players = {}
 
@@ -257,10 +258,10 @@ class PlayerManager:
         """ Returns a list of players based on the given filter predicate. """
         return list(filter(predicate, self._players.values()))
 
-    def get(self, guild_id: int):
+    def get(self, guild_id: int, node):
         """ Returns a player from the cache, or creates one if it does not exist. """
         if guild_id not in self._players:
-            p = self._player(node=self.node, lavalink=self.lavalink, guild_id=guild_id)
+            p = self._player(node=node, lavalink=self.lavalink, guild_id=guild_id)
             self._players[guild_id] = p
 
         return self._players[guild_id]
@@ -282,6 +283,4 @@ class PlayerManager:
 
     def clear(self):
         """ Removes all of the players from the cache. """
-        for guild_id in self._players:
-            self.lavalink.voice_states.pop(int(guild_id), None)
         self._players.clear()

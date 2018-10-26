@@ -118,13 +118,13 @@ class WebSocket:
                 log.warning('Disconnected from Lavalink: {}'.format(str(error)))
                 self._node.set_offline()
                 if not self._node.manager.nodes:
-                    for g in self._node.players._players.copy().keys():
+                    for g in self._lavalink.players._players.copy().keys():
                         ws = self._lavalink.bot._connection._get_websocket(int(g))
                         await ws.voice_state(int(g), None)
                 else:
                     await self._node.manage_failover()
 
-                self._node.players.clear()
+                self._lavalink.players.clear()
 
                 if self._shutdown:
                     break
@@ -143,7 +143,7 @@ class WebSocket:
 
             if op == 'event':
                 log.debug('Received event of type {}'.format(data['type']))
-                player = self._node.players[int(data['guildId'])]
+                player = self._lavalink.players[int(data['guildId'])]
                 event = None
 
                 if data['type'] == 'TrackEndEvent':
@@ -163,7 +163,7 @@ class WebSocket:
                 await self._lavalink.update_state(data)
             elif op == 'stats':
                 self._node.stats._update(data)
-                await self._node._lavalink.dispatch_event(StatsUpdateEvent(self._node))
+                await self._lavalink.dispatch_event(StatsUpdateEvent(self._node))
 
         log.debug('Closing WebSocket...')
         await self._ws.close()
