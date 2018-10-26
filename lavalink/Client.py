@@ -136,16 +136,12 @@ class Client:
         except asyncio.TimeoutError:
             raise NoNodesAvailable
         if guild_id in self.players:
-            log.debug('Found player in cache.')
             return self.players[guild_id]
-        log.debug('Player not in cache')
         if not create:
             return None
         guild = self.bot.get_guild(guild_id)
         if guild is None:
-            log.debug('Couldn\'t find the guild.')
             return self.players.get(guild_id, self.nodes.nodes[0])
-        log.debug('Getting new player from geo.')
         return self.nodes.get_by_region(guild)
 
     # Bot Events
@@ -167,7 +163,7 @@ class Client:
         guild_id = int(data['d']['guild_id'])
         player = self.players[guild_id]
         if not player:
-            log.info('Client received an updated for a non-existent player. {}'.format(guild_id))
+            log.debug('Client received an update for a non-existent player. {}'.format(guild_id))
             return
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
