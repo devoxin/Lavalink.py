@@ -111,11 +111,12 @@ class Client:
                     await hook(event)
                 else:
                     hook(event)
-            except Exception as e:  # Catch generic exception thrown by user hooks
+            except Exception as e:  # pylint: disable=broad-except
+                # Catch generic exception thrown by user hooks
                 log.warning(
                     'Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
 
-        if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player is not None:
+        if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player:
             await event.player.handle_event(event)
 
     async def update_state(self, data):
