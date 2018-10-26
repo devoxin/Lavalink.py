@@ -4,13 +4,13 @@ import logging
 
 import websockets
 
-from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, StatsUpdateEvent
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, StatsUpdateEvent, VoiceWebSocketClosedEvent
 
 log = logging.getLogger(__name__)
 
 
 class WebSocket:
-    def __init__(self, lavalink, node, host, password, ws_port, ws_retry, shard_count):
+    def __init__(self, lavalink, node, host, password, ws_port, rest_port, ws_retry, shard_count):
         self._lavalink = lavalink
         self._node = node
 
@@ -18,9 +18,12 @@ class WebSocket:
         self._queue = []
 
         self._ws_retry = ws_retry
+        self._is_v31 = True
+        self._first_connect = True
         self._password = password
         self._host = host
-        self._port = ws_port
+        self._port = rest_port
+        self._ws_port = ws_port
         self._uri = 'ws://{}:{}'.format(self._host, self._port)
         self._shards = shard_count
 
@@ -58,10 +61,18 @@ class WebSocket:
 
         try:
             self._ws = await websockets.connect(self._uri, loop=self._loop, extra_headers=headers)
-        except OSError as error:
-            log.exception('Failed to connect to Lavalink: {}'.format(str(error)))
+        except (OSError, websockets.InvalidStatusCode) as error:
+            if self._is_v31 and self._first_connect:
+                log.warning('Failed to connect to Lavalink, trying again with the WS port. '
+                            'Exception: {}'.format(str(error)))
+                self._is_v31 = False
+                self._uri = "ws://{}:{}".format(self._host, self._ws_port)
+                self._loop.create_task(self.connect())
+            else:
+                log.exception('Failed to connect to Lavalink: {}'.format(str(error)))
         else:
             self._node.set_online()
+            self._first_connect = False
             log.info('Connected to Lavalink! Server index: {}'.format(self._node.manager.nodes.index(self._node)))
             self._loop.create_task(self.listen())
             version = self._ws.response_headers.get('Lavalink-Major-Version', 2)
@@ -107,13 +118,13 @@ class WebSocket:
                 log.warning('Disconnected from Lavalink: {}'.format(str(error)))
                 self._node.set_offline()
                 if not self._node.manager.nodes:
-                    for g in self._node.players._players.copy().keys():
+                    for g in self._lavalink.players._players.copy().keys():
                         ws = self._lavalink.bot._connection._get_websocket(int(g))
                         await ws.voice_state(int(g), None)
                 else:
                     await self._node.manage_failover()
 
-                self._node.players.clear()
+                self._lavalink.players.clear()
 
                 if self._shutdown:
                     break
@@ -132,7 +143,7 @@ class WebSocket:
 
             if op == 'event':
                 log.debug('Received event of type {}'.format(data['type']))
-                player = self._node.players[int(data['guildId'])]
+                player = self._lavalink.players[int(data['guildId'])]
                 event = None
 
                 if data['type'] == 'TrackEndEvent':
@@ -141,6 +152,10 @@ class WebSocket:
                     event = TrackExceptionEvent(player, data['track'], data['error'])
                 elif data['type'] == 'TrackStuckEvent':
                     event = TrackStuckEvent(player, data['track'], data['thresholdMs'])
+                elif data['type'] == 'WebSocketClosedEvent':
+                    event = VoiceWebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
+                    if event.code == 4006:
+                        self._lavalink.loop.create_task(player.ws_reset_handler())
 
                 if event is not None:
                     await self._lavalink.dispatch_event(event)
@@ -148,7 +163,7 @@ class WebSocket:
                 await self._lavalink.update_state(data)
             elif op == 'stats':
                 self._node.stats._update(data)
-                await self._node._lavalink.dispatch_event(StatsUpdateEvent(self._node))
+                await self._lavalink.dispatch_event(StatsUpdateEvent(self._node))
 
         log.debug('Closing WebSocket...')
         await self._ws.close()
