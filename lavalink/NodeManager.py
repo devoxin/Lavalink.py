@@ -2,7 +2,6 @@ import asyncio
 import logging
 
 from .Events import NodeReadyEvent, NodeDisabledEvent
-from .PlayerManager import PlayerManager
 from .Stats import Stats
 from .WebSocket import WebSocket
 
@@ -111,23 +110,21 @@ class LavalinkNode:
 
         self.ready = asyncio.Event(loop=self._lavalink.loop)
 
-        self.players = PlayerManager(self._lavalink, self, self.manager.default_player)
-
     def set_online(self):
         self.manager.on_node_ready(self)
 
     def set_offline(self):
         self.manager.on_node_disabled(self)
 
-    async def _handover_player(self, guild_id, player):
-        lock = self._lavalink.voice_wait_locks.get(guild_id, None)
+    async def _handover_player(self, player):
+        lock = player._voice_lock
         try:
             await asyncio.wait_for(lock.wait(), timeout=30.0)
         except asyncio.TimeoutError:
             return
         if not lock:
             return
-        self._lavalink.voice_wait_locks.pop(guild_id)
+        player._voice_lock.clear()
         player.queue.insert(0, player.current)
         current_position = int(player.position)
         await player.play()
@@ -136,15 +133,16 @@ class LavalinkNode:
     async def manage_failover(self):
         if self.manager.nodes:
             new_node = self.manager.nodes[0]
-            for g in list(self.players._players):
-                new_player = self.players._players.pop(g)
-                new_player.node = new_node
-                new_node.players._players.update({g: new_player})
-                if new_player.is_playing:
+            for g in [int(x) for x, y in self._lavalink.players if y.node == self]:
+                player = self._lavalink.players[g]
+                if not player:
+                    continue
+                player.node = new_node
+                if player.is_playing:
                     ws = self._lavalink.bot._connection._get_websocket(int(g))
                     self._lavalink.voice_wait_locks.update({int(g): asyncio.Event(loop=self._lavalink.loop)})
-                    await ws.voice_state(int(g), str(new_player.channel_id))
-                    self._lavalink.loop.create_task(self._handover_player(int(g), new_player))
+                    await ws.voice_state(int(g), str(player.channel_id))
+                    self._lavalink.loop.create_task(self._handover_player(player))
 
 
 class NodeManager:
@@ -215,7 +213,7 @@ class NodeManager:
 
     def get_by_region(self, guild):
         node = self.nodes_by_region.get(str(guild.region), None)
-        if node is None:
+        if not node:
             log.info("Unknown region: {}".format(str(guild.region)))
             node = self.nodes[0]
-        return node.players.get(guild.id)
+        return self._lavalink.players.get(guild.id, node)
