@@ -4,9 +4,9 @@ from urllib.parse import quote
 
 import aiohttp
 
-from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
+from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, PlayerStatusUpdate
 from .NodeManager import NodeManager, NoNodesAvailable
-from .PlayerManager import DefaultPlayer
+from .PlayerManager import DefaultPlayer, PlayerManager
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +47,6 @@ class Client:
 
         bot.lavalink = self
         self.http = aiohttp.ClientSession(loop=loop)
-        self.voice_state = {}
         self.hooks = []
 
         set_log_level(log_level)
@@ -59,6 +58,7 @@ class Client:
         self.new_loop = asyncio.new_event_loop()
         self._server_version = 2
         self.nodes = NodeManager(self, default_node, rest_round_robin, player)
+        self.players = PlayerManager(self, player)
 
     def register_hook(self, func):
         """
@@ -115,12 +115,13 @@ class Client:
         """ Updates a player's state when a payload with opcode ``playerUpdate`` is received. """
         guild_id = int(data['guildId'])
 
-        for node in self.nodes:
-            if guild_id in node.players:
-                player = node.players.get(guild_id)
-                player.position = data['state'].get('position', 0)
-                player.position_timestamp = data['state']['time']
-                break
+        if guild_id in self.players:
+            player = self.players[guild_id]
+            if not player:
+                return
+            player.position = data['state'].get('position', 0)
+            player.position_timestamp = data['state']['time']
+            await self.dispatch_event(PlayerStatusUpdate(player, player.current))
 
     async def get_tracks(self, query):
         """ Returns a Dictionary containing search results for a given query. """
@@ -129,21 +130,18 @@ class Client:
         async with self.http.get(node.rest_uri + quote(query), headers={'Authorization': node.password}) as res:
             return await res.json(content_type=None)
 
-    async def get_player(self, guild_id: int):
+    async def get_player(self, guild_id: int, create: bool = True):
         try:
             await asyncio.wait_for(self.nodes.ready.wait(), timeout=10.0)
         except asyncio.TimeoutError:
             raise NoNodesAvailable
-        for node in self.nodes:
-            if guild_id in node.players:
-                log.debug("Found player in cache.")
-                return node.players[guild_id]
-        log.debug("Player not in cache")
+        if guild_id in self.players:
+            return self.players[guild_id]
+        if not create:
+            return None
         guild = self.bot.get_guild(guild_id)
         if guild is None:
-            log.debug("Couldn't find the guild.")
-            return self.nodes.nodes[0].players.get(guild_id)
-        log.debug("Getting new player from geo.")
+            return self.players.get(guild_id, self.nodes.nodes[0])
         return self.nodes.get_by_region(guild)
 
     # Bot Events
@@ -162,30 +160,33 @@ class Client:
         if not data or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
             return
 
+        guild_id = int(data['d']['guild_id'])
+        player = self.players[guild_id]
+        if not player:
+            log.debug('Client received an update for a non-existent player. {}'.format(guild_id))
+            return
+
         if data['t'] == 'VOICE_SERVER_UPDATE':
-            self.voice_state.update({
+            player._voice_state.update({
                 'op': 'voiceUpdate',
                 'guildId': data['d']['guild_id'],
                 'event': data['d']
             })
+            log.debug('Voice server update: {}'.format(str(data)))
         else:
             if int(data['d']['user_id']) != self.bot.user.id:
                 return
 
-            self.voice_state.update({'sessionId': data['d']['session_id']})
+            player._voice_state.update({'sessionId': data['d']['session_id']})
 
-            guild_id = int(data['d']['guild_id'])
+            player.channel_id = data['d']['channel_id']
 
-            for node in self.nodes:
-                if node.players[guild_id]:
-                    node.players[guild_id].channel_id = data['d']['channel_id']
+            log.debug('Voice state update: {}'.format(str(data)))
 
-        if {'op', 'guildId', 'sessionId', 'event'} == self.voice_state.keys():
-            guild_id = int(data['d']['guild_id'])
-            for node in self.nodes:
-                if node.players[guild_id]:
-                    await node.ws.send(**self.voice_state)
-            self.voice_state.clear()
+        if {'op', 'guildId', 'sessionId', 'event'} == player._voice_state.keys():
+            log.debug('Sending voice update to lavalink: {}'.format(str(player._voice_state)))
+            await player.node.ws.send(**player._voice_state)
+            player._voice_lock.set()
 
     def destroy(self):
         """ Destroys the Lavalink client. """

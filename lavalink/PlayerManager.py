@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABC, abstractmethod
 from random import randrange
 
@@ -15,11 +16,18 @@ class BasePlayer(ABC):
         self._lavalink = lavalink
         self.guild_id = str(guild_id)
 
+        self._voice_state = {}
+        self._voice_lock = asyncio.Event(loop=self._lavalink.loop)
+
     @abstractmethod
     async def handle_event(self, event):
         raise NotImplementedError
 
     def cleanup(self):
+        pass
+
+    async def ws_reset_handler(self):
+        """ This method is called when WS receives a WebSocketClosedEvent with status code 4006 """
         pass
 
 
@@ -75,6 +83,36 @@ class DefaultPlayer(BasePlayer):
 
         ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
         await ws.voice_state(self.guild_id, None)
+        self._voice_state = {}
+        self._voice_lock.clear()
+
+    async def ws_reset_handler(self):
+        """ This method is called when WS receives a WebSocketClosedEvent with status code 4006 """
+        current_channel = int(self.channel_id)
+        current_position = int(self.position)
+        ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
+        self._voice_lock.clear()
+        await ws.voice_state(int(self.guild_id), None)
+        try:
+            await asyncio.wait_for(self._voice_lock.wait(), timeout=10.0)
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            self._voice_state = {}
+            self._voice_lock.clear()
+        if current_channel:
+            self._voice_lock.clear()
+            await ws.voice_state(int(self.guild_id), str(current_channel))
+            try:
+                await asyncio.wait_for(self._voice_lock.wait(), timeout=10.0)
+            except asyncio.TimeoutError:
+                self.channel_id = None
+            else:
+                self.queue.insert(0, self.current)
+                await self.play()
+                await self.seek(current_position)
+            finally:
+                self._voice_lock.clear()
 
     def store(self, key: object, value: object):
         """ Stores custom user data. """
@@ -93,15 +131,15 @@ class DefaultPlayer(BasePlayer):
 
     def add(self, requester: int, track: dict):
         """ Adds a track to the queue. """
-        self.queue.append(AudioTrack().build(track, requester))
+        self.queue.append(AudioTrack.build(track, requester))
 
     def add_next(self, requester: int, track: dict):
         """ Adds a track to beginning of the queue """
-        self.queue.insert(0, AudioTrack().build(track, requester))
+        self.queue.insert(0, AudioTrack.build(track, requester))
 
     def add_at(self, index: int, requester: int, track: dict):
         """ Adds a track at a specific index in the queue. """
-        self.queue.insert(min(index, len(self.queue) - 1), AudioTrack().build(track, requester))
+        self.queue.insert(min(index, len(self.queue) - 1), AudioTrack.build(track, requester))
 
     async def play(self, track_index: int = 0, ignore_shuffle: bool = False):
         """ Plays the first track in the queue, if any or plays a track from the specified index in the queue. """
@@ -180,7 +218,7 @@ class DefaultPlayer(BasePlayer):
 
 
 class PlayerManager:
-    def __init__(self, lavalink, node, player):
+    def __init__(self, lavalink, player):
         """
         Instantiates a Player Manager.
 
@@ -193,7 +231,6 @@ class PlayerManager:
             raise ValueError('player must implement lavalink.BasePlayer.')
 
         self.lavalink = lavalink
-        self.node = node
         self._player = player
         self._players = {}
 
@@ -221,10 +258,10 @@ class PlayerManager:
         """ Returns a list of players based on the given filter predicate. """
         return list(filter(predicate, self._players.values()))
 
-    def get(self, guild_id: int):
+    def get(self, guild_id: int, node):
         """ Returns a player from the cache, or creates one if it does not exist. """
         if guild_id not in self._players:
-            p = self._player(node=self.node, lavalink=self.lavalink, guild_id=guild_id)
+            p = self._player(node=node, lavalink=self.lavalink, guild_id=guild_id)
             self._players[guild_id] = p
 
         return self._players[guild_id]
@@ -236,6 +273,13 @@ class PlayerManager:
             if call_cleanup:
                 player.cleanup()
             await player.disconnect()
+
+    async def safe_clear(self):
+        """ Safely clears all players, by disconnecting them from Discord WS. """
+        for player in self._players.values():
+            player.cleanup()
+            await player.disconnect()
+        self._players.clear()
 
     def clear(self):
         """ Removes all of the players from the cache. """
