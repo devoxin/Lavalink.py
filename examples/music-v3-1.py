@@ -11,32 +11,35 @@ import math
 import re
 
 import discord
+from discord.ext import commands  # pylint: disable=ungrouped-imports
+
 import lavalink
-from discord.ext import commands
 
 time_rx = re.compile('[0-9]+')
 
-url_rx = re.compile('https?:\/\/(?:www\.)?.+')  # noqa: W605
+url_rx = re.compile('https?:\/\/(?:www\.)?.+')  # noqa: W605 pylint: disable=anomalous-backslash-in-string
 
 
 class Music:
     def __init__(self, bot):
         self.bot = bot
 
-        if not hasattr(bot, 'lavalink'):
+        if not hasattr(bot, 'lavalink') or (hasattr(bot, 'lavalink') and not bot.lavalink):
             lavalink.Client(bot=bot, loop=bot.loop, log_level=logging.DEBUG)
 
             bot.lavalink.nodes.add(lavalink.Regions.all(), password='youshallnotpass')
             self.bot.lavalink.register_hook(self._track_hook)
+            self.version = self.bot.lavalink._server_version
 
     def __unload(self):
         # Clear the players from Lavalink's internal cache
         self.bot.loop.create_task(self.bot.lavalink.players.safe_clear())
+        self.bot.lavalink.unregister_hook(self._track_hook)
+        self.bot.lavalink.destroy()
+        self.bot.lavalink = None
 
     async def _track_hook(self, event):
-        if type(event) in [lavalink.Events.StatsUpdateEvent, lavalink.Events.NodeReadyEvent]:
-            return
-        if not event.player:
+        if not hasattr(event, 'player'):
             return
         channel = self.bot.get_channel(event.player.fetch('channel'))
         if not channel:
@@ -66,29 +69,45 @@ class Music:
 
         results = await self.bot.lavalink.get_tracks(query)
 
-        if not results or not results['tracks']:
+        if not results or (isinstance(results, dict) and not results['tracks']):
             return await ctx.send('Nothing found!')
 
-        embed = discord.Embed(color=discord.Color.blurple())
-
-        if results['loadType'] == 'PLAYLIST_LOADED':
+        if isinstance(results, dict):
             tracks = results['tracks']
-
-            for track in tracks:
-                player.add(requester=ctx.author.id, track=track)
-
-            embed.title = 'Playlist Enqueued!'
-            embed.description = f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks'
-            await ctx.send(embed=embed)
+            if results['loadType'] == 'PLAYLIST_LOADED':
+                await self.queue_playlist(player, tracks, ctx.channel, ctx.author, results['playlistInfo'])
+            else:
+                await self.queue_song(player, tracks, ctx.channel, ctx.author)
         else:
-            track = results['tracks'][0]
-            embed.title = 'Track Enqueued'
-            embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
-            await ctx.send(embed=embed)
-            player.add(requester=ctx.author.id, track=track)
+            if 'list' in query and 'ytsearch:' not in query:
+                await self.queue_playlist(player, results, ctx.channel, ctx.author)
+            else:
+                await self.queue_song(player, results, ctx.channel, ctx.author)
 
         if not player.is_playing:
             await player.play()
+
+    async def queue_song(self, player, tracks, channel, author):
+        embed = discord.Embed(color=discord.Color.blurple())
+        track = tracks[0]
+        track_title = track["info"]["title"]
+        track_uri = track["info"]["uri"]
+        embed.title = "Track enqueued!"
+        embed.description = f'[{track_title}]({track_uri})'
+        await channel.send(embed=embed)
+        player.add(requester=author.id, track=track)
+
+    async def queue_playlist(self, player, tracks, channel, author, info: bool = False):
+        embed = discord.Embed(color=discord.Color.blurple())
+        for track in tracks:
+            player.add(requester=author.id, track=track)
+
+        embed.title = 'Playlist enqueued!'
+        if info:
+            embed.description = f'{info["name"]} - {len(tracks)} tracks'
+        else:
+            embed.description = f'Imported {len(tracks)} tracks from the playlist!'
+        await channel.send(embed=embed)
 
     @commands.command(name='previous', aliases=['pv'])
     @commands.guild_only()
@@ -117,15 +136,20 @@ class Music:
 
         results = await self.bot.lavalink.get_tracks(query)
 
-        if not results or not results['tracks']:
+        if not results or (isinstance(results, dict) and not results['tracks']):
             return await ctx.send('Nothing found!')
 
-        tracks = results['tracks']
-        track = tracks.pop(0)
-
-        if results['loadType'] == 'PLAYLIST_LOADED':
-            for _track in tracks:
-                player.add(requester=ctx.author.id, track=_track)
+        if isinstance(results, dict):
+            tracks = results['tracks']
+            track = tracks.pop(0)
+            if results['loadType'] == 'PLAYLIST_LOADED':
+                for _track in tracks:
+                    player.add(requester=ctx.author.id, track=_track)
+        else:
+            track = results.pop(0)
+            if 'list' in query and 'ytsearch:' not in query:
+                for _track in results:
+                    player.add(requester=ctx.author.id, track=_track)
 
         await player.play_now(requester=ctx.author.id, track=track)
 
@@ -325,7 +349,7 @@ class Music:
         embed = discord.Embed(color=discord.Color.blurple(), description=o)
         await ctx.send(embed=embed)
 
-    @commands.command(name='disconnect', aliases=['dcd'])
+    @commands.command(name='disconnect', aliases=['dc'])
     @commands.guild_only()
     async def _disconnect(self, ctx):
         """ Disconnects the player from the voice channel and clears its queue. """
