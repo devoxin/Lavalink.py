@@ -131,6 +131,7 @@ class Client:
             return await res.json(content_type=None)
 
     async def get_player(self, guild_id: int, create: bool = True):
+        """ Gets or creates a player and determines which node is the best for it. """
         try:
             await asyncio.wait_for(self.nodes.ready.wait(), timeout=10.0)
         except asyncio.TimeoutError:
