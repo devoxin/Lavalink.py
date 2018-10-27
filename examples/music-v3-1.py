@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This is an example code that shows how you would setup a simple music bot for Lavalink v2, v3 and v3.1.
+This is an example code that shows how you would setup a simple music bot for Lavalink v3.
 This example is only compatible with the discord.py rewrite branch.
 Because of the F-Strings, you also must have Python 3.6 or higher installed.
 """
@@ -29,6 +29,7 @@ class Music:
 
             bot.lavalink.nodes.add(lavalink.Regions.all(), password='youshallnotpass')
             self.bot.lavalink.register_hook(self._track_hook)
+            self.version = self.bot.lavalink._server_version
 
     def __unload(self):
         # Clear the players from Lavalink's internal cache
@@ -139,16 +140,13 @@ class Music:
             return await ctx.send('Nothing found!')
 
         if isinstance(results, dict):
-            tracks = results['tracks']
-            track = tracks.pop(0)
+            track = results['tracks'].pop(0)
             if results['loadType'] == 'PLAYLIST_LOADED':
-                for _track in tracks:
-                    player.add(requester=ctx.author.id, track=_track)
+                await self.queue_playlist(player, results['tracks'], ctx.channel, ctx.author, results['playlistInfo'])
         else:
             track = results.pop(0)
             if 'list' in query and 'ytsearch:' not in query:
-                for _track in results:
-                    player.add(requester=ctx.author.id, track=_track)
+                await self.queue_playlist(player, results, ctx.channel, ctx.author)
 
         await player.play_now(requester=ctx.author.id, track=track)
 
