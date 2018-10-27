@@ -6,9 +6,9 @@ from .Stats import Stats
 from .WebSocket import WebSocket
 
 log = logging.getLogger(__name__)
-DISCORD_REGIONS = ["amsterdam", "brazil", "eu-central", "eu-west", "frankfurt", "hongkong", "japan", "london", "russia",
-                   "singapore", "southafrica", "sydney", "us-central", "us-east", "us-south", "us-west",
-                   "vip-amsterdam", "vip-us-east", "vip-us-west"]
+DISCORD_REGIONS = ('amsterdam', 'brazil', 'eu-central', 'eu-west', 'frankfurt', 'hongkong', 'japan', 'london', 'russia',
+                   'singapore', 'southafrica', 'sydney', 'us-central', 'us-east', 'us-south', 'us-west',
+                   'vip-amsterdam', 'vip-us-east', 'vip-us-west')
 
 
 class RegionNotFound(Exception):
@@ -37,60 +37,60 @@ class Regions:
     @classmethod
     def eu(cls):
         """ All servers in Europe including Russia, because majority of population is closer to EU. """
-        return cls(["amsterdam", "eu-central", "eu-west", "frankfurt", "london", "russia", "vip-amsterdam"])
+        return cls(['amsterdam', 'eu-central', 'eu-west', 'frankfurt', 'london', 'russia', 'vip-amsterdam'])
 
     @classmethod
     def us(cls):
         """ All servers located in United States """
-        return cls(["us-central", "us-east", "us-south", "us-west", "vip-us-east", "vip-us-west"])
+        return cls(['us-central', 'us-east', 'us-south', 'us-west', 'vip-us-east', 'vip-us-west'])
 
     @classmethod
     def america(cls):
         """ All servers in North and South America. """
-        return cls(["us-central", "us-east", "us-south", "us-west", "vip-us-east", "vip-us-west", "brazil"])
+        return cls(['us-central', 'us-east', 'us-south', 'us-west', 'vip-us-east', 'vip-us-west', 'brazil'])
 
     @classmethod
     def africa(cls):
         """ All servers in Africa. """
-        return cls(["southafrica"])
+        return cls(['southafrica'])
 
     @classmethod
     def asia(cls):
         """ All servers located in Asia """
-        return cls(["hongkong", "japan", "singapore"])
+        return cls(['hongkong', 'japan', 'singapore'])
 
     @classmethod
     def oceania(cls):
         """ All servers located in Australia """
-        return cls(["sydney"])
+        return cls(['sydney'])
 
     @classmethod
     def half_one(cls):
         """ EU, Africa, Brazil and East US """
-        return cls(["amsterdam", "brazil", "eu-central", "eu-west", "frankfurt", "london", "southafrica",
-                    "us-east", "vip-amsterdam", "vip-us-east"])
+        return cls(['amsterdam', 'brazil', 'eu-central', 'eu-west', 'frankfurt', 'london', 'southafrica',
+                    'us-east', 'vip-amsterdam', 'vip-us-east'])
 
     @classmethod
     def half_two(cls):
         """ West US, Asia and Oceania """
-        return cls(["hongkong", "japan", "russia", "singapore", "sydney", "us-central", "us-south", "us-west",
-                    "vip-us-west"])
+        return cls(['hongkong', 'japan', 'russia', 'singapore', 'sydney', 'us-central', 'us-south', 'us-west',
+                    'vip-us-west'])
 
     @classmethod
     def third_one(cls):
         """ EU, Russia and Africa """
-        return cls(["amsterdam", "eu-central", "eu-west", "frankfurt", "london", "russia", "southafrica",
-                    "vip-amsterdam"])
+        return cls(['amsterdam', 'eu-central', 'eu-west', 'frankfurt', 'london', 'russia', 'southafrica',
+                    'vip-amsterdam'])
 
     @classmethod
     def third_two(cls):
         """ Asia and Oceania """
-        return cls(["hongkong", "japan", "singapore", "sydney"])
+        return cls(['hongkong', 'japan', 'singapore', 'sydney'])
 
     @classmethod
     def third_three(cls):
         """ North and South America """
-        return cls(["us-central", "us-east", "us-south", "us-west", "vip-us-east", "vip-us-west", "brazil"])
+        return cls(['us-central', 'us-east', 'us-south', 'us-west', 'vip-us-east', 'vip-us-west', 'brazil'])
 
 
 class LavalinkNode:
@@ -186,9 +186,9 @@ class NodeManager:
         node.ready.clear()
         if not self.nodes:
             self.ready.clear()
-        log.info("Node {} was removed from use.".format(node_index))
+        log.info('Node {} was removed from use.'.format(node_index))
         if not self.nodes:
-            log.warning("Node {} is offline and it's the only node in the cluster.".format(node_index))
+            log.warning('Node {} is offline and it\'s the only node in the cluster.'.format(node_index))
             return
         default_node = self.nodes[0]
         for region in node.regions:
@@ -216,6 +216,6 @@ class NodeManager:
     def get_by_region(self, guild):
         node = self.nodes_by_region.get(str(guild.region), None)
         if not node:
-            log.info("Unknown region: {}".format(str(guild.region)))
+            log.info('Unknown region: {}'.format(str(guild.region)))
             node = self.nodes[0]
         return self._lavalink.players.get(guild.id, node)
