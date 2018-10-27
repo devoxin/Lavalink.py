@@ -10,6 +10,16 @@ class NoPreviousTrack(Exception):
     pass
 
 
+class UnsupportedLavalinkVersion(Exception):
+    pass
+
+
+class Band:
+    def __init__(self, band: int = 0, gain: float = 0.0):
+        self.band = band
+        self.gain = gain
+
+
 class BasePlayer(ABC):
     def __init__(self, node, lavalink, guild_id: int):
         self.node = node
@@ -45,6 +55,7 @@ class DefaultPlayer(BasePlayer):
         self.volume = 100
         self.shuffle = False
         self.repeat = False
+        self.equalizer = [0.0 for x in range(16)]
 
         self.queue = []
         self.current = None
@@ -72,6 +83,7 @@ class DefaultPlayer(BasePlayer):
         """ Connects to a voice channel. """
         ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
         await ws.voice_state(self.guild_id, str(channel_id))
+        await self.reset_equalizer()
 
     async def disconnect(self):
         """ Disconnects from the voice channel, if any. """
@@ -143,7 +155,7 @@ class DefaultPlayer(BasePlayer):
 
     async def play(self, track_index: int = 0, ignore_shuffle: bool = False):
         """ Plays the first track in the queue, if any or plays a track from the specified index in the queue. """
-        if self.repeat and self.current is not None:
+        if self.repeat and self.current:
             self.queue.append(self.current)
 
         self.previous = self.current
@@ -179,7 +191,7 @@ class DefaultPlayer(BasePlayer):
 
     async def play_previous(self):
         """ Plays previous track if it exist, if it doesn't raises a NoPreviousTrack error. """
-        if self.previous is None:
+        if not self.previous:
             raise NoPreviousTrack
         self.queue.insert(0, self.previous)
         await self.play(ignore_shuffle=True)
@@ -205,6 +217,44 @@ class DefaultPlayer(BasePlayer):
         else:
             self.volume = max(min(vol, 1000), 0)
         await self.node.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
+
+    async def set_gain(self, band: int, gain: float = 0.0):
+        """ (Only Lavalink v3.1 or higher) Sets the equalizer band (0-15) gain to the given amount.
+        A gain of 0.0 indicates no change. Gain cannot go below -0.25, or exceed 1.0 """
+        if not self.node.server_version == 3 and not self.node.ws._is_v31:
+            raise UnsupportedLavalinkVersion('Lavalink version must be at least 3.1')
+        gain = max(min(gain, 1.0), -0.25)
+        band = max(min(band, 15), 0)
+        self.equalizer[band] = gain
+        await self.node.ws.send(op='equalizer', guildId=self.guild_id, bands=[{'band': band, 'gain': gain}])
+
+    async def set_gains(self, *gain_list):
+        """ (Only Lavalink v3.1 or higher) Sets equalizer to the specified values in the list. Must have 16 values. """
+        if not self.node.server_version == 3 and not self.node.ws._is_v31:
+            raise UnsupportedLavalinkVersion('Lavalink version must be at least 3.1')
+        update_package = []
+        for value in gain_list:
+            if isinstance(value, tuple):
+                band = value[0]
+                gain = value[1]
+            elif isinstance(value, Band):
+                band = value.band
+                gain = value.gain
+            else:
+                raise TypeError('only accepts list of tuples or list of Band objects')
+            if -1 < value[0] < 16:
+                continue
+            gain = max(min(float(gain), 1.0), -0.25)
+            update_package.append({'band': band, 'gain': gain})
+            self.equalizer[band] = gain
+
+        await self.node.ws.send(op='equalizer', guildId=self.guild_id, bands=update_package)
+
+    async def reset_equalizer(self):
+        """ (Only Lavalink v3.1 or higher) Resets equalizer to default values. """
+        if not self.node.server_version == 3 and not self.node.ws._is_v31:
+            raise UnsupportedLavalinkVersion('Lavalink version must be at least 3.1')
+        await self.set_gains([(x, 0.0) for x in range(16)])
 
     async def seek(self, pos: int):
         """ Seeks to a given position in the track. """
