@@ -41,7 +41,7 @@ class WebSocket:
         """ Establishes a connection to the Lavalink server. """
         await self._lavalink.bot.wait_until_ready()
 
-        if self._ws is not None and self._ws.open:
+        if self._ws and self._ws.open:
             log.debug('WebSocket still open, closing...')
             self._node.set_offline()
             await self._ws.close()
@@ -111,7 +111,7 @@ class WebSocket:
 
     async def listen(self):
         """ Waits to receive a payload from the Lavalink server and processes it. """
-        while self._shutdown is False:
+        while not self._shutdown:
             try:
                 data = json.loads(await self._ws.recv())
             except websockets.ConnectionClosed as error:
@@ -157,7 +157,7 @@ class WebSocket:
                     if event.code == 4006:
                         self._lavalink.loop.create_task(player.ws_reset_handler())
 
-                if event is not None:
+                if event:
                     await self._lavalink.dispatch_event(event)
             elif op == 'playerUpdate':
                 await self._lavalink.update_state(data)
@@ -171,7 +171,7 @@ class WebSocket:
 
     async def send(self, **data):
         """ Sends data to the Lavalink server. """
-        if self._ws is not None and self._ws.open:
+        if self._ws and self._ws.open:
             log.debug('Sending payload {}'.format(str(data)))
             await self._ws.send(json.dumps(data))
         else:

@@ -143,7 +143,7 @@ class DefaultPlayer(BasePlayer):
 
     async def play(self, track_index: int = 0, ignore_shuffle: bool = False):
         """ Plays the first track in the queue, if any or plays a track from the specified index in the queue. """
-        if self.repeat and self.current is not None:
+        if self.repeat and self.current:
             self.queue.append(self.current)
 
         self.previous = self.current
@@ -179,7 +179,7 @@ class DefaultPlayer(BasePlayer):
 
     async def play_previous(self):
         """ Plays previous track if it exist, if it doesn't raises a NoPreviousTrack error. """
-        if self.previous is None:
+        if not self.previous:
             raise NoPreviousTrack
         self.queue.insert(0, self.previous)
         await self.play(ignore_shuffle=True)
