@@ -29,7 +29,6 @@ class Music:
 
             bot.lavalink.nodes.add(lavalink.Regions.all(), password='youshallnotpass')
             self.bot.lavalink.register_hook(self._track_hook)
-            self.version = self.bot.lavalink._server_version
 
     def __unload(self):
         # Clear the players from Lavalink's internal cache
