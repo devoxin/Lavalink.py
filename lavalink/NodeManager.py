@@ -129,6 +129,8 @@ class LavalinkNode:
         current_position = int(player.position)
         await player.play()
         await player.seek(current_position)
+        if player.node.server_version == 3 and player.node.ws._is_v31:
+            await player.bulk_set_gain(player.equalizer)
 
     async def manage_failover(self):
         if self.manager.nodes:
