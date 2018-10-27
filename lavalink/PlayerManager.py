@@ -55,7 +55,7 @@ class DefaultPlayer(BasePlayer):
         self.volume = 100
         self.shuffle = False
         self.repeat = False
-        self.equalizer = [0.0 for x in range(16)]
+        self.equalizer = [0.0 for x in range(15)]
 
         self.queue = []
         self.current = None
@@ -229,7 +229,7 @@ class DefaultPlayer(BasePlayer):
         await self.node.ws.send(op='equalizer', guildId=self.guild_id, bands=[{'band': band, 'gain': gain}])
 
     async def set_gains(self, *gain_list):
-        """ (Only Lavalink v3.1 or higher) Sets equalizer to the specified values in the list. Must have 16 values. """
+        """ (Only Lavalink v3.1 or higher) Sets equalizer to the specified values in the list. Must have 15 values. """
         if not self.node.server_version == 3 and not self.node.ws._is_v31:
             raise UnsupportedLavalinkVersion('Lavalink version must be at least 3.1')
         update_package = []
@@ -242,7 +242,7 @@ class DefaultPlayer(BasePlayer):
                 gain = value.gain
             else:
                 raise TypeError('only accepts list of tuples or list of Band objects')
-            if -1 < value[0] < 16:
+            if -1 > value[0] > 15:
                 continue
             gain = max(min(float(gain), 1.0), -0.25)
             update_package.append({'band': band, 'gain': gain})
@@ -254,7 +254,7 @@ class DefaultPlayer(BasePlayer):
         """ (Only Lavalink v3.1 or higher) Resets equalizer to default values. """
         if not self.node.server_version == 3 and not self.node.ws._is_v31:
             raise UnsupportedLavalinkVersion('Lavalink version must be at least 3.1')
-        await self.set_gains([(x, 0.0) for x in range(16)])
+        await self.set_gains(*[(x, 0.0) for x in range(15)])
 
     async def seek(self, pos: int):
         """ Seeks to a given position in the track. """
