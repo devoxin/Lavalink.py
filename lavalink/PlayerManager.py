@@ -45,6 +45,7 @@ class DefaultPlayer(BasePlayer):
         self.volume = 100
         self.shuffle = False
         self.repeat = False
+        self.equalizer = [0.0 for x in range(16)]
 
         self.queue = []
         self.current = None
@@ -111,6 +112,8 @@ class DefaultPlayer(BasePlayer):
                 self.queue.insert(0, self.current)
                 await self.play()
                 await self.seek(current_position)
+                if self.node.server_version == 3 and self.node.ws._is_v31:
+                    await self.bulk_set_gain(self.equalizer)
             finally:
                 self._voice_lock.clear()
 
@@ -205,6 +208,32 @@ class DefaultPlayer(BasePlayer):
         else:
             self.volume = max(min(vol, 1000), 0)
         await self.node.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
+
+    async def set_gain(self, band: int, gain: float = 0.0):
+        """ (Only Lavalink v3.1 or higher) Sets the equalizer band (0-15) gain to the given amount.
+        A gain of 0.0 indicates no change. Gain cannot go below -0.25, or exceed 1.0 """
+        if not self.node.server_version == 3 and not self.node.ws._is_v31:
+            return
+        gain = max(min(gain, 1.0), -0.25)
+        band = max(min(band, 15), 0)
+        self.equalizer[band] = gain
+        await self.node.ws.send(op='equalizer', guildId=self.guild_id, bands=[{'band': band, 'gain': gain}])
+
+    async def bulk_set_gain(self, gain_list: list):
+        """ (Only Lavalink v3.1 or higher) Sets equalizer to the specified values in the list. Must have 16 values. """
+        if not self.node.server_version == 3 and not self.node.ws._is_v31:
+            return
+        if len(gain_list) != 16:
+            raise ValueError("gain_list must have exactly 16 values")
+        self.equalizer = [max(min(float(x), 1.0), -0.25) for x in gain_list]
+        reset_package = [{'band': x, 'gain': y} for x, y in enumerate(self.equalizer)]
+        await self.node.ws.send(op='equalizer', guildId=self.guild_id, bands=reset_package)
+
+    async def reset_equalizer(self):
+        """ (Only Lavalink v3.1 or higher) Resets equalizer to default values. """
+        if not self.node.server_version == 3 and not self.node.ws._is_v31:
+            return
+        await self.bulk_set_gain([0.0 for x in range(16)])
 
     async def seek(self, pos: int):
         """ Seeks to a given position in the track. """
