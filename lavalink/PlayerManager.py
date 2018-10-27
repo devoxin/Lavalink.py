@@ -224,7 +224,7 @@ class DefaultPlayer(BasePlayer):
         if not self.node.server_version == 3 and not self.node.ws._is_v31:
             return
         if len(gain_list) != 16:
-            raise ValueError("gain_list must have exactly 16 values")
+            raise ValueError('gain_list must have exactly 16 values')
         self.equalizer = [max(min(float(x), 1.0), -0.25) for x in gain_list]
         reset_package = [{'band': x, 'gain': y} for x, y in enumerate(self.equalizer)]
         await self.node.ws.send(op='equalizer', guildId=self.guild_id, bands=reset_package)
