@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This is an example code that shows how you would setup a simple music bot for Lavalink v2.
+This is an example code that shows how you would setup a simple music bot for Lavalink v3.
 This example is only compatible with the discord.py rewrite branch.
 Because of the F-Strings, you also must have Python 3.6 or higher installed.
 """
@@ -15,6 +15,7 @@ import lavalink
 from discord.ext import commands
 
 time_rx = re.compile('[0-9]+')
+
 url_rx = re.compile('https?:\/\/(?:www\.)?.+')  # noqa: W605
 
 
@@ -23,19 +24,17 @@ class Music:
         self.bot = bot
 
         if not hasattr(bot, 'lavalink'):
-            lavalink.Client(bot=bot, password='youshallnotpass', loop=bot.loop, log_level=logging.DEBUG)
+            lavalink.Client(bot=bot, loop=bot.loop, log_level=logging.DEBUG)
+
+            bot.lavalink.nodes.add(lavalink.Regions.all(), password='youshallnotpass')
             self.bot.lavalink.register_hook(self._track_hook)
 
     def __unload(self):
-        for guild_id, player in self.bot.lavalink.players:
-            self.bot.loop.create_task(player.disconnect())
-            player.cleanup()
-
-        # Clears the players from Lavalink's internal cache
-        self.bot.lavalink.players.clear()
+        # Clear the players from Lavalink's internal cache
+        self.bot.loop.create_task(self.bot.lavalink.players.safe_clear())
 
     async def _track_hook(self, event):
-        if isinstance(event, lavalink.Events.StatsUpdateEvent):
+        if type(event) in [lavalink.Events.StatsUpdateEvent, lavalink.Events.NodeReadyEvent]:
             return
         if not event.player:
             return
@@ -51,47 +50,104 @@ class Music:
         elif isinstance(event, lavalink.Events.QueueEndEvent):
             await channel.send('Queue ended! Why not queue more songs?')
 
+    async def get_player(self, guild, create: bool = True):
+        return await self.bot.lavalink.get_player(guild.id, create)
+
     @commands.command(name='play', aliases=['p'])
     @commands.guild_only()
     async def _play(self, ctx, *, query: str):
         """ Searches and plays a song from a given query. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         query = query.strip('<>')
 
         if not url_rx.match(query):
             query = f'ytsearch:{query}'
 
-        tracks = await self.bot.lavalink.get_tracks(query)
+        results = await self.bot.lavalink.get_tracks(query)
 
-        if not tracks:
+        if not results or not results['tracks']:
             return await ctx.send('Nothing found!')
 
         embed = discord.Embed(color=discord.Color.blurple())
 
-        if 'list' in query and 'ytsearch:' not in query:
+        if results['loadType'] == 'PLAYLIST_LOADED':
+            tracks = results['tracks']
+
             for track in tracks:
                 player.add(requester=ctx.author.id, track=track)
 
-            embed.title = 'Playlist enqueued!'
-            embed.description = f'Imported {len(tracks)} tracks from the playlist!'
+            embed.title = 'Playlist Enqueued!'
+            embed.description = f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks'
             await ctx.send(embed=embed)
         else:
-            track_title = tracks[0]["info"]["title"]
-            track_uri = tracks[0]["info"]["uri"]
-
-            embed.title = "Track enqueued!"
-            embed.description = f'[{track_title}]({track_uri})'
-            player.add(requester=ctx.author.id, track=tracks[0])
+            track = results['tracks'][0]
+            embed.title = 'Track Enqueued'
+            embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
+            await ctx.send(embed=embed)
+            player.add(requester=ctx.author.id, track=track)
 
         if not player.is_playing:
             await player.play()
+
+    @commands.command(name='previous', aliases=['pv'])
+    @commands.guild_only()
+    async def _previous(self, ctx):
+        """ Plays the previous song. """
+        player = await self.get_player(ctx.guild)
+
+        try:
+            await player.play_previous()
+        except lavalink.NoPreviousTrack:
+            await ctx.send('There is no previous song to play.')
+
+    @commands.command(name='playnow', aliases=['pn'])
+    @commands.guild_only()
+    async def _playnow(self, ctx, *, query: str):
+        """ Plays immediately a song. """
+        player = await self.get_player(ctx.guild)
+
+        if not player.queue and not player.is_playing:
+            return await ctx.invoke(self._play, query=query)
+
+        query = query.strip('<>')
+
+        if not url_rx.match(query):
+            query = f'ytsearch:{query}'
+
+        results = await self.bot.lavalink.get_tracks(query)
+
+        if not results or not results['tracks']:
+            return await ctx.send('Nothing found!')
+
+        tracks = results['tracks']
+        track = tracks.pop(0)
+
+        if results['loadType'] == 'PLAYLIST_LOADED':
+            for _track in tracks:
+                player.add(requester=ctx.author.id, track=_track)
+
+        await player.play_now(requester=ctx.author.id, track=track)
+
+    @commands.command(name='playat', aliases=['pa'])
+    @commands.guild_only()
+    async def _playat(self, ctx, index: int):
+        """ Plays the queue from a specific point. Disregards tracks before the index. """
+        player = await self.get_player(ctx.guild)
+
+        if index < 1:
+            return await ctx.send('Invalid specified index.')
+
+        if len(player.queue) < index:
+            return await ctx.send('This index exceeds the queue\'s length.')
+
+        await player.play_at(index-1)
 
     @commands.command(name='seek')
     @commands.guild_only()
     async def _seek(self, ctx, *, time: str):
         """ Seeks to a given position in a track. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.is_playing:
             return await ctx.send('Not playing.')
@@ -113,7 +169,7 @@ class Music:
     @commands.guild_only()
     async def _skip(self, ctx):
         """ Skips the current track. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.is_playing:
             return await ctx.send('Not playing.')
@@ -125,7 +181,7 @@ class Music:
     @commands.guild_only()
     async def _stop(self, ctx):
         """ Stops the player and clears its queue. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.is_playing:
             return await ctx.send('Not playing.')
@@ -138,7 +194,7 @@ class Music:
     @commands.guild_only()
     async def _now(self, ctx):
         """ Shows some stats about the currently playing song. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
         song = 'Nothing'
 
         if player.current:
@@ -149,14 +205,15 @@ class Music:
                 duration = lavalink.Utils.format_time(player.current.duration)
             song = f'**[{player.current.title}]({player.current.uri})**\n({position}/{duration})'
 
-        embed = discord.Embed(color=discord.Color.blurple(), title='Now Playing', description=song)
+        embed = discord.Embed(color=discord.Color.blurple(),
+                              title='Now Playing', description=song)
         await ctx.send(embed=embed)
 
     @commands.command(name='queue', aliases=['q'])
     @commands.guild_only()
     async def _queue(self, ctx, page: int = 1):
         """ Shows the player's queue. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.queue:
             return await ctx.send('There\'s nothing in the queue! Why not queue something?')
@@ -180,7 +237,7 @@ class Music:
     @commands.guild_only()
     async def _pause(self, ctx):
         """ Pauses/Resumes the current track. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.is_playing:
             return await ctx.send('Not playing.')
@@ -195,8 +252,8 @@ class Music:
     @commands.command(name='volume', aliases=['vol'])
     @commands.guild_only()
     async def _volume(self, ctx, volume: int = None):
-        """ Changes the player's volume. Must be between 0 and 150. Error Handling for that is done by Lavalink. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        """ Changes the player's volume. Must be between 0 and 1000. Error Handling for that is done by Lavalink. """
+        player = await self.get_player(ctx.guild)
 
         if not volume:
             return await ctx.send(f'🔈 | {player.volume}%')
@@ -208,8 +265,7 @@ class Music:
     @commands.guild_only()
     async def _shuffle(self, ctx):
         """ Shuffles the player's queue. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
-
+        player = await self.get_player(ctx.guild)
         if not player.is_playing:
             return await ctx.send('Nothing playing.')
 
@@ -220,7 +276,7 @@ class Music:
     @commands.guild_only()
     async def _repeat(self, ctx):
         """ Repeats the current song until the command is invoked again. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.is_playing:
             return await ctx.send('Nothing playing.')
@@ -232,7 +288,7 @@ class Music:
     @commands.guild_only()
     async def _remove(self, ctx, index: int):
         """ Removes an item from the player's queue with the given index. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.queue:
             return await ctx.send('Nothing queued.')
@@ -252,12 +308,12 @@ class Music:
         if not query.startswith('ytsearch:') and not query.startswith('scsearch:'):
             query = 'ytsearch:' + query
 
-        tracks = await self.bot.lavalink.get_tracks(query)
+        results = await self.bot.lavalink.get_tracks(query)
 
-        if not tracks:
+        if not results or not results['tracks']:
             return await ctx.send('Nothing found')
 
-        tracks = tracks[:10]  # First 10 results
+        tracks = results['tracks'][:10]  # First 10 results
 
         o = ''
         for index, track in enumerate(tracks, start=1):
@@ -269,11 +325,11 @@ class Music:
         embed = discord.Embed(color=discord.Color.blurple(), description=o)
         await ctx.send(embed=embed)
 
-    @commands.command(name='disconnect', aliases=['dc'])
+    @commands.command(name='disconnect', aliases=['dcd'])
     @commands.guild_only()
     async def _disconnect(self, ctx):
         """ Disconnects the player from the voice channel and clears its queue. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.is_connected:
             return await ctx.send('Not connected.')
@@ -285,21 +341,25 @@ class Music:
         await player.disconnect()
         await ctx.send('*⃣ | Disconnected.')
 
+    @_playnow.before_invoke
+    @_previous.before_invoke
     @_play.before_invoke
     async def ensure_voice(self, ctx):
         """ A few checks to make sure the bot can join a voice channel. """
-        player = self.bot.lavalink.players.get(ctx.guild.id)
+        player = await self.get_player(ctx.guild)
 
         if not player.is_connected:
             if not ctx.author.voice or not ctx.author.voice.channel:
                 await ctx.send('You aren\'t connected to any voice channel.')
-                raise commands.CommandInvokeError('Author not connected to voice channel.')
+                raise commands.CommandInvokeError(
+                    'Author not connected to voice channel.')
 
             permissions = ctx.author.voice.channel.permissions_for(ctx.me)
 
             if not permissions.connect or not permissions.speak:
                 await ctx.send('Missing permissions `CONNECT` and/or `SPEAK`.')
-                raise commands.CommandInvokeError('Bot has no permissions CONNECT and/or SPEAK')
+                raise commands.CommandInvokeError(
+                    'Bot has no permissions CONNECT and/or SPEAK')
 
             player.store('channel', ctx.channel.id)
             await player.connect(ctx.author.voice.channel.id)
