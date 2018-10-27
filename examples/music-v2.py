@@ -15,7 +15,7 @@ import lavalink
 from discord.ext import commands
 
 time_rx = re.compile('[0-9]+')
-url_rx = re.compile('https?:\/\/(?:www\.)?.+')
+url_rx = re.compile('https?:\/\/(?:www\.)?.+')  # noqa: W605
 
 
 class Music:
