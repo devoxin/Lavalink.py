@@ -14,6 +14,7 @@ Tests output: [link](https://put-your-link-to-your-output.here) <!-- use 'paste.
 
 * [ ] Bug fix
 * [ ] New feature
+* [ ] Improvement
 * [ ] Breaking change
 * [ ] This change is a documentation update
 
