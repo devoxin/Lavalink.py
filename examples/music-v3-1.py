@@ -24,7 +24,7 @@ class Music:
     def __init__(self, bot):
         self.bot = bot
 
-        if not hasattr(bot, 'lavalink') or (hasattr(bot, 'lavalink') and not bot.lavalink):
+        if not hasattr(bot, 'lavalink') or not bot.lavalink:
             lavalink.Client(bot=bot, loop=bot.loop, log_level=logging.DEBUG)
 
             bot.lavalink.nodes.add(lavalink.Regions.all(), password='youshallnotpass')
