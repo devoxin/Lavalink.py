@@ -3,6 +3,14 @@ python:
   - 3.6
   - 3.7-dev
 
+notifications:
+  email: false
+
+#setuptools are broken for 3.7
+jobs:
+  allow_failures:
+    - python: 3.7-dev
+
 install:
   - pip install wheel
   - pip install flake8 pylint
