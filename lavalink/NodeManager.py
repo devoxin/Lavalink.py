@@ -130,7 +130,7 @@ class LavalinkNode:
         await player.play()
         await player.seek(current_position)
         if player.node.server_version == 3 and player.node.ws._is_v31:
-            await player.set_gains([(x, y) for x, y in enumerate(player.equalizer)])
+            await player.set_gains(*[(x, y) for x, y in enumerate(player.equalizer)])
 
     async def manage_failover(self):
         if self.manager.nodes:
