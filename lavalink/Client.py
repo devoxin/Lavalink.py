@@ -4,10 +4,9 @@ from urllib.parse import quote
 
 import aiohttp
 
-from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
+from .Events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, PlayerStatusUpdate
+from .NodeManager import NodeManager, NoNodesAvailable
 from .PlayerManager import DefaultPlayer, PlayerManager
-from .Stats import Stats
-from .WebSocket import WebSocket
 
 log = logging.getLogger(__name__)
 
@@ -18,8 +17,8 @@ def set_log_level(log_level):
 
 
 class Client:
-    def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), host='localhost',
-                 rest_port=2333, password='', ws_retry=3, ws_port=80, shard_count=1, player=DefaultPlayer):
+    def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), default_node: int = 0,
+                 player=DefaultPlayer, rest_round_robin: bool = False):
         """
         Creates a new Lavalink client.
         -----------------
@@ -48,7 +47,6 @@ class Client:
 
         bot.lavalink = self
         self.http = aiohttp.ClientSession(loop=loop)
-        self.voice_state = {}
         self.hooks = []
 
         set_log_level(log_level)
@@ -57,15 +55,9 @@ class Client:
         self.bot.add_listener(self.on_socket_response)
 
         self.loop = loop
-        self.rest_uri = 'http://{}:{}/loadtracks?identifier='.format(host, rest_port)
-        self.password = password
-
-        self.ws = WebSocket(
-            self, host, password, ws_port, ws_retry, shard_count
-        )
+        self.new_loop = asyncio.new_event_loop()
         self._server_version = 2
-        self.stats = Stats()
-
+        self.nodes = NodeManager(self, default_node, rest_round_robin, player)
         self.players = PlayerManager(self, player)
 
     def register_hook(self, func):
@@ -111,11 +103,12 @@ class Client:
                     await hook(event)
                 else:
                     hook(event)
-            except Exception as e:  # Catch generic exception thrown by user hooks
+            except Exception as e:  # pylint: disable=broad-except
+                # Catch generic exception thrown by user hooks
                 log.warning(
                     'Encountered exception while dispatching an event to hook `{}` ({})'.format(hook.__name__, str(e)))
 
-        if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player is not None:
+        if isinstance(event, (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent)) and event.player:
             await event.player.handle_event(event)
 
     async def update_state(self, data):
@@ -123,16 +116,34 @@ class Client:
         guild_id = int(data['guildId'])
 
         if guild_id in self.players:
-            player = self.players.get(guild_id)
+            player = self.players[guild_id]
+            if not player:
+                return
             player.position = data['state'].get('position', 0)
             player.position_timestamp = data['state']['time']
+            await self.dispatch_event(PlayerStatusUpdate(player, player.current))
 
     async def get_tracks(self, query):
         """ Returns a Dictionary containing search results for a given query. """
         log.debug('Requesting tracks for query {}'.format(query))
-
-        async with self.http.get(self.rest_uri + quote(query), headers={'Authorization': self.password}) as res:
+        node = self.nodes.get_rest()
+        async with self.http.get(node.rest_uri + quote(query), headers={'Authorization': node.password}) as res:
             return await res.json(content_type=None)
+
+    async def get_player(self, guild_id: int, create: bool = True):
+        """ Gets or creates a player and determines which node is the best for it. """
+        try:
+            await asyncio.wait_for(self.nodes.ready.wait(), timeout=10.0)
+        except asyncio.TimeoutError:
+            raise NoNodesAvailable
+        if guild_id in self.players:
+            return self.players[guild_id]
+        if not create:
+            return None
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            return self.players.get(guild_id, self.nodes.nodes[0])
+        return self.nodes.get_by_region(guild)
 
     # Bot Events
     async def on_socket_response(self, data):
@@ -144,33 +155,43 @@ class Client:
             The payload received from Discord.
         """
 
+        await self.nodes.ready.wait()
+
         # INTERCEPT VOICE UPDATES
         if not data or data.get('t', '') not in ['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE']:
             return
 
+        guild_id = int(data['d']['guild_id'])
+        player = self.players[guild_id]
+        if not player:
+            log.debug('Client received an update for a non-existent player. {}'.format(guild_id))
+            return
+
         if data['t'] == 'VOICE_SERVER_UPDATE':
-            self.voice_state.update({
+            player._voice_state.update({
                 'op': 'voiceUpdate',
                 'guildId': data['d']['guild_id'],
                 'event': data['d']
             })
+            log.debug('Voice server update: {}'.format(str(data)))
         else:
             if int(data['d']['user_id']) != self.bot.user.id:
                 return
 
-            self.voice_state.update({'sessionId': data['d']['session_id']})
+            player._voice_state.update({'sessionId': data['d']['session_id']})
 
-            guild_id = int(data['d']['guild_id'])
+            player.channel_id = data['d']['channel_id']
 
-            if self.players[guild_id]:
-                self.players[guild_id].channel_id = data['d']['channel_id']
+            log.debug('Voice state update: {}'.format(str(data)))
 
-        if {'op', 'guildId', 'sessionId', 'event'} == self.voice_state.keys():
-            await self.ws.send(**self.voice_state)
-            self.voice_state.clear()
+        if {'op', 'guildId', 'sessionId', 'event'} == player._voice_state.keys():
+            log.debug('Sending voice update to lavalink: {}'.format(str(player._voice_state)))
+            await player.node.ws.send(**player._voice_state)
+            player._voice_lock.set()
 
     def destroy(self):
         """ Destroys the Lavalink client. """
-        self.ws.destroy()
+        for node in self.nodes:
+            node.ws.destroy()
         self.bot.remove_listener(self.on_socket_response)
         self.hooks.clear()
