@@ -88,7 +88,7 @@ class Experimental:
         }
 
         await self.bot.lavalink.ws.send(**const)
-    
+
     async def apply_gains(self, guild_id, gains):
         const = {
             'op': 'equalizer',
