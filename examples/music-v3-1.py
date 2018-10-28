@@ -281,6 +281,38 @@ class Music:
         await player.set_volume(volume)
         await ctx.send(f'🔈 | Set to {player.volume}%')
 
+    @commands.command(name='bassboost', aliases=['bb'])
+    async def _bassboost(self, ctx, level: str = None):
+        """ Changes the player's bass frequencies up to 4 levels. OFF, LOW, MEDIUM, HIGH and INSANE. """
+        player = await self.get_player(ctx.guild)
+
+        levels = {
+                'OFF': [(0, 0), (1, 0)],
+                'LOW': [(0, 0.25), (1, 0.15)],
+                'MEDIUM': [(0, 0.50), (1, 0.25)],
+                'HIGH': [(0, 0.75), (1, 0.50)],
+                'INSANE': [(0, 1), (1, 0.75)]
+                }
+
+        if not level:
+            for k, v in levels.items():
+                if [(0, player.equalizer[0]), (1, player.equalizer[1])] == v:
+                    level = k
+                    break
+            return await ctx.send('Bass boost currently set on `{}`.'.format(level if level else 'CUSTOM'))
+
+        if level.upper()[0] not in [n[0] for n in levels.keys()]:
+            return await ctx.send('Invalid level.')
+
+        for k in levels.keys():
+            if k.startswith(level.upper()):
+                gain = levels[k]
+                break
+
+        await player.set_gains(*gain)
+
+        await ctx.send(f'Bass boost set on `{k}`.')
+
     @commands.command(name='shuffle')
     @commands.guild_only()
     async def _shuffle(self, ctx):
