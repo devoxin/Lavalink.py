@@ -51,4 +51,4 @@ class Equalizer:
             block += '\n'
 
         block += bottom
-        return block.strip()
+        return block
