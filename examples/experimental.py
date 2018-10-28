@@ -1,4 +1,5 @@
 import asyncio
+import discord
 from discord.ext import commands
 from utils.equalizer import Equalizer
 
@@ -28,47 +29,41 @@ class Experimental:
         reaction = await self.get_reaction(ctx, m.id)
 
         if not reaction:
-            await m.clear_reactions()
-
-        if reaction == '⬅':
+            try:
+                await m.clear_reactions()
+            except discord.Forbidden:
+                pass
+        elif reaction == '⬅':
             await self.interact(ctx, player, eq, m, max(selected - 1, 0))
-
-        if reaction == '➡':
+        elif reaction == '➡':
             await self.interact(ctx, player, eq, m, min(selected + 1, 14))
-
-        if reaction == '🔼':
-            _max = min(eq.get_gain(selected) + 0.1, 1.0)
-            eq.set_gain(selected, _max)
-            await self.apply_gain(ctx.guild.id, selected, _max)
+        elif reaction == '🔼':
+            gain = min(eq.get_gain(selected) + 0.1, 1.0)
+            eq.set_gain(selected, gain)
+            await self.apply_gain(ctx.guild.id, selected, gain)
             await self.interact(ctx, player, eq, m, selected)
-
-        if reaction == '🔽':
-            _min = max(eq.get_gain(selected) - 0.1, -0.25)
-            eq.set_gain(selected, _min)
-            await self.apply_gain(ctx.guild.id, selected, _min)
+        elif reaction == '🔽':
+            gain = max(eq.get_gain(selected) - 0.1, -0.25)
+            eq.set_gain(selected, gain)
+            await self.apply_gain(ctx.guild.id, selected, gain)
             await self.interact(ctx, player, eq, m, selected)
-
-        if reaction == '⏫':
-            _max = 1.0
-            eq.set_gain(selected, _max)
-            await self.apply_gain(ctx.guild.id, selected, _max)
+        elif reaction == '⏫':
+            gain = 1.0
+            eq.set_gain(selected, gain)
+            await self.apply_gain(ctx.guild.id, selected, gain)
             await self.interact(ctx, player, eq, m, selected)
-
-        if reaction == '⏬':
-            _min = -0.25
-            eq.set_gain(selected, _min)
-            await self.apply_gain(ctx.guild.id, selected, _min)
+        elif reaction == '⏬':
+            gain = -0.25
+            eq.set_gain(selected, gain)
+            await self.apply_gain(ctx.guild.id, selected, gain)
             await self.interact(ctx, player, eq, m, selected)
-
-        if reaction == '◀':
+        elif reaction == '◀':
             selected = 0
             await self.interact(ctx, player, eq, m, selected)
-
-        if reaction == '▶':
+        elif reaction == '▶':
             selected = 14
             await self.interact(ctx, player, eq, m, selected)
-
-        if reaction == '⏺':
+        elif reaction == '⏺':
             for band in range(eq._band_count):
                 eq.set_gain(band, 0.0)
 
@@ -76,37 +71,38 @@ class Experimental:
             await self.interact(ctx, player, eq, m, selected)
 
     async def apply_gain(self, guild_id, band, gain):
-        const = {
-            'op': 'equalizer',
-            'guildId': str(guild_id),
-            'bands': [
-                {
-                    'band': band,
-                    'gain': gain
-                }
-            ]
-        }
-
-        await self.bot.lavalink.ws.send(**const)
+        await self.apply_gains(guild_id, {'band': band, 'gain': gain})
 
     async def apply_gains(self, guild_id, gains):
-        const = {
+        payload = {
             'op': 'equalizer',
-            'guildId': str(guild_id),
-            'bands': [{'band': x, 'gain': y} for x, y in enumerate(gains)]
+            'guildId': str(guild_id)
         }
 
-        await self.bot.lavalink.ws.send(**const)
+        if isinstance(gains, list):
+            payload['bands'] = [{'band': x, 'gain': y} for x, y in enumerate(gains)]
+        elif isinstance(gains, dict):
+            payload['bands'] = [gains]
+
+        await self.bot.lavalink.ws.send(**payload)
 
     async def get_reaction(self, ctx, m_id):
         reactions = ['◀', '⬅', '⏫', '🔼', '🔽', '⏬', '➡', '▶', '⏺']
 
+        def check(r, u):
+            return r.message.id == m_id and \
+                    u.id == ctx.author.id and \
+                    r.emoji in reactions
+
         try:
-            reaction, user = await self.bot.wait_for('reaction_add', check=lambda r, u: r.message.id == m_id and u.id == ctx.author.id and r.emoji in reactions, timeout=20)
+            reaction, user = await self.bot.wait_for('reaction_add', check=check, timeout=20)
         except asyncio.TimeoutError:
             return None
         else:
-            await reaction.message.remove_reaction(reaction.emoji, user)
+            try:
+                await reaction.message.remove_reaction(reaction.emoji, user)
+            except discord.Forbidden:
+                pass
             return reaction.emoji
 
 
