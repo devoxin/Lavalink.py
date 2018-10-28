@@ -22,7 +22,7 @@ class Experimental:
 
     async def interact(self, ctx, player, eq, m, selected):
         player.store('eq', eq)
-        selector = f'{" " * 8}{"     " * selected}^^^'
+        selector = f'{" " * 8}{"    " * selected}^^'
         await m.edit(content=f'```\n{eq.visualise()}\n{selector}```')
 
         reaction = await self.get_reaction(ctx, m.id)
