@@ -15,7 +15,7 @@ import lavalink
 from discord.ext import commands
 
 time_rx = re.compile('[0-9]+')
-url_rx = re.compile('https?:\/\/(?:www\.)?.+')
+url_rx = re.compile('https?:\/\/(?:www\.)?.+')  # noqa: W605
 
 
 class Music:
@@ -36,6 +36,8 @@ class Music:
         self.bot.lavalink.unregister_hook(self._track_hook)
 
     async def _track_hook(self, event):
+        if isinstance(event, lavalink.Events.StatsUpdateEvent):
+            return
         channel = self.bot.get_channel(event.player.fetch('channel'))
         if not channel:
             return
