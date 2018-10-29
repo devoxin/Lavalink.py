@@ -142,7 +142,7 @@ class LavalinkNode:
                 player.node = new_node
                 if player.is_playing:
                     ws = self._lavalink.bot._connection._get_websocket(int(g))
-                    self._lavalink.voice_wait_locks.update({int(g): asyncio.Event(loop=self._lavalink.loop)})
+                    player._voice_lock.clear()
                     await ws.voice_state(int(g), str(player.channel_id))
                     self._lavalink.loop.create_task(self._handover_player(player))
 
