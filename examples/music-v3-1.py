@@ -301,13 +301,15 @@ class Music:
                     break
             return await ctx.send('Bass boost currently set on `{}`.'.format(level if level else 'CUSTOM'))
 
-        if level.upper()[0] not in [n[0] for n in levels.keys()]:
-            return await ctx.send('Invalid level.')
+        gain = None
 
         for k in levels.keys():
             if k.startswith(level.upper()):
                 gain = levels[k]
                 break
+
+        if not gain:
+            return await ctx.send('Invalid level.')
 
         await player.set_gains(*gain)
 
