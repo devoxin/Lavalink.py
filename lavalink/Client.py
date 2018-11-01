@@ -28,21 +28,13 @@ class Client:
             The log_level to set the client to. Defaults to ``INFO``
         :param loop:
             The event loop for the client.
-        :param host:
-            Your Lavalink server's host address.
-        :param rest_port:
-            The port over which the HTTP requests should be made.
-        :param password:
-            The password for your Lavalink server. The default password is ``youshallnotpass``.
-        :param ws_retry:
-            How often the client should attempt to reconnect to the Lavalink server.
-        :param ws_port:
-            The port on which a WebSocket connection to the Lavalink server should be established.
-        :param shard_count:
-            The bot's shard count. Defaults to ``1``.
+        :param default_node:
+            The index of the node that will be used for REST requests.
         :param player:
             The class that should be used for the player. Defaults to ``DefaultPlayer``.
             Do not change this unless you know what you are doing!
+        :param rest_round_robin:
+            Whether nodes should be cycled for REST requests to spread load.
         """
 
         bot.lavalink = self
@@ -62,8 +54,8 @@ class Client:
 
     def register_hook(self, func):
         """
-        Registers a hook. Since this probably is a bit difficult, I'll explain it in detail.
-        A hook basically is an object of a function you pass. This will append that object to a list and whenever
+        Registers a hook to be used for event handling.
+        A hook is an object of a function you pass. This will append that object to a list and whenever
         an event from the Lavalink server is dispatched, the function will be called internally. For declaring the
         function that should become a hook, pass ``event` as its sole parameter.
         Can be a function but also a coroutine.
