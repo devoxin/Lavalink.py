@@ -82,7 +82,12 @@ class Client:
             self.hooks.append(func)
 
     def unregister_hook(self, func):
-        """ Unregisters a hook. For further explanation, please have a look at ``register_hook``. """
+        """
+        Unregisters a hook. For further explanation, please have a look at ``register_hook``.
+        -----------------
+        :param func:
+            The function that should be unregistered as a hook.
+        """
         if func in self.hooks:
             self.hooks.remove(func)
 
@@ -116,14 +121,26 @@ class Client:
             await self.dispatch_event(PlayerStatusUpdate(player, player.current))
 
     async def get_tracks(self, query):
-        """ Returns a Dictionary containing search results for a given query. """
+        """
+        Returns a Dictionary containing search results for a given query.
+        -----------------
+        :param query:
+            The query to search for. Can also be a URL.
+        """
         log.debug('Requesting tracks for query {}'.format(query))
         node = self.nodes.get_rest()
         async with self.http.get(node.rest_uri + quote(query), headers={'Authorization': node.password}) as res:
             return await res.json(content_type=None)
 
     async def get_player(self, guild_id: int, create: bool = True):
-        """ Gets or creates a player and determines which node is the best for it. """
+        """
+        Gets a player if it exists, otherwise creates it.
+        -----------------
+        :param guild_id:
+            The guild_id associated with the player.
+        :param create:
+            Whether to create the player if it doesn't exist.
+        """
         try:
             await asyncio.wait_for(self.nodes.ready.wait(), timeout=10.0)
         except asyncio.TimeoutError:
