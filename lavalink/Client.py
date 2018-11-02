@@ -17,8 +17,8 @@ def set_log_level(log_level):
 
 
 class Client:
-    def __init__(self, bot, log_level = logging.INFO, loop = asyncio.get_event_loop(), default_node: int = 0,
-                 player = DefaultPlayer, rest_round_robin: bool = False):
+    def __init__(self, bot, log_level=logging.INFO, loop=asyncio.get_event_loop(), default_node: int = 0,
+                 player=DefaultPlayer, rest_round_robin: bool = False):
         """
         Creates a new Lavalink client.
         -----------------
