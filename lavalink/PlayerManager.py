@@ -83,12 +83,14 @@ class DefaultPlayer(BasePlayer):
         """ Connects to a voice channel. """
         ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
         await ws.voice_state(self.guild_id, str(channel_id))
-        await self.reset_equalizer()
 
     async def disconnect(self):
         """ Disconnects from the voice channel, if any. """
         if not self.is_connected:
             return
+
+        await self.reset_equalizer()
+
         self.channel_id = None
 
         await self.stop()
