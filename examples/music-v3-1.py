@@ -287,12 +287,12 @@ class Music:
         player = await self.get_player(ctx.guild)
 
         levels = {
-                'OFF': [(0, 0), (1, 0)],
-                'LOW': [(0, 0.25), (1, 0.15)],
-                'MEDIUM': [(0, 0.50), (1, 0.25)],
-                'HIGH': [(0, 0.75), (1, 0.50)],
-                'INSANE': [(0, 1), (1, 0.75)]
-                }
+            'OFF': [(0, 0), (1, 0)],
+            'LOW': [(0, 0.25), (1, 0.15)],
+            'MEDIUM': [(0, 0.50), (1, 0.25)],
+            'HIGH': [(0, 0.75), (1, 0.50)],
+            'INSANE': [(0, 1), (1, 0.75)]
+        }
 
         if not level:
             for k, v in levels.items():
