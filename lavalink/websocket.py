@@ -31,7 +31,7 @@ class WebSocket:
     @property
     def connected(self):
         """ Returns whether there is a valid WebSocket connection to the Lavalink server or not. """
-        return self._ws and not getattr(self._ws, "closed", True)
+        return self._ws and not self._ws.closed
 
     async def listen(self):
         """ Waits to receive a payload from the Lavalink server and processes it. """
