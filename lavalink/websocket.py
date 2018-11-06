@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import aiohttp
@@ -30,7 +31,7 @@ class WebSocket:
     @property
     def connected(self):
         """ Returns whether there is a valid WebSocket connection to the Lavalink server or not. """
-        return self._ws and not self._ws.closed
+        return self._ws and not getattr(self._ws, "closed", True)
 
     async def listen(self):
         """ Waits to receive a payload from the Lavalink server and processes it. """
@@ -43,12 +44,40 @@ class WebSocket:
             'User-Id': str(self._user_id)
         }
         while not self._shutdown and recon_try < len(backoff_range):
+            # TODO: Set node to offline
+            self._ws = None
             async with self.session.ws_connect(self._uri, heartbeat=5.0, headers=headers) as ws:
+                # TODO: Set node to online
                 self._ws = ws
+                recon_try = 1
                 for entry in self._queue:
                     await ws.send_json(entry)
                 async for msg in ws:
-                    pass  # TODO: Process message
+                    if msg.type == aiohttp.WSMsgType.PING:
+                        await ws.pong()
+                    elif msg.type == aiohttp.WSMsgType.TEXT:
+                        data = msg.json()
+                        op = data.get('op', None)
+                        if op == 'event':
+                            pass
+                        elif op == 'playerUpdate':
+                            pass
+                        elif op == 'stats':
+                            pass
+                    elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                        # TODO: Set node to offline
+                        self._ws = None
+                        break
+            await asyncio.sleep(backoff_range[recon_try - 1])
+            recon_try += 1
+
+    async def send(self, data):
+        if self.connected:
+            log.debug('Sending payload {}'.format(str(data)))
+            await self._ws.send_json(data)
+        else:
+            log.debug('Send called before WebSocket ready; queueing payload {}'.format(str(data)))
+            self._queue.append(data)
 
     def destroy(self):
         self._shutdown = True
