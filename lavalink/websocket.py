@@ -50,7 +50,7 @@ class WebSocket:
             asyncio.ensure_future(self._listen())
 
     async def _listen(self):
-        while self.available:
+        while self.connected:
             msg = await self._ws.receive()
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
 
