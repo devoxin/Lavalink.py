@@ -3,6 +3,8 @@ import logging
 
 import aiohttp
 
+from .Events import TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, StatsUpdateEvent, VoiceWebSocketClosedEvent
+
 log = logging.getLogger(__name__)
 
 
@@ -21,7 +23,7 @@ class WebSocket:
         self._port = port
         self._uri = 'ws://{}:{}'.format(self._host, self._port)
         self._shards = shard_count
-        self._user_id = lavalink.bot.user.id
+        self._is_v31 = True
 
         self._shutdown = False
 
@@ -35,19 +37,23 @@ class WebSocket:
 
     async def listen(self):
         """ Waits to receive a payload from the Lavalink server and processes it. """
+        await self._lavalink.bot.wait_until_ready()
+
+        self._user_id = self._lavalink.bot.user.id
         recon_try = 1
         backoff_range = [min(max(x, 3), 30) for x in range(0, self._ws_retry * 5, 5)]
         self.session = aiohttp.ClientSession(loop=self._loop)
+
         headers = {
-            'Authorization': self._password,
-            'Num-Shards': self._shards,
+            'Authorization': str(self._password),
+            'Num-Shards': str(self._shards),
             'User-Id': str(self._user_id)
         }
         while not self._shutdown and recon_try < len(backoff_range):
-            # TODO: Set node to offline
+            #  self._node.set_offline()
             self._ws = None
             async with self.session.ws_connect(self._uri, heartbeat=5.0, headers=headers) as ws:
-                # TODO: Set node to online
+                self._node.set_online()
                 self._ws = ws
                 recon_try = 1
                 for entry in self._queue:
@@ -59,19 +65,36 @@ class WebSocket:
                         data = msg.json()
                         op = data.get('op', None)
                         if op == 'event':
-                            pass
+                            log.debug('Received event of type {}'.format(data['type']))
+                            player = self._lavalink.players[int(data['guildId'])]
+                            event = None
+
+                            if data['type'] == 'TrackEndEvent':
+                                event = TrackEndEvent(player, data['track'], data['reason'])
+                            elif data['type'] == 'TrackExceptionEvent':
+                                event = TrackExceptionEvent(player, data['track'], data['error'])
+                            elif data['type'] == 'TrackStuckEvent':
+                                event = TrackStuckEvent(player, data['track'], data['thresholdMs'])
+                            elif data['type'] == 'WebSocketClosedEvent':
+                                event = VoiceWebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
+                                if event.code == 4006:
+                                    self._lavalink.loop.create_task(player.ws_reset_handler())
+
+                            if event:
+                                await self._lavalink.dispatch_event(event)
                         elif op == 'playerUpdate':
-                            pass
+                            await self._lavalink.update_state(data)
                         elif op == 'stats':
-                            pass
+                            self._node.stats._update(data)
+                            await self._lavalink.dispatch_event(StatsUpdateEvent(self._node))
                     elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
-                        # TODO: Set node to offline
+                        self._node.set_offline()
                         self._ws = None
                         break
             await asyncio.sleep(backoff_range[recon_try - 1])
             recon_try += 1
 
-    async def send(self, data):
+    async def send(self, **data):
         if self.connected:
             log.debug('Sending payload {}'.format(str(data)))
             await self._ws.send_json(data)
