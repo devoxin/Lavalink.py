@@ -3,14 +3,16 @@ import logging
 
 import aiohttp
 
+from .node import Node
+
 log = logging.getLogger(__name__)
 
 
 class WebSocket:
-    def __init__(self, node, host: str, password: str, port: int, regions):  # TODO: node+region types
+    def __init__(self, node: Node, host: str, port: int, password: str):
         self._node = node
 
-        self._session = None
+        self._session = aiohttp.ClientSession()
         self._ws = None
         self._message_queue = []
         self._ws_retry = self._node._lavalink._ws_retry
