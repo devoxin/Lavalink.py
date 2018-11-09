@@ -26,8 +26,8 @@ class WebSocket:
         self._loop.create_task(self.connect())  # TODO: Consider making add_node an async function to prevent creating a bunch of tasks?
 
     @property
-    def available(self):
-        """ Returns whether the websocket is successfully connected to Lavalink. """
+    def connected(self):
+        """ Returns whether the websocket is connected to Lavalink. """
         return self._ws and not self._ws.closed
 
     async def connect(self):
@@ -62,7 +62,7 @@ class WebSocket:
         if reconnect:
             await self.connect()
 
-    async def send(self, data):
+    async def _send(self, data):
         if self.connected:
             log.debug('Sending payload {}'.format(str(data)))
             await self._ws.send_json(data)
@@ -71,4 +71,5 @@ class WebSocket:
             self._message_queue.append(data)
 
     def destroy(self):
+        """ Terminates the websocket connection """
         pass  # TODO: Call websocket disconnect, shutdown internals n stuff
