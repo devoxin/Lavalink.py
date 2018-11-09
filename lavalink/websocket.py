@@ -7,77 +7,68 @@ log = logging.getLogger(__name__)
 
 
 class WebSocket:
-    def __init__(self, lavalink, node, host, password, port, ws_retry, shard_count):
-        self._lavalink = lavalink
+    def __init__(self, node, host: str, password: str, port: int, regions):  # TODO: node+region types
         self._node = node
 
-        self.session = None
+        self._session = None
         self._ws = None
-        self._queue = []
-        self._ws_retry = ws_retry
+        self._message_queue = []
+        self._ws_retry = self._node._lavalink._ws_retry
 
-        self._password = password
         self._host = host
         self._port = port
-        self._uri = 'ws://{}:{}'.format(self._host, self._port)
-        self._shards = shard_count
-        self._user_id = lavalink.bot.user.id
+        self._password = password
 
-        self._shutdown = False
+        self._shards = self._node._lavalink._shard_count
+        self._user_id = self._node._lavalink._user_id
 
         self._loop = self._lavalink.loop
-        self._loop.create_task(self.listen())
+        self._loop.create_task(self.connect())  # TODO: Consider making add_node an async function to prevent creating a bunch of tasks?
 
     @property
-    def connected(self):
-        """ Returns whether there is a valid WebSocket connection to the Lavalink server or not. """
+    def available(self):
+        """ Returns whether the websocket is successfully connected to Lavalink. """
         return self._ws and not self._ws.closed
 
-    async def listen(self):
-        """ Waits to receive a payload from the Lavalink server and processes it. """
-        recon_try = 1
-        backoff_range = [min(max(x, 3), 30) for x in range(0, self._ws_retry * 5, 5)]
-        self.session = aiohttp.ClientSession(loop=self._loop)
+    async def connect(self):
+        """ Attempts to establish a connection to Lavalink. """
         headers = {
             'Authorization': self._password,
             'Num-Shards': self._shards,
             'User-Id': str(self._user_id)
         }
-        while not self._shutdown and recon_try < len(backoff_range):
-            # TODO: Set node to offline
-            self._ws = None
-            async with self.session.ws_connect(self._uri, heartbeat=5.0, headers=headers) as ws:
-                # TODO: Set node to online
-                self._ws = ws
-                recon_try = 1
-                for entry in self._queue:
-                    await ws.send_json(entry)
-                async for msg in ws:
-                    if msg.type == aiohttp.WSMsgType.PING:
-                        await ws.pong()
-                    elif msg.type == aiohttp.WSMsgType.TEXT:
-                        data = msg.json()
-                        op = data.get('op', None)
-                        if op == 'event':
-                            pass
-                        elif op == 'playerUpdate':
-                            pass
-                        elif op == 'stats':
-                            pass
-                    elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
-                        # TODO: Set node to offline
-                        self._ws = None
-                        break
-            await asyncio.sleep(backoff_range[recon_try - 1])
-            recon_try += 1
+
+        try:
+            self._ws = await self.session.ws_connect('ws://{}:{}'.format(self._host, self._port),
+                                                     heartbeat=5.0,
+                                                     headers=headers)
+        except aiohttp.ClientConnectorError:
+            log.warn('Failed to connect to node `{}`, retrying in 5s...'.format(self._node.name))
+            await asyncio.sleep(5.0)
+            await self.connect()  # TODO: Consider a backoff or max retry attempt. Not sure why max_attempts would come in handy considering you *want* to connect to Lavalink
+        else:
+            asyncio.ensure_future(self._listen())
+
+    async def _listen(self):
+        while self.available:
+            msg = await self._ws.receive()
+            log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
+
+            # Type check and processing
+
+    async def _ws_disconnect(self, code: int, reason: str, reconnect: bool):
+        self._ws = None
+
+        if reconnect:
+            await self.connect()
 
     async def send(self, data):
         if self.connected:
             log.debug('Sending payload {}'.format(str(data)))
             await self._ws.send_json(data)
         else:
-            log.debug('Send called before WebSocket ready; queueing payload {}'.format(str(data)))
-            self._queue.append(data)
+            log.debug('Send called node `{}` ready, payload queued: {}'.format(self._node.name, str(data)))
+            self._message_queue.append(data)
 
     def destroy(self):
-        self._shutdown = True
+        pass  # TODO: Call websocket disconnect, shutdown internals n stuff
