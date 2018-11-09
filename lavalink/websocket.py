@@ -23,7 +23,6 @@ class WebSocket:
         self._port = port
         self._uri = 'ws://{}:{}'.format(self._host, self._port)
         self._shards = shard_count
-        self._is_v31 = True  # TODO: Real check
 
         self._shutdown = False
 
