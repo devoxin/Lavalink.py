@@ -21,9 +21,9 @@ class Client:
         """
         Gets all tracks associated with the given query
         -----------------
-        :param node:
-            The node to use for track lookup. Leave this blank to use a random node.
         :param query:
             The query to perform a search for
+        :param node:
+            The node to use for track lookup. Leave this blank to use a random node.
         """
         pass
