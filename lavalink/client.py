@@ -1,8 +1,10 @@
 import asyncio
 import aiohttp
 import logging
-
-from . import Node
+import random
+from urllib.parse import quote
+from .node import Node
+from .nodemanager import NodeManager
 
 log = logging.getLogger(__name__)
 
@@ -12,6 +14,7 @@ class Client:
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
+        self._node_manager = NodeManager()
 
         self._session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(limit=pool_size, loop=loop)
@@ -26,4 +29,14 @@ class Client:
         :param node:
             The node to use for track lookup. Leave this blank to use a random node.
         """
-        pass
+        node = node or random.choice(self._node_manager.nodes)
+        destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
+        headers = {
+            'Authorization': node.password
+        }
+
+        async with self._session.get(destination, headers=headers) as res:
+            if res == 200:
+                return await res.json()
+
+            return []
