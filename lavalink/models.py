@@ -46,8 +46,8 @@ class BasePlayer(ABC):
 
 
 class DefaultPlayer(BasePlayer):
-    def __init__(self, node: Node, guild_id: int):
-        super().__init__(node, guild_id)
+    def __init__(self, guild_id: int, node: Node):
+        super().__init__(guild_id, node)
 
         self._user_data = {}
         self.channel_id = None
