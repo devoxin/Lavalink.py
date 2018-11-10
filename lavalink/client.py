@@ -15,8 +15,8 @@ class Client:
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
-        self.node_manager = NodeManager()
-        self.players = PlayerManager()
+        self.node_manager = NodeManager(self)
+        self.players = PlayerManager(self)
 
         self._session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(limit=pool_size, loop=loop)
@@ -61,7 +61,8 @@ class Client:
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
             guild_id = int(data['d']['guild_id'])
-            player = self.players.get(guild_id, create=False)
+
+            player = self.players.get(guild_id)
 
             if player:
                 player.node._voice_server_update(data['d'])
@@ -69,7 +70,7 @@ class Client:
             if int(data['d']['user_id']) != int(self._user_id):
                 return
 
-            player = self.players.get(guild_id, create=False)
+            player = self.players.get(guild_id)
 
             if player:
                 player.node._voice_state_update(data['d'])
