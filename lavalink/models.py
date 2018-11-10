@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from random import randrange
 from .events import TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent
+from .node import Node
 
 
 class InvalidTrack(Exception):
@@ -32,10 +33,9 @@ class NoPreviousTrack(Exception):
 
 
 class BasePlayer(ABC):
-    def __init__(self, lavalink, guild_id: int):
-        self._lavalink = lavalink
-        self.node = None  # later
+    def __init__(self, guild_id: int, node: Node):
         self.guild_id = str(guild_id)
+        self.node = node
 
     @abstractmethod
     async def handle_event(self, event):
@@ -46,8 +46,8 @@ class BasePlayer(ABC):
 
 
 class DefaultPlayer(BasePlayer):
-    def __init__(self, lavalink, guild_id: int):
-        super().__init__(lavalink, guild_id)
+    def __init__(self, node: Node, guild_id: int):
+        super().__init__(node, guild_id)
 
         self._user_data = {}
         self.channel_id = None
@@ -66,35 +66,12 @@ class DefaultPlayer(BasePlayer):
     @property
     def is_playing(self):
         """ Returns the player's track state. """
-        return self.connected_channel is not None and self.current is not None
+        return self.is_connected and self.current is not None
 
     @property
     def is_connected(self):
-        """ Returns the player's connection state. """
-        return self.connected_channel is not None
-
-    @property
-    def connected_channel(self):
-        """ Returns the voice channel the player is connected to. """
-        if not self.channel_id:
-            return None
-
-        return self._lavalink.bot.get_channel(int(self.channel_id))
-
-    async def connect(self, channel_id: int):
-        """ Connects to a voice channel. """
-        ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
-        await ws.voice_state(self.guild_id, str(channel_id))
-
-    async def disconnect(self):
-        """ Disconnects from the voice channel, if any. """
-        if not self.is_connected:
-            return
-
-        await self.stop()
-
-        ws = self._lavalink.bot._connection._get_websocket(int(self.guild_id))
-        await ws.voice_state(self.guild_id, None)
+        """ Returns whether the player is connected to a voicechannel or not """
+        return self.channel_id is not None
 
     def store(self, key: object, value: object):
         """ Stores custom user data. """
@@ -135,7 +112,7 @@ class DefaultPlayer(BasePlayer):
 
         if not self.queue:
             await self.stop()
-            await self._lavalink.dispatch_event(QueueEndEvent(self))
+            #  await self._lavalink.dispatch_event(QueueEndEvent(self))
         else:
             if self.shuffle and not ignore_shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
@@ -143,8 +120,8 @@ class DefaultPlayer(BasePlayer):
                 track = self.queue.pop(min(track_index, len(self.queue) - 1))
 
             self.current = track
-            await self._lavalink.ws.send(op='play', guildId=self.guild_id, track=track.track)
-            await self._lavalink.dispatch_event(TrackStartEvent(self, track))
+            await self.node._send(op='play', guildId=self.guild_id, track=track.track)
+            #  await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
     async def play_now(self, requester: int, track: dict):
         """ Add track and play it. """
@@ -165,7 +142,7 @@ class DefaultPlayer(BasePlayer):
 
     async def stop(self):
         """ Stops the player, if playing. """
-        await self._lavalink.ws.send(op='stop', guildId=self.guild_id)
+        await self.node._send(op='stop', guildId=self.guild_id)
         self.current = None
 
     async def skip(self):
@@ -174,20 +151,20 @@ class DefaultPlayer(BasePlayer):
 
     async def set_pause(self, pause: bool):
         """ Sets the player's paused state. """
-        await self._lavalink.ws.send(op='pause', guildId=self.guild_id, pause=pause)
+        await self.node._send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
     async def set_volume(self, vol: int):
         """ Sets the player's volume (150% or 1000% limit imposed by lavalink depending on the version). """
-        if self._lavalink._server_version <= 2:
-            self.volume = max(min(vol, 150), 0)
-        else:
-            self.volume = max(min(vol, 1000), 0)
-        await self._lavalink.ws.send(op='volume', guildId=self.guild_id, volume=self.volume)
+        #  if self._lavalink._server_version <= 2:
+        #    self.volume = max(min(vol, 150), 0)
+        #  else:
+        self.volume = max(min(vol, 1000), 0)
+        await self.node._send(op='volume', guildId=self.guild_id, volume=self.volume)
 
     async def seek(self, pos: int):
         """ Seeks to a given position in the track. """
-        await self._lavalink.ws.send(op='seek', guildId=self.guild_id, position=pos)
+        await self.node._send(op='seek', guildId=self.guild_id, position=pos)
 
     async def handle_event(self, event):
         """ Makes the player play the next song from the queue if a song has finished or an issue occurred. """
