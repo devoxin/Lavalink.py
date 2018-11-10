@@ -155,10 +155,7 @@ class DefaultPlayer(BasePlayer):
         self.paused = pause
 
     async def set_volume(self, vol: int):
-        """ Sets the player's volume (150% or 1000% limit imposed by lavalink depending on the version). """
-        #  if self._lavalink._server_version <= 2:
-        #    self.volume = max(min(vol, 150), 0)
-        #  else:
+        """ Sets the player's volume (A limit of 1000 is imposed by Lavalink). """
         self.volume = max(min(vol, 1000), 0)
         await self.node._send(op='volume', guildId=self.guild_id, volume=self.volume)
 
