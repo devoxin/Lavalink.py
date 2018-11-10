@@ -12,7 +12,7 @@ class WebSocket:
     def __init__(self, node: Node, host: str, port: int, password: str):
         self._node = node
 
-        self._session = aiohttp.ClientSession()
+        self._session = self._node._lavalink._session
         self._ws = None
         self._message_queue = []
         self._ws_retry = self._node._lavalink._ws_retry
