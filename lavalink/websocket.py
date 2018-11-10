@@ -24,7 +24,7 @@ class WebSocket:
         self._shards = self._node._lavalink._shard_count
         self._user_id = self._node._lavalink._user_id
 
-        self._loop = self._lavalink.loop
+        self._loop = self._node._lavalink._loop
         self._loop.create_task(self.connect())  # TODO: Consider making add_node an async function to prevent creating a bunch of tasks?
 
     @property
