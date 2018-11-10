@@ -18,3 +18,7 @@ class Node:
     async def get_tracks(self, query: str):
         """ Gets all tracks associated with the given query """
         return await self._lavalink.get_tracks(query, self)
+
+    async def _send(self, **data):
+        """ wrapper around ws.send """  # TODO: Change
+        await self._ws._send(**data)

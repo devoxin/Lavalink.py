@@ -64,7 +64,7 @@ class WebSocket:
         if reconnect:
             await self.connect()
 
-    async def _send(self, data):
+    async def _send(self, **data):
         if self.connected:
             log.debug('Sending payload {}'.format(str(data)))
             await self._ws.send_json(data)
