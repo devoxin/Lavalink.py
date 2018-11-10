@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 class Client:
-    def __init__(self, user_id: int, shard_count: int = 1, loop=None, pool_size: int = 30):
+    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 30, loop=None):
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
