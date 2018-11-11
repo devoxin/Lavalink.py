@@ -2,8 +2,8 @@ from .websocket import WebSocket
 
 
 class Node:
-    def __init__(self, lavalink, host: str, port: int, password: str, region: str):
-        self._lavalink = lavalink
+    def __init__(self, manager, host: str, port: int, password: str, region: str):
+        self._manager = manager
         self._ws = WebSocket(self, host, port, password)
 
         self.host = host
@@ -18,7 +18,7 @@ class Node:
 
     async def get_tracks(self, query: str):
         """ Gets all tracks associated with the given query """
-        return await self._lavalink.get_tracks(query, self)
+        return await self._manager._lavalink.get_tracks(query, self)
 
     async def _send(self, **data):
         """ wrapper around ws.send """  # TODO: Change
