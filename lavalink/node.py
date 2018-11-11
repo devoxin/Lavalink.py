@@ -1,4 +1,5 @@
 from .websocket import WebSocket
+from .stats import Stats
 
 
 class Node:
@@ -10,7 +11,8 @@ class Node:
         self.port = port
         self.password = password
         self.region = region
-        self.name = name or '{}-{}'.format(self.region, self.host)
+        self.name = name or '{}-{}:'.format(self.region, self.host, self.port)
+        self.stats = Stats()
 
     @property
     def available(self):
@@ -24,3 +26,6 @@ class Node:
     async def _send(self, **data):
         """ wrapper around ws.send """  # TODO: Change
         await self._ws._send(**data)
+
+    def __repr__(self):  # TODO: Remove this comment: we should make it more printable and transparent for logs
+        return '<Node name={0.name} region={0.region}>'.format(self)
