@@ -13,8 +13,8 @@ class NodeManager:
             'us': ['us', 'brazil'],
         }
 
-    def add_node(self, host: str, port: int, password: str, region: str):
-        node = Node(self, host, port, password, region)
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None):
+        node = Node(self, host, port, password, region, name)
         self.nodes.append(node)
 
     def get_region(self, endpoint: str):

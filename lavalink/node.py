@@ -2,7 +2,7 @@ from .websocket import WebSocket
 
 
 class Node:
-    def __init__(self, manager, host: str, port: int, password: str, region: str):
+    def __init__(self, manager, host: str, port: int, password: str, region: str, name: str):
         self._manager = manager
         self._ws = WebSocket(self, host, port, password)
 
@@ -10,6 +10,7 @@ class Node:
         self.port = port
         self.password = password
         self.region = region
+        self.name = name or '{}-{}'.format(self.region, self.host)
 
     @property
     def available(self):
