@@ -107,17 +107,18 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: dict):
-        """ Adds a track to the queue. """
-        self.queue.append(AudioTrack().build(track, requester))
-
-    def add_next(self, requester: int, track: dict):
-        """ Adds a track to beginning of the queue """
-        self.queue.insert(0, AudioTrack().build(track, requester))
-
-    def add_at(self, index: int, requester: int, track: dict):
-        """ Adds a track at a specific index in the queue. """
-        self.queue.insert(min(index, len(self.queue) - 1), AudioTrack().build(track, requester))
+    def add(self, requester: int, track: dict, index: int = 0):
+        """
+        Adds a track to the queue
+        ----------
+        :param requester:
+            The ID of the user who requested the track
+        :param track:
+            A dict representing a track returned from Lavalink
+        :param index:
+            The index at which to add the track. Defaults to 0
+        """
+        self.queue.insert(index, AudioTrack().build(track, requester))
 
     async def play(self, track_index: int = 0, ignore_shuffle: bool = False):
         """ Plays the first track in the queue, if any or plays a track from the specified index in the queue. """
