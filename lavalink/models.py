@@ -105,6 +105,7 @@ class DefaultPlayer(BasePlayer):
         self.volume = 100
         self.shuffle = False
         self.repeat = False
+        self.equalizer = {x: 0.0 for x in range(15)}
 
         self.queue = []
         self.current = None
@@ -135,7 +136,7 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: dict, index: int = 0):
+    def add(self, requester: int, track: dict, index: int = None):
         """
         Adds a track to the queue
         ----------
@@ -144,9 +145,12 @@ class DefaultPlayer(BasePlayer):
         :param track:
             A dict representing a track returned from Lavalink
         :param index:
-            The index at which to add the track. Defaults to 0
+            The index at which to add the track. Defaults to None (append)
         """
-        self.queue.insert(index, AudioTrack.build(track, requester))
+        if index is None:
+            self.queue.append(AudioTrack.build(track, requester))
+        else:
+            self.queue.insert(index, AudioTrack.build(track, requester))
 
     async def play(self, track_index: int = 0, ignore_shuffle: bool = False):
         """ Plays the first track in the queue, if any or plays a track from the specified index in the queue. """
@@ -173,7 +177,7 @@ class DefaultPlayer(BasePlayer):
 
     async def play_now(self, requester: int, track: dict):
         """ Add track and play it. """
-        self.add_next(requester, track)
+        self.add(requester, track, 0)
         await self.play(ignore_shuffle=True)
 
     async def play_at(self, index: int):
@@ -191,6 +195,7 @@ class DefaultPlayer(BasePlayer):
     async def stop(self):
         """ Stops the player, if playing. """
         await self.node._send(op='stop', guildId=self.guild_id)
+        await self.reset_equalizer()
         self.current = None
 
     async def skip(self):
@@ -210,6 +215,38 @@ class DefaultPlayer(BasePlayer):
     async def seek(self, pos: int):
         """ Seeks to a given position in the track. """
         await self.node._send(op='seek', guildId=self.guild_id, position=pos)
+
+    async def set_gain(self, band: int, gain: float = 0.0):
+        """
+        Sets the equalizer band gain to the given amount
+        ----------
+        :param band:
+            Band number (0-14)
+        :param gain:
+            A float representing gain of a band (-0.25 to 1.00) Defaults to 0.0
+        """
+        await self.set_gains((band, gain))
+
+    async def set_gains(self, *gain_list):
+        """ Sets equalizer to the specified values in the list. Must be list of tuples. """
+        update_package = []
+        for value in gain_list:
+            if isinstance(value, tuple):
+                band = value[0]
+                gain = value[1]
+            else:
+                raise TypeError('only accepts list of tuples')
+            if -1 > value[0] > 15:
+                continue
+            gain = max(min(float(gain), 1.0), -0.25)
+            update_package.append({'band': band, 'gain': gain})
+            self.equalizer[band] = gain
+
+        await self.node._send(op='equalizer', guildId=self.guild_id, bands=update_package)
+
+    async def reset_equalizer(self):
+        """ Resets equalizer to default values. """
+        await self.set_gains(*[(x, 0.0) for x in range(15)])
 
     async def handle_event(self, event):
         """ Makes the player play the next song from the queue if a song has finished or an issue occurred. """
