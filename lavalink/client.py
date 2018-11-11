@@ -78,7 +78,6 @@ class Client:
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
             guild_id = int(data['d']['guild_id'])
-
             player = self.players.get(guild_id)
 
             if player:
@@ -87,6 +86,7 @@ class Client:
             if int(data['d']['user_id']) != int(self._user_id):
                 return
 
+            guild_id = int(data['d']['guild_id'])
             player = self.players.get(guild_id)
 
             if player:
