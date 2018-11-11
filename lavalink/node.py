@@ -16,15 +16,25 @@ class Node:
 
     @property
     def available(self):
-        """ Returns whether the node is available for requests """
+        """ Returns whether the node is available for requests. """
         return self._ws.connected
 
     async def get_tracks(self, query: str):
-        """ Gets all tracks associated with the given query """
+        """
+        Gets all tracks associated with the given query.
+        ----------
+        :param query:
+            The query to perform a search for.
+        """
         return await self._manager._lavalink.get_tracks(query, self)
 
     async def _send(self, **data):
-        """ wrapper around ws.send """  # TODO: Change
+        """
+        Sends the given data this node's websocket connection.
+        ----------
+        :param data:
+            The dict to send to Lavalink.
+        """
         await self._ws._send(**data)
 
     def __repr__(self):  # TODO: Remove this comment: we should make it more printable and transparent for logs
