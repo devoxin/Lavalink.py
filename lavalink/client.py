@@ -55,7 +55,7 @@ class Client:
         }
 
         async with self._session.get(destination, headers=headers) as res:
-            if res == 200:
+            if res_code == 200:
                 return await res.json()
 
             return []
