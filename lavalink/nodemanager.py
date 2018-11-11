@@ -8,9 +8,10 @@ class NodeManager:
 
         self.default_region = default_region
         self.default_regions = {
-            'asia': ['hongkong', 'singapore', 'sydney'],
-            'eu': ['eu', 'amsterdam', 'frankfurt', 'russia'],
-            'us': ['us', 'brazil'],
+            'asia': ['hongkong', 'singapore', 'sydney', 'japan'],
+            'eu': ['eu', 'amsterdam', 'frankfurt', 'russia', 'vip-amsterdam', 'london'],
+            'us': ['us', 'brazil', 'vip-us'],
+            # TODO: Africa? I'd add it to EU since it's the closest
         }
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None):
@@ -33,7 +34,7 @@ class NodeManager:
 
         return self.default_region
 
-    def find_ideal_node(self, region: str = None):
+    def find_ideal_node(self, region: str = None):  # TODO: We could add option to choose a sorting method?
         nodes = None
         if region:
             nodes = [n for n in self.nodes if n.region == region and n.available]
@@ -41,5 +42,6 @@ class NodeManager:
         if not nodes:  # If there are no regional nodes available, or a region wasn't specified.
             nodes = [n for n in self.nodes if n.available]
 
-        # TODO: Sort nodes based on penalties
+        # TODO: Sort nodes based on penalties (playing_players?)
+        nodes.sort(key=lambda x: x.stats.playing_players)
         return nodes[0] if len(nodes) > 0 else None
