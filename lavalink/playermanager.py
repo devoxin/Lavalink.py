@@ -19,7 +19,7 @@ class PlayerManager:
 
         return None
 
-    def create(self, guild_id: int, region: str = 'us', node: Node = None):
+    def create(self, guild_id: int, region: str = 'eu', node: Node = None):
         """
         Creates a player if one doesn't exist with the given information.
         If node is provided, a player will be created on that node, otherwise
