@@ -141,19 +141,26 @@ class DefaultPlayer(BasePlayer):
         Adds a track to the queue
         ----------
         :param requester:
-            The ID of the user who requested the track
+            The ID of the user who requested the track.
         :param track:
-            A dict representing a track returned from Lavalink
+            A dict representing a track returned from Lavalink.
         :param index:
-            The index at which to add the track. Defaults to None (append)
+            The index at which to add the track.
+            If index is left unspecified, the default behaviour is to append the track.
         """
         if not index:
             self.queue.append(AudioTrack.build(track, requester))
         else:
             self.queue.insert(index, AudioTrack.build(track, requester))
-
-    async def play(self, track_index: int = 0, ignore_shuffle: bool = False):
-        """ Plays the first track in the queue, if any or plays a track from the specified index in the queue. """
+i
+    async def play(self, track: AudioTrack = None):
+        """
+        Plays the given track
+        ----------
+        :param track:
+            The track to play. If left unspecified, this will default
+            to the first track in the queue
+        """
         if self.repeat and self.current:
             self.queue.append(self.current)
 
@@ -174,23 +181,6 @@ class DefaultPlayer(BasePlayer):
             self.current = track
             await self.node._send(op='play', guildId=self.guild_id, track=track.track)
             #  await self._lavalink.dispatch_event(TrackStartEvent(self, track))
-
-    async def play_now(self, requester: int, track: dict):
-        """ Add track and play it. """
-        self.add(requester, track, 0)
-        await self.play(ignore_shuffle=True)
-
-    async def play_at(self, index: int):
-        """ Play the queue from a specific point. Disregards tracks before the index. """
-        self.queue = self.queue[min(index, len(self.queue) - 1):len(self.queue)]
-        await self.play(ignore_shuffle=True)
-
-    async def play_previous(self):
-        """ Plays previous track if it exist, if it doesn't raises a NoPreviousTrack error. """
-        if not self.previous:
-            raise NoPreviousTrack
-        self.queue.insert(0, self.previous)
-        await self.play(ignore_shuffle=True)
 
     async def stop(self):
         """ Stops the player, if playing. """
