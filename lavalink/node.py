@@ -2,13 +2,14 @@ from .websocket import WebSocket
 
 
 class Node:
-    def __init__(self, lavalink, host: str, port: int, password: str, regions):
+    def __init__(self, lavalink, host: str, port: int, password: str, region: str):
         self._lavalink = lavalink
         self._ws = WebSocket(self, host, port, password)
 
         self.host = host
         self.port = port
         self.password = password
+        self.region = region
 
     @property
     def available(self):

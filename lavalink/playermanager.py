@@ -1,4 +1,5 @@
 from .node import Node
+from .models import DefaultPlayer
 
 
 class PlayerManager:
@@ -33,9 +34,13 @@ class PlayerManager:
         :param node:
             The node to put the player on
         """
+        if node:
+            return node
 
-    def get_region(self, region: str):
-        pass
+        node = self._lavalink.node_manager.find_ideal_node(region)
 
-    def find_ideal_node(self, region: str):
-        pass
+        if not node:
+            raise Exception('fuck, no nodes')
+
+        self.players[guild_id] = player = DefaultPlayer(guild_id, node)
+        return player
