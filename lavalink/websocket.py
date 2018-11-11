@@ -52,13 +52,16 @@ class WebSocket:
             msg = await self._ws.receive()
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
 
-            if msg.type == aiohttp.WSMsgType.close:
-                await self._ws_disconnect(msg.data, msg.extra)
-            elif msg.type == aiohttp.WSMsgType.closing or \
-                    msg.type == aiohttp.WSMsgType.closed:
-                return
-            elif msg.type == aiohttp.WSMsgType.text:
+            if msg.type == aiohttp.WSMsgType.text:
                 print(msg.data)  # TODO: Handle message
+            elif msg.type == aiohttp.WSMsgType.close or \
+                    msg.type == aiohttp.WSMsgType.closing:
+                print('a')
+                await self._ws_disconnect(msg.data, msg.extra)
+            elif msg.type == aiohttp.WSMsgType.closed:
+                return
+
+        print('Exited loop!')
 
     async def _ws_disconnect(self, code: int, reason: str):
         #  TODO: Check if code == 1000 (clean close). Maybe reconnect?
