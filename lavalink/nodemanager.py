@@ -13,6 +13,10 @@ class NodeManager:
             'us': ['us', 'brazil'],
         }
 
+    def add_node(self, host: str, port: int, password: str, region: str):
+        node = Node(self, host, port, password, region)
+        self.nodes.append(node)
+
     def get_region(self, endpoint: str):
         if not endpoint:
             return self.default_region
@@ -39,7 +43,3 @@ class NodeManager:
 
         # TODO: Sort nodes based on penalties
         return nodes[0] if len(nodes) > 0 else None
-
-    def add_node(self, host: str, port: int, password: str, region: str):
-        node = Node(self, host, port, password, region)
-        self.nodes.append(node)
