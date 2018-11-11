@@ -111,15 +111,34 @@ class DefaultPlayer(BasePlayer):
         return self.channel_id is not None
 
     def store(self, key: object, value: object):
-        """ Stores custom user data. """
+        """
+        Stores custom user data.
+        ----------
+        :param key:
+            The key of the object to store.
+        :param value:
+            The object to associate with the key.
+        """
         self._user_data.update({key: value})
 
     def fetch(self, key: object, default=None):
-        """ Retrieves the related value from the stored user data. """
+        """
+        Retrieves the related value from the stored user data.
+        ----------
+        :param key:
+            The key to fetch.
+        :param default:
+            The object that should be returned if the key doesn't exist.
+        """
         return self._user_data.get(key, default)
 
     def delete(self, key: object):
-        """ Removes an item from the the stored user data. """
+        """
+        Removes an item from the the stored user data.
+        ----------
+        :param key:
+            The key to delete
+        """
         try:
             del self._user_data[key]
         except KeyError:
@@ -127,7 +146,7 @@ class DefaultPlayer(BasePlayer):
 
     def add(self, requester: int, track: dict, index: int = None):
         """
-        Adds a track to the queue
+        Adds a track to the queue.
         ----------
         :param requester:
             The ID of the user who requested the track.
@@ -144,7 +163,7 @@ class DefaultPlayer(BasePlayer):
 
     async def play(self, track: AudioTrack = None):
         """
-        Plays the given track
+        Plays the given track.
         ----------
         :param track:
             The track to play. If left unspecified, this will default
@@ -171,7 +190,7 @@ class DefaultPlayer(BasePlayer):
         #  await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
-        """ Stops the player, if playing. """
+        """ Stops the player. """
         await self.node._send(op='stop', guildId=self.guild_id)
         await self.reset_equalizer()
         self.current = None
@@ -181,41 +200,63 @@ class DefaultPlayer(BasePlayer):
         await self.play()
 
     async def set_pause(self, pause: bool):
-        """ Sets the player's paused state. """
+        """
+        Sets the player's paused state.
+        ----------
+        :param pause:
+            Whether to pause the player or not
+        """
         await self.node._send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
 
     async def set_volume(self, vol: int):
-        """ Sets the player's volume (A limit of 1000 is imposed by Lavalink). """
+        """
+        Sets the player's volume (A limit of 1000 is imposed by Lavalink).
+        ----------
+        :param vol:
+            The new volume level.
+        """
         self.volume = max(min(vol, 1000), 0)
         await self.node._send(op='volume', guildId=self.guild_id, volume=self.volume)
 
-    async def seek(self, pos: int):
-        """ Seeks to a given position in the track. """
-        await self.node._send(op='seek', guildId=self.guild_id, position=pos)
+    async def seek(self, position: int):
+        """
+        Seeks to a given position in the track.
+        ----------
+        :param pos:
+            The new position to seek to in milliseconds.
+        """
+        await self.node._send(op='seek', guildId=self.guild_id, position=position)
 
     async def set_gain(self, band: int, gain: float = 0.0):
         """
-        Sets the equalizer band gain to the given amount
+        Sets the equalizer band gain to the given amount.
         ----------
         :param band:
-            Band number (0-14)
+            Band number (0-14).
         :param gain:
-            A float representing gain of a band (-0.25 to 1.00) Defaults to 0.0
+            A float representing gain of a band (-0.25 to 1.00) Defaults to 0.0.
         """
         await self.set_gains((band, gain))
 
     async def set_gains(self, *gain_list):
-        """ Sets equalizer to the specified values in the list. Must be list of tuples. """
+        """
+        Modifies the player's equalizer settings.
+        ----------
+        :param gain_list:
+            A list of tuples denoting (`band`, `gain`).
+        """
         update_package = []
         for value in gain_list:
-            if isinstance(value, tuple):
-                band = value[0]
-                gain = value[1]
-            else:
-                raise TypeError('only accepts list of tuples')
+            if not isinstance(value, tuple):
+                raise TypeError('gain_list must be a list of tuples')
+
+            band = value[0]
+            gain = value[1]
+
             if -1 > value[0] > 15:
                 continue
+
             gain = max(min(float(gain), 1.0), -0.25)
             update_package.append({'band': band, 'gain': gain})
             self.equalizer[band] = gain
@@ -226,8 +267,8 @@ class DefaultPlayer(BasePlayer):
         """ Resets equalizer to default values. """
         await self.set_gains(*[(x, 0.0) for x in range(15)])
 
-    async def handle_event(self, event):
-        """ Makes the player play the next song from the queue if a song has finished or an issue occurred. """
+    async def _handle_event(self, event):
+        """ Handles the given event as necessary. """
         if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
                 isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':
             await self.play()
