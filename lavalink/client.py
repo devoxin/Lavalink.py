@@ -22,7 +22,7 @@ class Client:
             connector=aiohttp.TCPConnector(limit=pool_size, loop=loop)
         )  # This session will be used for websocket and http requests
 
-    def add_node(self, host: str, port: int, password: str, region: str):
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None):
         """
         Adds a node to Lavalink's node manager
         ----------
@@ -34,8 +34,10 @@ class Client:
             The password used for authentication
         :param region:
             The region to assign this node to
+        :param name:
+            An identifier for the node that will show in logs
         """
-        self.node_manager.add_node(host, port, password, region)
+        self.node_manager.add_node(host, port, password, region, name)
 
     async def get_tracks(self, query: str, node: Node = None):
         """
