@@ -68,7 +68,7 @@ class Client:
 
         Example usage for Discord.py:
         -------------
-        bot.add_listener(lavalink_client, 'on_socket_response')
+        bot.add_listener(lavalink_client.voice_update_handler, 'on_socket_response')
         -------------
         :param data:
             The payload received from Discord.
