@@ -14,7 +14,6 @@ class WebSocket:
         self._session = self._lavalink._session
         self._ws = None
         self._message_queue = []
-        self._ws_retry = self._lavalink._ws_retry
 
         self._host = host
         self._port = port
