@@ -36,6 +36,8 @@ class BasePlayer(ABC):
     def __init__(self, guild_id: int, node: Node):
         self.guild_id = str(guild_id)
         self.node = node
+        self._voice_state = {}
+        self.channel_id = None
 
     @abstractmethod
     async def handle_event(self, event):
@@ -44,13 +46,30 @@ class BasePlayer(ABC):
     def cleanup(self):
         pass
 
+    async def _voice_server_update(self, data):
+        self._voice_state.update({
+            'event': data
+        })
+
+        if {'sessionId', 'event'} == self._voice_state.keys():
+            await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
+
+    async def _voice_state_update(self, data):
+        self._voice_state.update({
+            'sessionId': data['session_id']
+        })
+
+        self.channel_id = data['channel_id']
+
+        if {'sessionId', 'event'} == self._voice_state.keys():
+            await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
+
 
 class DefaultPlayer(BasePlayer):
     def __init__(self, guild_id: int, node: Node):
         super().__init__(guild_id, node)
 
         self._user_data = {}
-        self.channel_id = None
 
         self.paused = False
         self.position = 0
