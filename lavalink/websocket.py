@@ -3,13 +3,11 @@ import logging
 
 import aiohttp
 
-from .node import Node
-
 log = logging.getLogger(__name__)
 
 
 class WebSocket:
-    def __init__(self, node: Node, host: str, port: int, password: str):
+    def __init__(self, node, host: str, port: int, password: str):
         self._node = node
 
         self._session = self._node._lavalink._session
