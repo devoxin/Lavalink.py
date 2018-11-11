@@ -15,7 +15,7 @@ class TrackNotBuilt(Exception):
 
 
 class AudioTrack:
-    __slots__ = ('track', 'identifier', 'can_seek', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
+    __slots__ = ('track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
                  'preferences')
 
     def __init__(self, requester, **kwargs):
@@ -29,7 +29,7 @@ class AudioTrack:
         try:
             new_track.track = track['track']
             new_track.identifier = track['info']['identifier']
-            new_track.can_seek = track['info']['isSeekable']
+            new_track.is_seekable = track['info']['isSeekable']
             new_track.author = track['info']['author']
             new_track.duration = track['info']['length']
             new_track.stream = track['info']['isStream']
@@ -39,16 +39,6 @@ class AudioTrack:
             return new_track
         except KeyError:
             raise InvalidTrack('An invalid track was passed.')
-
-    @property
-    def thumbnail(self):
-        """ Returns the video thumbnail. Could be an empty string. """
-        if not hasattr(self, 'track'):
-            raise TrackNotBuilt
-        if 'youtube' in self.uri:
-            return "https://img.youtube.com/vi/{}/default.jpg".format(self.identifier)
-
-        return ""
 
     def __repr__(self):
         if not hasattr(self, 'track'):
@@ -109,7 +99,6 @@ class DefaultPlayer(BasePlayer):
 
         self.queue = []
         self.current = None
-        self.previous = None
 
     @property
     def is_playing(self):
@@ -148,39 +137,38 @@ class DefaultPlayer(BasePlayer):
             The index at which to add the track.
             If index is left unspecified, the default behaviour is to append the track.
         """
-        if not index:
+        if index is None:
             self.queue.append(AudioTrack.build(track, requester))
         else:
             self.queue.insert(index, AudioTrack.build(track, requester))
-i
+
     async def play(self, track: AudioTrack = None):
         """
         Plays the given track
         ----------
         :param track:
             The track to play. If left unspecified, this will default
-            to the first track in the queue
+            to the first track in the queue.
         """
         if self.repeat and self.current:
             self.queue.append(self.current)
 
-        self.previous = self.current
         self.current = None
         self.position = 0
         self.paused = False
 
-        if not self.queue:
+        if not track and len(self.queue) == 0:
             await self.stop()
             #  await self._lavalink.dispatch_event(QueueEndEvent(self))
-        else:
-            if self.shuffle and not ignore_shuffle:
+        elif not track:
+            if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
             else:
-                track = self.queue.pop(min(track_index, len(self.queue) - 1))
+                track = self.queue.pop(0)
 
-            self.current = track
-            await self.node._send(op='play', guildId=self.guild_id, track=track.track)
-            #  await self._lavalink.dispatch_event(TrackStartEvent(self, track))
+        self.current = track
+        await self.node._send(op='play', guildId=self.guild_id, track=track.track)
+        #  await self._lavalink.dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
         """ Stops the player, if playing. """
