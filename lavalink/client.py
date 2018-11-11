@@ -80,7 +80,7 @@ class Client:
             player = self.players.get(guild_id)
 
             if player:
-                player.node._voice_server_update(data['d'])
+                player._voice_server_update(data['d'])
         elif data['t'] == 'VOICE_STATE_UPDATE':
             if int(data['d']['user_id']) != int(self._user_id):
                 return
@@ -88,6 +88,6 @@ class Client:
             player = self.players.get(guild_id)
 
             if player:
-                player.node._voice_state_update(data['d'])
+                player._voice_state_update(data['d'])
         else:
             return
