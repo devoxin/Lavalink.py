@@ -147,7 +147,7 @@ class DefaultPlayer(BasePlayer):
         :param index:
             The index at which to add the track. Defaults to None (append)
         """
-        if index is None:
+        if not index:
             self.queue.append(AudioTrack.build(track, requester))
         else:
             self.queue.insert(index, AudioTrack.build(track, requester))
