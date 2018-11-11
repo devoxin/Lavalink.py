@@ -9,20 +9,21 @@ log = logging.getLogger(__name__)
 class WebSocket:
     def __init__(self, node, host: str, port: int, password: str):
         self._node = node
+        self._lavalink = self._node._manager._lavalink
 
-        self._session = self._node._lavalink._session
+        self._session = self._lavalink._session
         self._ws = None
         self._message_queue = []
-        self._ws_retry = self._node._lavalink._ws_retry
+        self._ws_retry = self._lavalink._ws_retry
 
         self._host = host
         self._port = port
         self._password = password
 
-        self._shards = self._node._lavalink._shard_count
-        self._user_id = self._node._lavalink._user_id
+        self._shards = self._lavalink._shard_count
+        self._user_id = self._lavalink._user_id
 
-        self._loop = self._node._lavalink._loop
+        self._loop = self._lavalink._loop
         self._loop.create_task(self.connect())  # TODO: Consider making add_node an async function to prevent creating a bunch of tasks?
 
     @property
