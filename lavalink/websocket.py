@@ -28,7 +28,7 @@ class WebSocket:
     @property
     def connected(self):
         """ Returns whether the websocket is connected to Lavalink. """
-        return self._ws and not self._ws.closed
+        return bool(self._ws) and not self._ws.closed
 
     async def connect(self):
         """ Attempts to establish a connection to Lavalink. """
@@ -53,14 +53,13 @@ class WebSocket:
         while self.connected:
             msg = await self._ws.receive()
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
+            #  TODO
 
-            # Type check and processing
+    async def _ws_disconnect(self, code: int, reason: str):
+        #  TODO: Check if code == 1000 (clean close). Maybe reconnect?
 
-    async def _ws_disconnect(self, code: int, reason: str, reconnect: bool):
         self._ws = None
-
-        if reconnect:
-            await self.connect()
+        await self.connect()
 
     async def _send(self, **data):
         if self.connected:
