@@ -11,7 +11,7 @@ class Node:
         self.port = port
         self.password = password
         self.region = region
-        self.name = name or '{}-{}:'.format(self.region, self.host, self.port)
+        self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
         self.stats = Stats()
 
     @property
