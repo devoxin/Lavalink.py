@@ -105,7 +105,7 @@ class DefaultPlayer(BasePlayer):
         self.volume = 100
         self.shuffle = False
         self.repeat = False
-        self.equalizer = {x: 0.0 for x in range(15)}
+        self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
 
         self.queue = []
         self.current = None
