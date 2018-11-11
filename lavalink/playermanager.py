@@ -40,7 +40,7 @@ class PlayerManager:
         node = self._lavalink.node_manager.find_ideal_node(region)
 
         if not node:
-            raise Exception('fuck, no nodes')
+            raise Exception('send nodes')
 
         self.players[guild_id] = player = DefaultPlayer(guild_id, node)
         return player
