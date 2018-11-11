@@ -34,6 +34,9 @@ class PlayerManager:
         :param node:
             The node to put the player on
         """
+        if guild_id in self.players:
+            return self.players[guild_id]
+
         if node:
             return node
 
