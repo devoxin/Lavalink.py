@@ -118,7 +118,7 @@ class DefaultPlayer(BasePlayer):
         :param index:
             The index at which to add the track. Defaults to 0
         """
-        self.queue.insert(index, AudioTrack().build(track, requester))
+        self.queue.insert(index, AudioTrack.build(track, requester))
 
     async def play(self, track_index: int = 0, ignore_shuffle: bool = False):
         """ Plays the first track in the queue, if any or plays a track from the specified index in the queue. """
