@@ -42,6 +42,5 @@ class NodeManager:
         if not nodes:  # If there are no regional nodes available, or a region wasn't specified.
             nodes = [n for n in self.nodes if n.available]
 
-        # TODO: Sort nodes based on penalties (playing_players?)
-        nodes.sort(key=lambda x: x.stats.playing_players)
+        # TODO: Sort nodes based on penalties
         return nodes[0] if len(nodes) > 0 else None

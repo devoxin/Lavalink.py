@@ -267,7 +267,7 @@ class DefaultPlayer(BasePlayer):
         """ Resets equalizer to default values. """
         await self.set_gains(*[(x, 0.0) for x in range(15)])
 
-    async def _handle_event(self, event):
+    async def handle_event(self, event):
         """ Handles the given event as necessary. """
         if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
                 isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':

@@ -39,9 +39,7 @@ class WebSocket:
         }
 
         try:
-            self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port),
-                                                      heartbeat=5.0,
-                                                      headers=headers)
+            self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers)
         except aiohttp.ClientConnectorError:
             log.warn('Failed to connect to node `{}`, retrying in 5s...'.format(self._node.name))
             await asyncio.sleep(5.0)
@@ -53,7 +51,14 @@ class WebSocket:
         while self.connected:
             msg = await self._ws.receive()
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
-            #  TODO
+
+            if msg.type == aiohttp.WSMsgType.close:
+                await self._ws_disconnect(msg.data, msg.extra)
+            elif msg.type == aiohttp.WSMsgType.closing or \
+                    msg.type == aiohttp.WSMsgType.closed:
+                return
+            elif msg.type == aiohttp.WSMsgType.text:
+                print(msg.data)  # TODO: Handle message
 
     async def _ws_disconnect(self, code: int, reason: str):
         #  TODO: Check if code == 1000 (clean close). Maybe reconnect?
