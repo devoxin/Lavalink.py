@@ -41,9 +41,9 @@ class WebSocket:
         try:
             self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers)
         except aiohttp.ClientConnectorError:
-            log.warn('Failed to connect to node `{}`, retrying in 5s...'.format(self._node.name))
+            log.warning('Failed to connect to node `{}`, retrying in 5s...'.format(self._node.name))
             await asyncio.sleep(5.0)
-            await self.connect()  # TODO: Consider a backoff or max retry attempt. Not sure why max_attempts would come in handy considering you *want* to connect to Lavalink
+            await self.connect()  # TODO: Consider a backoff or max retry attempt. max_attempts seems redundant as a connection is needed
         else:
             asyncio.ensure_future(self._listen())
 
@@ -61,6 +61,7 @@ class WebSocket:
                 return
 
     async def _ws_disconnect(self, code: int, reason: str):
+        log.warning('Disconnected from node `{}` ({}): {}'.format(self._node.name, code, reason))
         #  TODO: Check if code == 1000 (clean close). Maybe reconnect?
 
         self._ws = None
