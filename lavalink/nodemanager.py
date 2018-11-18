@@ -22,10 +22,10 @@ class NodeManager:
         if not endpoint:
             return self.default_region
 
-        for key in self.default_regions.keys():
+        for key in self.default_regions:
             nodes = [n for n in self.nodes if n.region == key]
 
-            if len(nodes) == 0 or not any(n.available for n in nodes):
+            if len(nodes) is 0 or not any(n.available for n in nodes):
                 continue
 
             for region in self.default_regions[key]:
@@ -43,4 +43,4 @@ class NodeManager:
             nodes = [n for n in self.nodes if n.available]
 
         # TODO: Sort nodes based on penalties
-        return nodes[0] if len(nodes) > 0 else None
+        return nodes[0] if len(nodes) is not 0 else None

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from random import randrange
-from .events import TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent
+from .events import TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent  # noqa: F401
 from .node import Node
 
 
@@ -176,7 +176,7 @@ class DefaultPlayer(BasePlayer):
         self.position = 0
         self.paused = False
 
-        if not track and len(self.queue) == 0:
+        if not track and len(self.queue) is 0:
             await self.stop()
             #  await self._lavalink.dispatch_event(QueueEndEvent(self))  # TODO
         elif not track:

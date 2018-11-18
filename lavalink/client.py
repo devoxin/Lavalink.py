@@ -1,8 +1,10 @@
 import asyncio
-import aiohttp
 import logging
 import random
 from urllib.parse import quote
+
+import aiohttp
+
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
