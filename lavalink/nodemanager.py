@@ -25,7 +25,7 @@ class NodeManager:
         for key in self.default_regions:
             nodes = [n for n in self.nodes if n.region == key]
 
-            if len(nodes) is 0 or not any(n.available for n in nodes):
+            if not nodes or not any(n.available for n in nodes):
                 continue
 
             for region in self.default_regions[key]:
@@ -42,7 +42,7 @@ class NodeManager:
         if not nodes:  # If there are no regional nodes available, or a region wasn't specified.
             nodes = [n for n in self.nodes if n.available]
 
-        if len(nodes) is 0:
+        if not nodes:
             return None
 
         best_node = min(nodes, key=lambda node: node.penalty)
