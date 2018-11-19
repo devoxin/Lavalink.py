@@ -1,10 +1,15 @@
-class QueueEndEvent:
+class Event:
+    """ The base for all Lavalink events """
+    pass
+
+
+class QueueEndEvent(Event):
     """ This event will be dispatched when there are no more songs in the queue. """
     def __init__(self, player):
         self.player = player
 
 
-class TrackStuckEvent:
+class TrackStuckEvent(Event):
     """ This event will be dispatched when the currently playing song is stuck. """
     def __init__(self, player, track, threshold):
         self.player = player
@@ -12,7 +17,7 @@ class TrackStuckEvent:
         self.threshold = threshold
 
 
-class TrackExceptionEvent:
+class TrackExceptionEvent(Event):
     """ This event will be dispatched when an exception occurs while playing a track. """
     def __init__(self, player, track, exception):
         self.exception = exception
@@ -20,7 +25,7 @@ class TrackExceptionEvent:
         self.track = track
 
 
-class TrackEndEvent:
+class TrackEndEvent(Event):
     """ This event will be dispatched when the player finished playing a track. """
     def __init__(self, player, track, reason):
         self.reason = reason
@@ -28,14 +33,8 @@ class TrackEndEvent:
         self.track = track
 
 
-class TrackStartEvent:
+class TrackStartEvent(Event):
     """ This event will be dispatched when the player starts to play a track. """
     def __init__(self, player, track):
         self.player = player
         self.track = track
-
-
-class StatsUpdateEvent:
-    """ This event will be dispatched when the websocket receives a statistics update. """
-    def __init__(self, data):
-        self.stats = data
