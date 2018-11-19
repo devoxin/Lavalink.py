@@ -7,6 +7,16 @@ class PlayerManager:
         self._lavalink = lavalink
         self.players = {}
 
+    def __iter__(self):
+        """ Returns an iterator that yields a tuple of (guild_id, player). """
+        for guild_id, player in self.players.items():
+            yield guild_id, player
+
+    def values(self):
+        """ Returns an iterator that yields only values """
+        for player in self.players.values():
+            yield player
+
     def get(self, guild_id: int):
         """
         Gets a player from cache

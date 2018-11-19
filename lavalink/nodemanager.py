@@ -34,7 +34,7 @@ class NodeManager:
 
         return self.default_region
 
-    def find_ideal_node(self, region: str = None):  # TODO: We could add option to choose a sorting method?
+    def find_ideal_node(self, region: str = None):
         nodes = None
         if region:
             nodes = [n for n in self.nodes if n.region == region and n.available]
@@ -42,5 +42,8 @@ class NodeManager:
         if not nodes:  # If there are no regional nodes available, or a region wasn't specified.
             nodes = [n for n in self.nodes if n.available]
 
-        # TODO: Sort nodes based on penalties
-        return nodes[0] if len(nodes) is not 0 else None
+        if len(nodes) is 0:
+            return None
+
+        best_node = min(nodes, key=lambda node: node.penalty)
+        return best_node
