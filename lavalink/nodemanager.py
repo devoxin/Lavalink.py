@@ -8,10 +8,9 @@ class NodeManager:
 
         self.default_region = default_region
         self.default_regions = {
-            'asia': ['hongkong', 'singapore', 'sydney', 'japan'],
-            'eu': ['eu', 'amsterdam', 'frankfurt', 'russia', 'vip-amsterdam', 'london'],
-            'us': ['us', 'brazil', 'vip-us'],
-            # TODO: Africa? I'd add it to EU since it's the closest
+            'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica'),
+            'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'vip-amsterdam', 'london'),
+            'us': ('us', 'brazil', 'vip-us')
         }
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None):

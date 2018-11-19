@@ -1,4 +1,5 @@
 from .websocket import WebSocket
+from .events import Event
 
 
 class Node:
@@ -39,6 +40,15 @@ class Node:
             The query to perform a search for.
         """
         return await self._manager._lavalink.get_tracks(query, self)
+
+    async def _dispatch_event(self, event: Event):
+        """
+        Dispatches the given event to all registered hooks
+        ----------
+        :param event:
+            The event to dispatch to the hooks
+        """
+        await self._manager._lavalink._dispatch_event(event)
 
     async def _send(self, **data):
         """

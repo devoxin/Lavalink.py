@@ -8,6 +8,7 @@ import aiohttp
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
+from .events import Event
 
 log = logging.getLogger(__name__)
 
@@ -114,3 +115,12 @@ class Client:
                 await player._voice_state_update(data['d'])
         else:
             return
+
+    async def _dispatch_event(self, event: Event):
+        """
+        Dispatches the given event to all registered hooks
+        ----------
+        :param event:
+            The event to dispatch to the hooks
+        """
+        pass  # TODO
