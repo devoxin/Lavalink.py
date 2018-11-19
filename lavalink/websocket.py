@@ -1,7 +1,8 @@
 import asyncio
 import logging
-
+import json
 import aiohttp
+from .stats import Stats
 
 log = logging.getLogger(__name__)
 
@@ -53,12 +54,18 @@ class WebSocket:
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
 
             if msg.type == aiohttp.WSMsgType.text:
-                print(msg.data)  # TODO: Handle message
+                await self._handle_message(json.loads(msg.data))
             elif msg.type == aiohttp.WSMsgType.close or \
                     msg.type == aiohttp.WSMsgType.closing or \
                     msg.type == aiohttp.WSMsgType.closed:
                 await self._ws_disconnect(msg.data, msg.extra)
                 return
+
+    async def _handle_message(self, data: dict):
+        op = data['op']
+
+        if op == 'stats':
+            self._node.stats = Stats(self._node, data)
 
     async def _ws_disconnect(self, code: int, reason: str):
         log.warning('Disconnected from node `{}` ({}): {}'.format(self._node.name, code, reason))

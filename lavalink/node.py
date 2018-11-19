@@ -1,5 +1,4 @@
 from .websocket import WebSocket
-from .stats import Stats
 
 
 class Node:
@@ -12,12 +11,25 @@ class Node:
         self.password = password
         self.region = region
         self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
-        self.stats = Stats()
+        self.stats = None
 
     @property
     def available(self):
         """ Returns whether the node is available for requests. """
         return self._ws.connected
+
+    @property
+    def players(self):
+        """ Returns a list of all players on this node """
+        return [p for p in self._manager._lavalink.players.values() if p.node == self]
+
+    @property
+    def penalty(self):
+        """ Returns the load-balancing penalty for this node """
+        if not self.available or not self.stats:
+            return 9e30
+
+        return self.stats.penalty.total
 
     async def get_tracks(self, query: str):
         """
