@@ -27,9 +27,8 @@ class NodeManager:
             if not nodes or not any(n.available for n in nodes):
                 continue
 
-            for region in self.default_regions[key]:
-                if endpoint.startswith(region):
-                    return key
+            if endpoint.startswith(self.default_regions[key]):
+                return key
 
         return self.default_region
 
