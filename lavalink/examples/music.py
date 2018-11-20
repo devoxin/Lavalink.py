@@ -91,7 +91,7 @@ class Music:
         track_time = player.position + seconds
         await player.seek(track_time)
 
-        await ctx.send(f'Moved track to **{lavalink.Utils.format_time(track_time)}**')
+        await ctx.send(f'Moved track to **{lavalink.utils.format_time(track_time)}**')
 
     @commands.command(aliases=['forceskip'])
     async def skip(self, ctx):
@@ -124,11 +124,11 @@ class Music:
         if not player.current:
             return await ctx.send('Nothing playing.')
 
-        position = lavalink.Utils.format_time(player.position)
+        position = lavalink.utils.format_time(player.position)
         if player.current.stream:
             duration = '🔴 LIVE'
         else:
-            duration = lavalink.Utils.format_time(player.current.duration)
+            duration = lavalink.utils.format_time(player.current.duration)
         song = f'**[{player.current.title}]({player.current.uri})**\n({position}/{duration})'
 
         embed = discord.Embed(color=discord.Color.blurple(),
@@ -141,7 +141,7 @@ class Music:
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not player.queue:
-            return await ctx.send('There\'s nothing in the queue! Why not queue something?')
+            return await ctx.send('Nothing queued.')
 
         items_per_page = 10
         pages = math.ceil(len(player.queue) / items_per_page)
@@ -283,7 +283,7 @@ class Music:
             player.store('channel', ctx.channel.id)
             await self.connect_to(ctx.guild.id, str(ctx.author.voice.channel.id))
         else:
-            if player.channel_id != ctx.author.voice.channel.id:
+            if int(player.channel_id) != ctx.author.voice.channel.id:
                 raise commands.CommandInvokeError('You need to be in my voicechannel.')
 
 
