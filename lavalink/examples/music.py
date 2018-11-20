@@ -21,7 +21,11 @@ class Music:
             bot.lavalink = lavalink.Client(bot.user.id)
             bot.lavalink.add_node('127.0.0.1', 2333, 'youshallnotpass', 'eu', 'default-node')  # Host, Port, Password, Region, Name
             bot.add_listener(bot.lavalink.voice_update_handler, 'on_socket_response')
-            #  bot.lavalink.register_hook(self._track_hook)
+            bot.lavalink.add_event_hook(self.track_hook)
+
+    async def track_hook(self, event):
+        if isinstance(event, lavalink.events.TrackEndEvent):
+            pass  # Send track ended message to channel.
 
     async def __before_invoke(self, ctx):
         guild_check = ctx.guild is not None
