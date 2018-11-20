@@ -268,12 +268,12 @@ class Music:
 
         should_connect = ctx.command.name in ('play')  # Add commands that require joining voice to work.
 
+        if not ctx.author.voice or not ctx.author.voice.channel:
+            raise commands.CommandInvokeError('Join a voicechannel first.')
+
         if not player.is_connected:
             if not should_connect:
                 raise commands.CommandInvokeError('Not connected.')
-
-            if not ctx.author.voice or not ctx.author.voice.channel:
-                raise commands.CommandInvokeError('Join a voicechannel first.')
 
             permissions = ctx.author.voice.channel.permissions_for(ctx.me)
 
