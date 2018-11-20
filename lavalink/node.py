@@ -72,5 +72,5 @@ class Node:
 
         self._manager.remove_node(self)
 
-    def __repr__(self):  # TODO: Remove this comment: we should make it more printable and transparent for logs
+    def __repr__(self):
         return '<Node name={0.name} region={0.region}>'.format(self)

@@ -26,7 +26,7 @@ class WebSocket:
         self._user_id = self._lavalink._user_id
 
         self._loop = self._lavalink._loop
-        self._loop.create_task(self.connect())  # TODO: Consider making add_node an async function to prevent creating a bunch of tasks?
+        asyncio.ensure_future(self.connect())
 
     @property
     def connected(self):
@@ -41,14 +41,20 @@ class WebSocket:
             'User-Id': str(self._user_id)
         }
 
-        try:
-            self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers)
-        except aiohttp.ClientConnectorError:
-            log.warning('Failed to connect to node `{}`, retrying in 5s...'.format(self._node.name))
-            await asyncio.sleep(5.0)
-            await self.connect()  # TODO: Consider a backoff or max retry attempt. max_attempts seems redundant as a connection is needed
-        else:
-            asyncio.ensure_future(self._listen())
+        attempt = 0
+
+        while not self.connected and not self._shutdown:
+            attempt += 1
+
+            try:
+                self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers)
+            except aiohttp.ClientConnectorError:
+                backoff = min(10 * attempt, 60)
+                await asyncio.sleep(backoff)
+                await self.connect()
+            else:
+                await self._node._manager._node_connect(self._node)
+                asyncio.ensure_future(self._listen())
 
     async def _listen(self):
         while self.connected:
@@ -60,7 +66,11 @@ class WebSocket:
             elif msg.type == aiohttp.WSMsgType.close or \
                     msg.type == aiohttp.WSMsgType.closing or \
                     msg.type == aiohttp.WSMsgType.closed:
-                await self._ws_disconnect(msg.data, msg.extra)
+                self._ws = None
+                await self._node._manager._node_disconnect(self._node, self._shutdown, msg.data, msg.extra)
+
+                if not self._shutdown:
+                    await self.connect()
                 return
 
     async def _handle_message(self, data: dict):
@@ -103,14 +113,6 @@ class WebSocket:
             await player.handle_event(event)
 
         await self._lavalink._dispatch_event(event)
-
-    async def _ws_disconnect(self, code: int, reason: str):
-        log.warning('Disconnected from node `{}` ({}): {}'.format(self._node.name, code, reason))
-        self._ws = None
-
-        if not self._shutdown:
-            await self._node._manager._node_disconnect(self._node)
-            await self.connect()
 
     async def _send(self, **data):
         if self.connected:
