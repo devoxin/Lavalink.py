@@ -11,7 +11,7 @@ from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 from .events import Event
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('lavalink')
 
 
 class Client:

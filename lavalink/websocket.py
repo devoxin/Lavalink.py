@@ -5,7 +5,7 @@ import aiohttp
 from .stats import Stats
 from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('lavalink')
 
 
 class WebSocket:
@@ -109,7 +109,7 @@ class WebSocket:
         self._ws = None
 
         if not self._shutdown:
-            await self._node._manager._node_disconnect(self)
+            await self._node._manager._node_disconnect(self._node)
             await self.connect()
 
     async def _send(self, **data):

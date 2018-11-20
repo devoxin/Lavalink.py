@@ -87,13 +87,9 @@ class BasePlayer(ABC):
         if {'sessionId', 'event'} == self._voice_state.keys():
             await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
 
+    @abstractmethod
     async def change_node(self, node: Node):
-        if self.node.available:
-            await self.node._send(op='destroy', guildId=self.guild_id)
-
-        self.node = node
-        await self._dispatch_voice_update()
-        # TODO: Send play op if this player is playing.
+        raise NotImplementedError
 
 
 class DefaultPlayer(BasePlayer):
@@ -289,3 +285,15 @@ class DefaultPlayer(BasePlayer):
     def update_state(self, state: dict):
         self.position = state.get('position', 0)
         self.position_timestamp = state.get('time', 0)
+
+    async def change_node(self, node: Node):
+        if self.node.available:
+            await self.node._send(op='destroy', guildId=self.guild_id)
+
+        self.node = node
+        await self._dispatch_voice_update()
+
+        if self.current:
+            await self.node._send(op='play', guildId=self.guild_id, track=self.current.track, startTime=self.position)
+
+        # TODO: dispatch node change event
