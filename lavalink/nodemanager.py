@@ -5,12 +5,11 @@ log = logging.getLogger('lavalink')
 
 
 class NodeManager:
-    def __init__(self, lavalink, default_region: str = 'eu'):  # This is only temporary, while I experiment
+    def __init__(self, lavalink):
         self._lavalink = lavalink
         self.nodes = []
 
-        self.default_region = default_region
-        self.default_regions = {
+        self.regions = {
             'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica'),
             'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'vip-amsterdam', 'london'),
             'us': ('us', 'brazil', 'vip-us')
@@ -27,7 +26,7 @@ class NodeManager:
 
     def remove_node(self, node: Node):
         """
-        Removes a node
+        Removes a node. This assumes the node has already been shutdown.
         ----------
         :param node:
             The node to remove from the list
@@ -42,18 +41,18 @@ class NodeManager:
             The address of the Discord voice server
         """
         if not endpoint:
-            return self.default_region
+            return None
 
-        for key in self.default_regions:
+        for key in self.regions:
             nodes = [n for n in self.nodes if n.region == key]
 
             if not nodes or not any(n.available for n in nodes):
                 continue
 
-            if endpoint.startswith(self.default_regions[key]):
+            if endpoint.startswith(self.regions[key]):
                 return key
 
-        return self.default_region
+        return None
 
     def find_ideal_node(self, region: str = None):
         """
@@ -75,8 +74,20 @@ class NodeManager:
         best_node = min(nodes, key=lambda node: node.penalty)
         return best_node
 
-    async def _node_disconnect(self, node: Node):
-        # TODO: Dispatch node disconnected event, maybe have node connected event too
+    async def _node_connect(self, node: Node):
+        log.info('Successfully connected to node `{}`'.format(node.name))
+        # TODO: Dispatch node connected event
+
+    async def _node_disconnect(self, node: Node, shutdown: bool, code: int, reason: str):
+        log.warning('Disconnected from node `{}` ({}): {}'.format(node.name, code, reason))
+        # TODO: Dispatch node disconnected event
+
+        if shutdown:
+            return
+            #  Generally if a node is shutdown then it's probably being cleaned up
+            #  perhaps if the bot is shutting down, so we shouldn't try to allocate
+            #  the node's players to another node.
+
         best_node = self.find_ideal_node(node.region)
 
         if not best_node:
@@ -85,5 +96,3 @@ class NodeManager:
 
         for player in node.players:
             await player.change_node(best_node)
-
-        # TODO: On node disconnect, shift players
