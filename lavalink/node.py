@@ -62,18 +62,5 @@ class Node:
         """
         await self._ws._send(**data)
 
-    async def shutdown(self):
-        """ Shuts down any connections to this node """
-        log.debug('Shutting down connection to node `{}`'.format(self.name))
-
-        for player in self.players:
-            await self._manager._lavalink.players.remove(int(player.guild_id))
-
-        if bool(self._ws._ws):
-            self._ws._shutdown = True
-            await self._ws._ws.close()
-
-        self._manager.remove_node(self)
-
     def __repr__(self):
         return '<Node name={0.name} region={0.region}>'.format(self)

@@ -78,15 +78,9 @@ class NodeManager:
         log.info('Successfully connected to node `{}`'.format(node.name))
         # TODO: Dispatch node connected event
 
-    async def _node_disconnect(self, node: Node, shutdown: bool, code: int, reason: str):
+    async def _node_disconnect(self, node: Node, code: int, reason: str):
         log.warning('Disconnected from node `{}` ({}): {}'.format(node.name, code, reason))
         # TODO: Dispatch node disconnected event
-
-        if shutdown:
-            return
-            #  Generally if a node is shutdown then it's probably being cleaned up
-            #  perhaps if the bot is shutting down, so we shouldn't try to allocate
-            #  the node's players to another node.
 
         best_node = self.find_ideal_node(node.region)
 

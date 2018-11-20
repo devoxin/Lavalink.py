@@ -16,7 +16,6 @@ class WebSocket:
         self._session = self._lavalink._session
         self._ws = None
         self._message_queue = []
-        self._shutdown = False
 
         self._host = host
         self._port = port
@@ -43,7 +42,7 @@ class WebSocket:
 
         attempt = 0
 
-        while not self.connected and not self._shutdown:
+        while not self.connected:
             attempt += 1
 
             try:
@@ -69,10 +68,8 @@ class WebSocket:
                     msg.type == aiohttp.WSMsgType.closing or \
                     msg.type == aiohttp.WSMsgType.closed:
                 self._ws = None
-                await self._node._manager._node_disconnect(self._node, self._shutdown, msg.data, msg.extra)
-
-                if not self._shutdown:
-                    await self.connect()
+                await self._node._manager._node_disconnect(self._node, msg.data, msg.extra)
+                await self.connect()
                 return
 
     async def _handle_message(self, data: dict):
