@@ -70,6 +70,9 @@ class Node:
             self._ws._shutdown = True
             await self._ws._ws.close()
 
+        for player in self.players:
+            await self._manager._lavalink.players.remove(int(player.guild_id))
+
         self._manager.remove_node(self)
 
     def __repr__(self):

@@ -65,8 +65,9 @@ class BasePlayer(ABC):
     def update_state(self, state: dict):
         raise NotImplementedError
 
-    def cleanup(self):
-        pass
+    async def cleanup(self):
+        if self.node:
+            await self.node._send(op='destroy', guildId=self.guild_id)
 
     async def _voice_server_update(self, data):
         self._voice_state.update({
