@@ -185,10 +185,12 @@ class DefaultPlayer(BasePlayer):
         self.position = 0
         self.paused = False
 
-        if not track and not self.queue:
-            await self.stop()
-            await self.node._dispatch_event(QueueEndEvent(self))
-        elif not track:
+        if not track:
+            if not self.queue:
+                await self.stop()
+                await self.node._dispatch_event(QueueEndEvent(self))
+                return
+
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
             else:
