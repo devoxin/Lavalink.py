@@ -26,7 +26,7 @@ class NodeManager:
 
     def remove_node(self, node: Node):
         """
-        Removes a node. This assumes the node has already been shutdown.
+        Removes a node.
         ----------
         :param node:
             The node to remove from the list
