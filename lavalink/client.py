@@ -40,11 +40,15 @@ class Client:
         self.node_manager = NodeManager(self)
         self.players = PlayerManager(self)
 
-        self.event_hooks = []
+        self._event_hooks = []
 
         self._session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(limit=pool_size, loop=loop)
         )  # This session will be used for websocket and http requests
+
+    def add_event_hook(self, hook):
+        if hook not in self._event_hooks:
+            self._event_hooks.append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None):
         """
@@ -126,7 +130,7 @@ class Client:
         :param event:
             The event to dispatch to the hooks
         """
-        for hook in self.event_hooks:
+        for hook in self._event_hooks:
             try:
                 if inspect.iscoroutinefunction(hook):
                     await hook(event)
