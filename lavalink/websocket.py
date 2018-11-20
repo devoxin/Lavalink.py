@@ -54,7 +54,6 @@ class WebSocket:
 
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
-                await self.connect()
             else:
                 await self._node._manager._node_connect(self._node)
                 asyncio.ensure_future(self._listen())
