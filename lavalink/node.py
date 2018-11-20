@@ -67,6 +67,7 @@ class Node:
         log.debug('Shutting down connection to node `{}`'.format(self.name))
 
         if bool(self._ws._ws):
+            self._ws._shutdown = True
             await self._ws._ws.close()
 
         self._manager.remove_node(self)
