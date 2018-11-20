@@ -26,11 +26,17 @@ class PlayerManager:
         """
         return self.players.get(guild_id)
 
-    def create(self, guild_id: int, region: str = 'eu', node: Node = None):
+    def create(self, guild_id: int, region: str = 'eu', endpoint: str = None, node: Node = None):
         """
         Creates a player if one doesn't exist with the given information.
-        If node is provided, a player will be created on that node, otherwise
-        a player will be created on the best node in the given region (defaults to US).
+
+        If node is provided, a player will be created on that node.
+        If region is provided, a player will be created on a node in the given region.
+        If endpoint is provided, Lavalink.py will attempt to parse the region from the endpoint
+        and return a node in the parsed region.
+
+        If node, region and endpoint are left unspecified, or region/endpoint selection fails,
+        Lavalink.py will fall back to the node with the lowest penalty.
 
         Region can be omitted if node is specified and vice-versa.
         ----------
@@ -46,6 +52,9 @@ class PlayerManager:
 
         if node:
             return node
+
+        if endpoint:
+            region = self._lavalink.node_manager.get_region(endpoint)
 
         node = self._lavalink.node_manager.find_ideal_node(region)
 
