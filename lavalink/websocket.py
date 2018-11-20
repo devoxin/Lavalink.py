@@ -89,11 +89,11 @@ class WebSocket:
         event_type = data['type']
         event = None
 
-        if event == 'TrackEndEvent':
+        if event_type == 'TrackEndEvent':
             event = TrackEndEvent(player, player.current, data['reason'])
-        elif event == 'TrackStuckEvent':
+        elif event_type == 'TrackStuckEvent':
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
-        elif event == 'TrackExceptionEvent':
+        elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
         else:
             log.warning('Received unknown event of type {} on node `{}`'.format(event_type, self._node.name))
