@@ -283,7 +283,7 @@ class Music:
             player.store('channel', ctx.channel.id)
             await self.connect_to(ctx.guild.id, str(ctx.author.voice.channel.id))
         else:
-            if player.connected_channel.id != ctx.author.voice.channel.id:
+            if player.channel_id != ctx.author.voice.channel.id:
                 raise commands.CommandInvokeError('You need to be in my voicechannel.')
 
 
