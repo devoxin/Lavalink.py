@@ -178,7 +178,7 @@ class DefaultPlayer(BasePlayer):
 
         if not track and not self.queue:
             await self.stop()
-            await self.node._manager._dispatch_event(QueueEndEvent(self))
+            await self.node._dispatch_event(QueueEndEvent(self))
         elif not track:
             if self.shuffle:
                 track = self.queue.pop(randrange(len(self.queue)))
@@ -187,7 +187,7 @@ class DefaultPlayer(BasePlayer):
 
         self.current = track
         await self.node._send(op='play', guildId=self.guild_id, track=track.track)
-        await self.node._manager._dispatch_event(TrackStartEvent(self, track))
+        await self.node._dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
         """ Stops the player. """

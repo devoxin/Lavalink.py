@@ -68,6 +68,8 @@ class WebSocket:
         if op == 'stats':
             self._node.stats = Stats(self._node, data)
 
+        # TODO
+
     async def _ws_disconnect(self, code: int, reason: str):
         log.warning('Disconnected from node `{}` ({}): {}'.format(self._node.name, code, reason))
         self._ws = None
