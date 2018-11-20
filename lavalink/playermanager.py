@@ -17,6 +17,12 @@ class PlayerManager:
         for player in self.players.values():
             yield player
 
+    async def remove(self, guild_id: int):
+        """ Removes a player from the internal cache """
+        if guild_id in self.players:
+            player = self.players.pop(guild_id)
+            await player.cleanup()
+
     def get(self, guild_id: int):
         """
         Gets a player from cache
