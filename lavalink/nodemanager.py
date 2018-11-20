@@ -79,7 +79,8 @@ class NodeManager:
         best_node = self.find_ideal_node(node.region)
 
         if not best_node:
-            log.error('Unable to move players, no available nodes!')  # TODO: NodeException or something
+            log.error('Unable to move players, no available nodes!')
+            return
 
         for player in node.players:
             await player.change_node(best_node)
