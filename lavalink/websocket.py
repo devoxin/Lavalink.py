@@ -107,7 +107,7 @@ class WebSocket:
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
         elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
-        elif event_type == 'WebSockedClosedEvent':
+        elif event_type == 'WebSocketClosedEvent':
             pass
             #  TODO: Send new voice update?
         else:
