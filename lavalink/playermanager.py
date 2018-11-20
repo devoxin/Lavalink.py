@@ -24,10 +24,7 @@ class PlayerManager:
         :param guild_id:
             The guild_id associated with the player to get
         """
-        if guild_id in self.players:
-            return self.players[guild_id]
-
-        return None
+        return self.players.get(guild_id)
 
     def create(self, guild_id: int, region: str = 'eu', node: Node = None):
         """
@@ -53,7 +50,7 @@ class PlayerManager:
         node = self._lavalink.node_manager.find_ideal_node(region)
 
         if not node:
-            raise Exception('send nodes')
+            raise Exception('No available nodes!')  # TODO: NodeException or something
 
         self.players[guild_id] = player = DefaultPlayer(guild_id, node)
         return player

@@ -3,6 +3,7 @@ import logging
 import json
 import aiohttp
 from .stats import Stats
+from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
 
 log = logging.getLogger(__name__)
 
@@ -67,14 +68,48 @@ class WebSocket:
 
         if op == 'stats':
             self._node.stats = Stats(self._node, data)
+        elif op == 'playerUpdate':
+            player = self._lavalink.players.get(int(data['guildId']))
 
-        # TODO
+            if not player:
+                return
+
+            player.update_state(data['state'])
+        elif op == 'event':
+            await self._handle_event(data)
+        else:
+            log.warning('Received unknown op: {}'.format(op))
+
+    async def _handle_event(self, data: dict):
+        player = self._lavalink.players.get(int(data['guildId']))
+
+        if not player:
+            log.warning('Received event for non-existent player! Node: `{}`, GuildId: {}'.format(self._node.name, data['guildId']))
+
+        event_type = data['type']
+        event = None
+
+        if event == 'TrackEndEvent':
+            event = TrackEndEvent(player, player.current, data['reason'])
+        elif event == 'TrackStuckEvent':
+            event = TrackStuckEvent(player, player.current, data['thresholdMs'])
+        elif event == 'TrackExceptionEvent':
+            event = TrackExceptionEvent(player, player.current, data['error'])
+        else:
+            log.warning('Received unknown event of type {} on node `{}`'.format(event_type, self._node.name))
+            return
+
+        if player:
+            await player.handle_event(event)
+
+        await self._lavalink._dispatch_event(event)
 
     async def _ws_disconnect(self, code: int, reason: str):
         log.warning('Disconnected from node `{}` ({}): {}'.format(self._node.name, code, reason))
         self._ws = None
 
         if not self._shutdown:
+            await self._node._manager._node_disconnect(self)
             await self.connect()
 
     async def _send(self, **data):
