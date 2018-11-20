@@ -15,6 +15,7 @@ class WebSocket:
         self._session = self._lavalink._session
         self._ws = None
         self._message_queue = []
+        self._shutdown = False
 
         self._host = host
         self._port = port
@@ -69,10 +70,10 @@ class WebSocket:
 
     async def _ws_disconnect(self, code: int, reason: str):
         log.warning('Disconnected from node `{}` ({}): {}'.format(self._node.name, code, reason))
-        #  TODO: Check if code == 1000 (clean close). Maybe reconnect?
-
         self._ws = None
-        await self.connect()
+
+        if not self._shutdown:
+            await self.connect()
 
     async def _send(self, **data):
         if self.connected:
@@ -81,7 +82,3 @@ class WebSocket:
         else:
             log.debug('Send called node `{}` ready, payload queued: {}'.format(self._node.name, str(data)))
             self._message_queue.append(data)
-
-    def destroy(self):
-        """ Terminates the websocket connection """
-        pass  # TODO: Call websocket disconnect, shutdown internals n stuff

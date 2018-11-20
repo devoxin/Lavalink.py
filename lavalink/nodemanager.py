@@ -14,10 +14,30 @@ class NodeManager:
         }
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None):
+        """
+        Adds a node
+        ----------
+        TODO
+        """
         node = Node(self, host, port, password, region, name)
         self.nodes.append(node)
 
+    def remove_node(self, node: Node):
+        """
+        Removes a node
+        ----------
+        :param node:
+            The node to remove from the list
+        """
+        self.nodes.remove(node)
+
     def get_region(self, endpoint: str):
+        """
+        Returns a Lavalink.py-friendly region from a Discord voice server address
+        ----------
+        :param endpoint:
+            The address of the Discord voice server
+        """
         if not endpoint:
             return self.default_region
 
@@ -33,6 +53,12 @@ class NodeManager:
         return self.default_region
 
     def find_ideal_node(self, region: str = None):
+        """
+        Finds the best (least used) node in the given region, if applicable.
+        ----------
+        :param region:
+            The region to find a node in.
+        """
         nodes = None
         if region:
             nodes = [n for n in self.nodes if n.region == region and n.available]
