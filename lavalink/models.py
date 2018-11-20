@@ -291,7 +291,9 @@ class DefaultPlayer(BasePlayer):
             await self.node._send(op='destroy', guildId=self.guild_id)
 
         self.node = node
-        await self._dispatch_voice_update()
+
+        if self._voice_state:
+            await self._dispatch_voice_update()
 
         if self.current:
             await self.node._send(op='play', guildId=self.guild_id, track=self.current.track, startTime=self.position)
