@@ -61,6 +61,10 @@ class BasePlayer(ABC):
     async def handle_event(self, event):
         raise NotImplementedError
 
+    @abstractmethod
+    def update_state(self, state: dict):
+        raise NotImplementedError
+
     def cleanup(self):
         pass
 
@@ -69,8 +73,7 @@ class BasePlayer(ABC):
             'event': data
         })
 
-        if {'sessionId', 'event'} == self._voice_state.keys():
-            await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
+        await self._dispatch_voice_update()
 
     async def _voice_state_update(self, data):
         self._voice_state.update({
@@ -78,9 +81,19 @@ class BasePlayer(ABC):
         })
 
         self.channel_id = data['channel_id']
+        await self._dispatch_voice_update()
 
+    async def _dispatch_voice_update(self):
         if {'sessionId', 'event'} == self._voice_state.keys():
             await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
+
+    async def change_node(self, node: Node):
+        if self.node.available:
+            await self.node._send(op='destroy', guildId=self.guild_id)
+
+        self.node = node
+        await self._dispatch_voice_update()
+        # TODO: Send play op if this player is playing.
 
 
 class DefaultPlayer(BasePlayer):
@@ -272,3 +285,7 @@ class DefaultPlayer(BasePlayer):
         if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
                 isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':
             await self.play()
+
+    def update_state(self, state: dict):
+        self.position = state.get('position', 0)
+        self.position_timestamp = state.get('time', 0)

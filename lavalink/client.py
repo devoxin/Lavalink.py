@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+import inspect
 from urllib.parse import quote
 
 import aiohttp
@@ -38,6 +39,8 @@ class Client:
         self._loop = loop or asyncio.get_event_loop()
         self.node_manager = NodeManager(self)
         self.players = PlayerManager(self)
+
+        self.event_hooks = []
 
         self._session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(limit=pool_size, loop=loop)
@@ -123,4 +126,11 @@ class Client:
         :param event:
             The event to dispatch to the hooks
         """
-        pass  # TODO
+        for hook in self.event_hooks:
+            try:
+                if inspect.iscoroutinefunction(hook):
+                    await hook(event)
+                else:
+                    hook(event)
+            except Exception as e:  # pylint: disable=W0703
+                log.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)

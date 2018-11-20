@@ -1,4 +1,7 @@
+import logging
 from .node import Node
+
+log = logging.getLogger(__name__)
 
 
 class NodeManager:
@@ -71,3 +74,14 @@ class NodeManager:
 
         best_node = min(nodes, key=lambda node: node.penalty)
         return best_node
+
+    async def _node_disconnect(self, node: Node):
+        best_node = self.find_ideal_node(node.region)
+
+        if not best_node:
+            log.error('Unable to move players, no available nodes!')  # TODO: NodeException or something
+
+        for player in node.players:
+            await player.change_node(best_node)
+
+        # TODO: On node disconnect, shift players
