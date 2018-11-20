@@ -49,6 +49,9 @@ class WebSocket:
             try:
                 self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers)
             except aiohttp.ClientConnectorError:
+                if attempt == 1:
+                    log.warning('Failed to connect to node `{}`!'.format(self._node.name))
+
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
                 await self.connect()
