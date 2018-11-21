@@ -17,6 +17,13 @@ class PlayerManager:
         for player in self.players.values():
             yield player
 
+    def find_all(self, predicate):
+        """ Returns a list of players that match the given predicate """
+        if not predicate:
+            return list(self.players.values())
+
+        return [p for p in self.players if bool(predicate(p))]
+
     def remove(self, guild_id: int):
         """ Removes a player from the internal cache """
         if guild_id in self.players:
