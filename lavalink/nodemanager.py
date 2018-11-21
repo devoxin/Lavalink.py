@@ -85,6 +85,7 @@ class NodeManager:
         best_node = self.find_ideal_node(node.region)
 
         if not best_node:
+            # TODO: Move players to a queue, wait for a node to connect?
             log.error('Unable to move players, no available nodes!')
             return
 
