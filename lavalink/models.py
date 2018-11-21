@@ -124,8 +124,14 @@ class DefaultPlayer(BasePlayer):
     @property
     def position(self):
         """ Returns the position in the track, adjusted for Lavalink's 5-second stats interval. """
+        if not self.is_playing:
+            return 0
+
+        if self.paused:
+            return min(self.last_position, self.current.duration)
+
         difference = time() * 1000 - self.last_update
-        return self.last_position + difference
+        return min(self.last_position + difference, self.current.duration)
 
     def store(self, key: object, value: object):
         """
@@ -310,6 +316,7 @@ class DefaultPlayer(BasePlayer):
 
         if self.current:
             await self.node._send(op='play', guildId=self.guild_id, track=self.current.track, startTime=self.position)
+            self.last_update = time() * 1000
 
             if self.paused:
                 await self.node._send(op='pause', guildId=self.guild_id, pause=self.paused)
