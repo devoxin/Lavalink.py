@@ -190,7 +190,9 @@ class DefaultPlayer(BasePlayer):
             self.queue.append(self.current)
 
         self.current = None
-        self.position = 0
+        self.last_update = 0
+        self.last_position = 0
+        self.position_timestamp = 0
         self.paused = False
 
         if not track:
