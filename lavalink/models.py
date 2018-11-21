@@ -306,7 +306,7 @@ class DefaultPlayer(BasePlayer):
         if self.volume != 100:
             await self.node._send(op='volume', guildId=self.guild_id, volume=self.volume)
 
-        if all(self.equalizer):  # If any bands of the equalizer was modified
+        if any(self.equalizer):  # If any bands of the equalizer was modified
             payload = [{'band': b, 'gain': g} for b, g in enumerate(self.equalizer)]
             await self.node._send(op='equalizer', guildId=self.guild_id, bands=payload)
 
