@@ -300,4 +300,14 @@ class DefaultPlayer(BasePlayer):
         if self.current:
             await self.node._send(op='play', guildId=self.guild_id, track=self.current.track, startTime=self.position)
 
+            if self.paused:
+                await self.node._send(op='pause', guildId=self.guild_id, pause=self.paused)
+
+        if self.volume != 100:
+            await self.node._send(op='volume', guildId=self.guild_id, volume=self.volume)
+
+        if all(self.equalizer):  # If any bands of the equalizer was modified
+            payload = [{'band': b, 'gain': g} for b, g in enumerate(self.equalizer)]
+            await self.node._send(op='equalizer', guildId=self.guild_id, bands=payload)
+
         # TODO: dispatch node change event
