@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from random import randrange
+from time import time
 from .events import TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent  # noqa: F401
 from .node import Node
 
@@ -99,7 +100,8 @@ class DefaultPlayer(BasePlayer):
         self._user_data = {}
 
         self.paused = False
-        self.position = 0
+        self.last_update = 0
+        self.last_position = 0
         self.position_timestamp = 0
         self.volume = 100
         self.shuffle = False
@@ -118,6 +120,12 @@ class DefaultPlayer(BasePlayer):
     def is_connected(self):
         """ Returns whether the player is connected to a voicechannel or not """
         return self.channel_id is not None
+
+    @property
+    def position(self):
+        """ Returns the position in the track, adjusted for Lavalink's 5-second stats interval. """
+        difference = self.last_update - self.position_timestamp
+        return self.last_position + difference
 
     def store(self, key: object, value: object):
         """
@@ -285,7 +293,8 @@ class DefaultPlayer(BasePlayer):
             await self.play()
 
     def update_state(self, state: dict):
-        self.position = state.get('position', 0)
+        self.last_update = time() * 1000
+        self.last_position = state.get('position', 0)
         self.position_timestamp = state.get('time', 0)
 
     async def change_node(self, node: Node):
