@@ -124,7 +124,7 @@ class DefaultPlayer(BasePlayer):
     @property
     def position(self):
         """ Returns the position in the track, adjusted for Lavalink's 5-second stats interval. """
-        difference = self.last_update - self.position_timestamp
+        difference = time() * 1000 - self.last_update
         return self.last_position + difference
 
     def store(self, key: object, value: object):
