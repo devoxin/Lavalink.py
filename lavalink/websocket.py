@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import json
 import aiohttp
 from .stats import Stats
 from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
@@ -58,19 +57,18 @@ class WebSocket:
                 asyncio.ensure_future(self._listen())
 
     async def _listen(self):
-        while self.connected:
-            msg = await self._ws.receive()
+        async for msg in self._ws:
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
 
             if msg.type == aiohttp.WSMsgType.text:
-                await self._handle_message(json.loads(msg.data))
+                await self._handle_message(msg.json())
             elif msg.type == aiohttp.WSMsgType.close or \
                     msg.type == aiohttp.WSMsgType.closing or \
                     msg.type == aiohttp.WSMsgType.closed:
                 self._ws = None
                 await self._node._manager._node_disconnect(self._node, msg.data, msg.extra)
                 await self.connect()
-                return
+                return  # This should be redundant?
 
     async def _handle_message(self, data: dict):
         op = data['op']
