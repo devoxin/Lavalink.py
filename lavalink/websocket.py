@@ -29,7 +29,7 @@ class WebSocket:
     @property
     def connected(self):
         """ Returns whether the websocket is connected to Lavalink. """
-        return bool(self._ws) and not self._ws.closed
+        return self._ws is not None and not self._ws.closed
 
     async def connect(self):
         """ Attempts to establish a connection to Lavalink. """
@@ -65,7 +65,6 @@ class WebSocket:
             elif msg.type == aiohttp.WSMsgType.close or \
                     msg.type == aiohttp.WSMsgType.closing or \
                     msg.type == aiohttp.WSMsgType.closed:
-                self._ws = None
                 await self._node._manager._node_disconnect(self._node, msg.data, msg.extra)
                 await self.connect()
                 return  # This should be redundant?
