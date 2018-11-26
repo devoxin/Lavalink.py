@@ -3,9 +3,10 @@ from .models import DefaultPlayer
 
 
 class PlayerManager:
-    def __init__(self, lavalink):
+    def __init__(self, lavalink, player):
         self._lavalink = lavalink
         self.players = {}
+        self.default_player = player or DefaultPlayer
 
     def __iter__(self):
         """ Returns an iterator that yields a tuple of (guild_id, player). """
@@ -74,5 +75,5 @@ class PlayerManager:
         if not node:
             raise Exception('No available nodes!')  # TODO: NodeException or something
 
-        self.players[guild_id] = player = DefaultPlayer(guild_id, node)
+        self.players[guild_id] = player = self.default_player(guild_id, node)
         return player
