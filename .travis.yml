@@ -1,0 +1,16 @@
+language: python
+python:
+  - 3.6
+  # - 3.7-dev  Suspended until setuptools get fixed
+
+notifications:
+  email: false
+
+
+install:
+  - pip install wheel
+  - pip install flake8 pylint
+  - python setup.py install
+
+script:
+  - python run_tests.py
