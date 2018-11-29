@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 import aiohttp
 
+from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
@@ -33,10 +34,10 @@ class Client:
         The `event loop`_ to use for asynchronous operations.
     player: Optional[class]
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
-        Do not change this unless you know what you are doing!        
+        Do not change this unless you know what you are doing!
     """
 
-    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100, loop=None, player=None):
+    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100, loop=None, player=DefaultPlayer):
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
