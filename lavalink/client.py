@@ -80,7 +80,7 @@ class Client:
         :param node:
             The node to use for track lookup. Leave this blank to use a random node.
         """
-        node = node or random.choice(self.node_manager.nodes)
+        node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
         headers = {
             'Authorization': node.password

@@ -15,6 +15,17 @@ class NodeManager:
             'us': ('us', 'brazil', 'vip-us')
         }
 
+    def __iter__(self):
+        for n in self.nodes:
+            yield n
+
+    @property
+    def available_nodes(self):
+        """
+        Returns a list of available nodes.
+        """
+        return [n for n in self.nodes if n.available]
+
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None):
         """
         Adds a node
