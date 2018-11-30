@@ -25,7 +25,7 @@ class PlayerManager:
         if not predicate:
             return list(self.players.values())
 
-        return [p for p in self.players if bool(predicate(p))]
+        return [p for p in self.players.values() if bool(predicate(p))]
 
     def remove(self, guild_id: int):
         """ Removes a player from the internal cache """
