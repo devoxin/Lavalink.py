@@ -63,16 +63,17 @@ class WebSocket:
     async def _listen(self):
         async for msg in self._ws:
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
+
             if msg.type == aiohttp.WSMsgType.text:
                 await self._handle_message(msg.json())
             elif msg.type in self._closers:
-                await self._websocket_closed(self._node, msg.data, msg.extra)
+                await self._websocket_closed(msg.data, msg.extra)
                 return
-        await self._websocket_closed(self._node)
+        await self._websocket_closed()
 
-    async def _websocket_closed(self, node, code: int = None, reason: str = None):
+    async def _websocket_closed(self, code: int = None, reason: str = None):
         self._ws = None
-        await self._node._manager._node_disconnect(node, code, reason)
+        await self._node._manager._node_disconnect(self._node, code, reason)
         await self.connect()
 
     async def _handle_message(self, data: dict):
