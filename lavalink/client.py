@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 import aiohttp
 
+from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
@@ -13,9 +14,11 @@ from .events import Event
 
 log = logging.getLogger('lavalink')
 
+
 def set_log_level(log_level):
     root_log = logging.getLogger('lavalink')
     root_log.handlers[0].setLevel(log_level)
+
 
 class Client:
     """
@@ -39,7 +42,7 @@ class Client:
         Do not change this unless you know what you are doing!
     """
 
-    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100, loop=None, player=None, bot=None, log_level=logging.INFO):
+    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100, loop=None, player=DefaultPlayer, bot=None, log_level=logging.INFO):
 
         set_log_level(log_level)
 

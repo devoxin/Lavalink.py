@@ -89,6 +89,9 @@ class BasePlayer(ABC):
         if {'sessionId', 'event'} == self._voice_state.keys():
             await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
 
+        if not self.channel_id:  # Disconnecting from a channel.
+            self._voice_state.clear()
+
     @abstractmethod
     async def change_node(self, node: Node):
         raise NotImplementedError

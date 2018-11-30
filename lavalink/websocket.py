@@ -23,6 +23,10 @@ class WebSocket:
         self._shards = self._lavalink._shard_count
         self._user_id = self._lavalink._user_id
 
+        self._closers = [aiohttp.WSMsgType.close,
+                         aiohttp.WSMsgType.closing,
+                         aiohttp.WSMsgType.closed]
+
         self._loop = self._lavalink._loop
         asyncio.ensure_future(self.connect())
 
@@ -59,15 +63,17 @@ class WebSocket:
     async def _listen(self):
         async for msg in self._ws:
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
-
             if msg.type == aiohttp.WSMsgType.text:
                 await self._handle_message(msg.json())
-            elif msg.type == aiohttp.WSMsgType.close or \
-                    msg.type == aiohttp.WSMsgType.closing or \
-                    msg.type == aiohttp.WSMsgType.closed:
-                await self._node._manager._node_disconnect(self._node, msg.data, msg.extra)
-                await self.connect()
-                return  # This should be redundant?
+            elif msg.type in self._closers:
+                await self._websocket_closed(self._node, msg.data, msg.extra)
+                return
+        await self._websocket_closed(self._node)
+
+    async def _websocket_closed(self, node, code: int = None, reason: str = None):
+        self._ws = None
+        await self._node._manager._node_disconnect(node, code, reason)
+        await self.connect()
 
     async def _handle_message(self, data: dict):
         op = data['op']
