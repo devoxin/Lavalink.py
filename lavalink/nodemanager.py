@@ -101,5 +101,4 @@ class NodeManager:
             return
 
         for player in node.players:
-            log.info(f'Changing node for {player} to {best_node.name}')
             await player.change_node(best_node)
