@@ -74,10 +74,10 @@ class NodeManager:
         """
         nodes = None
         if region:
-            nodes = [n for n in self.nodes if n.region == region and n.available]
+            nodes = [n for n in self.available_nodes if n.region == region]
 
         if not nodes:  # If there are no regional nodes available, or a region wasn't specified.
-            nodes = [n for n in self.nodes if n.available]
+            nodes = self.available_nodes
 
         if not nodes:
             return None
@@ -101,4 +101,5 @@ class NodeManager:
             return
 
         for player in node.players:
+            log.info(f'Changing node for {player} to {best_node.name}')
             await player.change_node(best_node)
