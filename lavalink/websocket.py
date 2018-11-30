@@ -96,7 +96,7 @@ class WebSocket:
         player = self._lavalink.players.get(int(data['guildId']))
 
         if not player:
-            return
+            log.warning('Received event for non-existent player! Node: `{}`, GuildId: {}'.format(self._node.name, data['guildId']))
 
         event_type = data['type']
         event = None
