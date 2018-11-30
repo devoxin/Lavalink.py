@@ -63,6 +63,7 @@ class WebSocket:
     async def _listen(self):
         async for msg in self._ws:
             log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
+
             if msg.type == aiohttp.WSMsgType.text:
                 await self._handle_message(msg.json())
             elif msg.type in self._closers:
