@@ -14,9 +14,11 @@ from .events import Event
 
 log = logging.getLogger('lavalink')
 
+
 def set_log_level(log_level):
     root_log = logging.getLogger('lavalink')
     root_log.handlers[0].setLevel(log_level)
+
 
 class Client:
     """

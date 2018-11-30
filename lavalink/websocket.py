@@ -24,8 +24,8 @@ class WebSocket:
         self._user_id = self._lavalink._user_id
 
         self._closers = [aiohttp.WSMsgType.close,
-                        aiohttp.WSMsgType.closing,
-                        aiohttp.WSMsgType.closed]
+                         aiohttp.WSMsgType.closing,
+                         aiohttp.WSMsgType.closed]
 
         self._loop = self._lavalink._loop
         asyncio.ensure_future(self.connect())
