@@ -1,26 +1,21 @@
-# WE DEMAND LESS NANIWARE
-
 <img align="right" src="https://its-called-hentai-and-its.art/9e83af1581.png" height="150" width="150">
 
 # Lavalink.py
 
-Lavalink.py serves to be an interface with various utilities to make interacting with Lavalink easier!
+Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink, while still promising full API coverage and powerful tools to get the most out of Lavalink.
 
-# Download Lavalink
-
-[Lavalink V3](https://ci.fredboat.com/guestAuth/repository/download/Lavalink_Build/.lastSuccessful/Lavalink.jar?branch=refs%2Fheads%2Fmaster)
+## Features
+- Regions
+- Multi-Node Support
+- Load Balancing (this includes region-based load balancing)
+- Equalizer
 
 # Getting Started
-Lavalink.py was built as an interface for Lavalink that you can use with discord.py.   
-  
-There aren't currently any docs for Lavalink.py at the time of writing (sorry!). We recommend that you check out the example music cogs, or check out the source itself!
+You may clone this repository and check out [the docs](docs/). The docs are not hosted anywhere, or 100% complete as of the time of writing. If you notice missing documentation, feel free to [open an issue](issues/) or [let us know in the Discord server](https://discord.gg/SbJXU9s)
 
-If you're using Lavalink V3, check out [examples/music-v3.py](https://github.com/Devoxin/Lavalink.py/blob/master/examples/music-v3.py)
-
-For Lavalink V2 users, check [examples/music-v2.py](https://github.com/Devoxin/Lavalink.py/blob/master/examples/music-v2.py)
+Additionally, there is an [example cog](lavalink/examples) (For Discord.py rewrite).
 
 # Links
 
-[Lavalink Wiki](https://github.com/Devoxin/Lavalink.py/wiki)
-
-[Get Support](https://discord.gg/SbJXU9s)
+[Discord Server](https://discord.gg/SbJXU9s)
+[Lavalink V3.1](https://ci.fredboat.com/guestAuth/repository/download/Lavalink_Build/.lastSuccessful/Lavalink.jar?branch=refs%2Fheads%2Fmaster)
