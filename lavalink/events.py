@@ -38,3 +38,11 @@ class TrackStartEvent(Event):
     def __init__(self, player, track):
         self.player = player
         self.track = track
+
+
+class PlayerUpdateEvent(Event):
+    """ This event will be dispatched when the player's progress changes """
+    def __init__(self, player, position: int, timestamp: int):
+        self.player = player
+        self.position = position
+        self.timestamp = timestamp

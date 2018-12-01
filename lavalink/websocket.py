@@ -87,7 +87,7 @@ class WebSocket:
             if not player:
                 return
 
-            player.update_state(data['state'])
+            await player.update_state(data['state'])
         elif op == 'event':
             await self._handle_event(data)
         else:
@@ -109,8 +109,7 @@ class WebSocket:
         elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
         elif event_type == 'WebSocketClosedEvent':
-            pass
-            #  TODO: Send new voice update?
+            pass  # TODO: Send new voice update?
         else:
             log.warning('Received unknown event of type {} on node `{}`'.format(event_type, self._node.name))
             return
