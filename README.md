@@ -13,7 +13,14 @@ Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) 
 # Getting Started
 You may clone this repository and check out [the docs](docs/). The docs are not hosted anywhere, or 100% complete at the time of writing. If you notice missing documentation, feel free to [open an issue](https://github.com/Devoxin/Lavalink.py/issues/) or [let us know in the Discord server](https://discord.gg/SbJXU9s).
 
-Additionally, there is an [example cog](lavalink/examples) (For Discord.py rewrite).
+Additionally, there is an [example cog](lavalink/examples). It should be noted that the example cog is oriented towards usage with Discord.py rewrite and Lavalink v3.1+, although backwards
+compatibility may be possible, it's not encouraged nor is support guaranteed.
+
+## Optional Dependencies
+
+`aiodns`   - Speed up DNS resolving.
+
+`cchardet` - A faster alternative to `chardet`.
 
 # Links
 
