@@ -82,13 +82,14 @@ class BasePlayer(ABC):
         })
 
         self.channel_id = data['channel_id']
-        await self._dispatch_voice_update()
 
-    async def _dispatch_voice_update(self):
-        if not self.channel_id:  # Disconnecting from a channel.
+        if not self.channel_id:  # We're disconnecting
             self._voice_state.clear()
             return
 
+        await self._dispatch_voice_update()
+
+    async def _dispatch_voice_update(self):
         if {'sessionId', 'event'} == self._voice_state.keys():
             await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
 
