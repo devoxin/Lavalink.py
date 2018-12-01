@@ -11,11 +11,12 @@ Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) 
 - Equalizer
 
 # Getting Started
-You may clone this repository and check out [the docs](docs/). The docs are not hosted anywhere, or 100% complete as of the time of writing. If you notice missing documentation, feel free to [open an issue](issues/) or [let us know in the Discord server](https://discord.gg/SbJXU9s)
+You may clone this repository and check out [the docs](docs/). The docs are not hosted anywhere, or 100% complete as of the time of writing. If you notice missing documentation, feel free to [open an issue](issues/) or [let us know in the Discord server](https://discord.gg/SbJXU9s).
 
 Additionally, there is an [example cog](lavalink/examples) (For Discord.py rewrite).
 
 # Links
 
 [Discord Server](https://discord.gg/SbJXU9s)
+
 [Lavalink V3.1](https://ci.fredboat.com/guestAuth/repository/download/Lavalink_Build/.lastSuccessful/Lavalink.jar?branch=refs%2Fheads%2Fmaster)
