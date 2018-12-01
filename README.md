@@ -2,7 +2,7 @@
 
 # Lavalink.py
 
-Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink, while still promising full API coverage and powerful tools to get the most out of Lavalink.
+Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
 
 ## Features
 - Regions
