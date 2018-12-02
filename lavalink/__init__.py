@@ -6,6 +6,8 @@ __license__ = 'MIT'
 __copyright__ = 'Copyright 2018 Devoxin'
 __version__ = '3.0.0'
 
+import logging
+import sys
 
 from .client import Client
 from .events import TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent
@@ -15,3 +17,16 @@ from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 from .utils import format_time
 from .websocket import WebSocket
+
+log = logging.getLogger('lavalink')
+
+fmt = logging.Formatter(
+    '[%(asctime)s] [lavalink.py] [%(levelname)s] %(message)s',
+    datefmt="%H:%M:%S"
+)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(fmt)
+log.addHandler(handler)
+
+log.setLevel(logging.DEBUG)

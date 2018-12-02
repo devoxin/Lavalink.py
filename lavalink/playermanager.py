@@ -15,6 +15,9 @@ class PlayerManager:
         for guild_id, player in self.players.items():
             yield guild_id, player
 
+    def __len__(self):
+        return len(self.players)
+
     def values(self):
         """ Returns an iterator that yields only values """
         for player in self.players.values():
@@ -42,7 +45,7 @@ class PlayerManager:
         """
         return self.players.get(guild_id)
 
-    def create(self, guild_id: int, region: str = 'eu', endpoint: str = None, node: Node = None):
+    def create(self, guild_id: int, region: str = 'eu', endpoint: str = None, node: Node = None, create: bool = True):
         """
         Creates a player if one doesn't exist with the given information.
 
@@ -65,6 +68,9 @@ class PlayerManager:
         """
         if guild_id in self.players:
             return self.players[guild_id]
+
+        if not create:
+            return None
 
         if node:
             return node
