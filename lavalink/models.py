@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from random import randrange
 from time import time
-from .events import TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, PlayerUpdateEvent  # noqa: F401
+from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, PlayerUpdateEvent,
+                     NodeChangedEvent)  # noqa: F401
 from .node import Node
 
 
@@ -317,6 +318,7 @@ class DefaultPlayer(BasePlayer):
         if self.node.available:
             await self.node._send(op='destroy', guildId=self.guild_id)
 
+        old_node = self.node
         self.node = node
 
         if self._voice_state:
@@ -336,4 +338,4 @@ class DefaultPlayer(BasePlayer):
             payload = [{'band': b, 'gain': g} for b, g in enumerate(self.equalizer)]
             await self.node._send(op='equalizer', guildId=self.guild_id, bands=payload)
 
-        # TODO: dispatch node change event
+        await self.node._dispatch_event(NodeChangedEvent(self, old_node, node))

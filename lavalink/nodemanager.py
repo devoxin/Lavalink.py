@@ -1,5 +1,6 @@
 import logging
 from .node import Node
+from .events import NodeConnectedEvent, NodeDisconnectedEvent
 
 log = logging.getLogger('lavalink')
 
@@ -89,11 +90,11 @@ class NodeManager:
 
     async def _node_connect(self, node: Node):
         log.info('Successfully connected to node `{}`'.format(node.name))
-        # TODO: Dispatch node connected event
+        await self._lavalink._dispatch_event(NodeConnectedEvent(node))
 
     async def _node_disconnect(self, node: Node, code: int, reason: str):
         log.warning('Disconnected from node `{}` ({}): {}'.format(node.name, code, reason))
-        # TODO: Dispatch node disconnected event
+        await self._lavalink._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
 
