@@ -22,7 +22,7 @@ class PlayerManager:
         """
         Removes a player from cache, and also Lavalink if applicable.
         Ensure you have disconnected the given guild_id from the voicechannel
-        first (if applicable).
+        first, if connected.
 
         ONLY USE THIS IF YOU KNOW WHAT YOU'RE DOING!
         Usage of this function may lead to invalid cache states!
