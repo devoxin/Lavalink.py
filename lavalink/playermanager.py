@@ -10,6 +10,9 @@ class PlayerManager:
         self.players = {}
         self.default_player = player
 
+    def __len__(self):
+        return len(self.players)
+
     def __iter__(self):
         """ Returns an iterator that yields a tuple of (guild_id, player). """
         for guild_id, player in self.players.items():
