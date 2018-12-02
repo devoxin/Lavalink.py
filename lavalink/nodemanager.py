@@ -5,11 +5,11 @@ log = logging.getLogger('lavalink')
 
 
 class NodeManager:
-    def __init__(self, lavalink):
+    def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
         self.nodes = []
 
-        self.regions = {
+        self.regions = regions or {
             'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica'),
             'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'london'),
             'us': ('us', 'brazil')
