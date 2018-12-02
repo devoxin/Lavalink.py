@@ -98,6 +98,7 @@ class WebSocket:
 
         if not player:
             log.warning('Received event for non-existent player! Node: `{}`, GuildId: {}'.format(self._node.name, data['guildId']))
+            return
 
         event_type = data['type']
         event = None
