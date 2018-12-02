@@ -109,7 +109,7 @@ class WebSocket:
         elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
         elif event_type == 'WebSocketClosedEvent':
-            pass  # TODO: Send new voice update?
+            pass  # TODO: Dispatch event
         else:
             log.warning('Received unknown event of type {} on node `{}`'.format(event_type, self._node.name))
             return
