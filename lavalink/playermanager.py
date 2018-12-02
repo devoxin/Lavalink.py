@@ -18,6 +18,26 @@ class PlayerManager:
         for guild_id, player in self.players.items():
             yield guild_id, player
 
+    async def destroy(self, guild_id: int):
+        """
+        Removes a player from cache, and also Lavalink if applicable.
+        ONLY USE THIS IF YOU KNOW WHAT YOU'RE DOING!
+        Usage of this function may lead to invalid cache states!
+
+        Additionally, make sure you have disconnected the given guild_id
+        from the voicechannel first (if applicable).
+        ----------
+        :param guild_id:
+            The guild_id associated with the player to remove.
+        """
+        if guild_id not in self.players:
+            return
+
+        player = self.players.pop(guild_id)
+
+        if player.node and player.node.available:
+            await player.node._send(op='destroy', guildId=player.guild_id)
+
     def values(self):
         """ Returns an iterator that yields only values """
         for player in self.players.values():
