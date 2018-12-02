@@ -21,11 +21,12 @@ class PlayerManager:
     async def destroy(self, guild_id: int):
         """
         Removes a player from cache, and also Lavalink if applicable.
+        Ensure you have disconnected the given guild_id from the voicechannel
+        first (if applicable).
+
         ONLY USE THIS IF YOU KNOW WHAT YOU'RE DOING!
         Usage of this function may lead to invalid cache states!
 
-        Additionally, make sure you have disconnected the given guild_id
-        from the voicechannel first (if applicable).
         ----------
         :param guild_id:
             The guild_id associated with the player to remove.
