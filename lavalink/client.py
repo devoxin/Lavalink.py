@@ -23,25 +23,30 @@ class Client:
 
     Parameters
     ----------
-    user_id: :class:`str`
+    user_id: int
         The user id of the bot.
-    shard_count: Optional[:class:`int`]
+    shard_count: Optional[int]
         The amount of shards your bot has.
-    pool_size: Optional[:class:`int`]
+    pool_size: Optional[int]
         The amount of connections to keep in a pool,
         used for HTTP requests and WS connections.
     loop: Optional[event loop]
         The `event loop`_ to use for asynchronous operations.
-    player: Optional[class]
+    player: Optional[BasePlayer]
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
         Do not change this unless you know what you are doing!
+    regions: Optional[dict]
+        A dictionary representing region -> discord endpoint. You should only
+        change this if you know what you're doing and want more control over
+        which regions handle specific locations.
     """
 
-    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100, loop=None, player=DefaultPlayer):
+    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100, loop=None, player=DefaultPlayer,
+                 regions: dict = None):
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
-        self.node_manager = NodeManager(self)
+        self.node_manager = NodeManager(self, regions)
         self.players = PlayerManager(self, player)
 
         self._event_hooks = []
