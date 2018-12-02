@@ -11,8 +11,8 @@ class NodeManager:
 
         self.regions = {
             'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica'),
-            'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'vip-amsterdam', 'london'),
-            'us': ('us', 'brazil', 'vip-us')
+            'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'london'),
+            'us': ('us', 'brazil')
         }
 
     def __iter__(self):
@@ -54,10 +54,12 @@ class NodeManager:
         if not endpoint:
             return None
 
-        for key in self.regions:
-            nodes = [n for n in self.nodes if n.region == key]
+        endpoint = endpoint.replace('vip-')
 
-            if not nodes or not any(n.available for n in nodes):
+        for key in self.regions:
+            nodes = [n for n in self.available_nodes if n.region == key]
+
+            if not nodes:
                 continue
 
             if endpoint.startswith(self.regions[key]):
