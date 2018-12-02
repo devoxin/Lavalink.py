@@ -55,7 +55,7 @@ class NodeManager:
         if not endpoint:
             return None
 
-        endpoint = endpoint.replace('vip-')
+        endpoint = endpoint.replace('vip-', '')
 
         for key in self.regions:
             nodes = [n for n in self.available_nodes if n.region == key]
