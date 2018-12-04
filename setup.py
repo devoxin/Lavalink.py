@@ -14,12 +14,12 @@ setup(
     name='lavalink',
     packages=['lavalink'],
     version=version,
-    description='A lavalink interface built for discord.py',
+    description='A lavalink interface built for discord.py',  # TODO: Change this if I successfully generic-ify the client
     author='Devoxin',
     author_email='luke@serux.pro',
     url='https://github.com/Devoxin/Lavalink.py',
     download_url='https://github.com/Devoxin/Lavalink.py/archive/{}.tar.gz'.format(version),
     keywords=['lavalink'],
     include_package_data=True,
-    install_requires=['websockets>=5.0.1,<6.1.0', 'aiohttp']
+    install_requires=['aiohttp']
 )
