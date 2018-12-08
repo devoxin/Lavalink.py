@@ -190,13 +190,16 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, AudioTrack.build(track, requester))
 
-    async def play(self, track: AudioTrack = None):
+    async def play(self, track: AudioTrack = None, start_time: int = 0):
         """
         Plays the given track.
         ----------
         :param track:
             The track to play. If left unspecified, this will default
             to the first track in the queue.
+        :param start_time
+            Setting that determines the number of milliseconds to offset the track by.
+            If left unspecified, it will start the track at its beginning.
         """
         if self.repeat and self.current:
             self.queue.append(self.current)
@@ -219,7 +222,7 @@ class DefaultPlayer(BasePlayer):
                 track = self.queue.pop(0)
 
         self.current = track
-        await self.node._send(op='play', guildId=self.guild_id, track=track.track)
+        await self.node._send(op='play', guildId=self.guild_id, track=track.track, startTime=start_time)
         await self.node._dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
