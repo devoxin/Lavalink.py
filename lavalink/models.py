@@ -197,7 +197,7 @@ class DefaultPlayer(BasePlayer):
         :param track:
             The track to play. If left unspecified, this will default
             to the first track in the queue.
-        :param start_time
+        :param start_time:
             Setting that determines the number of milliseconds to offset the track by.
             If left unspecified, it will start the track at its beginning.
         """
