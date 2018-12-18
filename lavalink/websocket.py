@@ -115,10 +115,10 @@ class WebSocket:
             log.warning('Received unknown event of type {} on node `{}`'.format(event_type, self._node.name))
             return
 
+        await self._lavalink._dispatch_event(event)
+
         if player:
             await player.handle_event(event)
-
-        await self._lavalink._dispatch_event(event)
 
     async def _send(self, **data):
         if self.connected:
