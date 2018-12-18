@@ -49,7 +49,7 @@ class WebSocket:
             attempt += 1
 
             try:
-                self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers)
+                self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers, heartbeat=60)
             except aiohttp.ClientConnectorError:
                 if attempt == 1:
                     log.warning('Failed to connect to node `{}`!'.format(self._node.name))
