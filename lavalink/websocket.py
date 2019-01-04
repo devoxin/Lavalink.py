@@ -52,7 +52,7 @@ class WebSocket:
                 self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers, heartbeat=60)
             except aiohttp.ClientConnectorError:
                 if attempt == 1:
-                    log.warning('Failed to connect to node `{}`!'.format(self._node.name))
+                    log.warning('[NODE-{}] Failed to establish connection!'.format(self._node.name))
 
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
@@ -62,7 +62,7 @@ class WebSocket:
 
     async def _listen(self):
         async for msg in self._ws:
-            log.debug('Received websocket message from node `{}`: {}'.format(self._node.name, msg.data))
+            log.debug('[NODE-{}] Received WebSocket message: {}'.format(self._node.name, msg.data))
 
             if msg.type == aiohttp.WSMsgType.text:
                 await self._handle_message(msg.json())
@@ -91,13 +91,13 @@ class WebSocket:
         elif op == 'event':
             await self._handle_event(data)
         else:
-            log.warning('Received unknown op: {}'.format(op))
+            log.warning('[NODE-{}] Received unknown op: {}'.format(self._node.name, op))
 
     async def _handle_event(self, data: dict):
         player = self._lavalink.players.get(int(data['guildId']))
 
         if not player:
-            log.warning('Received event for non-existent player! Node: `{}`, GuildId: {}'.format(self._node.name, data['guildId']))
+            log.warning('[NODE-{}] Received event for non-existent player! GuildId: {}'.format(self._node.name, data['guildId']))
             return
 
         event_type = data['type']
@@ -112,7 +112,7 @@ class WebSocket:
         elif event_type == 'WebSocketClosedEvent':
             pass  # TODO: Dispatch event
         else:
-            log.warning('Received unknown event of type {} on node `{}`'.format(event_type, self._node.name))
+            log.warning('[NODE-{}] Unknown event received: {}'.format(self._node.name, event_type))
             return
 
         await self._lavalink._dispatch_event(event)
@@ -122,8 +122,8 @@ class WebSocket:
 
     async def _send(self, **data):
         if self.connected:
-            log.debug('Sending payload {}'.format(str(data)))
+            log.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(data)))
             await self._ws.send_json(data)
         else:
-            log.debug('Send called node `{}` ready, payload queued: {}'.format(self._node.name, str(data)))
+            log.debug('[NODE-{}] Send called before WebSocket ready!'.format(self._node.name))
             self._message_queue.append(data)
