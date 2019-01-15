@@ -72,6 +72,12 @@ class WebSocket:
                     await self._send(op='configureResuming', key=self._resume_key, timeout=self._resume_timeout)
                     self._resuming_configured = True
 
+                if self._message_queue:
+                    for message in self._message_queue:
+                        await self._send(**message)
+
+                    self._message_queue.clear()
+
     async def _listen(self):
         async for msg in self._ws:
             log.debug('[NODE-{}] Received WebSocket message: {}'.format(self._node.name, msg.data))
