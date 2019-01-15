@@ -27,13 +27,14 @@ class NodeManager:
         """
         return [n for n in self.nodes if n.available]
 
-    def add_node(self, host: str, port: int, password: str, region: str, name: str = None):
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+                 resume_key: str = None, resume_timeout: int = None):
         """
         Adds a node
         ----------
         TODO
         """
-        node = Node(self, host, port, password, region, name)
+        node = Node(self, host, port, password, region, name, resume_key, resume_timeout)
         self.nodes.append(node)
 
     def remove_node(self, node: Node):

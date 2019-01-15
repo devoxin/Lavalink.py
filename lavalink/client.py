@@ -60,7 +60,8 @@ class Client:
         if hook not in self._event_hooks:
             self._event_hooks.append(hook)
 
-    def add_node(self, host: str, port: int, password: str, region: str, name: str = None):
+    def add_node(self, host: str, port: int, password: str, region: str,
+                 resume_key: str = None, resume_timeout: int = None, name: str = None):
         """
         Adds a node to Lavalink's node manager.
         ----------
@@ -72,10 +73,14 @@ class Client:
             The password used for authentication.
         :param region:
             The region to assign this node to.
+        :param resume_key:
+            The key used for resuming a WebSocket connection to Lavalink in the event it becomes disconnected.
+        :param resume_timeout:
+            How long the node should wait for a connection while disconnected before clearing all players.
         :param name:
             An identifier for the node that will show in logs.
         """
-        self.node_manager.add_node(host, port, password, region, name)
+        self.node_manager.add_node(host, port, password, region, name, resume_key, resume_timeout)
 
     async def get_tracks(self, query: str, node: Node = None):
         """|coro|
