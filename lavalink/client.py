@@ -61,7 +61,7 @@ class Client:
             self._event_hooks.append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
-                 resume_key: str = None, resume_timeout: int = None, name: str = None):
+                 resume_key: str = None, resume_timeout: int = 60, name: str = None):
         """
         Adds a node to Lavalink's node manager.
         ----------
