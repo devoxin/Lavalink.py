@@ -74,7 +74,7 @@ class Client:
         :param region:
             The region to assign this node to.
         :param resume_key:
-            The key used for resuming a WebSocket connection to Lavalink in the event it becomes disconnected.
+            A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
         :param resume_timeout:
             How long the node should wait for a connection while disconnected before clearing all players.
         :param name:
