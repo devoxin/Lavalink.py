@@ -28,7 +28,7 @@ class NodeManager:
         return [n for n in self.nodes if n.available]
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
-                 resume_key: str = None, resume_timeout: int = None):
+                 resume_key: str = None, resume_timeout: int = 60):
         """
         Adds a node
         ----------
