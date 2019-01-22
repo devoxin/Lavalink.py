@@ -67,8 +67,8 @@ class WebSocket:
                 await self._node._manager._node_connect(self._node)
                 asyncio.ensure_future(self._listen())
 
-                if not self._resuming_configured and self._resume_key is not None \
-                        and self._resume_timeout:
+                if not self._resuming_configured and self._resume_key \
+                        and (self._resume_timeout is not None and self._resume_timeout > 0):
                     await self._send(op='configureResuming', key=self._resume_key, timeout=self._resume_timeout)
                     self._resuming_configured = True
 
