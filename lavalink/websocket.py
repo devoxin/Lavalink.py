@@ -47,7 +47,7 @@ class WebSocket:
             'User-Id': str(self._user_id)
         }
 
-        if self._resuming_configured and self._resume_key is not None:
+        if self._resuming_configured and self._resume_key:
             headers['Resume-Key'] = self._resume_key
 
         attempt = 0
@@ -68,7 +68,7 @@ class WebSocket:
                 asyncio.ensure_future(self._listen())
 
                 if not self._resuming_configured and self._resume_key is not None \
-                        and self._resume_timeout is not None:
+                        and self._resume_timeout:
                     await self._send(op='configureResuming', key=self._resume_key, timeout=self._resume_timeout)
                     self._resuming_configured = True
 
