@@ -8,7 +8,7 @@ log = logging.getLogger('lavalink')
 
 
 class WebSocket:
-    def __init__(self, node, host: str, port: int, password: str):
+    def __init__(self, node, host: str, port: int, password: str, resume_key: str, resume_timeout: int):
         self._node = node
         self._lavalink = self._node._manager._lavalink
 
@@ -19,6 +19,10 @@ class WebSocket:
         self._host = host
         self._port = port
         self._password = password
+        self._resume_key = resume_key
+        self._resume_timeout = resume_timeout
+
+        self._resuming_configured = False
 
         self._shards = self._lavalink._shard_count
         self._user_id = self._lavalink._user_id
@@ -43,6 +47,9 @@ class WebSocket:
             'User-Id': str(self._user_id)
         }
 
+        if self._resuming_configured and self._resume_key:
+            headers['Resume-Key'] = self._resume_key
+
         attempt = 0
 
         while not self.connected:
@@ -59,6 +66,17 @@ class WebSocket:
             else:
                 await self._node._manager._node_connect(self._node)
                 asyncio.ensure_future(self._listen())
+
+                if not self._resuming_configured and self._resume_key \
+                        and (self._resume_timeout and self._resume_timeout > 0):
+                    await self._send(op='configureResuming', key=self._resume_key, timeout=self._resume_timeout)
+                    self._resuming_configured = True
+
+                if self._message_queue:
+                    for message in self._message_queue:
+                        await self._send(**message)
+
+                    self._message_queue.clear()
 
     async def _listen(self):
         async for msg in self._ws:
