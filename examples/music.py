@@ -9,7 +9,6 @@ import discord
 import lavalink
 from discord.ext import commands
 
-time_rx = re.compile('[0-9]+')
 url_rx = re.compile('https?:\\/\\/(?:www\\.)?.+')
 
 
@@ -46,6 +45,8 @@ class Music:
         """ Connects to the given voicechannel ID. A channel_id of `None` means disconnect. """
         ws = self.bot._connection._get_websocket(guild_id)
         await ws.voice_state(str(guild_id), channel_id)
+        # The above looks dirty, we could alternatively use `bot.shards[shard_id].ws` but that assumes
+        # the bot instance is an AutoShardedBot.
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query: str):
@@ -84,19 +85,11 @@ class Music:
             await player.play()
 
     @commands.command()
-    async def seek(self, ctx, *, time: str):
+    async def seek(self, ctx, *, seconds: int):
         """ Seeks to a given position in a track. """
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
-        seconds = time_rx.search(time)
-        if not seconds:
-            return await ctx.send('You need to specify the amount of seconds to skip!')
-
-        seconds = int(seconds.group()) * 1000
-        if time.startswith('-'):
-            seconds *= -1
-
-        track_time = player.position + seconds
+        track_time = player.position + (seconds * 1000)
         await player.seek(track_time)
 
         await ctx.send(f'Moved track to **{lavalink.utils.format_time(track_time)}**')
