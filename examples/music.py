@@ -27,8 +27,10 @@ class Music:
         self.bot.lavalink._event_hooks.clear()
 
     async def track_hook(self, event):
-        if isinstance(event, lavalink.events.TrackEndEvent):
-            pass  # Send track ended message to channel.
+        if isinstance(event, lavalink.events.QueueEndEvent):
+            guild_id = int(event.player.guild_id)
+            await self.connect_to(guild_id, None)
+            # Disconnect from the channel -- there's nothing else to play.
 
     async def __before_invoke(self, ctx):
         guild_check = ctx.guild is not None
@@ -73,13 +75,13 @@ class Music:
 
             embed.title = 'Playlist Enqueued!'
             embed.description = f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks'
-            await ctx.send(embed=embed)
         else:
             track = results['tracks'][0]
             embed.title = 'Track Enqueued'
             embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
-            await ctx.send(embed=embed)
             player.add(requester=ctx.author.id, track=track)
+
+        await ctx.send(embed=embed)
 
         if not player.is_playing:
             await player.play()
@@ -176,13 +178,13 @@ class Music:
 
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, volume: int = None):
-        """ Changes the player's volume. Must be between 0 and 1000. Error Handling for that is done by Lavalink. """
+        """ Changes the player's volume (0-1000). """
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not volume:
             return await ctx.send(f'🔈 | {player.volume}%')
 
-        await player.set_volume(volume)
+        await player.set_volume(volume)  # Lavalink will automatically cap values between, or equal to 0-1000.
         await ctx.send(f'🔈 | Set to {player.volume}%')
 
     @commands.command()
@@ -217,8 +219,7 @@ class Music:
         if index > len(player.queue) or index < 1:
             return await ctx.send(f'Index has to be **between** 1 and {len(player.queue)}')
 
-        index -= 1
-        removed = player.queue.pop(index)
+        removed = player.queue.pop(index - 1)  # Account for 0-index.
 
         await ctx.send(f'Removed **{removed.title}** from the queue.')
 
@@ -233,7 +234,7 @@ class Music:
         results = await player.node.get_tracks(query)
 
         if not results or not results['tracks']:
-            return await ctx.send('Nothing found')
+            return await ctx.send('Nothing found.')
 
         tracks = results['tracks'][:10]  # First 10 results
 
