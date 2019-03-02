@@ -15,10 +15,10 @@ import lavalink
 from discord.ext import commands
 
 time_rx = re.compile('[0-9]+')
-url_rx = re.compile('https?:\/\/(?:www\.)?.+')
+url_rx = re.compile('https?:\/\/(?:www\.)?.+')  # noqa: W605
 
 
-class Music:
+class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -27,7 +27,7 @@ class Music:
                             loop=bot.loop, log_level=logging.DEBUG)
             self.bot.lavalink.register_hook(self._track_hook)
 
-    def __unload(self):
+    def cog_unload(self):
         for guild_id, player in self.bot.lavalink.players:
             self.bot.loop.create_task(player.disconnect())
             player.cleanup()
