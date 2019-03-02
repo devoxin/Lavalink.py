@@ -8,12 +8,10 @@ from .node import Node
 
 class InvalidTrack(Exception):
     """ This exception will be raised when an invalid track was passed. """
-    pass
 
 
 class TrackNotBuilt(Exception):
     """ This exception will be raised when AudioTrack objects hasn't been built. """
-    pass
 
 
 class AudioTrack:
