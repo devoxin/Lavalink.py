@@ -1,6 +1,5 @@
 class InvalidTrack(Exception):
     """ This exception will be raised when an invalid track was passed. """
-    pass
 
 
 class AudioTrack:
