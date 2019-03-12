@@ -26,12 +26,6 @@ class Music(commands.Cog):
     def cog_unload(self):
         self.bot.lavalink._event_hooks.clear()
 
-    async def track_hook(self, event):
-        if isinstance(event, lavalink.events.QueueEndEvent):
-            guild_id = int(event.player.guild_id)
-            await self.connect_to(guild_id, None)
-            # Disconnect from the channel -- there's nothing else to play.
-
     async def cog_before_invoke(self, ctx):
         guild_check = ctx.guild is not None
         #  This is essentially the same as `@commands.guild_only()`
@@ -42,6 +36,20 @@ class Music(commands.Cog):
             #  Ensure that the bot and command author share a mutual voicechannel.
 
         return guild_check
+
+    async def cog_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandInvokeError):
+            await ctx.send(error.original)
+            # The above handles errors thrown in this cog and shows them to the user.
+            # This shouldn't be a problem as the only errors thrown in this cog are from `ensure_voice`
+            # which contain a reason string, such as "Join a voicechannel" etc. You can modify the above
+            # if you want to do things differently.
+
+    async def track_hook(self, event):
+        if isinstance(event, lavalink.events.QueueEndEvent):
+            guild_id = int(event.player.guild_id)
+            await self.connect_to(guild_id, None)
+            # Disconnect from the channel -- there's nothing else to play.
 
     async def connect_to(self, guild_id: int, channel_id: str):
         """ Connects to the given voicechannel ID. A channel_id of `None` means disconnect. """
