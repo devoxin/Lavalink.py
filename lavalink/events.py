@@ -1,6 +1,5 @@
 class Event:
     """ The base for all Lavalink events. """
-    pass
 
 
 class QueueEndEvent(Event):

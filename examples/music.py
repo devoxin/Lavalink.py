@@ -9,10 +9,10 @@ import discord
 import lavalink
 from discord.ext import commands
 
-url_rx = re.compile('https?:\\/\\/(?:www\\.)?.+')
+url_rx = re.compile('https?:\\/\\/(?:www\\.)?.+')  # noqa: W605
 
 
-class Music:
+class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -23,7 +23,7 @@ class Music:
 
         bot.lavalink.add_event_hook(self.track_hook)
 
-    def __unload(self):
+    def cog_unload(self):
         self.bot.lavalink._event_hooks.clear()
 
     async def track_hook(self, event):
@@ -32,7 +32,7 @@ class Music:
             await self.connect_to(guild_id, None)
             # Disconnect from the channel -- there's nothing else to play.
 
-    async def __before_invoke(self, ctx):
+    async def cog_before_invoke(self, ctx):
         guild_check = ctx.guild is not None
         #  This is essentially the same as `@commands.guild_only()`
         #  except it saves us repeating ourselves (and also a few lines).
