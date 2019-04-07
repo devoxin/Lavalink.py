@@ -3,44 +3,99 @@ class Event:
 
 
 class QueueEndEvent(Event):
-    """ This event is dispatched when there are no more songs in the queue. """
+    """
+    This event is dispatched when there are no more songs in the queue.
+
+    Parameters
+    ----------
+    player: BasePlayer
+        The player that has no more songs in queue
+    """
     def __init__(self, player):
         self.player = player
 
 
 class TrackStuckEvent(Event):
-    """ This event is dispatched when the currently playing song is stuck. """
-    def __init__(self, player, track, threshold):
+    """
+    This event is dispatched when the currently playing track is stuck.
+
+    Parameters
+    ----------
+    player: BasePlayer
+        The player that has the playing track being stuck
+    track: AudioTrack
+        The track is stuck from playing
+    threshold: int
+        The amount of time the track had while being stuck"""
+    def __init__(self, player, track, threshold: int):
         self.player = player
         self.track = track
         self.threshold = threshold
 
 
 class TrackExceptionEvent(Event):
-    """ This event is dispatched when an exception occurs while playing a track. """
+    """
+    This event is dispatched when an exception occurs while playing a track.
+
+    Parameters
+    ----------
+    player: BasePlayer
+        The player that had the exception occur while playing a track
+    track: AudioTrack
+        The track that had the exception while playing
+    exception: Exception
+        The type of exception that the track had while playing"""
     def __init__(self, player, track, exception):
-        self.exception = exception
         self.player = player
         self.track = track
+        self.exception = exception
 
 
 class TrackEndEvent(Event):
-    """ This event is dispatched when the player finished playing a track. """
-    def __init__(self, player, track, reason):
-        self.reason = reason
+    """
+    This event is dispatched when the player finished playing a track.
+
+    Parameters
+    ----------
+    player: BasePlayer
+        The player that finished playing a track
+    track: AudioTrack
+        The track that finished playing
+    reason: str
+        The reason why the track stopped playing"""
+    def __init__(self, player, track, reason: str):
         self.player = player
         self.track = track
+        self.reason = reason
 
 
 class TrackStartEvent(Event):
-    """ This event is dispatched when the player starts to play a track. """
+    """
+    This event is dispatched when the player starts to play a track.
+
+    Parameters
+    ----------
+    player: BasePlayer
+        The player that started to play a track
+    track: AudioTrack
+        The track that started playing"""
     def __init__(self, player, track):
         self.player = player
         self.track = track
 
 
 class PlayerUpdateEvent(Event):
-    """ This event is dispatched when the player's progress changes """
+    """
+    This event is dispatched when the player's progress changes
+
+    Parameters
+    ----------
+    player: BasePlayer
+        The player that's progress was updated
+    position: int
+        The position of the player that was changed to
+    timestamp: int
+        The timestamp that the player is currently on"""
     def __init__(self, player, position: int, timestamp: int):
         self.player = player
         self.position = position
@@ -48,7 +103,17 @@ class PlayerUpdateEvent(Event):
 
 
 class NodeDisconnectedEvent(Event):
-    """ This event is dispatched when a node disconnects and becomes unavailable """
+    """
+    This event is dispatched when a node disconnects and becomes unavailable.
+
+    Parameters
+    ----------
+    node: Node
+        The node that was disconnected from
+    code: int
+        The status code of the event
+    reason: str
+        The reason of why the node was disconnected"""
     def __init__(self, node, code: int, reason: str):
         self.node = node
         self.code = code
@@ -56,7 +121,14 @@ class NodeDisconnectedEvent(Event):
 
 
 class NodeConnectedEvent(Event):
-    """ This event is dispatched when Lavalink.py successfully connects to a node """
+    """
+    This event is dispatched when Lavalink.py successfully connects to a node.
+
+    Parameters
+    ----------
+    node: Node
+        The node that was successfully connected to
+    """
     def __init__(self, node):
         self.node = node
 
@@ -82,4 +154,25 @@ class NodeChangedEvent(Event):
         self.new_node = new_node
 
 
-# TODO: The above needs their parameters documented.
+class WebSocketClosedEvent(Event):
+    """
+    This event is dispatched when a audio websocket to Discord
+    is closed. This can happen happen for various reasons like an
+    expired voice server update.
+
+    Parameters
+    ----------
+    guildId: str
+        The player whose node was changed.
+    code: int
+        The node the player was moved from.
+    reason: str
+        The node the player was moved to.
+    byRemote: bool
+        If the websocket was closed remotely.
+    """
+    def __init__(self, guildId: str, code: int, reason: str, byRemote: bool):
+        self.guildId = guildId
+        self.code = code
+        self.reason = reason
+        self.byRemote = byRemote

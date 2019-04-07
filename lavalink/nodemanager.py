@@ -1,3 +1,4 @@
+# import asyncio
 import logging
 from .node import Node
 from .events import NodeConnectedEvent, NodeDisconnectedEvent
@@ -9,6 +10,7 @@ class NodeManager:
     def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
         self.nodes = []
+        self.player_queue = []
 
         self.regions = regions or {
             'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica'),
@@ -32,7 +34,21 @@ class NodeManager:
         """
         Adds a node
         ----------
-        TODO
+        :param host:
+            The host to which Lavalink server you're connecting to.
+        :param port:
+            The port to the Lavalink server you're connecting to.
+        :param password:
+            The password to the Lavalink server you're are connecting to, to authenticate with it.
+            Default password is ``youshallnotpass``.
+        :param region:
+            The region you want your node to connect to.
+        :param name:
+            The name of your node.
+        :param resume_key:
+            The resume key of the session you want to resume to.
+        :param resume_timeout:
+            The amount of time in seconds, that lavalink.py will reconnect to your node from a timeout.
         """
         node = Node(self, host, port, password, region, name, resume_key, resume_timeout)
         self.nodes.append(node)
@@ -100,9 +116,24 @@ class NodeManager:
         best_node = self.find_ideal_node(node.region)
 
         if not best_node:
-            # TODO: Move players to a queue, wait for a node to connect?
-            log.error('Unable to move players, no available nodes!')
+            for player in node.players:
+                self.player_queue.append(player)
+
+            await self._wait_for_best_node(node)
+            log.error('Unable to move players, no available nodes! Trying to find one to connect to.')
             return
 
         for player in node.players:
             await player.change_node(best_node)
+
+    async def _wait_for_best_node(self, original_node):
+        while True:
+            best_node = self.find_ideal_node()
+
+            if best_node:
+                for player in self.player_queue:
+                    await player.change_node(best_node)
+                self.player_queue.clear()
+                log.info('Connecting all players that were connected to NODE-{} to NODE-{}'.format(original_node.name, best_node.name))
+                return
+            # await asyncio.sleep(10) Not sure if I need this here or not

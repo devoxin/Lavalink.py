@@ -2,7 +2,7 @@ import asyncio
 import logging
 import aiohttp
 from .stats import Stats
-from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent
+from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, WebSocketClosedEvent
 
 log = logging.getLogger('lavalink')
 
@@ -128,7 +128,7 @@ class WebSocket:
         elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
         elif event_type == 'WebSocketClosedEvent':
-            pass  # TODO: Dispatch event
+            event = WebSocketClosedEvent(data["guildId"], data["code"], data["reason"], data["byRemote"])
         else:
             log.warning('[NODE-{}] Unknown event received: {}'.format(self._node.name, event_type))
             return

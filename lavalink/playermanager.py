@@ -2,6 +2,10 @@ from .node import Node
 from .models import BasePlayer
 
 
+class NodesNotFound(Exception):
+    """The exception will be raised when their are no nodes found to connect to."""
+
+
 class PlayerManager:
     def __init__(self, lavalink, player):
         if not issubclass(player, BasePlayer):
@@ -99,7 +103,7 @@ class PlayerManager:
         node = self._lavalink.node_manager.find_ideal_node(region)
 
         if not node:
-            raise Exception('No available nodes!')  # TODO: NodeException or something
+            raise NodesNotFound('No available nodes!')
 
         self.players[guild_id] = player = self.default_player(guild_id, node)
         return player
