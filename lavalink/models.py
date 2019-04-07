@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from random import randrange
 from time import time
-from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, PlayerUpdateEvent,
-                     NodeChangedEvent)  # noqa: F401
+from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent,
+                     QueueEndEvent, PlayerUpdateEvent, NodeChangedEvent)  # noqa: F401
 from .node import Node
 
 
@@ -122,7 +122,7 @@ class DefaultPlayer(BasePlayer):
 
     @property
     def is_connected(self):
-        """ Returns whether the player is connected to a voicechannel or not """
+        """ Returns whether the player is connected to a voicechannel or not. """
         return self.channel_id is not None
 
     @property
@@ -164,7 +164,7 @@ class DefaultPlayer(BasePlayer):
         Removes an item from the the stored user data.
         ----------
         :param key:
-            The key to delete
+            The key to delete.
         """
         try:
             del self._user_data[key]
@@ -238,7 +238,7 @@ class DefaultPlayer(BasePlayer):
         Sets the player's paused state.
         ----------
         :param pause:
-            Whether to pause the player or not
+            Whether to pause the player or not.
         """
         await self.node._send(op='pause', guildId=self.guild_id, pause=pause)
         self.paused = pause
