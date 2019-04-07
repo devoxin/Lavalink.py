@@ -106,7 +106,7 @@ class NodeManager:
 
     async def _node_connect(self, node: Node):
         for player in self._player_queue:
-            player.change_node(node, node.region)
+            player.change_node(node)
             log.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
 
         log.info('[NODE-{}] Successfully established connection'.format(node.name))
