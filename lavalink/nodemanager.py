@@ -1,4 +1,3 @@
-# import asyncio
 import logging
 from .node import Node
 from .events import NodeConnectedEvent, NodeDisconnectedEvent
@@ -8,9 +7,10 @@ log = logging.getLogger('lavalink')
 
 class NodeManager:
     def __init__(self, lavalink, regions: dict):
-        self._lavalink = lavalink
         self.nodes = []
-        self.player_queue = []
+
+        self._lavalink = lavalink
+        self._player_queue = []
 
         self.regions = regions or {
             'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica'),
@@ -32,23 +32,22 @@ class NodeManager:
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
                  resume_key: str = None, resume_timeout: int = 60):
         """
-        Adds a node
+        Adds a node to your Lavalink server.
         ----------
         :param host:
-            The host to which Lavalink server you're connecting to.
+            The address of the Lavalink node.
         :param port:
-            The port to the Lavalink server you're connecting to.
+            The port to use for websocket and REST connections.
         :param password:
-            The password to the Lavalink server you're are connecting to, to authenticate with it.
-            Default password is ``youshallnotpass``.
+            The password used for authentication.
         :param region:
-            The region you want your node to connect to.
-        :param name:
-            The name of your node.
+            The region to assign this node to.
         :param resume_key:
-            The resume key of the session you want to resume to.
+            A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
         :param resume_timeout:
-            The amount of time in seconds, that lavalink.py will reconnect to your node from a timeout.
+            How long the node should wait for a connection while disconnected before clearing all players.
+        :param name:
+            An identifier for the node that will show in logs.
         """
         node = Node(self, host, port, password, region, name, resume_key, resume_timeout)
         self.nodes.append(node)
@@ -58,16 +57,16 @@ class NodeManager:
         Removes a node.
         ----------
         :param node:
-            The node to remove from the list
+            The node to remove from the list.
         """
         self.nodes.remove(node)
 
     def get_region(self, endpoint: str):
         """
-        Returns a Lavalink.py-friendly region from a Discord voice server address
+        Returns a Lavalink.py-friendly region from a Discord voice server address.
         ----------
         :param endpoint:
-            The address of the Discord voice server
+            The address of the Discord voice server.
         """
         if not endpoint:
             return None
@@ -106,7 +105,12 @@ class NodeManager:
         return best_node
 
     async def _node_connect(self, node: Node):
+        for player in self._player_queue:
+            player.change_node(node, node.region)
+            log.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
+
         log.info('[NODE-{}] Successfully established connection'.format(node.name))
+        self._player_queue.clear()
         await self._lavalink._dispatch_event(NodeConnectedEvent(node))
 
     async def _node_disconnect(self, node: Node, code: int, reason: str):
@@ -116,24 +120,9 @@ class NodeManager:
         best_node = self.find_ideal_node(node.region)
 
         if not best_node:
-            for player in node.players:
-                self.player_queue.append(player)
-
-            await self._wait_for_best_node(node)
-            log.error('Unable to move players, no available nodes! Trying to find one to connect to.')
+            self._player_queue.extend(node.players)
+            log.error('Unable to move players, no available nodes! Will try to find one to connect to.')
             return
 
         for player in node.players:
             await player.change_node(best_node)
-
-    async def _wait_for_best_node(self, original_node):
-        while True:
-            best_node = self.find_ideal_node()
-
-            if best_node:
-                for player in self.player_queue:
-                    await player.change_node(best_node)
-                self.player_queue.clear()
-                log.info('Connecting all players that were connected to NODE-{} to NODE-{}'.format(original_node.name, best_node.name))
-                return
-            # await asyncio.sleep(10) Not sure if I need this here or not

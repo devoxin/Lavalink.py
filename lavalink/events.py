@@ -9,7 +9,7 @@ class QueueEndEvent(Event):
     Parameters
     ----------
     player: BasePlayer
-        The player that has no more songs in queue
+        The player that has no more songs in queue.
     """
     def __init__(self, player):
         self.player = player
@@ -22,12 +22,13 @@ class TrackStuckEvent(Event):
     Parameters
     ----------
     player: BasePlayer
-        The player that has the playing track being stuck
+        The player that has the playing track being stuck.
     track: AudioTrack
-        The track is stuck from playing
+        The track is stuck from playing.
     threshold: int
-        The amount of time the track had while being stuck"""
-    def __init__(self, player, track, threshold: int):
+        The amount of time the track had while being stuck.
+    """
+    def __init__(self, player, track, threshold):
         self.player = player
         self.track = track
         self.threshold = threshold
@@ -40,11 +41,12 @@ class TrackExceptionEvent(Event):
     Parameters
     ----------
     player: BasePlayer
-        The player that had the exception occur while playing a track
+        The player that had the exception occur while playing a track.
     track: AudioTrack
-        The track that had the exception while playing
+        The track that had the exception while playing.
     exception: Exception
-        The type of exception that the track had while playing"""
+        The type of exception that the track had while playing.
+    """
     def __init__(self, player, track, exception):
         self.player = player
         self.track = track
@@ -58,12 +60,13 @@ class TrackEndEvent(Event):
     Parameters
     ----------
     player: BasePlayer
-        The player that finished playing a track
+        The player that finished playing a track.
     track: AudioTrack
-        The track that finished playing
+        The track that finished playing.
     reason: str
-        The reason why the track stopped playing"""
-    def __init__(self, player, track, reason: str):
+        The reason why the track stopped playing.
+    """
+    def __init__(self, player, track, reason):
         self.player = player
         self.track = track
         self.reason = reason
@@ -76,9 +79,10 @@ class TrackStartEvent(Event):
     Parameters
     ----------
     player: BasePlayer
-        The player that started to play a track
+        The player that started to play a track.
     track: AudioTrack
-        The track that started playing"""
+        The track that started playing.
+    """
     def __init__(self, player, track):
         self.player = player
         self.track = track
@@ -91,12 +95,13 @@ class PlayerUpdateEvent(Event):
     Parameters
     ----------
     player: BasePlayer
-        The player that's progress was updated
+        The player that's progress was updated.
     position: int
-        The position of the player that was changed to
+        The position of the player that was changed to.
     timestamp: int
-        The timestamp that the player is currently on"""
-    def __init__(self, player, position: int, timestamp: int):
+        The timestamp that the player is currently on.
+    """
+    def __init__(self, player, position, timestamp):
         self.player = player
         self.position = position
         self.timestamp = timestamp
@@ -109,12 +114,13 @@ class NodeDisconnectedEvent(Event):
     Parameters
     ----------
     node: Node
-        The node that was disconnected from
+        The node that was disconnected from.
     code: int
-        The status code of the event
+        The status code of the event.
     reason: str
-        The reason of why the node was disconnected"""
-    def __init__(self, node, code: int, reason: str):
+        The reason of why the node was disconnected.
+    """
+    def __init__(self, node, code, reason):
         self.node = node
         self.code = code
         self.reason = reason
@@ -127,7 +133,7 @@ class NodeConnectedEvent(Event):
     Parameters
     ----------
     node: Node
-        The node that was successfully connected to
+        The node that was successfully connected to.
     """
     def __init__(self, node):
         self.node = node
@@ -162,17 +168,17 @@ class WebSocketClosedEvent(Event):
 
     Parameters
     ----------
-    guildId: str
+    guild_id: str
         The player whose node was changed.
     code: int
         The node the player was moved from.
     reason: str
         The node the player was moved to.
-    byRemote: bool
+    by_remote: bool
         If the websocket was closed remotely.
     """
-    def __init__(self, guildId: str, code: int, reason: str, byRemote: bool):
-        self.guildId = guildId
+    def __init__(self, guild_id, code, reason, by_remote):
+        self.guildId = guild_id
         self.code = code
         self.reason = reason
-        self.byRemote = byRemote
+        self.byRemote = by_remote

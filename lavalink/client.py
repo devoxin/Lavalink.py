@@ -139,7 +139,7 @@ class Client:
 
         Parameters
         ----------
-        track: list[str]
+        tracks: list[str]
             A list of base64-encoded `track` strings.
         node: Node
             The node to use for the query. ``None`` means random.
@@ -198,10 +198,10 @@ class Client:
     async def _dispatch_event(self, event: Event):
         """|coro|
 
-        Dispatches the given event to all registered hooks
+        Dispatches the given event to all registered hooks.
         ----------
         :param event:
-            The event to dispatch to the hooks
+            The event to dispatch to the hooks.
         """
         for hook in self._event_hooks:
             try:
