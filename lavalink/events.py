@@ -90,7 +90,7 @@ class TrackStartEvent(Event):
 
 class PlayerUpdateEvent(Event):
     """
-    This event is dispatched when the player's progress changes
+    This event is dispatched when the player's progress changes.
 
     Parameters
     ----------
