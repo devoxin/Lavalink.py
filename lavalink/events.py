@@ -168,8 +168,8 @@ class WebSocketClosedEvent(Event):
 
     Parameters
     ----------
-    guild_id: str
-        The player whose node was changed.
+    player: BasePlayer
+        The player whose audio websocket was closed.
     code: int
         The node the player was moved from.
     reason: str
@@ -177,8 +177,8 @@ class WebSocketClosedEvent(Event):
     by_remote: bool
         If the websocket was closed remotely.
     """
-    def __init__(self, guild_id, code, reason, by_remote):
-        self.guildId = guild_id
+    def __init__(self, player, code, reason, by_remote):
+        self.player = player
         self.code = code
         self.reason = reason
-        self.byRemote = by_remote
+        self.by_remote = by_remote

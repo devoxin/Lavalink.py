@@ -7,10 +7,10 @@ log = logging.getLogger('lavalink')
 
 class NodeManager:
     def __init__(self, lavalink, regions: dict):
-        self.nodes = []
-
         self._lavalink = lavalink
         self._player_queue = []
+
+        self.nodes = []
 
         self.regions = regions or {
             'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica'),
@@ -105,11 +105,11 @@ class NodeManager:
         return best_node
 
     async def _node_connect(self, node: Node):
-        for player in self._player_queue:
-            player.change_node(node)
-            log.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
-
         log.info('[NODE-{}] Successfully established connection'.format(node.name))
+
+        for player in self._player_queue:
+            await player.change_node(node)
+            log.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
         self._player_queue.clear()
         await self._lavalink._dispatch_event(NodeConnectedEvent(node))
 
@@ -121,7 +121,7 @@ class NodeManager:
 
         if not best_node:
             self._player_queue.extend(node.players)
-            log.error('Unable to move players, no available nodes! Will try to find one to connect to.')
+            log.error('Unable to move players, no available nodes! Waiting for a node to become available.')
             return
 
         for player in node.players:
