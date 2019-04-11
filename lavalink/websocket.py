@@ -130,7 +130,7 @@ class WebSocket:
         elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
         elif event_type == 'WebSocketClosedEvent':
-            event = WebSocketClosedEvent(data['guildId'], data['code'], data['reason'], data['byRemote'])
+            event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
         else:
             log.warning('[NODE-{}] Unknown event received: {}'.format(self._node.name, event_type))
             return

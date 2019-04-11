@@ -257,7 +257,7 @@ class DefaultPlayer(BasePlayer):
         """
         Seeks to a given position in the track.
         ----------
-        :param pos:
+        :param position:
             The new position to seek to in milliseconds.
         """
         await self.node._send(op='seek', guildId=self.guild_id, position=position)
