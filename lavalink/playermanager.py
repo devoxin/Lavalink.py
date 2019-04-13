@@ -1,11 +1,13 @@
 from .node import Node
 from .models import BasePlayer
+from .exceptions import NodeException
 
 
 class PlayerManager:
     def __init__(self, lavalink, player):
         if not issubclass(player, BasePlayer):
             raise ValueError('Player must implement BasePlayer or DefaultPlayer.')
+
         self._lavalink = lavalink
         self.players = {}
         self.default_player = player
@@ -40,29 +42,29 @@ class PlayerManager:
             await player.node._send(op='destroy', guildId=player.guild_id)
 
     def values(self):
-        """ Returns an iterator that yields only values """
+        """ Returns an iterator that yields only values. """
         for player in self.players.values():
             yield player
 
     def find_all(self, predicate):
-        """ Returns a list of players that match the given predicate """
+        """ Returns a list of players that match the given predicate. """
         if not predicate:
             return list(self.players.values())
 
         return [p for p in self.players.values() if bool(predicate(p))]
 
     def remove(self, guild_id: int):
-        """ Removes a player from the internal cache """
+        """ Removes a player from the internal cache. """
         if guild_id in self.players:
             player = self.players.pop(guild_id)
             player.cleanup()
 
     def get(self, guild_id: int):
         """
-        Gets a player from cache
+        Gets a player from cache.
         ----------
         :param guild_id:
-            The guild_id associated with the player to get
+            The guild_id associated with the player to get.
         """
         return self.players.get(guild_id)
 
@@ -81,11 +83,13 @@ class PlayerManager:
         Region can be omitted if node is specified and vice-versa.
         ----------
         :param guild_id:
-            The guild_id to associate with the player
+            The guild_id to associate with the player.
         :param region:
-            The region to use when selecting a Lavalink node
+            The region to use when selecting a Lavalink node.
+        :param endpoint:
+            The address of the Discord voice server.
         :param node:
-            The node to put the player on
+            The node to put the player on.
         """
         if guild_id in self.players:
             return self.players[guild_id]
@@ -99,7 +103,7 @@ class PlayerManager:
         node = self._lavalink.node_manager.find_ideal_node(region)
 
         if not node:
-            raise Exception('No available nodes!')  # TODO: NodeException or something
+            raise NodeException('No available nodes!')
 
         self.players[guild_id] = player = self.default_player(guild_id, node)
         return player
