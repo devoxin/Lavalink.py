@@ -6,7 +6,8 @@ log = logging.getLogger('lavalink')
 
 
 class Node:
-    def __init__(self, manager, host: str, port: int, password: str, region: str, name: str, resume_key: str, resume_timeout: int):
+    def __init__(self, manager, host: str, port: int, password: str,
+                 region: str, name: str, resume_key: str, resume_timeout: int):
         self._manager = manager
         self._ws = WebSocket(self, host, port, password, resume_key, resume_timeout)
 
@@ -24,12 +25,12 @@ class Node:
 
     @property
     def players(self):
-        """ Returns a list of all players on this node """
+        """ Returns a list of all players on this node. """
         return [p for p in self._manager._lavalink.players.values() if p.node == self]
 
     @property
     def penalty(self):
-        """ Returns the load-balancing penalty for this node """
+        """ Returns the load-balancing penalty for this node. """
         if not self.available or not self.stats:
             return 9e30
 
@@ -46,10 +47,10 @@ class Node:
 
     async def _dispatch_event(self, event: Event):
         """
-        Dispatches the given event to all registered hooks
+        Dispatches the given event to all registered hooks.
         ----------
         :param event:
-            The event to dispatch to the hooks
+            The event to dispatch to the hooks.
         """
         await self._manager._lavalink._dispatch_event(event)
 

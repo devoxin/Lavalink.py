@@ -19,7 +19,7 @@ class Client:
     """
     Represents a Lavalink client used to manage nodes and connections.
 
-    .. _event loop: https://docs.python.org/3/library/asyncio-eventloops.html
+    .. _event loop: https://docs.python.org/3/library/asyncio-eventloop.html
 
     Parameters
     ----------
@@ -41,8 +41,8 @@ class Client:
         which regions handle specific locations.
     """
 
-    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100, loop=None, player=DefaultPlayer,
-                 regions: dict = None):
+    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100,
+                 loop=None, player=DefaultPlayer, regions: dict = None):
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
@@ -139,7 +139,7 @@ class Client:
 
         Parameters
         ----------
-        track: list[str]
+        tracks: list[str]
             A list of base64-encoded `track` strings.
         node: Node
             The node to use for the query. ``None`` means random.
@@ -198,10 +198,10 @@ class Client:
     async def _dispatch_event(self, event: Event):
         """|coro|
 
-        Dispatches the given event to all registered hooks
+        Dispatches the given event to all registered hooks.
         ----------
         :param event:
-            The event to dispatch to the hooks
+            The event to dispatch to the hooks.
         """
         for hook in self._event_hooks:
             try:

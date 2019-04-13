@@ -8,6 +8,8 @@ log = logging.getLogger('lavalink')
 class NodeManager:
     def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
+        self._player_queue = []
+
         self.nodes = []
 
         self.regions = regions or {
@@ -30,9 +32,22 @@ class NodeManager:
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
                  resume_key: str = None, resume_timeout: int = 60):
         """
-        Adds a node
+        Adds a node to your Lavalink server.
         ----------
-        TODO
+        :param host:
+            The address of the Lavalink node.
+        :param port:
+            The port to use for websocket and REST connections.
+        :param password:
+            The password used for authentication.
+        :param region:
+            The region to assign this node to.
+        :param resume_key:
+            A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
+        :param resume_timeout:
+            How long the node should wait for a connection while disconnected before clearing all players.
+        :param name:
+            An identifier for the node that will show in logs.
         """
         node = Node(self, host, port, password, region, name, resume_key, resume_timeout)
         self.nodes.append(node)
@@ -42,16 +57,16 @@ class NodeManager:
         Removes a node.
         ----------
         :param node:
-            The node to remove from the list
+            The node to remove from the list.
         """
         self.nodes.remove(node)
 
     def get_region(self, endpoint: str):
         """
-        Returns a Lavalink.py-friendly region from a Discord voice server address
+        Returns a Lavalink.py-friendly region from a Discord voice server address.
         ----------
         :param endpoint:
-            The address of the Discord voice server
+            The address of the Discord voice server.
         """
         if not endpoint:
             return None
@@ -91,6 +106,11 @@ class NodeManager:
 
     async def _node_connect(self, node: Node):
         log.info('[NODE-{}] Successfully established connection'.format(node.name))
+
+        for player in self._player_queue:
+            await player.change_node(node)
+            log.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
+        self._player_queue.clear()
         await self._lavalink._dispatch_event(NodeConnectedEvent(node))
 
     async def _node_disconnect(self, node: Node, code: int, reason: str):
@@ -100,8 +120,8 @@ class NodeManager:
         best_node = self.find_ideal_node(node.region)
 
         if not best_node:
-            # TODO: Move players to a queue, wait for a node to connect?
-            log.error('Unable to move players, no available nodes!')
+            self._player_queue.extend(node.players)
+            log.error('Unable to move players, no available nodes! Waiting for a node to become available.')
             return
 
         for player in node.players:
