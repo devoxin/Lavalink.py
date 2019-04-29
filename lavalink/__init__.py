@@ -19,7 +19,6 @@ from .utils import format_time
 from .websocket import WebSocket
 
 
-
 def enable_debug_logging():
     """
     Sets up a logger to stdout. This solely exists to make things easier for
