@@ -1,4 +1,4 @@
-<img align="right" src="https://its-called-hentai-and-its.art/9e83af1581.png" height="150" width="150">
+<img align="right" src="https://serux.pro/9e83af1581.png" height="150" width="150">
 
 # Lavalink.py
 
