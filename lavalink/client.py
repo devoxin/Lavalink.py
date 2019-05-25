@@ -41,7 +41,7 @@ class Client:
         which regions handle specific locations.
     """
 
-    def __init__(self, user_id: int, shard_count: int = 1, pool_size: int = 100,
+    def __init__(self, user_id: int, shard_count: int = 1,
                  loop=None, player=DefaultPlayer, regions: dict = None):
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
@@ -52,7 +52,7 @@ class Client:
         self._event_hooks = []
 
         self._session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(limit=pool_size, loop=loop),
+            connector=aiohttp.TCPConnector(loop=loop),
             timeout=aiohttp.ClientTimeout(total=30)
         )  # This session will be used for websocket and http requests.
 
