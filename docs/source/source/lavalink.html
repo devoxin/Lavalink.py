@@ -1,0 +1,670 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>lavalink package &#8212; Lavalink.py  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="lavalink-package">
+<h1>lavalink package<a class="headerlink" href="#lavalink-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-lavalink.client">
+<span id="lavalink-client-module"></span><h2>lavalink.client module<a class="headerlink" href="#module-lavalink.client" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lavalink.client.Client">
+<em class="property">class </em><code class="descclassname">lavalink.client.</code><code class="descname">Client</code><span class="sig-paren">(</span><em>user_id: int</em>, <em>shard_count: int = 1</em>, <em>pool_size: int = 100</em>, <em>loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.client.Client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents a Lavalink client used to manage nodes and connections.</p>
+<dl class="docutils">
+<dt>user_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></dt>
+<dd>The user id of the bot.</dd>
+<dt>shard_count: Optional[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</dt>
+<dd>The amount of shards your bot has.</dd>
+<dt>pool_size: Optional[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</dt>
+<dd>The amount of connections to keep in a pool,
+used for HTTP requests and WS connections.</dd>
+<dt>loop: Optional[event loop]</dt>
+<dd>The <a class="reference external" href="https://docs.python.org/3/library/asyncio-eventloops.html">event loop</a> to use for asynchronous operations.</dd>
+</dl>
+<dl class="method">
+<dt id="lavalink.client.Client.add_node">
+<code class="descname">add_node</code><span class="sig-paren">(</span><em>host: str</em>, <em>port: int</em>, <em>password: str</em>, <em>region: str</em>, <em>name: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.client.Client.add_node" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>host</strong> – The address of the Lavalink node.</li>
+<li><strong>port</strong> – The port to use for websocket and REST connections.</li>
+<li><strong>password</strong> – The password used for authentication.</li>
+<li><strong>region</strong> – The region to assign this node to.</li>
+<li><strong>name</strong> – An identifier for the node that will show in logs.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.client.Client.get_tracks">
+<em class="property">coroutine </em><code class="descname">get_tracks</code><span class="sig-paren">(</span><em>query: str</em>, <em>node: lavalink.node.Node = None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.client.Client.get_tracks" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>query</strong> – The query to perform a search for.</li>
+<li><strong>node</strong> – The node to use for track lookup. Leave this blank to use a random node.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.client.Client.voice_update_handler">
+<em class="property">coroutine </em><code class="descname">voice_update_handler</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.client.Client.voice_update_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is a <a class="reference external" href="https://docs.python.org/3/library/asyncio-task.html#coroutine"><em>coroutine</em></a>.</p>
+<p>This function intercepts websocket data from your Discord library and
+forwards the relevant information on to Lavalink, which is used to
+establish a websocket connection and send audio packets to Discord.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body">bot.add_listener(lavalink_client.voice_update_handler, ‘on_socket_response’)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> – The payload received from Discord.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink.events">
+<span id="lavalink-events-module"></span><h2>lavalink.events module<a class="headerlink" href="#module-lavalink.events" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lavalink.events.QueueEndEvent">
+<em class="property">class </em><code class="descclassname">lavalink.events.</code><code class="descname">QueueEndEvent</code><span class="sig-paren">(</span><em>player</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.events.QueueEndEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This event will be dispatched when there are no more songs in the queue.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.events.TrackStuckEvent">
+<em class="property">class </em><code class="descclassname">lavalink.events.</code><code class="descname">TrackStuckEvent</code><span class="sig-paren">(</span><em>player</em>, <em>track</em>, <em>threshold</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.events.TrackStuckEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This event will be dispatched when the currently playing song is stuck.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.events.TrackExceptionEvent">
+<em class="property">class </em><code class="descclassname">lavalink.events.</code><code class="descname">TrackExceptionEvent</code><span class="sig-paren">(</span><em>player</em>, <em>track</em>, <em>exception</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.events.TrackExceptionEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This event will be dispatched when an exception occurs while playing a track.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.events.TrackEndEvent">
+<em class="property">class </em><code class="descclassname">lavalink.events.</code><code class="descname">TrackEndEvent</code><span class="sig-paren">(</span><em>player</em>, <em>track</em>, <em>reason</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.events.TrackEndEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This event will be dispatched when the player finished playing a track.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.events.TrackStartEvent">
+<em class="property">class </em><code class="descclassname">lavalink.events.</code><code class="descname">TrackStartEvent</code><span class="sig-paren">(</span><em>player</em>, <em>track</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.events.TrackStartEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This event will be dispatched when the player starts to play a track.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.events.StatsUpdateEvent">
+<em class="property">class </em><code class="descclassname">lavalink.events.</code><code class="descname">StatsUpdateEvent</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.events.StatsUpdateEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This event will be dispatched when the websocket receives a statistics update.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink.models">
+<span id="lavalink-models-module"></span><h2>lavalink.models module<a class="headerlink" href="#module-lavalink.models" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="lavalink.models.InvalidTrack">
+<em class="property">exception </em><code class="descclassname">lavalink.models.</code><code class="descname">InvalidTrack</code><a class="headerlink" href="#lavalink.models.InvalidTrack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>This exception will be raised when an invalid track was passed.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="lavalink.models.TrackNotBuilt">
+<em class="property">exception </em><code class="descclassname">lavalink.models.</code><code class="descname">TrackNotBuilt</code><a class="headerlink" href="#lavalink.models.TrackNotBuilt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>This exception will be raised when AudioTrack objects hasn’t been built.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.models.AudioTrack">
+<em class="property">class </em><code class="descclassname">lavalink.models.</code><code class="descname">AudioTrack</code><span class="sig-paren">(</span><em>requester</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.AudioTrack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.requester">
+<code class="descname">requester</code><a class="headerlink" href="#lavalink.models.AudioTrack.requester" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.preferences">
+<code class="descname">preferences</code><a class="headerlink" href="#lavalink.models.AudioTrack.preferences" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="lavalink.models.AudioTrack.build">
+<em class="property">classmethod </em><code class="descname">build</code><span class="sig-paren">(</span><em>track</em>, <em>requester</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.AudioTrack.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an optional AudioTrack.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.author">
+<code class="descname">author</code><a class="headerlink" href="#lavalink.models.AudioTrack.author" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.duration">
+<code class="descname">duration</code><a class="headerlink" href="#lavalink.models.AudioTrack.duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.identifier">
+<code class="descname">identifier</code><a class="headerlink" href="#lavalink.models.AudioTrack.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.is_seekable">
+<code class="descname">is_seekable</code><a class="headerlink" href="#lavalink.models.AudioTrack.is_seekable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.stream">
+<code class="descname">stream</code><a class="headerlink" href="#lavalink.models.AudioTrack.stream" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.title">
+<code class="descname">title</code><a class="headerlink" href="#lavalink.models.AudioTrack.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.track">
+<code class="descname">track</code><a class="headerlink" href="#lavalink.models.AudioTrack.track" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.AudioTrack.uri">
+<code class="descname">uri</code><a class="headerlink" href="#lavalink.models.AudioTrack.uri" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="lavalink.models.NoPreviousTrack">
+<em class="property">exception </em><code class="descclassname">lavalink.models.</code><code class="descname">NoPreviousTrack</code><a class="headerlink" href="#lavalink.models.NoPreviousTrack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.models.BasePlayer">
+<em class="property">class </em><code class="descclassname">lavalink.models.</code><code class="descname">BasePlayer</code><span class="sig-paren">(</span><em>guild_id: int</em>, <em>node: lavalink.node.Node</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.BasePlayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dl class="method">
+<dt id="lavalink.models.BasePlayer.cleanup">
+<code class="descname">cleanup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.BasePlayer.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.BasePlayer.handle_event">
+<em class="property">coroutine </em><code class="descname">handle_event</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.BasePlayer.handle_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.models.DefaultPlayer">
+<em class="property">class </em><code class="descclassname">lavalink.models.</code><code class="descname">DefaultPlayer</code><span class="sig-paren">(</span><em>guild_id: int</em>, <em>node: lavalink.node.Node</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lavalink.models.BasePlayer" title="lavalink.models.BasePlayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">lavalink.models.BasePlayer</span></code></a></p>
+<dl class="attribute">
+<dt id="lavalink.models.DefaultPlayer.is_playing">
+<code class="descname">is_playing</code><a class="headerlink" href="#lavalink.models.DefaultPlayer.is_playing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the player’s track state.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lavalink.models.DefaultPlayer.is_connected">
+<code class="descname">is_connected</code><a class="headerlink" href="#lavalink.models.DefaultPlayer.is_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the player is connected to a voicechannel or not</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.store">
+<code class="descname">store</code><span class="sig-paren">(</span><em>key: object</em>, <em>value: object</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.store" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> – The key of the object to store.</li>
+<li><strong>value</strong> – The object to associate with the key.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.fetch">
+<code class="descname">fetch</code><span class="sig-paren">(</span><em>key: object</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.fetch" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> – The key to fetch.</li>
+<li><strong>default</strong> – The object that should be returned if the key doesn’t exist.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>key: object</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.delete" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – The key to delete</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>requester: int</em>, <em>track: dict</em>, <em>index: int = None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.add" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>requester</strong> – The ID of the user who requested the track.</li>
+<li><strong>track</strong> – A dict representing a track returned from Lavalink.</li>
+<li><strong>index</strong> – The index at which to add the track.
+If index is left unspecified, the default behaviour is to append the track.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.play">
+<em class="property">coroutine </em><code class="descname">play</code><span class="sig-paren">(</span><em>track: lavalink.models.AudioTrack = None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.play" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>track</strong> – The track to play. If left unspecified, this will default
+to the first track in the queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.reset_equalizer">
+<em class="property">coroutine </em><code class="descname">reset_equalizer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.reset_equalizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets equalizer to default values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.seek">
+<em class="property">coroutine </em><code class="descname">seek</code><span class="sig-paren">(</span><em>position: int</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.seek" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pos</strong> – The new position to seek to in milliseconds.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.set_gain">
+<em class="property">coroutine </em><code class="descname">set_gain</code><span class="sig-paren">(</span><em>band: int</em>, <em>gain: float = 0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.set_gain" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>band</strong> – Band number (0-14).</li>
+<li><strong>gain</strong> – A float representing gain of a band (-0.25 to 1.00) Defaults to 0.0.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.set_gains">
+<em class="property">coroutine </em><code class="descname">set_gains</code><span class="sig-paren">(</span><em>*gain_list</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.set_gains" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gain_list</strong> – A list of tuples denoting (<cite>band</cite>, <cite>gain</cite>).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.set_pause">
+<em class="property">coroutine </em><code class="descname">set_pause</code><span class="sig-paren">(</span><em>pause: bool</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.set_pause" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pause</strong> – Whether to pause the player or not</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.set_volume">
+<em class="property">coroutine </em><code class="descname">set_volume</code><span class="sig-paren">(</span><em>vol: int</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.set_volume" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vol</strong> – The new volume level.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.skip">
+<em class="property">coroutine </em><code class="descname">skip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.skip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plays the next track in the queue, if any.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.models.DefaultPlayer.stop">
+<em class="property">coroutine </em><code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.models.DefaultPlayer.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops the player.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink.node">
+<span id="lavalink-node-module"></span><h2>lavalink.node module<a class="headerlink" href="#module-lavalink.node" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lavalink.node.Node">
+<em class="property">class </em><code class="descclassname">lavalink.node.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>manager</em>, <em>host: str</em>, <em>port: int</em>, <em>password: str</em>, <em>region: str</em>, <em>name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.node.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="lavalink.node.Node.available">
+<code class="descname">available</code><a class="headerlink" href="#lavalink.node.Node.available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the node is available for requests.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.node.Node.get_tracks">
+<em class="property">coroutine </em><code class="descname">get_tracks</code><span class="sig-paren">(</span><em>query: str</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.node.Node.get_tracks" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>query</strong> – The query to perform a search for.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink.nodemanager">
+<span id="lavalink-nodemanager-module"></span><h2>lavalink.nodemanager module<a class="headerlink" href="#module-lavalink.nodemanager" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lavalink.nodemanager.NodeManager">
+<em class="property">class </em><code class="descclassname">lavalink.nodemanager.</code><code class="descname">NodeManager</code><span class="sig-paren">(</span><em>lavalink</em>, <em>default_region: str = 'eu'</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.nodemanager.NodeManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="lavalink.nodemanager.NodeManager.add_node">
+<code class="descname">add_node</code><span class="sig-paren">(</span><em>host: str</em>, <em>port: int</em>, <em>password: str</em>, <em>region: str</em>, <em>name: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.nodemanager.NodeManager.add_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lavalink.nodemanager.NodeManager.get_region">
+<code class="descname">get_region</code><span class="sig-paren">(</span><em>endpoint: str</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.nodemanager.NodeManager.get_region" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lavalink.nodemanager.NodeManager.find_ideal_node">
+<code class="descname">find_ideal_node</code><span class="sig-paren">(</span><em>region: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.nodemanager.NodeManager.find_ideal_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink.playermanager">
+<span id="lavalink-playermanager-module"></span><h2>lavalink.playermanager module<a class="headerlink" href="#module-lavalink.playermanager" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lavalink.playermanager.PlayerManager">
+<em class="property">class </em><code class="descclassname">lavalink.playermanager.</code><code class="descname">PlayerManager</code><span class="sig-paren">(</span><em>lavalink</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.playermanager.PlayerManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="lavalink.playermanager.PlayerManager.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>guild_id: int</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.playermanager.PlayerManager.get" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>guild_id</strong> – The guild_id associated with the player to get</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.playermanager.PlayerManager.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>guild_id: int</em>, <em>region: str = 'eu'</em>, <em>node: lavalink.node.Node = None</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.playermanager.PlayerManager.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a player if one doesn’t exist with the given information.
+If node is provided, a player will be created on that node, otherwise
+a player will be created on the best node in the given region (defaults to US).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>guild_id</strong> – The guild_id to associate with the player</li>
+<li><strong>region</strong> – The region to use when selecting a Lavalink node</li>
+<li><strong>node</strong> – The node to put the player on</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink.stats">
+<span id="lavalink-stats-module"></span><h2>lavalink.stats module<a class="headerlink" href="#module-lavalink.stats" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lavalink.stats.Memory">
+<em class="property">class </em><code class="descclassname">lavalink.stats.</code><code class="descname">Memory</code><a class="headerlink" href="#lavalink.stats.Memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.stats.CPU">
+<em class="property">class </em><code class="descclassname">lavalink.stats.</code><code class="descname">CPU</code><a class="headerlink" href="#lavalink.stats.CPU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lavalink.stats.Stats">
+<em class="property">class </em><code class="descclassname">lavalink.stats.</code><code class="descname">Stats</code><a class="headerlink" href="#lavalink.stats.Stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink.utils">
+<span id="lavalink-utils-module"></span><h2>lavalink.utils module<a class="headerlink" href="#module-lavalink.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="lavalink.utils.format_time">
+<code class="descclassname">lavalink.utils.</code><code class="descname">format_time</code><span class="sig-paren">(</span><em>time</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.utils.format_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats the given time into HH:MM:SS.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink.websocket">
+<span id="lavalink-websocket-module"></span><h2>lavalink.websocket module<a class="headerlink" href="#module-lavalink.websocket" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lavalink.websocket.WebSocket">
+<em class="property">class </em><code class="descclassname">lavalink.websocket.</code><code class="descname">WebSocket</code><span class="sig-paren">(</span><em>node</em>, <em>host: str</em>, <em>port: int</em>, <em>password: str</em><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.websocket.WebSocket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="lavalink.websocket.WebSocket.connected">
+<code class="descname">connected</code><a class="headerlink" href="#lavalink.websocket.WebSocket.connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the websocket is connected to Lavalink.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.websocket.WebSocket.destroy">
+<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.websocket.WebSocket.destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terminates the websocket connection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lavalink.websocket.WebSocket.connect">
+<em class="property">coroutine </em><code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lavalink.websocket.WebSocket.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempts to establish a connection to Lavalink.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lavalink">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-lavalink" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Lavalink.py</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Devoxin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/source/lavalink.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

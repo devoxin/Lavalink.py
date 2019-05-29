@@ -8,9 +8,8 @@ def test_flake8():
     proc = subprocess.Popen('flake8', stdout=subprocess.PIPE)
     proc.wait()
     out = proc.stdout.read().decode()
-    print(out)
-    assert proc.returncode == 0
-    print('OK')
+    msg = 'OK' if not out and proc.returncode == 0 else out
+    print(msg)
 
 
 def test_pylint():
@@ -23,11 +22,10 @@ def test_pylint():
                              'lavalink').split(),
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    proc.wait()
-    out = proc.stdout.read().decode()
-    print(out)
-    assert proc.returncode == 0
-    print('OK')
+    stdout, stderr = proc.communicate()
+    out = stdout.decode()
+    msg = 'OK' if not out and proc.returncode == 0 else out
+    print(msg)
 
 
 if __name__ == '__main__':
