@@ -14,7 +14,7 @@ setup(
     name='lavalink',
     packages=['lavalink'],
     version=version,
-    description='A lavalink interface built for discord.py',  # TODO: Change this if I successfully generic-ify the client
+    description='A lavalink interface built for discord.py',
     author='Devoxin',
     author_email='luke@serux.pro',
     url='https://github.com/Devoxin/Lavalink.py',
