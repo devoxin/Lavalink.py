@@ -36,11 +36,16 @@ class Client:
         A dictionary representing region -> discord endpoint. You should only
         change this if you know what you're doing and want more control over
         which regions handle specific locations.
+    connect_back: Optional[bool]
+        A boolean that determines if a player will connect back to the
+        node it was originally connected to. This is not recommended to do since
+        the player will most likely be performing better in the new node.
     """
 
     def __init__(self, user_id: int, shard_count: int = 1,
-                 loop=None, player=DefaultPlayer, regions: dict = None):
+                 loop=None, player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
         self._user_id = str(user_id)
+        self._connect_back = connect_back
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
         self.node_manager = NodeManager(self, regions)

@@ -55,6 +55,7 @@ class BasePlayer(ABC):
         self.guild_id = str(guild_id)
         self.node = node
         self._voice_state = {}
+        self._original_node = None
         self.channel_id = None
 
     @abstractmethod

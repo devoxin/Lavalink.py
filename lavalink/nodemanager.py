@@ -9,6 +9,7 @@ class NodeManager:
     def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
         self._player_queue = []
+        self._original_player_nodes = {}
 
         self.nodes = []
 
@@ -110,6 +111,10 @@ class NodeManager:
         for player in self._player_queue:
             await player.change_node(node)
             log.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
+
+        for player in node._original_players:
+            player.change_node(node)
+
         self._player_queue.clear()
         await self._lavalink._dispatch_event(NodeConnectedEvent(node))
 

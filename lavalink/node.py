@@ -10,6 +10,7 @@ class Node:
                  region: str, name: str, resume_key: str, resume_timeout: int):
         self._manager = manager
         self._ws = WebSocket(self, host, port, password, resume_key, resume_timeout)
+        self._original_players = []
 
         self.host = host
         self.port = port

@@ -106,4 +106,6 @@ class PlayerManager:
             raise NodeException('No available nodes!')
 
         self.players[guild_id] = player = self.default_player(guild_id, node)
+        node._original_players.append(player)
+
         return player
