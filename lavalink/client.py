@@ -27,9 +27,6 @@ class Client:
         The user id of the bot.
     shard_count: Optional[int]
         The amount of shards your bot has.
-    pool_size: Optional[int]
-        The amount of connections to keep in a pool,
-        used for HTTP requests and WS connections.
     loop: Optional[event loop]
         The `event loop`_ to use for asynchronous operations.
     player: Optional[BasePlayer]
@@ -195,6 +192,19 @@ class Client:
         else:
             return
 
+    def on(self, event: Event):
+        def decorator(func):
+            for hook in self._event_hooks:
+                if isinstance(hook, dict):
+                    event_hook = hook.get(event)
+
+                    if event_hook is None:
+                        hook[event] = [func]
+                    else:
+                        event_hook.append(func)
+
+        return decorator
+
     async def _dispatch_event(self, event: Event):
         """|coro|
 
@@ -203,11 +213,21 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
+
         for hook in self._event_hooks:
             try:
-                if inspect.iscoroutinefunction(hook):
-                    await hook(event)
+                if isinstance(hook, dict):
+                    event_hooks = hook.get(event)
+
+                    for decorated_hook in event_hooks:
+                        if inspect.iscoroutinefunction(hook):
+                            await decorated_hook(event)
+                        else:
+                            decorated_hook(event)
                 else:
-                    hook(event)
+                    if inspect.iscoroutinefunction(hook):
+                        await hook(event)
+                    else:
+                        hook(event)
             except Exception as e:  # pylint: disable=W0703
                 log.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
