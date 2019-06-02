@@ -23,7 +23,7 @@ class AudioTrack:
         self.preferences = kwargs
 
     @classmethod
-    def build(cls, track, requester, **kwargs):
+    def build(cls, track, requester, extra: dict = {}, **kwargs):
         """ Returns an optional AudioTrack. """
         new_track = cls(requester, **kwargs)
         try:
@@ -35,6 +35,9 @@ class AudioTrack:
             new_track.stream = track['info']['isStream']
             new_track.title = track['info']['title']
             new_track.uri = track['info']['uri']
+
+            for key in extra:
+                setattr(new_track, key, extra[key])
 
             return new_track
         except KeyError:
@@ -172,7 +175,7 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: dict, index: int = None):
+    def add(self, requester: int, track: dict, extra: dict = {}, index: int = None):
         """
         Adds a track to the queue.
         ----------
@@ -180,14 +183,16 @@ class DefaultPlayer(BasePlayer):
             The ID of the user who requested the track.
         :param track:
             A dict representing a track returned from Lavalink.
+        :param extra:
+            A dict adding extra attributes to the track.
         :param index:
             The index at which to add the track.
             If index is left unspecified, the default behaviour is to append the track.
         """
         if index is None:
-            self.queue.append(AudioTrack.build(track, requester))
+            self.queue.append(AudioTrack.build(track, requester, extra=extra))
         else:
-            self.queue.insert(index, AudioTrack.build(track, requester))
+            self.queue.insert(index, AudioTrack.build(track, requester, extra=extra))
 
     async def play(self, track: AudioTrack = None, start_time: int = 0):
         """
