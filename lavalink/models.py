@@ -229,8 +229,11 @@ class DefaultPlayer(BasePlayer):
                 track = self.queue.pop(0)
 
         self.current = track
+
         if end_time is -1:
             end_time = track.duration
+        elif 0 > end_time > track.duration:
+            raise TypeError("end_time is either less than 0 or greater than the track's duration")
 
         await self.node._send(op='play', guildId=self.guild_id, track=track.track, startTime=start_time,
                               endTime=end_time, noReplace=no_replace)
