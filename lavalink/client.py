@@ -60,7 +60,8 @@ class Client:
 
     def add_event_hook(self, hook, event: Event = None):
         """
-
+        Adds an event hook to be dispatched on an event.
+        ----------
         :param hook:
             The hook to be added, that will be dispatched when an event is dispatched.
             If `event` parameter is left empty, then it will run when any event is dispatched.
