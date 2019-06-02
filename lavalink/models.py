@@ -191,7 +191,7 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, AudioTrack.build(track, requester, extra=extra))
 
-    async def play(self, track: AudioTrack = None, start_time: int = 0):
+    async def play(self, track: AudioTrack = None, start_time: int = 0, end_time: int = -1, no_replace: bool = False):
         """
         Plays the given track.
         ----------
@@ -201,6 +201,11 @@ class DefaultPlayer(BasePlayer):
         :param start_time:
             Setting that determines the number of milliseconds to offset the track by.
             If left unspecified, it will start the track at its beginning.
+        :param end_time:
+            Settings that determines the number of milliseconds the track will stop playing.
+            By default track plays until it ends as per encoded data.
+        :param no_replace:
+            If set to true, operation will be ignored if a track is already playing or paused.
         """
         if self.repeat and self.current:
             self.queue.append(self.current)
@@ -223,7 +228,11 @@ class DefaultPlayer(BasePlayer):
                 track = self.queue.pop(0)
 
         self.current = track
-        await self.node._send(op='play', guildId=self.guild_id, track=track.track, startTime=start_time)
+        if end_time is -1:
+            end_time = track.duration
+
+        await self.node._send(op='play', guildId=self.guild_id, track=track.track, startTime=start_time,
+                              endTime=end_time, noReplace=no_replace)
         await self.node._dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
