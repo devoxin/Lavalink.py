@@ -16,16 +16,15 @@ class TrackNotBuilt(Exception):
 
 class AudioTrack:
     __slots__ = ('track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
-                 'preferences')
+                 'extra')
 
-    def __init__(self, requester, **kwargs):
+    def __init__(self, requester):
         self.requester = requester
-        self.preferences = kwargs
 
     @classmethod
-    def build(cls, track, requester, extra: dict = {}, **kwargs):
+    def build(cls, track, requester, extra: dict = None):
         """ Returns an optional AudioTrack. """
-        new_track = cls(requester, **kwargs)
+        new_track = cls(requester)
         try:
             new_track.track = track['track']
             new_track.identifier = track['info']['identifier']
@@ -36,10 +35,11 @@ class AudioTrack:
             new_track.title = track['info']['title']
             new_track.uri = track['info']['uri']
 
-            for key in extra:
-                if key in cls.__slots__:
-                    raise AttributeError("{} is not overwritable as it's a class attribute".format(key))
-                setattr(new_track, key, extra[key])
+            # This is to avoid 'Dangerous default value {} as argument' from pylint
+            if extra is None:
+                extra = {}
+
+            new_track.extra = extra
 
             return new_track
         except KeyError:
@@ -177,7 +177,7 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: dict, extra: dict = {}, index: int = None):
+    def add(self, requester: int, track: dict, extra: dict = None, index: int = None):
         """
         Adds a track to the queue.
         ----------
