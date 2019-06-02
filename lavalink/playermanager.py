@@ -1,10 +1,6 @@
-import logging
-
 from .node import Node
 from .models import BasePlayer
 from .exceptions import NodeException
-
-log = logging.getLogger('lavalink')
 
 
 class PlayerManager:
@@ -45,7 +41,7 @@ class PlayerManager:
         if player.node and player.node.available:
             await player.node._send(op='destroy', guildId=player.guild_id)
 
-        log.info('[NODE-{}] Successfully destroyed its player'.format(player.node.name))
+        self._lavalink.logger.info('[NODE-{}] Successfully destroyed its player'.format(player.node.name))
 
     def values(self):
         """ Returns an iterator that yields only values. """
@@ -114,5 +110,5 @@ class PlayerManager:
         self.players[guild_id] = player = self.default_player(guild_id, node)
         node._original_players.append(player)
 
-        log.info('[NODE-{}] Successfully created a player'.format(node.name))
+        self._lavalink.logger.info('[NODE-{}] Successfully created a player'.format(node.name))
         return player

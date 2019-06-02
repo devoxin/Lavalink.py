@@ -1,8 +1,5 @@
-import logging
 from .node import Node
 from .events import NodeConnectedEvent, NodeDisconnectedEvent
-
-log = logging.getLogger('lavalink')
 
 
 class NodeManager:
@@ -53,7 +50,7 @@ class NodeManager:
         node = Node(self, host, port, password, region, name, resume_key, resume_timeout)
         self.nodes.append(node)
 
-        log.info('[NODE-{}] Successfully added to Node Manager'.format(node.name))
+        self._lavalink.logger.info('[NODE-{}] Successfully added to Node Manager'.format(node.name))
 
     def remove_node(self, node: Node):
         """
@@ -63,7 +60,7 @@ class NodeManager:
             The node to remove from the list.
         """
         self.nodes.remove(node)
-        log.info('[NODE-{}] Successfully removed Node'.format(node.name))
+        self._lavalink.logger.info('[NODE-{}] Successfully removed Node'.format(node.name))
 
     def get_region(self, endpoint: str):
         """
@@ -109,11 +106,11 @@ class NodeManager:
         return best_node
 
     async def _node_connect(self, node: Node):
-        log.info('[NODE-{}] Successfully established connection'.format(node.name))
+        self._lavalink.logger.info('[NODE-{}] Successfully established connection'.format(node.name))
 
         for player in self._player_queue:
             await player.change_node(node)
-            log.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
+            self._lavalink.logger.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
 
         for player in node._original_players:
             player.change_node(node)
@@ -122,14 +119,16 @@ class NodeManager:
         await self._lavalink._dispatch_event(NodeConnectedEvent(node))
 
     async def _node_disconnect(self, node: Node, code: int, reason: str):
-        log.warning('[NODE-{}] Disconnected with code {} and reason {}'.format(node.name, code, reason))
+        self._lavalink.logger.warning('[NODE-{}] Disconnected with code {} and reason {}'.format(node.name, code,
+                                                                                                 reason))
         await self._lavalink._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
 
         if not best_node:
             self._player_queue.extend(node.players)
-            log.error('Unable to move players, no available nodes! Waiting for a node to become available.')
+            self._lavalink.logger.error('Unable to move players, no available nodes! '
+                                        'Waiting for a node to become available.')
             return
 
         for player in node.players:

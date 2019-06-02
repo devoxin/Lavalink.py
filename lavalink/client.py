@@ -12,8 +12,6 @@ from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 from .events import Event
 
-log = logging.getLogger('lavalink')
-
 
 class Client:
     """
@@ -50,6 +48,7 @@ class Client:
         self._loop = loop or asyncio.get_event_loop()
         self.node_manager = NodeManager(self, regions)
         self.players = PlayerManager(self, player)
+        self.logger = logging.getLogger(__name__)
 
         self._event_hooks = {}
 
@@ -242,6 +241,6 @@ class Client:
                 else:
                     hook(event)
 
-            log.info('Dispatched {} event to all registered hooks'.format(event.__name__))
+            self.logger.info('Dispatched {} event to all registered hooks'.format(event.__name__))
         except Exception as e:  # pylint: disable=W0703
-            log.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
+            self.logger.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)

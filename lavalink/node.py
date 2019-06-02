@@ -1,8 +1,5 @@
-import logging
 from .websocket import WebSocket
 from .events import Event
-
-log = logging.getLogger('lavalink')
 
 
 class Node:
