@@ -53,6 +53,8 @@ class NodeManager:
         node = Node(self, host, port, password, region, name, resume_key, resume_timeout)
         self.nodes.append(node)
 
+        log.info("[NODE-{}] Successfully added Node to Node Manager".format(node.name))
+
     def remove_node(self, node: Node):
         """
         Removes a node.
@@ -61,6 +63,7 @@ class NodeManager:
             The node to remove from the list.
         """
         self.nodes.remove(node)
+        log.info("[NODE-{}] Successfully removed Node".format(node.name))
 
     def get_region(self, endpoint: str):
         """

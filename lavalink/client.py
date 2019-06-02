@@ -234,5 +234,7 @@ class Client:
                         await hook(event)
                     else:
                         hook(event)
+
+                log.info('Dispatched {} event to all registered hooks'.format(event.__name__))
             except Exception as e:  # pylint: disable=W0703
                 log.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
