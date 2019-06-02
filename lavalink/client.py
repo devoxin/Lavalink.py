@@ -51,7 +51,7 @@ class Client:
         self.node_manager = NodeManager(self, regions)
         self.players = PlayerManager(self, player)
 
-        self._event_hooks = []
+        self._event_hooks = {}
 
         self._session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(loop=loop),
@@ -59,8 +59,11 @@ class Client:
         )  # This session will be used for websocket and http requests.
 
     def add_event_hook(self, hook):
-        if hook not in self._event_hooks:
-            self._event_hooks.append(hook)
+        if hook not in self._event_hooks.get("Unknown Event"):
+            if self._event_hooks.get("Unknown Event") is None:
+                self._event_hooks["Unknown Event"] = [hook]
+            else:
+                self._event_hooks["Unknown Event"].append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None):
@@ -199,14 +202,12 @@ class Client:
 
     def on(self, event: Event):
         def decorator(func):
-            for hook in self._event_hooks:
-                if isinstance(hook, dict):
-                    event_hook = hook.get(event)
+            event_hook = self._event_hooks.get(event)
 
-                    if event_hook is None:
-                        hook[event] = [func]
-                    else:
-                        event_hook.append(func)
+            if event_hook is None:
+                self._event_hooks[event] = [func]
+            else:
+                event_hook.append(func)
 
         return decorator
 
@@ -218,23 +219,18 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
+        try:
+            unknown_events = self._event_hooks.get("Unknown Events")
+            registered_events = self._event_hooks.get(event)
 
-        for hook in self._event_hooks:
-            try:
-                if isinstance(hook, dict):
-                    event_hooks = hook.get(event)
+            event_hooks = unknown_events + registered_events
 
-                    for decorated_hook in event_hooks:
-                        if inspect.iscoroutinefunction(hook):
-                            await decorated_hook(event)
-                        else:
-                            decorated_hook(event)
+            for hook in event_hooks:
+                if inspect.iscoroutinefunction(hook):
+                    await hook(event)
                 else:
-                    if inspect.iscoroutinefunction(hook):
-                        await hook(event)
-                    else:
-                        hook(event)
+                    hook(event)
 
-                log.info('Dispatched {} event to all registered hooks'.format(event.__name__))
-            except Exception as e:  # pylint: disable=W0703
-                log.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
+            log.info('Dispatched {} event to all registered hooks'.format(event.__name__))
+        except Exception as e:  # pylint: disable=W0703
+            log.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
