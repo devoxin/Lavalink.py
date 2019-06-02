@@ -34,12 +34,7 @@ class AudioTrack:
             new_track.stream = track['info']['isStream']
             new_track.title = track['info']['title']
             new_track.uri = track['info']['uri']
-
-            # This is to avoid 'Dangerous default value {} as argument' from pylint
-            if extra is None:
-                extra = {}
-
-            new_track.extra = extra
+            new_track.extra = extra or {}
 
             return new_track
         except KeyError:
