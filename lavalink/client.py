@@ -59,11 +59,12 @@ class Client:
         )  # This session will be used for websocket and http requests.
 
     def add_event_hook(self, hook):
-        if hook not in self._event_hooks.get("Unknown Event"):
-            if self._event_hooks.get("Unknown Event") is None:
-                self._event_hooks["Unknown Event"] = [hook]
+        event_hooks = self._event_hooks.get('Unknown Event')
+        if hook not in event_hooks:
+            if event_hooks is None:
+                self._event_hooks['Unknown Event'] = [hook]
             else:
-                self._event_hooks["Unknown Event"].append(hook)
+                self._event_hooks['Unknown Event'].append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None):
@@ -220,7 +221,7 @@ class Client:
             The event to dispatch to the hooks.
         """
         try:
-            unknown_events = self._event_hooks.get("Unknown Events")
+            unknown_events = self._event_hooks.get('Unknown Events')
             registered_events = self._event_hooks.get(event)
 
             event_hooks = unknown_events + registered_events
