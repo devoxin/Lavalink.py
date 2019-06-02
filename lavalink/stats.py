@@ -1,4 +1,6 @@
 class Penalty:
+    __slots__ = ("player_penalty", "cpu_penalty", "null_frame_penalty", "deficit_frame_penalty", "total")
+
     def __init__(self, stats):
         self.player_penalty = stats.playing_players
         self.cpu_penalty = 1.05 ** (100 * stats.system_load) * 10 - 10
@@ -16,6 +18,10 @@ class Penalty:
 
 
 class Stats:
+    __slots__ = ("_node", "uptime", "players", "playing_players", "memory_free", "memory_used", "memory_allocated",
+                 "memory_reservable", "cpu_cores", "system_load", "lavalink_load", "frames_sent", "frames_nulled",
+                 "frames_deficit", "penalty")
+
     def __init__(self, node, data):
         self._node = node
 
