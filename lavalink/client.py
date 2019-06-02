@@ -58,13 +58,22 @@ class Client:
             timeout=aiohttp.ClientTimeout(total=30)
         )  # This session will be used for websocket and http requests.
 
-    def add_event_hook(self, hook):
-        event_hooks = self._event_hooks.get('Unknown Event')
+    def add_event_hook(self, hook, event: Event = None):
+        """
+
+        :param hook:
+            The hook to be added, that will be dispatched when an event is dispatched.
+            If `event` parameter is left empty, then it will run when any event is dispatched.
+        :param event:
+            The event the hook belongs to. This will dispatch when that specific event is
+            dispatched.
+        """
+        event_hooks = self._event_hooks.get(event)
         if hook not in event_hooks:
             if event_hooks is None:
-                self._event_hooks['Unknown Event'] = [hook]
+                self._event_hooks[event] = [hook]
             else:
-                self._event_hooks['Unknown Event'].append(hook)
+                self._event_hooks[event].append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None):
@@ -221,7 +230,7 @@ class Client:
             The event to dispatch to the hooks.
         """
         try:
-            unknown_events = self._event_hooks.get('Unknown Events')
+            unknown_events = self._event_hooks.get(None)
             registered_events = self._event_hooks.get(event)
 
             event_hooks = unknown_events + registered_events
