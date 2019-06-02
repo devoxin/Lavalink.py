@@ -4,6 +4,7 @@ from time import time
 from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent,
                      QueueEndEvent, PlayerUpdateEvent, NodeChangedEvent)  # noqa: F401
 from .node import Node
+from .exceptions import InvalidBand
 
 
 class InvalidTrack(Exception):
@@ -300,8 +301,8 @@ class DefaultPlayer(BasePlayer):
             band = value[0]
             gain = value[1]
 
-            if -1 > value[0] > 15:
-                continue
+            if not -1 < value[0] < 15:
+                raise InvalidBand("{} is a invalid band, must be 0-14".format(band))
 
             gain = max(min(float(gain), 1.0), -0.25)
             update_package.append({'band': band, 'gain': gain})
