@@ -229,12 +229,12 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
+        unknown_events = self._event_hooks.get(None) or []
+        registered_events = self._event_hooks.get(event) or []
+
+        event_hooks = unknown_events + registered_events
+
         try:
-            unknown_events = self._event_hooks.get(None)
-            registered_events = self._event_hooks.get(event)
-
-            event_hooks = unknown_events + registered_events
-
             for hook in event_hooks:
                 if inspect.iscoroutinefunction(hook):
                     await hook(event)
