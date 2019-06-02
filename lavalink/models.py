@@ -37,6 +37,8 @@ class AudioTrack:
             new_track.uri = track['info']['uri']
 
             for key in extra:
+                if key in cls.__slots__:
+                    raise AttributeError("{} is not overwritable as it's a class attribute".format(key))
                 setattr(new_track, key, extra[key])
 
             return new_track
