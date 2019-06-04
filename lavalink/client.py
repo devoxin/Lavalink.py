@@ -48,7 +48,7 @@ class Client:
         self._loop = loop or asyncio.get_event_loop()
         self.node_manager = NodeManager(self, regions)
         self.players = PlayerManager(self, player)
-        self.logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger('lavalink')
 
         self._event_hooks = {}
 

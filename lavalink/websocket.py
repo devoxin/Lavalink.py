@@ -79,7 +79,7 @@ class WebSocket:
 
     async def _listen(self):
         async for msg in self._ws:
-            self._lavalink.logger.debug('[NODE-{}] Received WebSocket message: {}'.format(self._node.name, msg.data))
+            self._lavalink._logger.debug('[NODE-{}] Received WebSocket message: {}'.format(self._node.name, msg.data))
 
             if msg.type == aiohttp.WSMsgType.text:
                 await self._handle_message(msg.json())
@@ -108,13 +108,13 @@ class WebSocket:
         elif op == 'event':
             await self._handle_event(data)
         else:
-            self._lavalink.logger.warning('[NODE-{}] Received unknown op: {}'.format(self._node.name, op))
+            self._lavalink._logger.warning('[NODE-{}] Received unknown op: {}'.format(self._node.name, op))
 
     async def _handle_event(self, data: dict):
         player = self._lavalink.players.get(int(data['guildId']))
 
         if not player:
-            self._lavalink.logger.warning('[NODE-{}] Received event for non-existent player! GuildId: {}'
+            self._lavalink._logger.warning('[NODE-{}] Received event for non-existent player! GuildId: {}'
                                           .format(self._node.name, data['guildId']))
             return
 
@@ -130,7 +130,7 @@ class WebSocket:
         elif event_type == 'WebSocketClosedEvent':
             event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
         else:
-            self._lavalink.logger.warning('[NODE-{}] Unknown event received: {}'.format(self._node.name, event_type))
+            self._lavalink._logger.warning('[NODE-{}] Unknown event received: {}'.format(self._node.name, event_type))
             return
 
         await self._lavalink._dispatch_event(event)
@@ -140,8 +140,8 @@ class WebSocket:
 
     async def _send(self, **data):
         if self.connected:
-            self._lavalink.logger.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(data)))
+            self._lavalink._logger.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(data)))
             await self._ws.send_json(data)
         else:
-            self._lavalink.logger.debug('[NODE-{}] Send called before WebSocket ready!'.format(self._node.name))
+            self._lavalink._logger.debug('[NODE-{}] Send called before WebSocket ready!'.format(self._node.name))
             self._message_queue.append(data)
