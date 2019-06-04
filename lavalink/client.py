@@ -212,12 +212,7 @@ class Client:
 
     def on(self, event: Event):
         def decorator(func):
-            event_hook = self._event_hooks.get(event)
-
-            if event_hook is None:
-                self._event_hooks[event] = [func]
-            else:
-                event_hook.append(func)
+            self.add_event_hook(func, event)
 
         return decorator
 
