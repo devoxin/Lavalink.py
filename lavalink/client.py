@@ -224,7 +224,7 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
-        generic_events = self._event_hooks.get("Generic") or []
+        generic_events = self._event_hooks.get('Generic') or []
         registered_events = self._event_hooks.get(event) or []
 
         try:
