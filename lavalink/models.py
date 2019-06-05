@@ -230,14 +230,18 @@ class DefaultPlayer(BasePlayer):
         self.current = track
         options = {}
 
-        if end_time == 0:
-            options['endTime'] = track.duration
-        elif no_replace:
-            options['noReplace'] = no_replace
-        elif 0 > end_time > track.duration or 0 > start_time > track.duration:
-            raise ValueError("end_time or start_time is either less than 0 or greater than the track's duration")
-        else:
+        if 0 > start_time > track.duration:
+            raise ValueError('start_time is either less than 0 or greater than the track\'s duration')
+        elif start_time:
             options['startTime'] = start_time
+
+        if 0 > end_time > track.duration:
+            raise ValueError('end_time is either less than 0 or greater than the track\'s duration')
+        elif end_time:
+            options['endTime'] = end_time
+
+        if no_replace:
+            options['noReplace'] = no_replace
 
         await self.node._send(op='play', guildId=self.guild_id, track=track.track, **options)
         await self.node._dispatch_event(TrackStartEvent(self, track))
