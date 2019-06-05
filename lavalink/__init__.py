@@ -24,7 +24,7 @@ def enable_debug_logging():
     Sets up a logger to stdout. This solely exists to make things easier for
     end-users who want to debug issues with Lavalink.py.
     """
-    log = logging.getLogger(__name__)
+    log = logging.getLogger('lavalink')
 
     fmt = logging.Formatter(
         '[%(asctime)s] [lavalink.py] [%(levelname)s] %(message)s',
