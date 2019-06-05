@@ -308,7 +308,7 @@ class DefaultPlayer(BasePlayer):
             gain = value[1]
 
             if not -1 < value[0] < 15:
-                raise IndexError('{} is a invalid band, must be 0-14'.format(band))
+                raise IndexError('{} is an invalid band, must be 0-14'.format(band))
 
             gain = max(min(float(gain), 1.0), -0.25)
             update_package.append({'band': band, 'gain': gain})
