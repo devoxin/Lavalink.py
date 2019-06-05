@@ -229,11 +229,12 @@ class Client:
         registered_events = self._event_hooks.get(event) or []
 
         try:
-            async for generic_hook in generic_events:
-                await generic_hook(event)
-                async for registered_hook in registered_events:
-                    await registered_hook(event)
+            async for hook in generic_events:
+                await hook(event)
 
-            self.logger.info('Dispatched {} event to all registered hooks'.format(event.__name__))
+            async for hook in registered_events:
+                await hook(event)
+
+            self._logger.info('Dispatched {} event to all registered hooks'.format(event.__name__))
         except Exception as e:  # pylint: disable=W0703
-            self.logger.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
+            self._logger.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
