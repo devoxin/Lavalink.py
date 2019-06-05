@@ -191,7 +191,7 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, AudioTrack.build(track, requester, extra=extra))
 
-    async def play(self, track: AudioTrack = None, start_time: int = 0, end_time: int = -1, no_replace: bool = False):
+    async def play(self, track: AudioTrack = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
         """
         Plays the given track.
         ----------
@@ -228,14 +228,18 @@ class DefaultPlayer(BasePlayer):
                 track = self.queue.pop(0)
 
         self.current = track
+        options = {}
 
-        if end_time is -1:
-            end_time = track.duration
-        elif 0 > end_time > track.duration:
-            raise TypeError("end_time is either less than 0 or greater than the track's duration")
+        if 0 > end_time > track.duration or 0 > start_time > track.duration:
+            raise ValueError("end_time or start_time is either less than 0 or greater than the track's duration")
+        elif end_time == 0:
+            options['endTime'] = track.duration
+        elif no_replace:
+            options['noReplace'] = no_replace
+        else:
+            options['startTime'] = start_time
 
-        await self.node._send(op='play', guildId=self.guild_id, track=track.track, startTime=start_time,
-                              endTime=end_time, noReplace=no_replace)
+        await self.node._send(op='play', guildId=self.guild_id, track=track.track, **options)
         await self.node._dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
