@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import random
-import inspect
 from urllib.parse import quote
 
 import aiohttp
