@@ -120,7 +120,7 @@ class NodeManager:
 
     async def _node_disconnect(self, node: Node, code: int, reason: str):
         self._lavalink._logger.warning('[NODE-{}] Disconnected with code {} and reason {}'.format(node.name, code,
-                                                                                                 reason))
+                                                                                                  reason))
         await self._lavalink._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
@@ -128,7 +128,7 @@ class NodeManager:
         if not best_node:
             self._player_queue.extend(node.players)
             self._lavalink._logger.error('Unable to move players, no available nodes! '
-                                        'Waiting for a node to become available.')
+                                         'Waiting for a node to become available.')
             return
 
         for player in node.players:

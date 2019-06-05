@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import aiohttp
 from .stats import Stats
 from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, WebSocketClosedEvent
@@ -115,7 +114,7 @@ class WebSocket:
 
         if not player:
             self._lavalink._logger.warning('[NODE-{}] Received event for non-existent player! GuildId: {}'
-                                          .format(self._node.name, data['guildId']))
+                                           .format(self._node.name, data['guildId']))
             return
 
         event_type = data['type']

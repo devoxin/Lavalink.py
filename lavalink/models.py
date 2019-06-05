@@ -230,12 +230,12 @@ class DefaultPlayer(BasePlayer):
         self.current = track
         options = {}
 
-        if 0 > end_time > track.duration or 0 > start_time > track.duration:
-            raise ValueError("end_time or start_time is either less than 0 or greater than the track's duration")
-        elif end_time == 0:
+        if end_time == 0:
             options['endTime'] = track.duration
         elif no_replace:
             options['noReplace'] = no_replace
+        elif 0 > end_time > track.duration or 0 > start_time > track.duration:
+            raise ValueError("end_time or start_time is either less than 0 or greater than the track's duration")
         else:
             options['startTime'] = start_time
 
