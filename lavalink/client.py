@@ -69,9 +69,10 @@ class Client:
             dispatched.
         """
         event_hooks = self._event_hooks.get(event)
+
         if hook not in event_hooks:
             if event_hooks is None:
-                self._event_hooks[event] = [hook]
+                self._event_hooks["Generic"] = [hook]
             else:
                 self._event_hooks[event].append(hook)
 
@@ -224,17 +225,14 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
-        unknown_events = self._event_hooks.get(None) or []
+        generic_events = self._event_hooks.get("Generic") or []
         registered_events = self._event_hooks.get(event) or []
 
-        event_hooks = unknown_events + registered_events
-
         try:
-            for hook in event_hooks:
-                if inspect.iscoroutinefunction(hook):
-                    await hook(event)
-                else:
-                    hook(event)
+            async for generic_hook in generic_events:
+                await generic_hook(event)
+                async for registered_hook in registered_events:
+                    await registered_hook(event)
 
             self.logger.info('Dispatched {} event to all registered hooks'.format(event.__name__))
         except Exception as e:  # pylint: disable=W0703
