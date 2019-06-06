@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+import itertools
 from urllib.parse import quote
 
 import aiohttp
@@ -224,16 +225,16 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
-        generic_events = self._event_hooks.get('Generic') or []
-        registered_events = self._event_hooks.get(event) or []
+        generic_hooks = self._event_hooks.get('Generic') or []
+        targeted_hooks = self._event_hooks.get(event) or []
 
-        try:
-            async for hook in generic_events:
-                await hook(event)
+        tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
 
-            async for hook in registered_events:
-                await hook(event)
+        results = await asyncio.gather(*tasks)
 
-            self._logger.info('Dispatched {} event to all registered hooks'.format(event.__name__))
-        except Exception as e:  # pylint: disable=W0703
-            self._logger.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
+        for index, result in enumerate(results):
+            if isinstance(result, Exception):
+                self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
+                raise result
+
+        self._logger.info('Dispatched {} event to all registered hooks'.format(event.__name__))
