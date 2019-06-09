@@ -211,7 +211,19 @@ class Client:
         else:
             return
 
-    def on(self, event: Event):
+    def on(self, event: Event = "Generic"):
+        """
+        Adds an event hook when decorated with a function.
+
+        Parameters
+        ----------
+        event: Event
+            The event that will dispatch the given event hook.
+
+        Returns
+        ---------
+        None
+        """
         def decorator(func):
             self.add_event_hook(func, event)
 
