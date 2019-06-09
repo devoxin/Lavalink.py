@@ -10,7 +10,7 @@ class NodeManager:
         self.nodes = []
 
         self.regions = regions or {
-            'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica'),
+            'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica', 'india'),
             'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'london'),
             'us': ('us', 'brazil')
         }
