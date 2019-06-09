@@ -232,11 +232,15 @@ class DefaultPlayer(BasePlayer):
 
         if not 0 > start_time > track.duration and start_time:
             options['startTime'] = start_time
+        elif start_time == 0:
+            pass
         else:
             raise ValueError('start_time is either less than 0 or greater than the track\'s duration')
 
         if not 0 > end_time > track.duration and end_time:
             options['endTime'] = end_time
+        elif end_time == 0:
+            pass
         else:
             raise ValueError('end_time is either less than 0 or greater than the track\'s duration')
 
