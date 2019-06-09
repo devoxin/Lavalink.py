@@ -6,7 +6,6 @@ class NodeManager:
     def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
         self._player_queue = []
-        self._original_player_nodes = {}
 
         self.nodes = []
 
