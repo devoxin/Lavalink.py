@@ -220,10 +220,6 @@ class Client:
         event: Event
             The event that will dispatch the given event hook. This defaults 
             to 'Generic', which is dispatched on all events. 
-
-        Returns
-        ---------
-        None
         """
         def decorator(func):
             self.add_event_hook(func, event)
