@@ -71,7 +71,7 @@ class Client:
         event_hooks = self._event_hooks.get(event)
 
         if hook not in event_hooks:
-            if event_hooks is None:
+            if not event_hooks:
                 self._event_hooks["Generic"] = [hook]
             else:
                 self._event_hooks[event].append(hook)
