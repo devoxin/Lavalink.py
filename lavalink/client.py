@@ -6,12 +6,13 @@ from urllib.parse import quote
 
 import aiohttp
 
-from . import _event_hooks
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 from .events import Event
+
+_event_hooks = {}
 
 
 class Client:
@@ -175,7 +176,7 @@ class Client:
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
             guild_id = int(data['d']['guild_id'])
-            player = self.players.get(guild_id)
+            player = self.player_manager.get(guild_id)
 
             if player:
                 await player._voice_server_update(data['d'])
@@ -184,7 +185,7 @@ class Client:
                 return
 
             guild_id = int(data['d']['guild_id'])
-            player = self.players.get(guild_id)
+            player = self.player_manager.get(guild_id)
 
             if player:
                 await player._voice_state_update(data['d'])

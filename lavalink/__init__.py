@@ -9,16 +9,14 @@ __version__ = '3.0.0'
 
 import logging
 import sys
-from .client import Client
+from .client import Client, _event_hooks
 from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent
 from .models import BasePlayer, DefaultPlayer, AudioTrack, NoPreviousTrack, InvalidTrack
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
-from .utils import format_time
+from .utils import format_time, parse_time
 from .websocket import WebSocket
-
-_event_hooks = {}
 
 
 def enable_debug_logging():
