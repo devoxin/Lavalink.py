@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 import aiohttp
 
+from . import _internal_event_hooks
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
@@ -211,21 +212,6 @@ class Client:
         else:
             return
 
-    def on(self, event: Event = 'Generic'):
-        """
-        Adds an event hook when decorated with a function.
-
-        Parameters
-        ----------
-        event: Event
-            The event that will dispatch the given event hook. This defaults 
-            to 'Generic', which is dispatched on all events. 
-        """
-        def decorator(func):
-            self.add_event_hook(func, event)
-
-        return decorator
-
     async def _dispatch_event(self, event: Event):
         """|coro|
 
@@ -237,7 +223,11 @@ class Client:
         generic_hooks = self._event_hooks.get('Generic') or []
         targeted_hooks = self._event_hooks.get(event) or []
 
-        tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
+        internal_generic_hooks = _internal_event_hooks.get('Generic', [])
+        internal_targeted_hooks = _internal_event_hooks.get(event, [])
+
+        tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks,
+                                                         internal_generic_hooks, internal_targeted_hooks)]
 
         results = await asyncio.gather(*tasks)
 
