@@ -60,7 +60,7 @@ def add_event_hook(hook, event: Event = None):
             _event_hooks[event or 'Generic'].append(hook)
 
 
-def on(event: Event = 'Generic'):
+def on(event: Event = None):
     """
     Adds an event hook when decorated with a function.
 
