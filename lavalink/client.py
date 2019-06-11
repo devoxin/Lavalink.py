@@ -73,7 +73,7 @@ class Client:
 
         if hook not in event_hooks:
             if not event_hooks:
-                self._event_hooks["Generic"] = [hook]
+                self._event_hooks['Generic'] = [hook]
             else:
                 self._event_hooks[event].append(hook)
 
@@ -220,8 +220,8 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
-        generic_hooks = self._event_hooks.get('Generic') or []
-        targeted_hooks = self._event_hooks.get(event) or []
+        generic_hooks = self._event_hooks.get('Generic', [])
+        targeted_hooks = self._event_hooks.get(event, [])
 
         internal_generic_hooks = _internal_event_hooks.get('Generic', [])
         internal_targeted_hooks = _internal_event_hooks.get(event, [])
