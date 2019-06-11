@@ -51,31 +51,10 @@ class Client:
         self.players = PlayerManager(self, player)
         self._logger = logging.getLogger('lavalink')
 
-        self._event_hooks = {}
-
         self._session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(loop=loop),
             timeout=aiohttp.ClientTimeout(total=30)
         )  # This session will be used for websocket and http requests.
-
-    def add_event_hook(self, hook, event: Event = None):
-        """
-        Adds an event hook to be dispatched on an event.
-        ----------
-        :param hook:
-            The hook to be added, that will be dispatched when an event is dispatched.
-            If `event` parameter is left empty, then it will run when any event is dispatched.
-        :param event:
-            The event the hook belongs to. This will dispatch when that specific event is
-            dispatched.
-        """
-        event_hooks = self._event_hooks.get(event)
-
-        if hook not in event_hooks:
-            if not event_hooks:
-                self._event_hooks['Generic'] = [hook]
-            else:
-                self._event_hooks[event].append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None):
@@ -220,14 +199,10 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
-        generic_hooks = self._event_hooks.get('Generic', [])
-        targeted_hooks = self._event_hooks.get(event, [])
+        generic_hooks = _internal_event_hooks.get('Generic', [])
+        targeted_hooks = _internal_event_hooks.get(event, [])
 
-        internal_generic_hooks = _internal_event_hooks.get('Generic', [])
-        internal_targeted_hooks = _internal_event_hooks.get(event, [])
-
-        tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks,
-                                                         internal_generic_hooks, internal_targeted_hooks)]
+        tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
 
         results = await asyncio.gather(*tasks)
 

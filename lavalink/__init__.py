@@ -40,7 +40,7 @@ def enable_debug_logging():
     log.setLevel(logging.DEBUG)
 
 
-def _internal_add_event_hook(hook, event: Event = None):
+def add_event_hook(hook, event: Event = None):
     """
     Adds an event hook to be dispatched on an event.
     ----------
