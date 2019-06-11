@@ -24,7 +24,7 @@ class Music(commands.Cog):
         lavalink.add_event_hook(self.track_hook)
 
     def cog_unload(self):
-        self.bot.lavalink._event_hooks.clear()
+        self.bot.lavalink.client_event_hooks.clear()
 
     async def cog_before_invoke(self, ctx):
         guild_check = ctx.guild is not None
