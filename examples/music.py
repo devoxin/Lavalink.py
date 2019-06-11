@@ -21,7 +21,7 @@ class Music(commands.Cog):
             bot.lavalink.add_node('127.0.0.1', 2333, 'youshallnotpass', 'eu', 'default-node')  # Host, Port, Password, Region, Name
             bot.add_listener(bot.lavalink.voice_update_handler, 'on_socket_response')
 
-        bot.lavalink.add_event_hook(self.track_hook)
+        lavalink.add_event_hook(self.track_hook)
 
     def cog_unload(self):
         self.bot.lavalink._event_hooks.clear()
@@ -50,6 +50,11 @@ class Music(commands.Cog):
             guild_id = int(event.player.guild_id)
             await self.connect_to(guild_id, None)
             # Disconnect from the channel -- there's nothing else to play.
+
+    # You can create event hooks by decorators too.
+    @lavalink.on(lavalink.events.TrackStartEvent)
+    async def on_track_start(self, event):
+        print('{} has just started playing!'.format(event.track.title))
 
     async def connect_to(self, guild_id: int, channel_id: str):
         """ Connects to the given voicechannel ID. A channel_id of `None` means disconnect. """
@@ -87,6 +92,9 @@ class Music(commands.Cog):
             track = results['tracks'][0]
             embed.title = 'Track Enqueued'
             embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
+
+            # You can create your own AudioTrack and add more information about the track you may want.
+            track = lavalink.models.AudioTrack.build(track, ctx.author.id, {'Recommended': True})
             player.add(requester=ctx.author.id, track=track)
 
         await ctx.send(embed=embed)
