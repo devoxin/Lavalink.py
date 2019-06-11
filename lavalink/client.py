@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 import aiohttp
 
-from . import _internal_event_hooks
+from . import _event_hooks
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
@@ -48,7 +48,7 @@ class Client:
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
         self.node_manager = NodeManager(self, regions)
-        self.players = PlayerManager(self, player)
+        self.player_manager = PlayerManager(self, player)
         self._logger = logging.getLogger('lavalink')
 
         self._session = aiohttp.ClientSession(
@@ -199,8 +199,8 @@ class Client:
         :param event:
             The event to dispatch to the hooks.
         """
-        generic_hooks = _internal_event_hooks.get('Generic', [])
-        targeted_hooks = _internal_event_hooks.get(event, [])
+        generic_hooks = _event_hooks.get('Generic', [])
+        targeted_hooks = _event_hooks.get(event, [])
 
         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
 
