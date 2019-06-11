@@ -18,7 +18,7 @@ from .playermanager import PlayerManager
 from .utils import format_time
 from .websocket import WebSocket
 
-_internal_event_hooks = {}
+_event_hooks = {}
 
 
 def enable_debug_logging():
@@ -45,19 +45,19 @@ def add_event_hook(hook, event: Event = None):
     Adds an event hook to be dispatched on an event.
     ----------
     :param hook:
-        The hook to be added, that will be dispatched when an event is dispatched.
+        The hook to register for the given event type.
         If `event` parameter is left empty, then it will run when any event is dispatched.
     :param event:
         The event the hook belongs to. This will dispatch when that specific event is
         dispatched.
     """
-    event_hooks = _internal_event_hooks.get(event)
+    event_hooks = _event_hooks.get(event)
 
     if hook not in event_hooks:
         if not event_hooks:
-            _internal_event_hooks['Generic'] = [hook]
+            _event_hooks['Generic'] = [hook]
         else:
-            _internal_event_hooks[event].append(hook)
+            _event_hooks[event].append(hook)
 
 
 def on(event: Event = 'Generic'):
@@ -71,6 +71,6 @@ def on(event: Event = 'Generic'):
         to 'Generic', which is dispatched on all events.
     """
     def decorator(func):
-        _internal_add_event_hook(func, event)
+        add_event_hook(func, event)
 
     return decorator
