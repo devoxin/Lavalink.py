@@ -51,13 +51,13 @@ def add_event_hook(hook, event: Event = None):
         The event the hook belongs to. This will dispatch when that specific event is
         dispatched.
     """
-    event_hooks = _event_hooks.get(event)
+    event_hooks = _event_hooks.get(event, [])
 
     if hook not in event_hooks:
         if not event_hooks:
-            _event_hooks['Generic'] = [hook]
+            _event_hooks[event or 'Generic'] = list(hook)
         else:
-            _event_hooks[event].append(hook)
+            _event_hooks[event or 'Generic'].append(hook)
 
 
 def on(event: Event = 'Generic'):
