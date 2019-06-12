@@ -45,11 +45,13 @@ def enable_debug_logging():
 def add_event_hook(hook, event: Event = None):
     """
     Adds an event hook to be dispatched on an event.
+
+    Parameters
     ----------
-    :param hook:
+    hook: function
         The hook to register for the given event type.
         If `event` parameter is left empty, then it will run when any event is dispatched.
-    :param event:
+    event: Event
         The event the hook belongs to. This will dispatch when that specific event is
         dispatched.
     """

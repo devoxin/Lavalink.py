@@ -15,6 +15,14 @@ class TrackNotBuilt(Exception):
 
 
 class AudioTrack:
+    """
+    Represents the AudioTrack sent to Lavalink.
+
+    Parameters
+    ----------
+    requester: any
+        The requester of the track.
+    """
     __slots__ = ('track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
                  'extra')
 
@@ -51,6 +59,16 @@ class NoPreviousTrack(Exception):
 
 
 class BasePlayer(ABC):
+    """
+    Represents the BasePlayer all players must be inherited from.
+
+    Parameters
+    ----------
+    guild_id: int
+        The guild id of the player.
+    node: Node
+        The node that the player is connected to.
+    """
     def __init__(self, guild_id: int, node: Node):
         self.guild_id = str(guild_id)
         self.node = node
@@ -99,6 +117,16 @@ class BasePlayer(ABC):
 
 
 class DefaultPlayer(BasePlayer):
+    """
+    The player that Lavalink.py defaults to use.
+
+    Parameters
+    ----------
+    guild_id: int
+        The guild id of the player.
+    node: Node
+        The node that the player is connected to.
+    """
     def __init__(self, guild_id: int, node: Node):
         super().__init__(guild_id, node)
 
@@ -141,10 +169,12 @@ class DefaultPlayer(BasePlayer):
     def store(self, key: object, value: object):
         """
         Stores custom user data.
+
+        Parameters
         ----------
-        :param key:
+        key: object
             The key of the object to store.
-        :param value:
+        value: object
             The object to associate with the key.
         """
         self._user_data.update({key: value})
@@ -152,10 +182,12 @@ class DefaultPlayer(BasePlayer):
     def fetch(self, key: object, default=None):
         """
         Retrieves the related value from the stored user data.
+
+        Parameters
         ----------
-        :param key:
+        key: object
             The key to fetch.
-        :param default:
+        default: Optional[any]
             The object that should be returned if the key doesn't exist.
         """
         return self._user_data.get(key, default)
@@ -163,8 +195,10 @@ class DefaultPlayer(BasePlayer):
     def delete(self, key: object):
         """
         Removes an item from the the stored user data.
+
+        Parameters
         ----------
-        :param key:
+        key: object
             The key to delete.
         """
         try:
@@ -175,14 +209,16 @@ class DefaultPlayer(BasePlayer):
     def add(self, requester: int, track: dict, extra: dict = None, index: int = None):
         """
         Adds a track to the queue.
+
+        Parameters
         ----------
-        :param requester:
+        requester: int
             The ID of the user who requested the track.
-        :param track:
+        track: dict
             A dict representing a track returned from Lavalink.
-        :param extra:
+        extra: dict
             A dict adding extra attributes to the track.
-        :param index:
+        index: Optional[int]
             The index at which to add the track.
             If index is left unspecified, the default behaviour is to append the track.
         """
@@ -194,17 +230,19 @@ class DefaultPlayer(BasePlayer):
     async def play(self, track: AudioTrack = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
         """
         Plays the given track.
+
+        Parameters
         ----------
-        :param track:
+        track: AudioTrack
             The track to play. If left unspecified, this will default
             to the first track in the queue.
-        :param start_time:
+        start_time: Optional[int]
             Setting that determines the number of milliseconds to offset the track by.
             If left unspecified, it will start the track at its beginning.
-        :param end_time:
+        end_time: Optional[int]
             Settings that determines the number of milliseconds the track will stop playing.
             By default track plays until it ends as per encoded data.
-        :param no_replace:
+        no_replace: Optional[bool]
             If set to true, operation will be ignored if a track is already playing or paused.
         """
         if self.repeat and self.current:
@@ -259,8 +297,10 @@ class DefaultPlayer(BasePlayer):
     async def set_pause(self, pause: bool):
         """
         Sets the player's paused state.
+
+        Parameters
         ----------
-        :param pause:
+        pause: bool
             Whether to pause the player or not.
         """
         await self.node._send(op='pause', guildId=self.guild_id, pause=pause)
@@ -269,8 +309,10 @@ class DefaultPlayer(BasePlayer):
     async def set_volume(self, vol: int):
         """
         Sets the player's volume (A limit of 1000 is imposed by Lavalink).
+
+        Parameters
         ----------
-        :param vol:
+        vol: int
             The new volume level.
         """
         self.volume = max(min(vol, 1000), 0)
@@ -279,8 +321,10 @@ class DefaultPlayer(BasePlayer):
     async def seek(self, position: int):
         """
         Seeks to a given position in the track.
+
+        Parameters
         ----------
-        :param position:
+        position: int
             The new position to seek to in milliseconds.
         """
         await self.node._send(op='seek', guildId=self.guild_id, position=position)
@@ -288,10 +332,12 @@ class DefaultPlayer(BasePlayer):
     async def set_gain(self, band: int, gain: float = 0.0):
         """
         Sets the equalizer band gain to the given amount.
+
+        Parameters
         ----------
-        :param band:
+        band: int
             Band number (0-14).
-        :param gain:
+        gain: Optional[float]
             A float representing gain of a band (-0.25 to 1.00) Defaults to 0.0.
         """
         await self.set_gains((band, gain))
@@ -299,8 +345,10 @@ class DefaultPlayer(BasePlayer):
     async def set_gains(self, *gain_list):
         """
         Modifies the player's equalizer settings.
+
+        Parameters
         ----------
-        :param gain_list:
+        gain_list: any
             A list of tuples denoting (`band`, `gain`).
         """
         update_package = []
@@ -325,12 +373,27 @@ class DefaultPlayer(BasePlayer):
         await self.set_gains(*[(x, 0.0) for x in range(15)])
 
     async def handle_event(self, event):
-        """ Handles the given event as necessary. """
+        """
+        Handles the given event as necessary.
+
+        Parameters
+        ----------
+        event: Event
+            The event that will be handled.
+        """
         if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
                 isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':
             await self.play()
 
     async def update_state(self, state: dict):
+        """
+        Updates the position of the player.
+
+        Parameters
+        ----------
+        state: dict
+            The state that is given to update.
+        """
         self.last_update = time() * 1000
         self.last_position = state.get('position', 0)
         self.position_timestamp = state.get('time', 0)
@@ -339,6 +402,14 @@ class DefaultPlayer(BasePlayer):
         await self.node._dispatch_event(event)
 
     async def change_node(self, node: Node):
+        """
+        Changes the player's node
+
+        Parameters
+        ----------
+        node: Node
+            The node the player is changed to.
+        """
         if self.node.available:
             await self.node._send(op='destroy', guildId=self.guild_id)
 

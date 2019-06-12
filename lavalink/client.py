@@ -61,33 +61,41 @@ class Client:
                  resume_key: str = None, resume_timeout: int = 60, name: str = None):
         """
         Adds a node to Lavalink's node manager.
+
+        Parameters
         ----------
-        :param host:
+        host: str
             The address of the Lavalink node.
-        :param port:
+        port: int
             The port to use for websocket and REST connections.
-        :param password:
+        password: str
             The password used for authentication.
-        :param region:
+        region: str
             The region to assign this node to.
-        :param resume_key:
+        resume_key: Optional[str]
             A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-        :param resume_timeout:
+        resume_timeout: Optional[int]
             How long the node should wait for a connection while disconnected before clearing all players.
-        :param name:
+        name: Optional[str]
             An identifier for the node that will show in logs.
         """
-        self.node_manager.add_node(host, port, password, region, name, resume_key, resume_timeout)
+        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name)
 
     async def get_tracks(self, query: str, node: Node = None):
         """|coro|
 
         Gets all tracks associated with the given query.
-        -----------------
-        :param query:
+
+        Parameters
+        ----------
+        query: str
             The query to perform a search for.
-        :param node:
+        node: Optional[Node]
             The node to use for track lookup. Leave this blank to use a random node.
+
+        Returns
+        ----------
+        A dict representing tracks.
         """
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
@@ -110,7 +118,7 @@ class Client:
         ----------
         track: str
             The base64-encoded `track` string.
-        node: Node
+        node: Optional[Node]
             The node to use for the query. ``None`` means random.
 
         Returns
@@ -138,7 +146,7 @@ class Client:
         ----------
         tracks: list[str]
             A list of base64-encoded `track` strings.
-        node: Node
+        node: Optional[Node]
             The node to use for the query. ``None`` means random.
 
         Returns
@@ -164,11 +172,14 @@ class Client:
         forwards the relevant information on to Lavalink, which is used to
         establish a websocket connection and send audio packets to Discord.
 
-        -------------
-        :example:
-            bot.add_listener(lavalink_client.voice_update_handler, 'on_socket_response')
+        Example
+        ----------
+        ```bot.add_listener(lavalink_client.voice_update_handler,
+                            'on_socket_response')```
 
-        :param data:
+        Parameters
+        ----------
+        data: dict
             The payload received from Discord.
         """
         if not data or 't' not in data:
@@ -196,8 +207,10 @@ class Client:
         """|coro|
 
         Dispatches the given event to all registered hooks.
+
+        Parameters
         ----------
-        :param event:
+        event: Event
             The event to dispatch to the hooks.
         """
         generic_hooks = _event_hooks.get('Generic', [])

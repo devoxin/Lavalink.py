@@ -1,8 +1,10 @@
 def format_time(time):
     """
     Formats the given time into HH:MM:SS.
+
+    Parameters
     ----------
-    :param time:
+    time: int
         The time in milliseconds.
     """
     hours, remainder = divmod(time / 1000, 3600)
@@ -15,8 +17,10 @@ def parse_time(time):
     """
     Parses the given time into days, hours, minutes and seconds.
     Useful for formatting time yourself.
+
+    Parameters
     ----------
-    :param time:
+    time: int
         The time in milliseconds.
     """
     days, remainder = divmod(time / 1000, 86400)
