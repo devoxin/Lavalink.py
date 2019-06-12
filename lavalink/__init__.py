@@ -9,6 +9,7 @@ __version__ = '3.0.0'
 
 import logging
 import sys
+import inspect
 from .client import Client, _event_hooks
 from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent
 from .models import BasePlayer, DefaultPlayer, AudioTrack, NoPreviousTrack, InvalidTrack
@@ -49,6 +50,12 @@ def add_event_hook(hook, event: Event = None):
         The event the hook belongs to. This will dispatch when that specific event is
         dispatched.
     """
+    if event is not None or not isinstance(event, Event):
+        raise TypeError('Event parameter is not of type Event or None')
+
+    if not callable(hook) or inspect.iscoroutinefunction(hook):
+        raise TypeError('Hook is not callable or a coroutine')
+
     event_hooks = _event_hooks.get(event, [])
 
     if hook not in event_hooks:
