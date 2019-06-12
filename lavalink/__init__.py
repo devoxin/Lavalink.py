@@ -11,11 +11,14 @@ import logging
 import sys
 import inspect
 from .client import Client, _event_hooks
-from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent
+from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, \
+    NodeConnectedEvent, NodeChangedEvent, NodeDisconnectedEvent, WebSocketClosedEvent
+from .exceptions import NodeException
 from .models import BasePlayer, DefaultPlayer, AudioTrack, NoPreviousTrack, InvalidTrack
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
+from .stats import Penalty, Stats
 from .utils import format_time, parse_time
 from .websocket import WebSocket
 
