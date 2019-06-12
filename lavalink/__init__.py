@@ -50,17 +50,17 @@ def add_event_hook(hook, event: Event = None):
         The event the hook belongs to. This will dispatch when that specific event is
         dispatched.
     """
-    if event is not None or not isinstance(event, Event):
+    if event is not None and not isinstance(event, Event):
         raise TypeError('Event parameter is not of type Event or None')
 
-    if not callable(hook) or inspect.iscoroutinefunction(hook):
+    if not callable(hook) or not inspect.iscoroutinefunction(hook):
         raise TypeError('Hook is not callable or a coroutine')
 
     event_hooks = _event_hooks.get(event, [])
 
     if hook not in event_hooks:
         if not event_hooks:
-            _event_hooks[event or 'Generic'] = list(hook)
+            _event_hooks[event or 'Generic'] = [hook]
         else:
             _event_hooks[event or 'Generic'].append(hook)
 
