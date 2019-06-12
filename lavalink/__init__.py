@@ -8,19 +8,20 @@ __version__ = '3.0.0'
 
 
 import logging
-import sys
 import inspect
-from .client import Client, _event_hooks
+import sys
+
 from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, \
     NodeConnectedEvent, NodeChangedEvent, NodeDisconnectedEvent, WebSocketClosedEvent
-from .exceptions import NodeException
 from .models import BasePlayer, DefaultPlayer, AudioTrack, NoPreviousTrack, InvalidTrack
-from .node import Node
-from .nodemanager import NodeManager
-from .playermanager import PlayerManager
-from .stats import Penalty, Stats
 from .utils import format_time, parse_time
+from .client import Client, _event_hooks
+from .playermanager import PlayerManager
+from .exceptions import NodeException
+from .nodemanager import NodeManager
+from .stats import Penalty, Stats
 from .websocket import WebSocket
+from .node import Node
 
 
 def enable_debug_logging():
@@ -42,14 +43,14 @@ def enable_debug_logging():
     log.setLevel(logging.DEBUG)
 
 
-def add_event_hook(hook, event: Event = None):
+def add_event_hook(*hooks, event: Event = None):
     """
     Adds an event hook to be dispatched on an event.
 
     Parameters
     ----------
-    hook: function
-        The hook to register for the given event type.
+    hooks: function
+        The hooks to register for the given event type.
         If `event` parameter is left empty, then it will run when any event is dispatched.
     event: Event
         The event the hook belongs to. This will dispatch when that specific event is
@@ -58,16 +59,17 @@ def add_event_hook(hook, event: Event = None):
     if event is not None and not isinstance(event, Event):
         raise TypeError('Event parameter is not of type Event or None')
 
-    if not callable(hook) or not inspect.iscoroutinefunction(hook):
-        raise TypeError('Hook is not callable or a coroutine')
-
     event_hooks = _event_hooks.get(event, [])
 
-    if hook not in event_hooks:
-        if not event_hooks:
-            _event_hooks[event or 'Generic'] = [hook]
-        else:
-            _event_hooks[event or 'Generic'].append(hook)
+    for hook in hooks:
+        if not callable(hook) or not inspect.iscoroutinefunction(hook):
+            raise TypeError('Hook is not callable or a coroutine')
+
+        if hook not in event_hooks:
+            if not event_hooks:
+                _event_hooks[event or 'Generic'] = [hook]
+            else:
+                _event_hooks[event or 'Generic'].append(hook)
 
 
 def on(event: Event = None):
