@@ -11,7 +11,7 @@ class QueueEndEvent(Event):
     player: BasePlayer
         The player that has no more songs in queue.
     """
-    __slots__ = 'player'
+    __slots__ = ('player',)
 
     def __init__(self, player):
         self.player = player
@@ -149,7 +149,7 @@ class NodeConnectedEvent(Event):
     node: Node
         The node that was successfully connected to.
     """
-    __slots__ = 'node'
+    __slots__ = ('node',)
 
     def __init__(self, node):
         self.node = node
