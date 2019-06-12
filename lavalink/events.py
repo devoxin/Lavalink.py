@@ -11,6 +11,8 @@ class QueueEndEvent(Event):
     player: BasePlayer
         The player that has no more songs in queue.
     """
+    __slots__ = 'player'
+
     def __init__(self, player):
         self.player = player
 
@@ -28,6 +30,8 @@ class TrackStuckEvent(Event):
     threshold: int
         The amount of time the track had while being stuck.
     """
+    __slots__ = ('player', 'track', 'threshold')
+
     def __init__(self, player, track, threshold):
         self.player = player
         self.track = track
@@ -47,6 +51,8 @@ class TrackExceptionEvent(Event):
     exception: Exception
         The type of exception that the track had while playing.
     """
+    __slots__ = ('player', 'track', 'exception')
+
     def __init__(self, player, track, exception):
         self.player = player
         self.track = track
@@ -66,6 +72,8 @@ class TrackEndEvent(Event):
     reason: str
         The reason why the track stopped playing.
     """
+    __slots__ = ('player', 'track', 'reason')
+
     def __init__(self, player, track, reason):
         self.player = player
         self.track = track
@@ -83,6 +91,8 @@ class TrackStartEvent(Event):
     track: AudioTrack
         The track that started playing.
     """
+    __slots__ = ('player', 'track')
+
     def __init__(self, player, track):
         self.player = player
         self.track = track
@@ -101,6 +111,8 @@ class PlayerUpdateEvent(Event):
     timestamp: int
         The timestamp that the player is currently on.
     """
+    __slots__ = ('player', 'position', 'timestamp')
+
     def __init__(self, player, position, timestamp):
         self.player = player
         self.position = position
@@ -120,6 +132,8 @@ class NodeDisconnectedEvent(Event):
     reason: str
         The reason of why the node was disconnected.
     """
+    __slots__ = ('node', 'code', 'reason')
+
     def __init__(self, node, code, reason):
         self.node = node
         self.code = code
@@ -135,6 +149,8 @@ class NodeConnectedEvent(Event):
     node: Node
         The node that was successfully connected to.
     """
+    __slots__ = 'node'
+
     def __init__(self, node):
         self.node = node
 
@@ -154,6 +170,8 @@ class NodeChangedEvent(Event):
     new_node: Node
         The node the player was moved to.
     """
+    __slots__ = ('player', 'old_node', 'new_node')
+
     def __init__(self, player, old_node, new_node):
         self.player = player
         self.old_node = old_node
@@ -177,6 +195,8 @@ class WebSocketClosedEvent(Event):
     by_remote: bool
         If the websocket was closed remotely.
     """
+    __slots__ = ('player', 'code', 'reason', 'by_remote')
+
     def __init__(self, player, code, reason, by_remote):
         self.player = player
         self.code = code
