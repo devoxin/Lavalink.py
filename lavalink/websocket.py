@@ -1,13 +1,28 @@
 import asyncio
-import logging
 import aiohttp
 from .stats import Stats
 from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, WebSocketClosedEvent
 
-log = logging.getLogger('lavalink')
-
 
 class WebSocket:
+    """
+    Represents the WebSocket connection with Lavalink.
+
+    Parameters
+    ----------
+    node: Node
+        The node that will be connected to.
+    host: str
+        The address of the Lavalink node.
+    port: int
+        The port to use for websocket and REST connections.
+    password: str
+        The password used for authentication.
+    resume_key: str
+        A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
+    resume_timeout: int
+        How long the node should wait for a connection while disconnected before clearing all players.
+    """
     def __init__(self, node, host: str, port: int, password: str, resume_key: str, resume_timeout: int):
         self._node = node
         self._lavalink = self._node._manager._lavalink
@@ -60,7 +75,7 @@ class WebSocket:
                                                           heartbeat=60)
             except aiohttp.ClientConnectorError:
                 if attempt == 1:
-                    log.warning('[NODE-{}] Failed to establish connection!'.format(self._node.name))
+                    self._lavalink.warning('[NODE-{}] Failed to establish connection!'.format(self._node.name))
 
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
@@ -80,8 +95,9 @@ class WebSocket:
                     self._message_queue.clear()
 
     async def _listen(self):
+        """ Listens for websocket messages. """
         async for msg in self._ws:
-            log.debug('[NODE-{}] Received WebSocket message: {}'.format(self._node.name, msg.data))
+            self._lavalink._logger.debug('[NODE-{}] Received WebSocket message: {}'.format(self._node.name, msg.data))
 
             if msg.type == aiohttp.WSMsgType.text:
                 await self._handle_message(msg.json())
@@ -91,11 +107,29 @@ class WebSocket:
         await self._websocket_closed()
 
     async def _websocket_closed(self, code: int = None, reason: str = None):
+        """
+        Handles when the websocket is closed.
+
+        Parameters
+        ----------
+        code: int
+            The response code.
+        reason: str
+            Reason why the websocket was closed.
+        """
         self._ws = None
         await self._node._manager._node_disconnect(self._node, code, reason)
         await self.connect()
 
     async def _handle_message(self, data: dict):
+        """
+        Handles the response from the websocket.
+
+        Parameters
+        ----------
+        data: dict
+            The data given from Lavalink.
+        """
         op = data['op']
 
         if op == 'stats':
@@ -110,14 +144,22 @@ class WebSocket:
         elif op == 'event':
             await self._handle_event(data)
         else:
-            log.warning('[NODE-{}] Received unknown op: {}'.format(self._node.name, op))
+            self._lavalink._logger.warning('[NODE-{}] Received unknown op: {}'.format(self._node.name, op))
 
     async def _handle_event(self, data: dict):
+        """
+        Handles the event from Lavalink.
+
+        Parameters
+        ----------
+        data: dict
+            The data given from Lavalink.
+        """
         player = self._lavalink.players.get(int(data['guildId']))
 
         if not player:
-            log.warning('[NODE-{}] Received event for non-existent player! GuildId: {}'.format(self._node.name,
-                                                                                               data['guildId']))
+            self._lavalink._logger.warning('[NODE-{}] Received event for non-existent player! GuildId: {}'
+                                           .format(self._node.name, data['guildId']))
             return
 
         event_type = data['type']
@@ -132,7 +174,7 @@ class WebSocket:
         elif event_type == 'WebSocketClosedEvent':
             event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
         else:
-            log.warning('[NODE-{}] Unknown event received: {}'.format(self._node.name, event_type))
+            self._lavalink._logger.warning('[NODE-{}] Unknown event received: {}'.format(self._node.name, event_type))
             return
 
         await self._lavalink._dispatch_event(event)
@@ -141,9 +183,17 @@ class WebSocket:
             await player.handle_event(event)
 
     async def _send(self, **data):
+        """
+        Sends a payload to Lavalink.
+
+        Parameters
+        ----------
+        data: dict
+            The data sent to Lavalink.
+        """
         if self.connected:
-            log.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(data)))
+            self._lavalink._logger.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(data)))
             await self._ws.send_json(data)
         else:
-            log.debug('[NODE-{}] Send called before WebSocket ready!'.format(self._node.name))
+            self._lavalink._logger.debug('[NODE-{}] Send called before WebSocket ready!'.format(self._node.name))
             self._message_queue.append(data)

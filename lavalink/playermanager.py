@@ -4,6 +4,16 @@ from .exceptions import NodeException
 
 
 class PlayerManager:
+    """
+    Represents the player manager that contains all the players.
+
+    Parameters
+    ----------
+    lavalink: Client
+        The main client class.
+    player: BasePlayer
+        The player that the player manager is initialized with.
+    """
     def __init__(self, lavalink, player):
         if not issubclass(player, BasePlayer):
             raise ValueError('Player must implement BasePlayer or DefaultPlayer.')
@@ -29,8 +39,9 @@ class PlayerManager:
         ONLY USE THIS IF YOU KNOW WHAT YOU'RE DOING!
         Usage of this function may lead to invalid cache states!
 
+        Parameters
         ----------
-        :param guild_id:
+        guild_id: int
             The guild_id associated with the player to remove.
         """
         if guild_id not in self.players:
@@ -41,20 +52,36 @@ class PlayerManager:
         if player.node and player.node.available:
             await player.node._send(op='destroy', guildId=player.guild_id)
 
+        self._lavalink._logger.info('[NODE-{}] Successfully destroyed its player'.format(player.node.name))
+
     def values(self):
         """ Returns an iterator that yields only values. """
         for player in self.players.values():
             yield player
 
-    def find_all(self, predicate):
-        """ Returns a list of players that match the given predicate. """
+    def find_all(self, predicate=None):
+        """
+        Returns a list of players that match the given predicate.
+
+        Parameters
+        ----------
+        predicate: Optional[function]
+
+        """
         if not predicate:
             return list(self.players.values())
 
         return [p for p in self.players.values() if bool(predicate(p))]
 
     def remove(self, guild_id: int):
-        """ Removes a player from the internal cache. """
+        """
+        Removes a player from the internal cache.
+
+        Parameters
+        ----------
+        guild_id: int
+            The player that will be removed.
+        """
         if guild_id in self.players:
             player = self.players.pop(guild_id)
             player.cleanup()
@@ -62,8 +89,10 @@ class PlayerManager:
     def get(self, guild_id: int):
         """
         Gets a player from cache.
+
+        Parameters
         ----------
-        :param guild_id:
+        guild_id: int
             The guild_id associated with the player to get.
         """
         return self.players.get(guild_id)
@@ -81,14 +110,16 @@ class PlayerManager:
         Lavalink.py will fall back to the node with the lowest penalty.
 
         Region can be omitted if node is specified and vice-versa.
+
+        Parameters
         ----------
-        :param guild_id:
+        guild_id: int
             The guild_id to associate with the player.
-        :param region:
+        region: str
             The region to use when selecting a Lavalink node.
-        :param endpoint:
+        endpoint: str
             The address of the Discord voice server.
-        :param node:
+        node: Node
             The node to put the player on.
         """
         if guild_id in self.players:
@@ -106,4 +137,7 @@ class PlayerManager:
             raise NodeException('No available nodes!')
 
         self.players[guild_id] = player = self.default_player(guild_id, node)
+        node._original_players.append(player)
+
+        self._lavalink._logger.info('[NODE-{}] Successfully created a player'.format(node.name))
         return player
