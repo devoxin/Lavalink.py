@@ -4,14 +4,7 @@ from time import time
 from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent,
                      QueueEndEvent, PlayerUpdateEvent, NodeChangedEvent)  # noqa: F401
 from .node import Node
-
-
-class InvalidTrack(Exception):
-    """ This exception will be raised when an invalid track was passed. """
-
-
-class TrackNotBuilt(Exception):
-    """ This exception will be raised when AudioTrack objects hasn't been built. """
+from .exceptions import (InvalidTrack, TrackNotBuilt)
 
 
 class AudioTrack:
@@ -50,12 +43,8 @@ class AudioTrack:
 
     def __repr__(self):
         if not hasattr(self, 'track'):
-            raise TrackNotBuilt
+            raise TrackNotBuilt('The track has not been built yet.')
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
-
-
-class NoPreviousTrack(Exception):
-    pass
 
 
 class BasePlayer(ABC):
