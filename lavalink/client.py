@@ -12,8 +12,6 @@ from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 from .events import Event
 
-_event_hooks = {}
-
 
 class Client:
     """
@@ -41,6 +39,7 @@ class Client:
         node it was originally connected to. This is not recommended to do since
         the player will most likely be performing better in the new node.
     """
+    _event_hooks = {}
 
     def __init__(self, user_id: int, shard_count: int = 1,
                  loop=None, player=DefaultPlayer, regions: dict = None, connect_back: bool = False):

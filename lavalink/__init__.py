@@ -13,11 +13,11 @@ import sys
 
 from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, \
     NodeConnectedEvent, NodeChangedEvent, NodeDisconnectedEvent, WebSocketClosedEvent
-from .models import BasePlayer, DefaultPlayer, AudioTrack, NoPreviousTrack, InvalidTrack
+from .models import BasePlayer, DefaultPlayer, AudioTrack
 from .utils import format_time, parse_time
-from .client import Client, _event_hooks
+from .client import Client
 from .playermanager import PlayerManager
-from .exceptions import NodeException
+from .exceptions import NodeException, InvalidTrack, TrackNotBuilt
 from .nodemanager import NodeManager
 from .stats import Penalty, Stats
 from .websocket import WebSocket
@@ -59,7 +59,7 @@ def add_event_hook(*hooks, event: Event = None):
     if event is not None and not isinstance(event, Event):
         raise TypeError('Event parameter is not of type Event or None')
 
-    event_hooks = _event_hooks.get(event, [])
+    event_hooks = Client._event_hooks.get(event, [])
 
     for hook in hooks:
         if not callable(hook) or not inspect.iscoroutinefunction(hook):
@@ -67,9 +67,9 @@ def add_event_hook(*hooks, event: Event = None):
 
         if hook not in event_hooks:
             if not event_hooks:
-                _event_hooks[event or 'Generic'] = [hook]
+                Client._event_hooks[event or 'Generic'] = [hook]
             else:
-                _event_hooks[event or 'Generic'].append(hook)
+                Client._event_hooks[event or 'Generic'].append(hook)
 
 
 def on(event: Event = None):
@@ -83,6 +83,6 @@ def on(event: Event = None):
         to 'Generic', which is dispatched on all events.
     """
     def decorator(func):
-        add_event_hook(func, event)
+        add_event_hook(func, event=event)
 
     return decorator
