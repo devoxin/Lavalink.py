@@ -135,7 +135,7 @@ class WebSocket:
         if op == 'stats':
             self._node.stats = Stats(self._node, data)
         elif op == 'playerUpdate':
-            player = self._lavalink.players.get(int(data['guildId']))
+            player = self._lavalink.player_manager.get(int(data['guildId']))
 
             if not player:
                 return
@@ -155,7 +155,7 @@ class WebSocket:
         data: dict
             The data given from Lavalink.
         """
-        player = self._lavalink.players.get(int(data['guildId']))
+        player = self._lavalink.player_manager.get(int(data['guildId']))
 
         if not player:
             self._lavalink._logger.warning('[NODE-{}] Received event for non-existent player! GuildId: {}'
