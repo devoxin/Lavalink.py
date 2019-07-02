@@ -75,7 +75,7 @@ class WebSocket:
                                                           heartbeat=60)
             except aiohttp.ClientConnectorError:
                 if attempt == 1:
-                    self._lavalink.warning('[NODE-{}] Failed to establish connection!'.format(self._node.name))
+                    self._lavalink._logger.warning('[NODE-{}] Failed to establish connection!'.format(self._node.name))
 
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
