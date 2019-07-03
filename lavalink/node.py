@@ -80,7 +80,7 @@ class Node:
 
     async def _send(self, **data):
         """
-        Sends the given data this node's websocket connection.
+        Sends the passed data to the node via the websocket connection.
 
         Parameters
         ----------
