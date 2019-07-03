@@ -150,7 +150,9 @@ class NodeManager:
         node: Node
             The node that has just connected.
         code: int
+            The code for why the node was disconnected.
         reason: str
+            The reason why the node was disconnected.
         """
         self._lavalink._logger.warning('[NODE-{}] Disconnected with code {} and reason {}'.format(node.name, code,
                                                                                                   reason))
