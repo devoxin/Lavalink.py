@@ -49,12 +49,12 @@ def add_event_hook(*hooks, event: Event = None):
 
     Parameters
     ----------
-    hooks: function
+    hooks: :class:`function`
         The hooks to register for the given event type.
         If `event` parameter is left empty, then it will run when any event is dispatched.
-    event: Event
+    event: :class:`Event`
         The event the hook belongs to. This will dispatch when that specific event is
-        dispatched.
+        dispatched. Defaults to `None` which means the hook is dispatched on all events.
     """
     if event is not None and not isinstance(event, Event):
         raise TypeError('Event parameter is not of type Event or None')
@@ -78,9 +78,9 @@ def on(event: Event = None):
 
     Parameters
     ----------
-    event: Event
-        The event that will dispatch the given event hook. This defaults
-        to 'Generic', which is dispatched on all events.
+    event: :class:`Event`
+        The event that will dispatch the given event hook. Defaults to `None`
+        which means the hook is dispatched on all events.
     """
     def decorator(func):
         add_event_hook(func, event=event)

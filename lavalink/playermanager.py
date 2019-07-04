@@ -7,11 +7,16 @@ class PlayerManager:
     """
     Represents the player manager that contains all the players.
 
-    Parameters
+    len(x):
+        Returns the total amount of cached players.
+    iter(x):
+        Returns an iterator of all the players cached.
+
+    Attributes
     ----------
-    lavalink: Client
-        The main client class.
-    player: BasePlayer
+    players: :class:`dict`
+        Cache of all the players that Lavalink has created.
+    default_player: :class:`BasePlayer`
         The player that the player manager is initialized with.
     """
     def __init__(self, lavalink, player):
@@ -36,7 +41,10 @@ class PlayerManager:
         Ensure you have disconnected the given guild_id from the voicechannel
         first, if connected.
 
+        Warning
+        -------
         ONLY USE THIS IF YOU KNOW WHAT YOU'RE DOING!
+
         Usage of this function may lead to invalid cache states!
 
         Parameters
@@ -65,8 +73,8 @@ class PlayerManager:
 
         Parameters
         ----------
-        predicate: Optional[function]
-
+        predicate: Optional[:class:`function`]
+            A predicate to return specific players. Defaults to `None`.
         """
         if not predicate:
             return list(self.players.values())
@@ -79,7 +87,7 @@ class PlayerManager:
 
         Parameters
         ----------
-        guild_id: int
+        guild_id: :class:`int`
             The player that will be removed.
         """
         if guild_id in self.players:
@@ -92,7 +100,7 @@ class PlayerManager:
 
         Parameters
         ----------
-        guild_id: int
+        guild_id: :class:`int`
             The guild_id associated with the player to get.
         """
         return self.players.get(guild_id)
@@ -113,14 +121,14 @@ class PlayerManager:
 
         Parameters
         ----------
-        guild_id: int
+        guild_id: :class:`int`
             The guild_id to associate with the player.
-        region: str
-            The region to use when selecting a Lavalink node.
-        endpoint: str
-            The address of the Discord voice server.
-        node: Node
-            The node to put the player on.
+        region: :class:`str`
+            The region to use when selecting a Lavalink node. Defaults to `eu`.
+        endpoint: :class:`str`
+            The address of the Discord voice server. Defaults to `None`.
+        node: :class:`Node`
+            The node to put the player on. Defaults to `None` and a node with the lowest penalty is chosen.
         """
         if guild_id in self.players:
             return self.players[guild_id]

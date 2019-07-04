@@ -21,23 +21,30 @@ class Client:
 
     Parameters
     ----------
-    user_id: int
+    user_id: :class:`int`
         The user id of the bot.
-    shard_count: Optional[int]
-        The amount of shards your bot has.
-    loop: Optional[event loop]
-        The `event loop`_ to use for asynchronous operations.
-    player: Optional[BasePlayer]
+    shard_count: Optional[:class:`int`]
+        The amount of shards your bot has. Defaults to `1`.
+    loop: Optional[`event loop`_]
+        The `event loop`_ to use for asynchronous operations. Defaults to `None`.
+    player: Optional[:class:`BasePlayer`]
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
         Do not change this unless you know what you are doing!
-    regions: Optional[dict]
+    regions: Optional[:class:`dict`]
         A dictionary representing region -> discord endpoint. You should only
         change this if you know what you're doing and want more control over
-        which regions handle specific locations.
-    connect_back: Optional[bool]
+        which regions handle specific locations. Defaults to `None`.
+    connect_back: Optional[:class:`bool`]
         A boolean that determines if a player will connect back to the
         node it was originally connected to. This is not recommended to do since
-        the player will most likely be performing better in the new node.
+        the player will most likely be performing better in the new node. Defaults to `False`.
+
+    Attributes
+    ----------
+    node_manager: :class:`NodeManager`
+        Represents the node manager that contains all lavalink nodes.
+    player_manager: :class:`PlayerManager`
+        Represents the player manager that contains all the players.
     """
     _event_hooks = {}
 
@@ -63,20 +70,22 @@ class Client:
 
         Parameters
         ----------
-        host: str
+        host: :class:`str`
             The address of the Lavalink node.
-        port: int
+        port: :class:`int`
             The port to use for websocket and REST connections.
-        password: str
+        password: :class:`str`
             The password used for authentication.
-        region: str
+        region: :class:`str`
             The region to assign this node to.
-        resume_key: Optional[str]
+        resume_key: Optional[:class:`str`]
             A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-        resume_timeout: Optional[int]
+            Defaults to `None`.
+        resume_timeout: Optional[:class:`int`]
             How long the node should wait for a connection while disconnected before clearing all players.
-        name: Optional[str]
-            An identifier for the node that will show in logs.
+            Defaults to `60`.
+        name: Optional[:class:`str`]
+            An identifier for the node that will show in logs. Defaults to `None`
         """
         self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name)
 
@@ -87,13 +96,14 @@ class Client:
 
         Parameters
         ----------
-        query: str
+        query: :class:`str`
             The query to perform a search for.
-        node: Optional[Node]
+        node: Optional[:class:`Node`]
             The node to use for track lookup. Leave this blank to use a random node.
+            Defaults to `None` which is a random node.
 
         Returns
-        ----------
+        -------
         A dict representing tracks.
         """
         node = node or random.choice(self.node_manager.available_nodes)
@@ -115,13 +125,13 @@ class Client:
 
         Parameters
         ----------
-        track: str
+        track: :class:`str`
             The base64-encoded `track` string.
-        node: Optional[Node]
-            The node to use for the query. ``None`` means random.
+        node: Optional[:class:`Node`]
+            The node to use for the query. Defaults to `None` which is a random node.
 
         Returns
-        ---------
+        -------
         A dict representing the track's information.
         """
         node = node or random.choice(self.node_manager.available_nodes)
@@ -143,13 +153,13 @@ class Client:
 
         Parameters
         ----------
-        tracks: list[str]
+        tracks: list[:class:`str`]
             A list of base64-encoded `track` strings.
-        node: Optional[Node]
-            The node to use for the query. ``None`` means random.
+        node: Optional[:class:`Node`]
+            The node to use for the query. Defaults to `None` which is a random node.
 
         Returns
-        ---------
+        -------
         An array of dicts representing track information.
         """
         node = node or random.choice(self.node_manager.available_nodes)
@@ -172,13 +182,14 @@ class Client:
         establish a websocket connection and send audio packets to Discord.
 
         Example
-        ----------
-        ```bot.add_listener(lavalink_client.voice_update_handler,
-                            'on_socket_response')```
+        -------
+        .. code:: python
+
+            bot.add_listener(lavalink_client.voice_update_handler, 'on_socket_response')
 
         Parameters
         ----------
-        data: dict
+        data: :class:`dict`
             The payload received from Discord.
         """
         if not data or 't' not in data:
@@ -209,7 +220,7 @@ class Client:
 
         Parameters
         ----------
-        event: Event
+        event: :class:`Event`
             The event to dispatch to the hooks.
         """
         generic_hooks = Client._event_hooks.get('Generic', [])

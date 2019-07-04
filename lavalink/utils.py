@@ -4,7 +4,7 @@ def format_time(time):
 
     Parameters
     ----------
-    time: int
+    time: :class:`int`
         The time in milliseconds.
     """
     hours, remainder = divmod(time / 1000, 3600)
@@ -20,7 +20,7 @@ def parse_time(time):
 
     Parameters
     ----------
-    time: int
+    time: :class:`int`
         The time in milliseconds.
     """
     days, remainder = divmod(time / 1000, 86400)
