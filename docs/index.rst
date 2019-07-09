@@ -4,16 +4,15 @@ Welcome to Lavalink.py's documentation!
 .. toctree::
     :hidden:
 
+    lavalink
     overview
     quickstart
-    logging
-    lavalink
     whatsnew
     license
 
 
 .. image:: https://serux.pro/9e83af1581.png
-    :width: 200px
+    :width: 150px
     :align: right
 
 \
@@ -27,4 +26,11 @@ Welcome to Lavalink.py's documentation!
     - Load Balancing (this includes region-based load balancing)
     - Equalizer
 
+    **Support:**
+
+    `Discord Server <https://discord.gg/SbJXU9s>`_
+
+
 :ref:`genindex`
+
+:ref:`search`

@@ -1,57 +1,91 @@
+.. currentmodule:: lavalink
+
 Documentation
 =============
 
-.. automodule:: lavalink
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autofunction:: enable_debug_logging
 
-.. automodule:: lavalink.client
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autofunction:: add_event_hook
 
-.. automodule:: lavalink.events
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autofunction:: on
 
-.. automodule:: lavalink.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Client
+------
+.. autoclass:: Client
+    :members:
 
-.. automodule:: lavalink.models
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Events
+------
+All Events are derived from :class:`Event`
 
-.. automodule:: lavalink.node
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autoclass:: Event
+    :members:
 
-.. automodule:: lavalink.nodemanager
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autoclass:: TrackStartEvent
+    :members:
 
-.. automodule:: lavalink.playermanager
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autoclass:: TrackEndEvent
+    :members:
 
-.. automodule:: lavalink.stats
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autoclass:: TrackStuckEvent
+    :members:
 
-.. automodule:: lavalink.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autoclass:: TrackExceptionEvent
+    :members:
 
-.. automodule:: lavalink.websocket
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. autoclass:: QueueEndEvent
+    :members:
+
+.. autoclass:: NodeConnectedEvent
+    :members:
+
+.. autoclass:: NodeChangedEvent
+    :members:
+
+.. autoclass:: NodeDisconnectedEvent
+    :members:
+
+.. autoclass:: WebSocketClosedEvent
+    :members:
+
+Models
+------
+**All** custom players must derive from :class:`BasePlayer`
+
+.. autoclass:: AudioTrack
+    :members:
+
+.. autoclass:: BasePlayer
+    :members:
+
+.. autoclass:: DefaultPlayer
+    :members:
+
+Node
+----
+.. autoclass:: Node
+    :members:
+
+Node Manager
+------------
+.. autoclass:: NodeManager
+    :members:
+
+Player Manager
+-------------
+.. autoclass:: PlayerManager
+    :members:
+
+Stats
+-----
+.. autoclass:: Stats
+    :members:
+
+.. autoclass:: Penalty
+    :members:
+
+Utilities
+---------
+.. autofunction:: format_time
+
+.. autofunction:: parse_time

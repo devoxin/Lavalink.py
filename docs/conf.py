@@ -23,6 +23,14 @@ copyright = '2019, Devoxin'
 author = 'Devoxin'
 master_doc = 'index'
 
+projectlink = 'https://github.com/Devoxin/Lavalink.py'
+
+# If true, TOC entries that are not ancestors of the current page are collapsed
+globaltoc_collapse = False
+
+# If true, the global TOC tree will also contain hidden entries
+globaltoc_includehidden = False
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -80,3 +88,7 @@ html_show_sourcelink = False
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_context = {
+    'css_files': ['_static/style.css']
+}
