@@ -6,6 +6,11 @@ class Node:
     """
     Represents a Node connection with Lavalink.
 
+    Note
+    ----
+    Nodes are **NOT** mean't to be added manually, but rather with :func:`Client.add_node`. Doing this can cause
+    invalid cache and much more problems.
+
     Attributes
     ----------
     host: :class:`str`

@@ -1,30 +1,31 @@
-import shutil
-import subprocess
-
-executable = str(shutil.which('python3.6') or shutil.which('py')).split('/')[-1]
+from flake8.api import legacy
+import pylint.lint as pylint
+from pylint.reporters import text
+from io import StringIO
 
 
 def test_flake8():
-    proc = subprocess.Popen('flake8', stdout=subprocess.PIPE)
-    proc.wait()
-    out = proc.stdout.read().decode()
-    msg = 'OK' if not out and proc.returncode == 0 else out
-    print(msg)
+    style_guide = legacy.get_style_guide()
+    report = style_guide.check_files(['lavalink'])
+    statistics = report.get_statistics('E')
+
+    if not statistics:
+        print('OK')
 
 
 def test_pylint():
-    proc = subprocess.Popen((f'{executable} -m pylint --max-line-length=150 --score=no '
-                             '--disable=missing-docstring,wildcard-import,'
-                             'attribute-defined-outside-init,too-few-public-methods,'
-                             'old-style-class,import-error,invalid-name,no-init,'
-                             'too-many-instance-attributes,protected-access,too-many-arguments,'
-                             'too-many-public-methods,logging-format-interpolation,too-many-branches '
-                             'lavalink').split(),
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    stdout, stderr = proc.communicate()
-    out = stdout.decode()
-    msg = 'OK' if not out and proc.returncode == 0 else out
+    stdout = StringIO()
+    reporter = text.TextReporter(stdout)
+    opts = ['--max-line-length=150', '--score=no', '--disable=missing-docstring, wildcard-import, '
+                                                   'attribute-defined-outside-init, too-few-public-methods, '
+                                                   'old-style-class,import-error,invalid-name,no-init,'
+                                                   'too-many-instance-attributes,protected-access,too-many-arguments,'
+                                                   'too-many-public-methods,logging-format-interpolation,'
+                                                   'too-many-branches', 'lavalink']
+    pylint.Run(opts, reporter=reporter, do_exit=False)
+    out = reporter.out.getvalue()
+
+    msg = 'OK' if not out else out
     print(msg)
 
 

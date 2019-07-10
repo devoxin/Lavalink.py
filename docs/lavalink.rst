@@ -72,7 +72,7 @@ Node Manager
     :members:
 
 Player Manager
--------------
+--------------
 .. autoclass:: PlayerManager
     :members:
 

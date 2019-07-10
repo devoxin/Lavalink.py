@@ -4,7 +4,11 @@ class Penalty:
 
     Attributes
     ----------
-    player_penalty: :class:
+    player_penalty: :class:`int`
+    cpu_penalty: :class:`int`
+    null_frame_penalty: :class:`int`
+    deficit_frame_penalty: :class:`int`
+    total: :class:`int`
     """
     __slots__ = ('player_penalty', 'cpu_penalty', 'null_frame_penalty', 'deficit_frame_penalty', 'total')
 
@@ -47,7 +51,6 @@ class Stats:
     cpu_cores: :class:`int`
         The amount of cpu cores the system of the node has.
     system_load: :class:`int`
-
     lavalink_load: :class:`int`
     frames_sent: :class:`int`
     frames_nulled: :class:`int`

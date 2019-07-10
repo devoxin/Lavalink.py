@@ -24,5 +24,7 @@ setup(
     install_requires=['aiohttp'],
     extras_require={'docs': ['sphinx',
                              'pygments',
-                             'guzzle_sphinx_theme']}
+                             'guzzle_sphinx_theme'],
+                    'development': ['pylint',
+                                    'flake8']}
 )
