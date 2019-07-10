@@ -1,6 +1,7 @@
 <img align="right" src="https://serux.pro/9e83af1581.png" height="150" width="150">
 
 # Lavalink.py
+[![Python](https://img.shields.io/badge/Python-3+-blue.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity) [![Build Status](https://travis-ci.com/SoulSen/Lavalink.py.svg?branch=docs)](https://travis-ci.com/SoulSen/Lavalink.py) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ef190e67fe6b42e4b717ae00a3bef9f1)](https://app.codacy.com/app/SoulSen/Lavalink.py?utm_source=github.com&utm_medium=referral&utm_content=SoulSen/Lavalink.py&utm_campaign=Badge_Grade_Dashboard) [![License](https://img.shields.io/github/license/SoulSen/Lavalink.py.svg)](LICENSE)
 
 Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
 
