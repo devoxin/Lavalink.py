@@ -56,7 +56,7 @@ def add_event_hook(*hooks, event: Event = None):
         The event the hook belongs to. This will dispatch when that specific event is
         dispatched. Defaults to `None` which means the hook is dispatched on all events.
     """
-    if event is not None and not isinstance(event, Event):
+    if event is not None and not Event in event.__bases__:
         raise TypeError('Event parameter is not of type Event or None')
 
     event_hooks = Client._event_hooks.get(event, [])
