@@ -46,7 +46,7 @@ class Node:
     @property
     def players(self):
         """ Returns a list of all players on this node. """
-        return [p for p in self._manager._lavalink.players.values() if p.node == self]
+        return [p for p in self._manager._lavalink.player_manager.values() if p.node == self]
 
     @property
     def penalty(self):

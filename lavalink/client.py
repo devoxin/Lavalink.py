@@ -12,8 +12,6 @@ from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 from .events import Event
 
-_event_hooks = {}
-
 
 class Client:
     """
@@ -41,6 +39,7 @@ class Client:
         node it was originally connected to. This is not recommended to do since
         the player will most likely be performing better in the new node.
     """
+    _event_hooks = {}
 
     def __init__(self, user_id: int, shard_count: int = 1,
                  loop=None, player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
@@ -213,8 +212,8 @@ class Client:
         event: Event
             The event to dispatch to the hooks.
         """
-        generic_hooks = _event_hooks.get('Generic', [])
-        targeted_hooks = _event_hooks.get(event, [])
+        generic_hooks = Client._event_hooks.get('Generic', [])
+        targeted_hooks = Client._event_hooks.get(event, [])
 
         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
 
@@ -225,4 +224,4 @@ class Client:
                 self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
                 raise result
 
-        self._logger.info('Dispatched {} event to all registered hooks'.format(event.__name__))
+        self._logger.info('Dispatched {} event to all registered hooks'.format(type(event).__name__))

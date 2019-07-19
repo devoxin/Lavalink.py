@@ -66,7 +66,7 @@ class PlayerManager:
         Parameters
         ----------
         predicate: Optional[function]
-
+            The predicate to filter through players.
         """
         if not predicate:
             return list(self.players.values())
