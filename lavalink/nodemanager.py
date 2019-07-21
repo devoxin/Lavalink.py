@@ -139,8 +139,9 @@ class NodeManager:
             await player.change_node(node)
             self._lavalink._logger.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
 
-        for player in node._original_players:
-            player.change_node(node)
+        if self._lavalink._connect_back:
+            for player in node._original_players:
+                await player.change_node(node)
 
         self._player_queue.clear()
         await self._lavalink._dispatch_event(NodeConnectedEvent(node))

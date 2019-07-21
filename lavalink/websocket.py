@@ -56,9 +56,24 @@ class WebSocket:
             try:
                 self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers,
                                                           heartbeat=60)
-            except aiohttp.ClientConnectorError:
+            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError) as ce:
                 if attempt == 1:
                     self._lavalink._logger.warning('[NODE-{}] Failed to establish connection!'.format(self._node.name))
+
+                    if isinstance(ce, aiohttp.ClientConnectorError):
+                        self._lavalink._logger.warning('[NODE-{}] This may indicate that Lavalink is not running, or is running on '
+                                                       'a port different to the one you passed to `add_node`.'.format(self._node.name))
+                    elif isinstance(ce, aiohttp.WSServerHandshakeError):
+                        if ce.code == 401:
+                            self._lavalink._logger.warning('[NODE-{}] Authentication failed while trying to establish a connection '
+                                                           'to the node.'.format(self._node.name))
+                            return  # We shouldn't try to establish any more connections as correcting this particular error
+                            #  would require the cog to be reloaded (or the bot to be rebooted), so further attempts would be
+                            #  futile, and a waste of resources.
+                        elif ce.code != 101:
+                            self._lavalink._logger.warning('[NODE-{}] The remote server returned code {}, the expected code '
+                                                           'was 101. This usually indicates that the remote server is a webserver '
+                                                           'and not Lavalink. Check your ports, and try again.'.format(self._node.name, ce.code))
 
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
