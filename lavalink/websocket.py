@@ -5,24 +5,7 @@ from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, WebSock
 
 
 class WebSocket:
-    """
-    Represents the WebSocket connection with Lavalink.
-
-    Parameters
-    ----------
-    node: Node
-        The node that will be connected to.
-    host: str
-        The address of the Lavalink node.
-    port: int
-        The port to use for websocket and REST connections.
-    password: str
-        The password used for authentication.
-    resume_key: str
-        A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-    resume_timeout: int
-        How long the node should wait for a connection while disconnected before clearing all players.
-    """
+    """ Represents the WebSocket connection with Lavalink. """
     def __init__(self, node, host: str, port: int, password: str, resume_key: str, resume_timeout: int):
         self._node = node
         self._lavalink = self._node._manager._lavalink
@@ -112,10 +95,10 @@ class WebSocket:
 
         Parameters
         ----------
-        code: int
+        code: :class:`int`
             The response code.
-        reason: str
-            Reason why the websocket was closed.
+        reason: :class:`str`
+            Reason why the websocket was closed. Defaults to `None`
         """
         self._ws = None
         await self._node._manager._node_disconnect(self._node, code, reason)
@@ -127,7 +110,7 @@ class WebSocket:
 
         Parameters
         ----------
-        data: dict
+        data: :class:`dict`
             The data given from Lavalink.
         """
         op = data['op']
@@ -140,7 +123,7 @@ class WebSocket:
             if not player:
                 return
 
-            await player.update_state(data['state'])
+            await player._update_state(data['state'])
         elif op == 'event':
             await self._handle_event(data)
         else:
@@ -152,7 +135,7 @@ class WebSocket:
 
         Parameters
         ----------
-        data: dict
+        data: :class:`dict`
             The data given from Lavalink.
         """
         player = self._lavalink.player_manager.get(int(data['guildId']))
@@ -180,7 +163,7 @@ class WebSocket:
         await self._lavalink._dispatch_event(event)
 
         if player:
-            await player.handle_event(event)
+            await player._handle_event(event)
 
     async def _send(self, **data):
         """
@@ -188,7 +171,7 @@ class WebSocket:
 
         Parameters
         ----------
-        data: dict
+        data: :class:`dict`
             The data sent to Lavalink.
         """
         if self.connected:

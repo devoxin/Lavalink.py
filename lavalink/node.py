@@ -6,24 +6,25 @@ class Node:
     """
     Represents a Node connection with Lavalink.
 
-    Parameters
+    Note
+    ----
+    Nodes are **NOT** mean't to be added manually, but rather with :func:`Client.add_node`. Doing this can cause
+    invalid cache and much more problems.
+
+    Attributes
     ----------
-    manager: NodeManager
-        The Node Manager that the Node belongs to.
-    host: str
+    host: :class:`str`
         The address of the Lavalink node.
-    port: int
+    port: :class:`int`
         The port to use for websocket and REST connections.
-    password: str
+    password: :class:`str`
         The password used for authentication.
-    region: str
+    region: :class:`str`
         The region to assign this node to.
-    resume_key: str
-        A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-    resume_timeout: int
-        How long the node should wait for a connection while disconnected before clearing all players.
-    name: Optional[str]
-        An identifier for the node that will show in logs.
+    name: :class;`str`
+        The name the :class:`Node` is identified by.
+    stats: :class:`Stats`
+        The statistics of how the :class:`Node` is performing.
     """
     def __init__(self, manager, host: str, port: int, password: str,
                  region: str, resume_key: str, resume_timeout: int, name: str = None):
@@ -62,7 +63,7 @@ class Node:
 
         Parameters
         ----------
-        query: str
+        query: :class:`str`
             The query to perform a search for.
         """
         return await self._manager._lavalink.get_tracks(query, self)
@@ -73,7 +74,7 @@ class Node:
 
         Parameters
         ----------
-        event: Event
+        event: :class:`Event`
             The event to dispatch to the hooks.
         """
         await self._manager._lavalink._dispatch_event(event)

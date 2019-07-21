@@ -6,9 +6,9 @@ class QueueEndEvent(Event):
     """
     This event is dispatched when there are no more songs in the queue.
 
-    Parameters
+    Attributes
     ----------
-    player: BasePlayer
+    player: :class:`BasePlayer`
         The player that has no more songs in queue.
     """
     __slots__ = ('player',)
@@ -21,13 +21,13 @@ class TrackStuckEvent(Event):
     """
     This event is dispatched when the currently playing track is stuck.
 
-    Parameters
+    Attributes
     ----------
-    player: BasePlayer
+    player: :class:`BasePlayer`
         The player that has the playing track being stuck.
-    track: AudioTrack
+    track: :class:`AudioTrack`
         The track is stuck from playing.
-    threshold: int
+    threshold: :class:`int`
         The amount of time the track had while being stuck.
     """
     __slots__ = ('player', 'track', 'threshold')
@@ -42,13 +42,13 @@ class TrackExceptionEvent(Event):
     """
     This event is dispatched when an exception occurs while playing a track.
 
-    Parameters
+    Attributes
     ----------
-    player: BasePlayer
+    player: :class:`BasePlayer`
         The player that had the exception occur while playing a track.
-    track: AudioTrack
+    track: :class:`AudioTrack`
         The track that had the exception while playing.
-    exception: Exception
+    exception: :class:`Exception`
         The type of exception that the track had while playing.
     """
     __slots__ = ('player', 'track', 'exception')
@@ -63,13 +63,13 @@ class TrackEndEvent(Event):
     """
     This event is dispatched when the player finished playing a track.
 
-    Parameters
+    Attributes
     ----------
-    player: BasePlayer
+    player: :class:`BasePlayer`
         The player that finished playing a track.
-    track: AudioTrack
+    track: :class:`AudioTrack`
         The track that finished playing.
-    reason: str
+    reason: :class:`str`
         The reason why the track stopped playing.
     """
     __slots__ = ('player', 'track', 'reason')
@@ -84,11 +84,11 @@ class TrackStartEvent(Event):
     """
     This event is dispatched when the player starts to play a track.
 
-    Parameters
+    Attributes
     ----------
-    player: BasePlayer
+    player: :class:`BasePlayer`
         The player that started to play a track.
-    track: AudioTrack
+    track: :class:`AudioTrack`
         The track that started playing.
     """
     __slots__ = ('player', 'track')
@@ -102,13 +102,13 @@ class PlayerUpdateEvent(Event):
     """
     This event is dispatched when the player's progress changes.
 
-    Parameters
+    Attributes
     ----------
-    player: BasePlayer
+    player: :class:`BasePlayer`
         The player that's progress was updated.
-    position: int
+    position: :class:`int`
         The position of the player that was changed to.
-    timestamp: int
+    timestamp: :class:`int`
         The timestamp that the player is currently on.
     """
     __slots__ = ('player', 'position', 'timestamp')
@@ -123,13 +123,13 @@ class NodeDisconnectedEvent(Event):
     """
     This event is dispatched when a node disconnects and becomes unavailable.
 
-    Parameters
+    Attributes
     ----------
-    node: Node
+    node: :class:`Node`
         The node that was disconnected from.
-    code: int
+    code: :class:`int`
         The status code of the event.
-    reason: str
+    reason: :class:`str`
         The reason of why the node was disconnected.
     """
     __slots__ = ('node', 'code', 'reason')
@@ -144,9 +144,9 @@ class NodeConnectedEvent(Event):
     """
     This event is dispatched when Lavalink.py successfully connects to a node.
 
-    Parameters
+    Attributes
     ----------
-    node: Node
+    node: :class:`Node`
         The node that was successfully connected to.
     """
     __slots__ = ('node',)
@@ -161,13 +161,13 @@ class NodeChangedEvent(Event):
     Keep in mind this event can be dispatched multiple times if a node
     disconnects and the load balancer moves players to a new node.
 
-    Parameters
+    Attributes
     ----------
-    player: BasePlayer
+    player: :class:`BasePlayer`
         The player whose node was changed.
-    old_node: Node
+    old_node: :class:`Node`
         The node the player was moved from.
-    new_node: Node
+    new_node: :class:`Node`
         The node the player was moved to.
     """
     __slots__ = ('player', 'old_node', 'new_node')
@@ -184,15 +184,15 @@ class WebSocketClosedEvent(Event):
     is closed. This can happen happen for various reasons like an
     expired voice server update.
 
-    Parameters
+    Attributes
     ----------
-    player: BasePlayer
+    player: :class:`BasePlayer`
         The player whose audio websocket was closed.
-    code: int
+    code: :class:`int`
         The node the player was moved from.
-    reason: str
+    reason: :class:`str`
         The node the player was moved to.
-    by_remote: bool
+    by_remote: :class:`bool`
         If the websocket was closed remotely.
     """
     __slots__ = ('player', 'code', 'reason', 'by_remote')

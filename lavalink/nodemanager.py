@@ -3,15 +3,17 @@ from .events import NodeConnectedEvent, NodeDisconnectedEvent
 
 
 class NodeManager:
-    """
-    Represents the node manager that contains all lavalink nodes.
+    """Represents the node manager that contains all lavalink nodes.
 
-    Parameters
+    iter(x):
+        Returns an iterator of all the nodes cached.
+
+    Attributes
     ----------
-    lavalink: Client
-        The main client class.
-    regions: dict
-        The possible regions of nodes.
+    nodes: :class:`list`
+        Cache of all the nodes that Lavalink has created.
+    regions: :class:`dict`
+        All the regions that Discord supports.
     """
     def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
@@ -41,20 +43,22 @@ class NodeManager:
 
         Parameters
         ----------
-        host: str
+        host: :class:`str`
             The address of the Lavalink node.
-        port: int
+        port: :class:`int`
             The port to use for websocket and REST connections.
-        password: str
+        password: :class:`str`
             The password used for authentication.
-        region: str
+        region: :class:`str`
             The region to assign this node to.
-        resume_key: Optional[str]
+        resume_key: Optional[:class:`str`]
             A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-        resume_timeout: Optional[int]
+            Defaults to `None`.
+        resume_timeout: Optional[:class:`int`]
             How long the node should wait for a connection while disconnected before clearing all players.
-        name: Optional[str]
-            An identifier for the node that will show in logs.
+            Defaults to `60`.
+        name: Optional[:class:`str`]
+            An identifier for the node that will show in logs. Defaults to `None`.
         """
         node = Node(self, host, port, password, region, resume_key, resume_timeout, name)
         self.nodes.append(node)
@@ -67,7 +71,7 @@ class NodeManager:
 
         Parameters
         ----------
-        node: Node
+        node: :class:`Node`
             The node to remove from the list.
         """
         self.nodes.remove(node)
@@ -79,7 +83,7 @@ class NodeManager:
 
         Parameters
         ----------
-        endpoint: str
+        endpoint: :class:`str`
             The address of the Discord voice server.
         """
         if not endpoint:
@@ -104,8 +108,8 @@ class NodeManager:
 
         Parameters
         ----------
-        region: Optional[str]
-            The region to find a node in.
+        region: Optional[:class:`str`]
+            The region to find a node in. Defaults to `None`.
         """
         nodes = None
         if region:
@@ -126,7 +130,7 @@ class NodeManager:
 
         Parameters
         ----------
-        node: Node
+        node: :class:`Node`
             The node that has just connected.
         """
         self._lavalink._logger.info('[NODE-{}] Successfully established connection'.format(node.name))
@@ -147,11 +151,11 @@ class NodeManager:
 
         Parameters
         ----------
-        node: Node
+        node: :class:`Node`
             The node that has just connected.
-        code: int
+        code: :class:`int`
             The code for why the node was disconnected.
-        reason: str
+        reason: :class:`str`
             The reason why the node was disconnected.
         """
         self._lavalink._logger.warning('[NODE-{}] Disconnected with code {} and reason {}'.format(node.name, code,
