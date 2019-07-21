@@ -4,7 +4,7 @@ from time import time
 from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent,
                      QueueEndEvent, PlayerUpdateEvent, NodeChangedEvent)  # noqa: F401
 from .node import Node
-from .exceptions import (InvalidTrack, TrackNotBuilt)
+from .exceptions import InvalidTrack, TrackNotBuilt
 
 
 class AudioTrack:
