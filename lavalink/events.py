@@ -20,6 +20,8 @@ class QueueEndEvent(Event):
 class TrackStuckEvent(Event):
     """
     This event is dispatched when the currently playing track is stuck.
+    This normally has something to do with the stream you are playing
+    and not Lavalink itself.
 
     Attributes
     ----------

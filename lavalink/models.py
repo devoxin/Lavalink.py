@@ -41,6 +41,11 @@ class AudioTrack:
         except KeyError:
             raise InvalidTrack('An invalid track was passed.')
 
+    def __getitem__(self, item):
+        if not hasattr(self, 'track'):
+            raise TrackNotBuilt('The track has not been built yet.')
+        return self.__getattribute__(item)
+
     def __repr__(self):
         if not hasattr(self, 'track'):
             raise TrackNotBuilt('The track has not been built yet.')
@@ -228,9 +233,10 @@ class DefaultPlayer(BasePlayer):
             If index is left unspecified, the default behaviour is to append the track. Defaults to `None`.
         """
         if index is None:
-            self.queue.append(AudioTrack.build(track, requester, extra=extra))
+            self.queue.append(AudioTrack.build(track, requester, extra=extra) if isinstance(track, dict) else track)
         else:
-            self.queue.insert(index, AudioTrack.build(track, requester, extra=extra))
+            self.queue.insert(index, AudioTrack.build(track, requester, extra=extra) if isinstance(track, dict)
+                              else track)
 
     async def play(self, track: AudioTrack = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
         """
