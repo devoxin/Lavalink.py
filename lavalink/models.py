@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from random import randrange
 import collections
 from time import time
+import typing 
 from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent,
                      QueueEndEvent, PlayerUpdateEvent, NodeChangedEvent)  # noqa: F401
 from .node import Node
@@ -217,7 +218,7 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: dict, extra: dict = None, index: int = None):
+    def add(self, requester: int, track: typing.Union[dict, AudioTrack], extra: dict = None, index: int = None):
         """
         Adds a track to the queue.
 
