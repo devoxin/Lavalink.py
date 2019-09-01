@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from random import randrange
 import collections
 from time import time
-import typing 
+import typing
 from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent,
                      QueueEndEvent, PlayerUpdateEvent, NodeChangedEvent)  # noqa: F401
 from .node import Node
@@ -48,7 +48,7 @@ class AudioTrack:
             raise TrackNotBuilt('The track has not been built yet.')
         return self.__getattribute__(item)
 
-    def __repr__(self): 
+    def __repr__(self):
         if not hasattr(self, 'track'):
             raise TrackNotBuilt('The track has not been built yet.')
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
@@ -278,9 +278,11 @@ class DefaultPlayer(BasePlayer):
                 return
 
             if self.shuffle:
-                track = self.queue.pop(randrange(len(self.queue)))
+                track = self.queue.index(randrange(len(self.queue)))
+                self.queue.remove(track)
             else:
-                track = self.queue.pop(0)
+                track = self.queue.index(0)
+                self.queue.remove(track)
 
         self.current = track
         options = {}
