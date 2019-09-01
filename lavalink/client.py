@@ -235,8 +235,8 @@ class Client:
         event: :class:`Event`
             The event to dispatch to the hooks.
         """
-        generic_hooks = Client._event_hooks.get('Generic', [])
-        targeted_hooks = Client._event_hooks.get(event, [])
+        generic_hooks = Client._event_hooks['Generic']
+        targeted_hooks = Client._event_hooks[event]
 
         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
 
@@ -247,4 +247,4 @@ class Client:
                 self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
                 raise result
 
-        self._logger.info('Dispatched {} event to all registered hooks'.format(type(event).__name__))
+        self._logger.info('Dispatched {} to all registered hooks'.format(type(event).__name__))
