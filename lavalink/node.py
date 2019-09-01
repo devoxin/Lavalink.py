@@ -1,5 +1,5 @@
-from .websocket import WebSocket
 from .events import Event
+from .websocket import WebSocket
 
 
 class Node:
@@ -21,7 +21,7 @@ class Node:
         The password used for authentication.
     region: :class:`str`
         The region to assign this node to.
-    name: :class;`str`
+    name: :class:`str`
         The name the :class:`Node` is identified by.
     stats: :class:`Stats`
         The statistics of how the :class:`Node` is performing.
@@ -30,7 +30,6 @@ class Node:
                  region: str, resume_key: str, resume_timeout: int, name: str = None):
         self._manager = manager
         self._ws = WebSocket(self, host, port, password, resume_key, resume_timeout)
-        self._original_players = []
 
         self.host = host
         self.port = port
@@ -43,6 +42,11 @@ class Node:
     def available(self):
         """ Returns whether the node is available for requests. """
         return self._ws.connected
+
+    @property
+    def _original_players(self):
+        """ Returns a list of players that were assigned to this node, but were moved due to failover etc. """
+        return [p for p in self._manager._lavalink.player_manager.values() if p._original_node == self]
 
     @property
     def players(self):

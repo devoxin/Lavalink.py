@@ -1,5 +1,5 @@
-from .node import Node
 from .events import NodeConnectedEvent, NodeDisconnectedEvent
+from .node import Node
 
 
 class NodeManager:
@@ -142,6 +142,7 @@ class NodeManager:
         if self._lavalink._connect_back:
             for player in node._original_players:
                 await player.change_node(node)
+                player._original_node = None
 
         self._player_queue.clear()
         await self._lavalink._dispatch_event(NodeConnectedEvent(node))
@@ -173,3 +174,6 @@ class NodeManager:
 
         for player in node.players:
             await player.change_node(best_node)
+
+            if self._lavalink._connect_back:
+                player._original_node = node
