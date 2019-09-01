@@ -7,7 +7,7 @@ about: Report bugs or unintended behavior
 <!--- A summary of how the bug behaves --->
 
 ### Lavalink & System Version
-<!--- Paste basic info like, operating system, python version, and Lavalink.py version -->
+<!--- Paste basic info like, operating system, python version, and Lavalink.py & Lavalink version -->
 
 ### Reproduction
 <!-- Snippet of code that caused problem or step by step directions -->
