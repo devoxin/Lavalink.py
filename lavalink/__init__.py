@@ -83,7 +83,8 @@ def on(event: Event = None):
     def decorator(func):
         def decorated_func(*args, **kwargs):
             return func(*args, **kwargs)
-        add_event_hook(func, event=event)
+
+        add_event_hook(decorated_func, event=event)
         return decorated_func
 
     return decorator
