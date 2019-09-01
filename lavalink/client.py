@@ -236,7 +236,7 @@ class Client:
             The event to dispatch to the hooks.
         """
         generic_hooks = Client._event_hooks['Generic']
-        targeted_hooks = Client._event_hooks[event]
+        targeted_hooks = Client._event_hooks[type(event).__name__]
 
         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
 
