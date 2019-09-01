@@ -81,6 +81,9 @@ def on(event: Event = None):
         which means the hook is dispatched on all events.
     """
     def decorator(func):
+        def decorated_func(*args, **kwargs):
+            return func(*args, **kwargs)
         add_event_hook(func, event=event)
+        return decorated_func
 
     return decorator
