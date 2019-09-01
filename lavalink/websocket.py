@@ -1,7 +1,10 @@
 import asyncio
+
 import aiohttp
+
+from .events import (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent,
+                     WebSocketClosedEvent)
 from .stats import Stats
-from .events import TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, WebSocketClosedEvent
 
 
 class WebSocket:
@@ -25,9 +28,9 @@ class WebSocket:
         self._shards = self._lavalink._shard_count
         self._user_id = self._lavalink._user_id
 
-        self._closers = [aiohttp.WSMsgType.close,
+        self._closers = (aiohttp.WSMsgType.close,
                          aiohttp.WSMsgType.closing,
-                         aiohttp.WSMsgType.closed]
+                         aiohttp.WSMsgType.closed)
 
         self._loop = self._lavalink._loop
         asyncio.ensure_future(self.connect())

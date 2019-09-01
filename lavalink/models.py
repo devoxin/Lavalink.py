@@ -1,11 +1,13 @@
+import typing
 from abc import ABC, abstractmethod
 from random import randrange
 from time import time
-import typing 
-from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent,
-                     QueueEndEvent, PlayerUpdateEvent, NodeChangedEvent)  # noqa: F401
-from .node import Node
+
+from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
+                     QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
+                     TrackStartEvent, TrackStuckEvent)
 from .exceptions import InvalidTrack, TrackNotBuilt
+from .node import Node
 
 
 class AudioTrack:
@@ -67,8 +69,8 @@ class BasePlayer(ABC):
     def __init__(self, guild_id: int, node: Node):
         self.guild_id = str(guild_id)
         self.node = node
+        self._original_node = None  # This is used internally for failover.
         self._voice_state = {}
-        self._original_node = None
         self.channel_id = None
 
     @abstractmethod

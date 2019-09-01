@@ -1,6 +1,6 @@
-from .node import Node
-from .models import BasePlayer
 from .exceptions import NodeException
+from .models import BasePlayer
+from .node import Node
 
 
 class PlayerManager:
@@ -146,7 +146,5 @@ class PlayerManager:
             raise NodeException('No available nodes!')
 
         self.players[guild_id] = player = self.default_player(guild_id, node)
-        node._original_players.append(player)
-
         self._lavalink._logger.info('[NODE-{}] Successfully created a player'.format(node.name))
         return player

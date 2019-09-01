@@ -59,17 +59,15 @@ def add_event_hook(*hooks, event: Event = None):
     if event is not None and Event not in event.__bases__:
         raise TypeError('Event parameter is not of type Event or None')
 
-    event_hooks = Client._event_hooks.get(event, [])
+    event_name = event or 'Generic'
+    event_hooks = Client._event_hooks[event_name]
 
     for hook in hooks:
         if not callable(hook) or not inspect.iscoroutinefunction(hook):
             raise TypeError('Hook is not callable or a coroutine')
 
         if hook not in event_hooks:
-            if not event_hooks:
-                Client._event_hooks[event or 'Generic'] = [hook]
-            else:
-                Client._event_hooks[event or 'Generic'].append(hook)
+            event_hooks.append(hook)
 
 
 def on(event: Event = None):

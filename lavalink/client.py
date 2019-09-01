@@ -1,16 +1,18 @@
 import asyncio
+import itertools
 import logging
 import random
-import itertools
+from collections import defaultdict
 from urllib.parse import quote
 
 import aiohttp
 
+from .events import Event
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
-from .events import Event
+from .utils import deprecated
 
 
 class Client:
@@ -39,6 +41,13 @@ class Client:
         node it was originally connected to. This is not recommended to do since
         the player will most likely be performing better in the new node. Defaults to `False`.
 
+        Warning
+        -------
+        If this option is enabled and the player's node is changed through `Player.change_node` after
+        the player was moved via the failover mechanism, the player will still move back to the original
+        node when it becomes available. This behaviour can be avoided in custom player implementations by
+        setting `self._original_node` to `None` in the `change_node` function.
+
     Attributes
     ----------
     node_manager: :class:`NodeManager`
@@ -46,22 +55,27 @@ class Client:
     player_manager: :class:`PlayerManager`
         Represents the player manager that contains all the players.
     """
-    _event_hooks = {}
+    _event_hooks = defaultdict(list)
 
     def __init__(self, user_id: int, shard_count: int = 1,
                  loop=None, player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
         self._user_id = str(user_id)
-        self._connect_back = connect_back
         self._shard_count = str(shard_count)
         self._loop = loop or asyncio.get_event_loop()
         self.node_manager = NodeManager(self, regions)
         self.player_manager = PlayerManager(self, player)
+        self._connect_back = connect_back
         self._logger = logging.getLogger('lavalink')
 
         self._session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(loop=loop),
             timeout=aiohttp.ClientTimeout(total=30)
         )  # This session will be used for websocket and http requests.
+
+    @deprecated('Use lavalink.add_event_hook instead.')
+    def add_event_hook(self, hook):
+        if hook not in self._event_hooks['Generic']:
+            self._event_hooks['Generic'].append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None):
@@ -210,8 +224,6 @@ class Client:
 
             if player:
                 await player._voice_state_update(data['d'])
-        else:
-            return
 
     async def _dispatch_event(self, event: Event):
         """|coro|
