@@ -72,7 +72,6 @@ class Client:
             timeout=aiohttp.ClientTimeout(total=30)
         )  # This session will be used for websocket and http requests.
 
-    @deprecated('Use lavalink.add_event_hook instead.')
     def add_event_hook(self, hook):
         if hook not in self._event_hooks['Generic']:
             self._event_hooks['Generic'].append(hook)
