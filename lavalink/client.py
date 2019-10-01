@@ -246,4 +246,4 @@ class Client:
                 self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
                 raise result
 
-        self._logger.info('Dispatched {} to all registered hooks'.format(type(event).__name__))
+        self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
