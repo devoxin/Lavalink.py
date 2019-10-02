@@ -16,6 +16,10 @@ You may clone this repository and check out [the docs](docs/). The docs are not 
 Additionally, there is an [example cog](lavalink/examples). It should be noted that the example cog is oriented towards usage with Discord.py rewrite and Lavalink v3.1+, although backwards
 compatibility may be possible, it's not encouraged nor is support guaranteed.
 
+## Platform Support
+
+Currently, Lavalink.py only supports **Windows and Linux**. This is due to a missing library on Mac OS X that is required by lavalink. You can install Lavalink.py on it, but when you try to play sound nothing will come out. The error you should get is: `java.lang.UnsatisfiedLinkError: Required library at /natives/darwin/libudpqueue.dylib was not found`. 
+
 ## Optional Dependencies
 
 `aiodns`   - Speed up DNS resolving.
