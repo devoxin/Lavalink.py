@@ -8,6 +8,7 @@ from urllib.parse import quote
 import aiohttp
 
 from .events import Event
+from .exceptions import NodeException
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
@@ -119,6 +120,8 @@ class Client:
         -------
         A dict representing tracks.
         """
+        if not self.node_manager.available_nodes:
+            raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
         headers = {
@@ -147,6 +150,8 @@ class Client:
         -------
         A dict representing the track's information.
         """
+        if not self.node_manager.available_nodes:
+            raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/decodetrack?track={}'.format(node.host, node.port, track)
         headers = {
@@ -175,6 +180,8 @@ class Client:
         -------
         An array of dicts representing track information.
         """
+        if not self.node_manager.available_nodes:
+            raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/decodetracks'.format(node.host, node.port)
         headers = {
