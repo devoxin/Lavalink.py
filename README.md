@@ -1,25 +1,35 @@
-<img align="right" src="https://its-called-hentai-and-its.art/9e83af1581.png" height="150" width="150">
+<img align="right" src="https://serux.pro/9e83af1581.png" height="150" width="150">
 
 # Lavalink.py
+[![Python](https://img.shields.io/badge/Python-3+-blue.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity) [![Build Status](https://travis-ci.com/SoulSen/Lavalink.py.svg?branch=docs)](https://travis-ci.com/SoulSen/Lavalink.py) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ef190e67fe6b42e4b717ae00a3bef9f1)](https://app.codacy.com/app/SoulSen/Lavalink.py?utm_source=github.com&utm_medium=referral&utm_content=SoulSen/Lavalink.py&utm_campaign=Badge_Grade_Dashboard) [![License](https://img.shields.io/github/license/SoulSen/Lavalink.py.svg)](LICENSE)
 
-Lavalink.py serves to be an interface with various utilities to make interacting with Lavalink easier!
-
-# Download Lavalink
-
-[Lavalink V2](https://ci.fredboat.com/viewType.html?buildTypeId=Lavalink_Build&branch_Lavalink=%3Cdefault%3E&tab=buildTypeStatusDiv)
-
-[Lavalink V3](https://ci.fredboat.com/viewType.html?buildTypeId=Lavalink_Build&branch_Lavalink=refs%2Fheads%2Fv3&tab=buildTypeStatusDiv)
+Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
 
 # Getting Started
+First you need to run a command to install the library,
+```shell
+pip install lavalink
+```
 
-There aren't currently any docs for Lavalink.py at the time of writing (sorry!). We recommend that you check out the example music cogs, or check out the source itself!
+Then you need to setup the Lavalink server, you will need to install Java, and then download the latest [Lavalink.jar](https://github.com/Frederikam/Lavalink/releases/).
+Then place an ``application.yml`` file in the same directory. The file should look like [this](https://github.com/Frederikam/Lavalink/blob/master/LavalinkServer/application.yml.example/). Finally run `java -jar Lavalink.jar` in the directory of the jar.
 
-If you're using Lavalink V3, check out [examples/music-v3.py](https://github.com/Devoxin/Lavalink.py/blob/master/examples/music-v3.py)
+Additionally, there is an [example cog](examples). It should be noted that the example cog is oriented towards usage with Discord.py rewrite and Lavalink v3.1+, although backwards
+compatibility may be possible, it's not encouraged nor is support guaranteed.
 
-For Lavalink V2 users, check [examples/music-v2.py](https://github.com/Devoxin/Lavalink.py/blob/master/examples/music-v2.py)
+## Features
+- Regions
+- Multi-Node Support
+- Load Balancing (this includes region-based load balancing)
+- Equalizer
 
-# Links
+## Optional Dependencies
 
-[Lavalink Wiki](https://github.com/Devoxin/Lavalink.py/wiki)
+`aiodns`   - Speed up DNS resolving.
 
-[Get Support](https://discord.gg/SbJXU9s)
+`cchardet` - A faster alternative to `chardet`.
+
+## Need Further Help? 
+[Discord Server](https://discord.gg/SbJXU9s) 
+
+[Documentation](https://lavalink.readthedocs.io/en/latest/)
