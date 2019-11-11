@@ -71,8 +71,8 @@ class WebSocket:
                         if ce.status == 401:  # pylint: disable=R1705
                             # Fully aware I shouldn't disable pylint warnings but I don't like the two separate if
                             # statements otherwise.
-                            self._lavalink._logger.warning('[NODE-{}] Authentication failed '
-                                                           'while trying to establish a connection to the node.'
+                            self._lavalink._logger.warning('[NODE-{}] Authentication failed while trying to '
+                                                           'establish a connection to the node.'
                                                            .format(self._node.name))
                             return
                             # We shouldn't try to establish any more connections as correcting this particular error
@@ -80,10 +80,9 @@ class WebSocket:
                             # would be futile, and a waste of resources.
                         elif ce.status != 101:
                             self._lavalink._logger.warning('[NODE-{}] The remote server returned code {}, '
-                                                           'the expected code was 101. '
-                                                           'This usually indicates that the remote server is a '
-                                                           'webserver and not Lavalink. '
-                                                           'Check your ports, and try again.'
+                                                           'the expected code was 101. This usually '
+                                                           'indicates that the remote server is a webserver '
+                                                           'and not Lavalink. Check your ports, and try again.'
                                                            .format(self._node.name, ce.status))
 
                 backoff = min(10 * attempt, 60)

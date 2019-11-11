@@ -8,7 +8,7 @@ from urllib.parse import quote
 import aiohttp
 
 from .events import Event
-from .exceptions import NodeException
+from .exceptions import NodeException, Unauthorized
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
@@ -59,12 +59,13 @@ class Client:
 
     def __init__(self, user_id: int, shard_count: int = 1,
                  loop=None, player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
-        if user_id is None or not isinstance(user_id, int):
-            raise TypeError('user_id must be an integer (got {}). If the type is None, '
+        if not isinstance(user_id, int):
+            raise TypeError('user_id must be an int (got {}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
-                            'the Lavalink client. Alternatively, you can hardcode your user ID.')
+                            'the Lavalink client. Alternatively, you can hardcode your user ID.'
+                            .format(user_id))
 
-        if shard_count is None or not isinstance(shard_count, int):
+        if not isinstance(shard_count, int):
             raise TypeError('shard_count must be an int with a positive value.')
 
         self._user_id = str(user_id)
@@ -138,7 +139,9 @@ class Client:
         async with self._session.get(destination, headers=headers) as res:
             if res.status == 200:
                 return await res.json()
-            # TODO: Throw if 401/403
+
+            if res.status == 401 or res.status == 403:
+                raise Unauthorized
 
             return []
 
@@ -169,7 +172,9 @@ class Client:
         async with self._session.get(destination, headers=headers) as res:
             if res.status == 200:
                 return await res.json()
-            # TODO: Throw if 401/403
+
+            if res.status == 401 or res.status == 403:
+                raise Unauthorized
 
             return None
 
@@ -200,7 +205,9 @@ class Client:
         async with self._session.post(destination, headers=headers, json=tracks) as res:
             if res.status == 200:
                 return await res.json()
-            # TODO: Throw if 401/403
+
+            if res.status == 401 or res.status == 403:
+                raise Unauthorized
 
             return None
 
