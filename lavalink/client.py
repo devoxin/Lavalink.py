@@ -13,7 +13,6 @@ from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
-from .utils import deprecated
 
 
 class Client:
@@ -60,12 +59,12 @@ class Client:
 
     def __init__(self, user_id: int, shard_count: int = 1,
                  loop=None, player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
-        if user_id is None or type(user_id) is not int:
+        if user_id is None or not isinstance(user_id, int):
             raise TypeError('user_id must be an integer (got {}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
                             'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
-        if shard_count is None or type(shard_count) is not int:
+        if shard_count is None or not isinstance(shard_count, int):
             raise TypeError('shard_count must be an int with a positive value.')
 
         self._user_id = str(user_id)
