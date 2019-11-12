@@ -281,8 +281,7 @@ class DefaultPlayer(BasePlayer):
                 track = self.queue.index(randrange(len(self.queue)))
                 self.queue.remove(track)
             else:
-                track = self.queue.index(0)
-                self.queue.remove(track)
+                self.queue.popleft()
 
         self.current = track
         options = {}
