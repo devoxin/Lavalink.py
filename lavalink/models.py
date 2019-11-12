@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from random import randrange
+import collections
 from time import time
 from .events import (TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent,
                      QueueEndEvent, PlayerUpdateEvent, NodeChangedEvent)  # noqa: F401
@@ -46,7 +47,7 @@ class AudioTrack:
             raise TrackNotBuilt('The track has not been built yet.')
         return self.__getattribute__(item)
 
-    def __repr__(self):
+    def __repr__(self): 
         if not hasattr(self, 'track'):
             raise TrackNotBuilt('The track has not been built yet.')
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
@@ -151,7 +152,7 @@ class DefaultPlayer(BasePlayer):
         self.repeat = False
         self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
 
-        self.queue = []
+        self.queue = collections.deque([])
         self.current = None
 
     @property
