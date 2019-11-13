@@ -6,10 +6,10 @@ __license__ = 'MIT'
 __copyright__ = 'Copyright 2019 Devoxin'
 __version__ = '3.1.0'
 
-
 import logging
 import inspect
 import sys
+import functools
 
 from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, \
     NodeConnectedEvent, NodeChangedEvent, NodeDisconnectedEvent, WebSocketClosedEvent
@@ -67,7 +67,38 @@ def add_event_hook(*hooks, event: Event = None):
             raise TypeError('Hook is not callable or a coroutine')
 
         if hook not in event_hooks:
+            if '__arg_count' not in hook.__dict__:
+                hook.__dict__['__arg_count'] = hook.__code__.co_argcount - 1 if inspect.ismethod(hook) \
+                    else hook.__code__.co_argcount
             event_hooks.append(hook)
+
+
+class ListenerAdapter:
+    """ The base of all listener adapters. """
+    def _get_hooks(self):
+        funcs = [func for func in dir(self) if callable(getattr(self, func))]
+        for hook in funcs:
+            if not hook.startswith('__'):
+                func = getattr(self, hook)
+                if hasattr(func, '__event'):
+                    yield func, getattr(func, '__event')
+
+
+def add_adapter(adapter):
+    """
+    Adds the event hooks from the adapter.
+
+    Parameters
+    ----------
+    adapter: :class:`ListenerAdapter`
+        The listener adapter of which the event hooks are assigned to.
+        Must be derived from :class:`ListenerAdapter`
+    """
+    if not isinstance(adapter, ListenerAdapter):
+        raise TypeError('Adapter must be derived from ListenerAdapter')
+
+    for hook, event in adapter._get_hooks():
+        add_event_hook(hook, event=event)
 
 
 def on(event: Event = None):
@@ -80,11 +111,23 @@ def on(event: Event = None):
         The event that will dispatch the given event hook. Defaults to `None`
         which means the hook is dispatched on all events.
     """
-    def decorator(func):
-        def decorated_func(*args, **kwargs):
-            return func(*args, **kwargs)
 
-        add_event_hook(decorated_func, event=event)
+    def decorator(func):
+        if not inspect.iscoroutinefunction(func):
+            raise TypeError('Hook is not a coroutine')
+
+        func.__event = event
+
+        # Hacky way of finding if function is in a class
+        if '.' in func.__qualname__:
+            func.__arg_count = func.__code__.co_argcount - 1
+        else:
+            func.__arg_count = func.__code__.co_argcount
+
+        @functools.wraps(func)
+        async def decorated_func(*args, **kwargs):
+            return await func(*args, **kwargs)
+
         return decorated_func
 
     return decorator

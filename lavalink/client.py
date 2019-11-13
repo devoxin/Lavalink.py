@@ -1,5 +1,4 @@
 import asyncio
-import itertools
 import logging
 import random
 from collections import defaultdict
@@ -261,7 +260,16 @@ class Client:
         generic_hooks = Client._event_hooks['Generic']
         targeted_hooks = Client._event_hooks[type(event).__name__]
 
-        tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
+        tasks = [hook(event) for hook in generic_hooks]
+
+        for hook in targeted_hooks:
+            if hook.__dict__['__arg_count'] == 1:
+                tasks.append(hook(event))
+            else:
+                params = []
+                for attr in event.__slots__:
+                    params.append(getattr(event, attr))
+                tasks.append(hook(*params))
 
         results = await asyncio.gather(*tasks)
 

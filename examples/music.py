@@ -12,7 +12,7 @@ from discord.ext import commands
 url_rx = re.compile('https?:\\/\\/(?:www\\.)?.+')  # noqa: W605
 
 
-class Music(commands.Cog):
+class Music(commands.Cog, lavalink.ListenerAdapter):
     def __init__(self, bot):
         self.bot = bot
 
@@ -22,6 +22,9 @@ class Music(commands.Cog):
             bot.add_listener(bot.lavalink.voice_update_handler, 'on_socket_response')
 
         lavalink.add_event_hook(self.track_hook)
+
+        # Registers the ListenerAdapter, so it allows us to be able to register event hooks with decorators
+        lavalink.add_adapter(self)
 
     def cog_unload(self):
         self.bot.lavalink._event_hooks.clear()
@@ -53,8 +56,8 @@ class Music(commands.Cog):
 
     # You can create event hooks by decorators too.
     @lavalink.on(lavalink.events.TrackStartEvent)
-    async def on_track_start(self, event):
-        print('{} has just started playing!'.format(event.track.title))
+    async def on_track_start(self, player, track):
+        print('{} has just started playing!'.format(track.title))
 
     async def connect_to(self, guild_id: int, channel_id: str):
         """ Connects to the given voicechannel ID. A channel_id of `None` means disconnect. """
