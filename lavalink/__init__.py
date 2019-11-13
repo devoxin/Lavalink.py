@@ -123,6 +123,7 @@ def on(event: Event = None):
             func.__arg_count = func.__code__.co_argcount - 1
         else:
             func.__arg_count = func.__code__.co_argcount
+            add_event_hook(func, event=event)
 
         @functools.wraps(func)
         async def decorated_func(*args, **kwargs):
