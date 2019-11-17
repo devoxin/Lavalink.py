@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+import inspect
 from collections import defaultdict
 from urllib.parse import quote
 
@@ -80,9 +81,34 @@ class Client:
             timeout=aiohttp.ClientTimeout(total=30)
         )  # This session will be used for websocket and http requests.
 
-    def add_event_hook(self, hook):
-        if hook not in self._event_hooks['Generic']:
-            self._event_hooks['Generic'].append(hook)
+    def add_event_hook(self, *hooks, event: Event = None):
+        """
+        Adds an event hook to be dispatched on an event.
+
+        Parameters
+        ----------
+        hooks: :class:`function`
+            The hooks to register for the given event type.
+            If `event` parameter is left empty, then it will run when any event is dispatched.
+        event: :class:`Event`
+            The event the hook belongs to. This will dispatch when that specific event is
+            dispatched. Defaults to `None` which means the hook is dispatched on all events.
+        """
+        if event is not None and Event not in event.__bases__:
+            raise TypeError('Event parameter is not of type Event or None')
+
+        event_name = event.__name__ if event is not None else 'Generic'
+        event_hooks = Client._event_hooks[event_name]
+
+        for hook in hooks:
+            if not callable(hook) or not inspect.iscoroutinefunction(hook):
+                raise TypeError('Hook is not callable or a coroutine')
+
+            if hook not in event_hooks:
+                if '__arg_count' not in hook.__dict__:
+                    hook.__dict__['__arg_count'] = hook.__code__.co_argcount - 1 if inspect.ismethod(hook) \
+                        else hook.__code__.co_argcount
+                event_hooks.append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None):

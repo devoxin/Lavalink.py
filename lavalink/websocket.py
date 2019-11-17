@@ -190,7 +190,7 @@ class WebSocket:
         if player:
             await player._handle_event(event)
 
-    async def _send(self, **data):
+    async def _send(self, **kwargs):
         """
         Sends a payload to Lavalink.
 
@@ -200,8 +200,8 @@ class WebSocket:
             The data sent to Lavalink.
         """
         if self.connected:
-            self._lavalink._logger.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(data)))
-            await self._ws.send_json(data)
+            self._lavalink._logger.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(kwargs)))
+            await self._ws.send_json(kwargs)
         else:
             self._lavalink._logger.debug('[NODE-{}] Send called before WebSocket ready!'.format(self._node.name))
-            self._message_queue.append(data)
+            self._message_queue.append(kwargs)

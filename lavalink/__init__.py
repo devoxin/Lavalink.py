@@ -7,8 +7,8 @@ __copyright__ = 'Copyright 2019 Devoxin'
 __version__ = '3.1.0'
 
 import logging
-import inspect
 import sys
+import inspect
 import functools
 
 from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, \
@@ -17,7 +17,7 @@ from .models import BasePlayer, DefaultPlayer, AudioTrack
 from .utils import format_time, parse_time
 from .client import Client
 from .playermanager import PlayerManager
-from .exceptions import NodeException, InvalidTrack, TrackNotBuilt
+from .exceptions import NodeException, InvalidTrack, TrackNotBuilt, Unauthorized
 from .nodemanager import NodeManager
 from .stats import Penalty, Stats
 from .websocket import WebSocket
@@ -32,7 +32,7 @@ def enable_debug_logging():
     log = logging.getLogger('lavalink')
 
     fmt = logging.Formatter(
-        '[%(asctime)s] [lavalink.py] [%(levelname)s] %(message)s',
+        '[%(asctime)s] [lavalink.py {}] [%(levelname)s] %(message)s'.format(__version__),
         datefmt="%H:%M:%S"
     )
 

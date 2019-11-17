@@ -65,6 +65,8 @@ class BasePlayer(ABC):
         The guild id of the player.
     node: :class:`Node`
         The node that the player is connected to.
+    channel_id: :class:`int`
+        The channel id of which the player is participating in.
     """
     def __init__(self, guild_id: int, node: Node):
         self.guild_id = str(guild_id)

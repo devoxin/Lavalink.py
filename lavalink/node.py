@@ -9,7 +9,7 @@ class Node:
     Note
     ----
     Nodes are **NOT** mean't to be added manually, but rather with :func:`Client.add_node`. Doing this can cause
-    invalid cache and much more problems.
+    invalid cache and many more problems.
 
     Attributes
     ----------

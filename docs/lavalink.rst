@@ -1,11 +1,15 @@
 .. currentmodule:: lavalink
 
+
 Documentation
 =============
 
 .. autofunction:: enable_debug_logging
 
 .. autofunction:: add_event_hook
+
+.. autoclass:: ListenerAdapter
+    :members:
 
 .. autofunction:: on
 
@@ -47,6 +51,16 @@ All Events are derived from :class:`Event`
 
 .. autoclass:: WebSocketClosedEvent
     :members:
+
+Exceptions
+----------
+.. autoclass:: NodeException
+
+.. autoclass:: Unauthorized
+
+.. autoclass:: InvalidTrack
+
+.. autoclass:: TrackNotBuilt
 
 Models
 ------
