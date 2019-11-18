@@ -1,11 +1,6 @@
 Overview
 ========
 
-Requirements
-------------
-- Python 3+
-- aiohttp
-
 Installation
 ------------
 You should first install Python from their website, which is `here
@@ -22,3 +17,8 @@ If you would like to install the development branch, you will need to have ``git
 .. code-block:: bash
 
     pip install -U git+https://github.com/Devoxin/Lavalink.py@dev
+
+Requirements
+------------
+- Python 3+
+- aiohttp

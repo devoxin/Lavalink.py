@@ -15,22 +15,17 @@ Welcome to Lavalink.py's documentation!
     :width: 150px
     :align: right
 
-\
-    Lavalink.py is a wrapper for which `Lavalink
-    <https://github.com/Frederikam/Lavalink/>`_ abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
 
-    **Features:**
+Lavalink.py is a wrapper for which `Lavalink
+<https://github.com/Frederikam/Lavalink/>`_ abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
 
-    - Regions
-    - Multi-Node Support
-    - Load Balancing (this includes region-based load balancing)
-    - Equalizer
+**Features:**
 
-    **Support:**
+- Regions
+- Multi-Node Support
+- Load Balancing (this includes region-based load balancing)
+- Equalizer
 
-    `Discord Server <https://discord.gg/SbJXU9s>`_
+**Need Help?**
 
-
-:ref:`genindex`
-
-:ref:`search`
+- `Join the Discord Server <https://discord.gg/SbJXU9s>`_
