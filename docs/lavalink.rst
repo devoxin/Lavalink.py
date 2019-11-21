@@ -4,14 +4,9 @@
 Documentation
 =============
 
+Logging
+-------
 .. autofunction:: enable_debug_logging
-
-.. autofunction:: add_event_hook
-
-.. autoclass:: ListenerAdapter
-    :members:
-
-.. autofunction:: on
 
 Client
 ------

@@ -19,9 +19,7 @@ Bug Fixes
 
 New Features
 ~~~~~~~~~~~~
-* Added :attr:`lavalink.add_event_hook`, for compatibility with the newly added decorators, but for backwards compatibility :attr:`Client.add_event_hook` is kept.
-* Added :attr:`lavalink.on` decorator that registers the function as a event hook, it can be used if in a class that derives `lavalink.ListenerAdapter` or outside of a class.
-* Added :attr:`lavalink.ListenerAdapter`, which allows :attr:`lavalink.on` decorator to be usable within classes derived from it.
+* Added `event` and `hooks` parameter to :attr:`Client.add_event_hook`. `hooks` parameter may now be an iterable.
 * Added `connect_back` parameter to :attr:`Client`, which connects a player back to its original node from its current node.
 * Added `end_time` and `no_replace` parameters to :attr:`DefaultPlayer.play`.
 * Added :attr:`AudioTrack` as a parameter to :attr:`DefaultPlayer.add`.
