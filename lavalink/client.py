@@ -55,8 +55,6 @@ class Client:
     player_manager: :class:`PlayerManager`
         Represents the player manager that contains all the players.
     """
-    _event_hooks = defaultdict(list)
-
     def __init__(self, user_id: int, shard_count: int = 1,
                  loop=None, player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
         if not isinstance(user_id, int):
@@ -74,6 +72,7 @@ class Client:
         self.node_manager = NodeManager(self, regions)
         self.player_manager = PlayerManager(self, player)
         self._connect_back = connect_back
+        self._event_hooks = defaultdict(list)
         self._logger = logging.getLogger('lavalink')
 
         self._session = aiohttp.ClientSession(
@@ -81,7 +80,7 @@ class Client:
             timeout=aiohttp.ClientTimeout(total=30)
         )  # This session will be used for websocket and http requests.
 
-    def add_event_hook(self, *hooks, event: Event = None):
+    def add_event_hook(self, *hooks, event=None):
         """
         Adds an event hook to be dispatched on an event.
 
@@ -98,7 +97,7 @@ class Client:
             raise TypeError('Event parameter is not of type Event or None')
 
         event_name = event.__name__ if event is not None else 'Generic'
-        event_hooks = Client._event_hooks[event_name]
+        event_hooks = self._event_hooks[event_name]
 
         for hook in hooks:
             if not callable(hook) or not inspect.iscoroutinefunction(hook):
@@ -283,8 +282,8 @@ class Client:
         event: :class:`Event`
             The event to dispatch to the hooks.
         """
-        generic_hooks = Client._event_hooks['Generic']
-        targeted_hooks = Client._event_hooks[type(event).__name__]
+        generic_hooks = self._event_hooks['Generic']
+        targeted_hooks = self._event_hooks[type(event).__name__]
 
         tasks = [hook(event) for hook in generic_hooks]
 

@@ -12,19 +12,17 @@ from discord.ext import commands
 url_rx = re.compile('https?:\\/\\/(?:www\\.)?.+')  # noqa: W605
 
 
-class Music(commands.Cog, lavalink.ListenerAdapter):
+class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
         if not hasattr(bot, 'lavalink'):  # This ensures the client isn't overwritten during cog reloads.
             bot.lavalink = lavalink.Client(bot.user.id)
-            bot.lavalink.add_node('127.0.0.1', 2333, 'youshallnotpass', 'eu', 'default-node')  # Host, Port, Password, Region, Name
+            bot.lavalink.add_node('127.0.0.1', 80, 'HeB7AxNRh;Mw&]L-nj4GUS?9@{%/c:TX=P5}6qC$KpuQZt3bmy', 'us', 'default-node')  # Host, Port, Password, Region, Name
             bot.add_listener(bot.lavalink.voice_update_handler, 'on_socket_response')
 
-        lavalink.add_event_hook(self.track_hook)
-
-        # Registers the ListenerAdapter, so it allows us to be able to register event hooks with decorators
-        lavalink.add_adapter(self)
+        bot.lavalink.add_event_hook(self.track_hook)
+        bot.lavalink.add_event_hook(self.on_track_start, event=lavalink.events.TrackStartEvent)
 
     def cog_unload(self):
         self.bot.lavalink._event_hooks.clear()
@@ -54,8 +52,6 @@ class Music(commands.Cog, lavalink.ListenerAdapter):
             await self.connect_to(guild_id, None)
             # Disconnect from the channel -- there's nothing else to play.
 
-    # You can create event hooks by decorators too.
-    @lavalink.on(lavalink.events.TrackStartEvent)
     async def on_track_start(self, player, track):
         print('{} has just started playing!'.format(track.title))
 
