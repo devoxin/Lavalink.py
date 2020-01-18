@@ -20,5 +20,5 @@ about: Report bugs or unintended behavior
 
 ### Checklist
 - [ ] Have you checked that there aren't other open [Bug Reports](../../issues) for the same problem?
-- [ ] Have you checked that you're Lavalink password isn't visible?
+- [ ] Have you checked that your Lavalink password isn't visible?
 - [ ] Have you given a traceback if possible?
