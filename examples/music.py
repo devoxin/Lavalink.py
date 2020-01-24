@@ -88,7 +88,7 @@ class Music(commands.Cog):
             embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
 
             # You can create your own AudioTrack and add more information about the track you may want.
-            track = lavalink.models.AudioTrack.build(track, ctx.author.id, {'Recommended': True})
+            track = lavalink.models.AudioTrack(track, ctx.author.id, recommended=True)
             player.add(requester=ctx.author.id, track=track)
 
         await ctx.send(embed=embed)
