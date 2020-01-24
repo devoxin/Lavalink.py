@@ -68,23 +68,3 @@ def add_event_hook(*hooks, event: Event = None):
 
         if hook not in event_hooks:
             event_hooks.append(hook)
-
-
-def on(event: Event = None):
-    """
-    Adds an event hook when decorated with a function.
-
-    Parameters
-    ----------
-    event: :class:`Event`
-        The event that will dispatch the given event hook. Defaults to `None`
-        which means the hook is dispatched on all events.
-    """
-    def decorator(func):
-        def decorated_func(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        add_event_hook(decorated_func, event=event)
-        return decorated_func
-
-    return decorator
