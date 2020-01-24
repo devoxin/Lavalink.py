@@ -62,18 +62,57 @@ class Node:
         return self.stats.penalty.total
 
     async def get_tracks(self, query: str):
-        """
+        """|coro|
         Gets all tracks associated with the given query.
 
         Parameters
         ----------
         query: :class:`str`
             The query to perform a search for.
+
+        Returns
+        -------
+        A dict representing tracks.
         """
         return await self._manager._lavalink.get_tracks(query, self)
 
-    async def _dispatch_event(self, event: Event):
+    async def routeplanner_status(self):
+        """|coro|
+        Gets the routeplanner status of the target node.
+
+        Returns
+        -------
+        A dict representing the routeplanner information.
         """
+        return await self._manager._lavalink.routeplanner_status(self)
+
+    async def routeplanner_free_address(self, address: str):
+        """|coro|
+        Gets the routeplanner status of the target node.
+
+        Parameters
+        ----------
+        address: :class:`str`
+            The address to free.
+
+        Returns
+        -------
+        A bool - True if the address was freed, False otherwise.
+        """
+        return await self._manager._lavalink.routeplanner_free_address(self, address)
+
+    async def routeplanner_free_all_failing(self):
+        """|coro|
+        Gets the routeplanner status of the target node.
+
+        Returns
+        -------
+        A bool - True if all failing addresses were freed, False otherwise.
+        """
+        return await self._manager._lavalink.routeplanner_free_all_failing(self)
+
+    async def _dispatch_event(self, event: Event):
+        """|coro|
         Dispatches the given event to all registered hooks.
 
         Parameters
@@ -84,7 +123,7 @@ class Node:
         await self._manager._lavalink._dispatch_event(event)
 
     async def _send(self, **data):
-        """
+        """|coro|
         Sends the passed data to the node via the websocket connection.
 
         Parameters
