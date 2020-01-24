@@ -89,7 +89,7 @@ class WebSocket:
                 await asyncio.sleep(backoff)
             else:
                 await self._node._manager._node_connect(self._node)
-                asyncio.ensure_future(self._listen())
+                #  asyncio.ensure_future(self._listen())
 
                 if not self._resuming_configured and self._resume_key \
                         and (self._resume_timeout and self._resume_timeout > 0):
@@ -101,6 +101,8 @@ class WebSocket:
                         await self._send(**message)
 
                     self._message_queue.clear()
+
+                await self._listen()
 
     async def _listen(self):
         """ Listens for websocket messages. """
