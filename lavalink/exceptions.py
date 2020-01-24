@@ -8,7 +8,3 @@ class Unauthorized(Exception):
 
 class InvalidTrack(Exception):
     """ Raised when an invalid track was passed. """
-
-
-class TrackNotBuilt(Exception):
-    """ Raised when AudioTrack objects hasn't been built. """

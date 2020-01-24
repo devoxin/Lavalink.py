@@ -211,6 +211,80 @@ class Client:
 
             return None
 
+    async def routeplanner_status(self, node: Node):
+        """|coro|
+
+        Gets the routeplanner status of the target node.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to use for the query.
+
+        Returns
+        -------
+        A dict representing the routeplanner information.
+        """
+        destination = 'http://{}:{}/routeplanner/status'.format(node.host, node.port)
+        headers = {
+            'Authorization': node.password
+        }
+
+        async with self._session.get(destination, headers=headers) as res:
+            if res.status == 200:
+                return await res.json()
+
+            if res.status == 401 or res.status == 403:
+                raise Unauthorized
+
+            return None
+
+    async def routeplanner_free_address(self, node: Node, address: str):
+        """|coro|
+
+        Gets the routeplanner status of the target node.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to use for the query.
+        address: :class:`str`
+            The address to free.
+
+        Returns
+        -------
+        A bool - True if the address was freed, False otherwise.
+        """
+        destination = 'http://{}:{}/routeplanner/free/address'.format(node.host, node.port)
+        headers = {
+            'Authorization': node.password
+        }
+
+        async with self._session.post(destination, headers=headers, json={'address': address}) as res:
+            return res.status == 204
+
+    async def routeplanner_free_all_failing(self, node: Node):
+        """|coro|
+
+        Gets the routeplanner status of the target node.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to use for the query.
+
+        Returns
+        -------
+        A bool - True if all failing addresses were freed, False otherwise.
+        """
+        destination = 'http://{}:{}/routeplanner/free/all'.format(node.host, node.port)
+        headers = {
+            'Authorization': node.password
+        }
+
+        async with self._session.post(destination, headers=headers) as res:
+            return res.status == 204
+
     async def voice_update_handler(self, data):
         """|coro|
 

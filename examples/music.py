@@ -9,7 +9,7 @@ import discord
 import lavalink
 from discord.ext import commands
 
-url_rx = re.compile('https?:\\/\\/(?:www\\.)?.+')  # noqa: W605
+url_rx = re.compile(r'https?://(?:www\.)?.+')
 
 
 class Music(commands.Cog):
@@ -51,11 +51,6 @@ class Music(commands.Cog):
             await self.connect_to(guild_id, None)
             # Disconnect from the channel -- there's nothing else to play.
 
-    # You can create event hooks by decorators too.
-    @lavalink.on(lavalink.events.TrackStartEvent)
-    async def on_track_start(self, event):
-        print('{} has just started playing!'.format(event.track.title))
-
     async def connect_to(self, guild_id: int, channel_id: str):
         """ Connects to the given voicechannel ID. A channel_id of `None` means disconnect. """
         ws = self.bot._connection._get_websocket(guild_id)
@@ -67,7 +62,6 @@ class Music(commands.Cog):
     async def play(self, ctx, *, query: str):
         """ Searches and plays a song from a given query. """
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-
         query = query.strip('<>')
 
         if not url_rx.match(query):

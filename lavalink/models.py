@@ -6,7 +6,7 @@ from time import time
 from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
                      QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStartEvent, TrackStuckEvent)
-from .exceptions import InvalidTrack, TrackNotBuilt
+from .exceptions import InvalidTrack
 from .node import Node
 
 
@@ -16,42 +16,54 @@ class AudioTrack:
 
     Parameters
     ----------
+    data: :class:`dict`
+        The data to initialise an AudioTrack from.
     requester: :class:`any`
         The requester of the track.
+    extra: :class:`dict`
+        Any extra information to store in this AudioTrack.
+
+    Attributes
+    ----------
+    track: :class:`str`
+        The base64-encoded string representing a Lavalink-readable AudioTrack.
+    identifier: :class:`str`
+        The track's id. For example, a youtube track's identifier will look like dQw4w9WgXcQ.
+    is_seekable: :class:`bool`
+        Whether the track supports seeking.
+    author: :class:`str`
+        The track's uploader.
+    duration: :class:`int`
+        The duration of the track, in milliseconds.
+    stream: :class:`bool`
+        Whether the track is a live-stream.
+    title: :class:`str`
+        The title of the track.
+    uri: :class:`str`
+        The full URL of track.
+    extra: :class:`dict`
+        Any extra properties given to this AudioTrack will be stored here.
     """
     __slots__ = ('track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
                  'extra')
 
-    def __init__(self, requester):
-        self.requester = requester
-
-    @classmethod
-    def build(cls, track, requester, extra: dict = None):
-        """ Returns an optional AudioTrack. """
-        new_track = cls(requester)
+    def __init__(self, data: dict, requester: int, **extra):
         try:
-            new_track.track = track['track']
-            new_track.identifier = track['info']['identifier']
-            new_track.is_seekable = track['info']['isSeekable']
-            new_track.author = track['info']['author']
-            new_track.duration = track['info']['length']
-            new_track.stream = track['info']['isStream']
-            new_track.title = track['info']['title']
-            new_track.uri = track['info']['uri']
-            new_track.extra = extra or {}
-
-            return new_track
-        except KeyError:
-            raise InvalidTrack('An invalid track was passed.')
-
-    def __getitem__(self, item):
-        if not hasattr(self, 'track'):
-            raise TrackNotBuilt('The track has not been built yet.')
-        return self.__getattribute__(item)
+            self.track = data['track']
+            self.identifier = data['info']['identifier']
+            self.is_seekable = data['info']['isSeekable']
+            self.author = data['info']['author']
+            self.duration = data['info']['length']
+            self.stream = data['info']['isStream']
+            self.title = data['info']['title']
+            self.uri = data['info']['uri']
+            self.requester = requester
+            self.extra = extra
+        except KeyError as ke:
+            missing_key = ke.args[0]
+            raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
 
     def __repr__(self):
-        if not hasattr(self, 'track'):
-            raise TrackNotBuilt('The track has not been built yet.')
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
 
 
@@ -219,7 +231,7 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: typing.Union[dict, AudioTrack], extra: dict = None, index: int = None):
+    def add(self, requester: int, track: typing.Union[dict, AudioTrack], index: int = None):
         """
         Adds a track to the queue.
 
@@ -229,17 +241,16 @@ class DefaultPlayer(BasePlayer):
             The ID of the user who requested the track.
         track: :class:`dict`
             A dict representing a track returned from Lavalink.
-        extra: :class:`dict`
-            A dict adding extra attributes to the track. Defaults to `None`
         index: Optional[:class:`int`]
             The index at which to add the track.
             If index is left unspecified, the default behaviour is to append the track. Defaults to `None`.
         """
+        at = AudioTrack(track, requester) if isinstance(track, dict) else track
+
         if index is None:
-            self.queue.append(AudioTrack.build(track, requester, extra=extra) if isinstance(track, dict) else track)
+            self.queue.append(at)
         else:
-            self.queue.insert(index, AudioTrack.build(track, requester, extra=extra) if isinstance(track, dict)
-                              else track)
+            self.queue.insert(index, at)
 
     async def play(self, track: AudioTrack = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
         """

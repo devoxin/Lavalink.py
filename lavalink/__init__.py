@@ -17,7 +17,7 @@ from .models import BasePlayer, DefaultPlayer, AudioTrack
 from .utils import format_time, parse_time
 from .client import Client
 from .playermanager import PlayerManager
-from .exceptions import NodeException, InvalidTrack, TrackNotBuilt
+from .exceptions import NodeException, InvalidTrack
 from .nodemanager import NodeManager
 from .stats import Penalty, Stats
 from .websocket import WebSocket
