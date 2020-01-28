@@ -10,11 +10,11 @@ class DataReader:
     def _read(self, n):
         return self._buf.read(n)
 
-    def read_boolean(self):
-        return self.read_byte() != 0
-
     def read_byte(self):
         return self._read(1)
+
+    def read_boolean(self):
+        return self.read_byte() != 0
 
     def read_unsigned_short(self):  # 2 bytes
         result, = struct.unpack('>H', self._read(2))
