@@ -1,10 +1,11 @@
 import struct
+from base64 import b64decode
 from io import BytesIO
 
 
 class DataReader:
-    def __init__(self, buf):
-        self._buf = buf
+    def __init__(self, ts):
+        self._buf = BytesIO(b64decode(ts))
 
     def _read(self, n):
         return self._buf.read(n)
@@ -34,8 +35,8 @@ class DataReader:
 
 
 class DataWriter:
-    def __init__(self, buf):
-        self._buf = buf
+    def __init__(self):
+        self._buf = BytesIO()
 
     def _write(self, data):
         self._buf.write(data)

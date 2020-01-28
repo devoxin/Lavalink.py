@@ -78,8 +78,7 @@ def decode_track(track):
 # def encode_track(track: dict):
 #     assert {'title', 'author', 'length', 'identifier', 'is_stream', 'uri', 'source', 'position'} == track.keys()
 
-#     buf = BytesIO()
-#     writer = DataWriter(buf)
+#     writer = DataWriter()
 
 #     version = struct.pack('B', 2)
 #     writer.write_byte(version)
