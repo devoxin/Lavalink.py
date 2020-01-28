@@ -6,7 +6,6 @@ modifications as necessary for use with another Discord library.
 Usage of this cog requires Python 3.6 or higher due to the use of f-strings.
 Compatibility with Python 3.5 should be possible if f-strings are removed.
 """
-import math
 import re
 
 import discord
@@ -125,7 +124,7 @@ class Music(commands.Cog):
 
         # Valid loadTypes are:
         #   TRACK_LOADED    - single video/direct URL)
-        #   PLAYLIST_LOADED - direct URL to playlist) 
+        #   PLAYLIST_LOADED - direct URL to playlist)
         #   SEARCH_RESULT   - query prefixed with either ytsearch: or scsearch:.
         #   NO_MATCHES      - query yielded no results
         #   LOAD_FAILED     - most likely, the video encountered an exception during loading.

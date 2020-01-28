@@ -60,7 +60,7 @@ class AudioTrack:
             self.requester = requester
             self.extra = extra
         except KeyError as ke:
-            missing_key = ke.args[0]
+            missing_key, = ke.args
             raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
 
     def __repr__(self):

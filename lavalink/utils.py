@@ -1,4 +1,7 @@
-import warnings
+import struct
+
+from .datareader import DataReader
+from .models import AudioTrack
 
 
 def format_time(time):
@@ -33,13 +36,39 @@ def parse_time(time):
     return days, hours, minutes, seconds
 
 
-def deprecated(message):
-    def deprecated_decorator(func):
-        def deprecated_func(*args, **kwargs):
-            warnings.warn('{} is a deprecated function. {}'.format(func.__name__, message),
-                          category=DeprecationWarning,
-                          stacklevel=2)
-            warnings.simplefilter('default', DeprecationWarning)
-            return func(*args, **kwargs)
-        return deprecated_func
-    return deprecated_decorator
+def decode_track(track):
+    """
+    Decodes a base64 track string into an AudioTrack object.
+
+    Parameters
+    ----------
+    track: :class:`str`
+        The base64 track string.
+    """
+    reader = DataReader(track)
+
+    flags = (reader.read_int() & 0xC0000000) >> 30
+    version, = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1  # pylint: disable=unused-variable
+
+    title = reader.read_utf().decode()
+    author = reader.read_utf().decode()
+    length = reader.read_long()
+    identifier = reader.read_utf().decode()
+    is_stream = reader.read_boolean()
+    uri = reader.read_utf().decode() if reader.read_boolean() else None
+    source = reader.read_utf().decode()  # noqa: F841 pylint: disable=unused-variable
+
+    track_object = {
+        'track': track,
+        'info': {
+            'title': title,
+            'author': author,
+            'length': length,
+            'identifier': identifier,
+            'isStream': is_stream,
+            'uri': uri,
+            'isSeekable': not is_stream
+        }
+    }
+
+    return AudioTrack(track_object, 0)
