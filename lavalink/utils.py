@@ -1,6 +1,6 @@
 import struct
 
-from .datareader import DataReader
+from .datarw import DataReader
 from .models import AudioTrack
 
 
@@ -57,6 +57,7 @@ def decode_track(track):
     is_stream = reader.read_boolean()
     uri = reader.read_utf().decode() if reader.read_boolean() else None
     source = reader.read_utf().decode()  # noqa: F841 pylint: disable=unused-variable
+    position = reader.read_long()  # noqa: F841 pylint: disable=unused-variable
 
     track_object = {
         'track': track,
@@ -71,4 +72,27 @@ def decode_track(track):
         }
     }
 
-    return AudioTrack(track_object, 0)
+    return AudioTrack(track_object, 0, source=source)
+
+
+# def encode_track(track: dict):
+#     assert {'title', 'author', 'length', 'identifier', 'is_stream', 'uri', 'source', 'position'} == track.keys()
+
+#     buf = BytesIO()
+#     writer = DataWriter(buf)
+
+#     version = struct.pack('B', 2)
+#     writer.write_byte(version)
+#     writer.write_utf(track['title'])
+#     writer.write_utf(track['author'])
+#     writer.write_long(track['length'])
+#     writer.write_utf(track['identifier'])
+#     writer.write_boolean(track['is_stream'])
+#     writer.write_boolean(track['uri'])
+#     writer.write_utf(track['uri'])
+#     writer.write_utf(track['source'])
+#     writer.write_long(track['position'])
+
+#     enc = writer.finish()
+#     b64 = b64encode(enc)
+#     return b64
