@@ -36,7 +36,7 @@ def parse_time(time):
     return days, hours, minutes, seconds
 
 
-def decode_track(track):
+def decode_track(track, decode_errors='ignore'):
     """
     Decodes a base64 track string into an AudioTrack object.
 
@@ -44,13 +44,15 @@ def decode_track(track):
     ----------
     track: :class:`str`
         The base64 track string.
+    decode_errors: :class:`str`
+        The action to take upon encountering erroneous characters within track titles.
     """
     reader = DataReader(track)
 
     flags = (reader.read_int() & 0xC0000000) >> 30
     version, = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1  # pylint: disable=unused-variable
 
-    title = reader.read_utf().decode()
+    title = reader.read_utf().decode(encoding=decode_errors)
     author = reader.read_utf().decode()
     length = reader.read_long()
     identifier = reader.read_utf().decode()
