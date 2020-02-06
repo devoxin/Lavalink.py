@@ -53,38 +53,34 @@ class WebSocket:
 
         attempt = 0
 
-        while not self.connected:
+        while not self.connected and attempt < 3:
             attempt += 1
+            self._lavalink._logger.info('[NODE-{}] Attempting to establish WebSocket connection ({}/3)...',
+                                        self._node.name, attempt)
 
             try:
                 self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers,
                                                           heartbeat=60)
             except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError) as ce:
-                if attempt == 1:
-                    self._lavalink._logger.warning('[NODE-{}] Failed to establish connection!'.format(self._node.name))
+                if isinstance(ce, aiohttp.ClientConnectorError):
+                    self._lavalink._logger.warning('[NODE-{}] This may indicate that Lavalink is not running, '
+                                                   'or is running on a port different '
+                                                   'to the one you passed to `add_node`.'.format(self._node.name))
+                elif isinstance(ce, aiohttp.WSServerHandshakeError):
+                    if ce.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
+                        self._lavalink._logger.warning('[NODE-{}] Authentication failed while trying to '
+                                                       'establish a connection to the node.'
+                                                       .format(self._node.name))
+                        # We shouldn't try to establish any more connections as correcting this particular error
+                        # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
+                        # would be futile, and a waste of resources.
+                        return
 
-                    if isinstance(ce, aiohttp.ClientConnectorError):
-                        self._lavalink._logger.warning('[NODE-{}] This may indicate that Lavalink is not running, '
-                                                       'or is running on a port different '
-                                                       'to the one you passed to `add_node`.'.format(self._node.name))
-                    elif isinstance(ce, aiohttp.WSServerHandshakeError):
-                        if ce.status == 401:  # pylint: disable=R1705
-                            # Fully aware I shouldn't disable pylint warnings but I don't like the two separate if
-                            # statements otherwise.
-                            self._lavalink._logger.warning('[NODE-{}] Authentication failed while trying to '
-                                                           'establish a connection to the node.'
-                                                           .format(self._node.name))
-                            return
-                            # We shouldn't try to establish any more connections as correcting this particular error
-                            # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
-                            # would be futile, and a waste of resources.
-                        elif ce.status != 101:
-                            self._lavalink._logger.warning('[NODE-{}] The remote server returned code {}, '
-                                                           'the expected code was 101. This usually '
-                                                           'indicates that the remote server is a webserver '
-                                                           'and not Lavalink. Check your ports, and try again.'
-                                                           .format(self._node.name, ce.status))
-
+                    self._lavalink._logger.warning('[NODE-{}] The remote server returned code {}, '
+                                                   'the expected code was 101. This usually '
+                                                   'indicates that the remote server is a webserver '
+                                                   'and not Lavalink. Check your ports, and try again.'
+                                                   .format(self._node.name, ce.status))
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
             else:
@@ -103,6 +99,11 @@ class WebSocket:
                     self._message_queue.clear()
 
                 await self._listen()
+                # Ensure this loop doesn't proceed if _listen returns control back to this function.
+                return
+
+        self._lavalink._logger.warning('[NODE-{}] A WebSocket connection could not be established within 3 '
+                                       'attempts.'.format(self._node.name))
 
     async def _listen(self):
         """ Listens for websocket messages. """
@@ -112,6 +113,7 @@ class WebSocket:
             if msg.type == aiohttp.WSMsgType.text:
                 await self._handle_message(msg.json())
             elif msg.type in self._closers:
+                self._lavalink._logger.debug('[NODE-{}] Received close frame with code {}.'.format(self._node.name, msg.data))
                 await self._websocket_closed(msg.data, msg.extra)
                 return
         await self._websocket_closed()
@@ -127,6 +129,8 @@ class WebSocket:
         reason: :class:`str`
             Reason why the websocket was closed. Defaults to `None`
         """
+        self._lavalink._logger.debug('[NODE-{}] WebSocket disconnected with the following: code={} '
+                                     'reason={}'.format(self._node.name, code, reason))
         self._ws = None
         await self._node._manager._node_disconnect(self._node, code, reason)
         await self.connect()
