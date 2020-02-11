@@ -33,7 +33,6 @@ class WebSocket:
                          aiohttp.WSMsgType.closing,
                          aiohttp.WSMsgType.closed)
 
-        self._loop = self._lavalink._loop
         asyncio.ensure_future(self.connect())
 
     @property

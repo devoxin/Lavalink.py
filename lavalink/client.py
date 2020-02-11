@@ -27,8 +27,6 @@ class Client:
         The user id of the bot.
     shard_count: Optional[:class:`int`]
         The amount of shards your bot has. Defaults to `1`.
-    loop: Optional[`event loop`_]
-        The `event loop`_ to use for asynchronous operations. Defaults to `None`.
     player: Optional[:class:`BasePlayer`]
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
         Do not change this unless you know what you are doing!
@@ -58,7 +56,7 @@ class Client:
     _event_hooks = defaultdict(list)
 
     def __init__(self, user_id: int, shard_count: int = 1,
-                 loop=None, player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
+                 player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
         if not isinstance(user_id, int):
             raise TypeError('user_id must be an int (got {}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
@@ -70,7 +68,6 @@ class Client:
 
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
-        self._loop = loop or asyncio.get_event_loop()
         self.node_manager = NodeManager(self, regions)
         self.player_manager = PlayerManager(self, player)
         self._connect_back = connect_back
