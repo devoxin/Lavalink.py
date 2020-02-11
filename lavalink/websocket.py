@@ -110,7 +110,7 @@ class WebSocket:
         async for msg in self._ws:
             self._lavalink._logger.debug('[NODE-{}] Received WebSocket message: {}'.format(self._node.name, msg.data))
 
-            if msg.type == aiohttp.WSMsgType.text:
+            if msg.type == aiohttp.WSMsgType.TEXT:
                 await self._handle_message(msg.json())
             elif msg.type in self._closers:
                 self._lavalink._logger.debug('[NODE-{}] Received close frame with code {}.'.format(self._node.name, msg.data))
