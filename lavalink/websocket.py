@@ -29,9 +29,9 @@ class WebSocket:
         self._shards = self._lavalink._shard_count
         self._user_id = self._lavalink._user_id
 
-        self._closers = (aiohttp.WSMsgType.close,
-                         aiohttp.WSMsgType.closing,
-                         aiohttp.WSMsgType.closed)
+        self._closers = (aiohttp.WSMsgType.CLOSE,
+                         aiohttp.WSMsgType.CLOSING,
+                         aiohttp.WSMsgType.CLOSED)
 
         asyncio.ensure_future(self.connect())
 
