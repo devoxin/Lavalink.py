@@ -77,9 +77,8 @@ class Client:
         self._logger = logging.getLogger('lavalink')
 
         self._session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(loop=loop),
             timeout=aiohttp.ClientTimeout(total=30)
-        )  # This session will be used for websocket and http requests.
+        )
 
     def add_event_hook(self, hook):
         if hook not in self._event_hooks['Generic']:
