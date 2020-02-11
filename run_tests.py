@@ -1,15 +1,18 @@
-from flake8.api import legacy
-import pylint.lint as pylint
-from pylint.reporters import text
+import sys
 from io import StringIO
+
+import pylint.lint as pylint
+from flake8.api import legacy
+from pylint.reporters import text
 
 
 def test_flake8():
     style_guide = legacy.get_style_guide()
     report = style_guide.check_files(['lavalink'])
     statistics = report.get_statistics('E')
+    failed = bool(statistics)
 
-    if not statistics:
+    if not failed:
         print('OK')
 
 
@@ -25,12 +28,18 @@ def test_pylint():
     pylint.Run(opts, reporter=reporter, do_exit=False)
     out = reporter.out.getvalue()
 
-    msg = 'OK' if not out else out
+    failed = bool(out)
+    msg = 'OK' if not failed else out
     print(msg)
+
+    return failed
 
 
 if __name__ == '__main__':
     print('-- flake8 test --')
-    test_flake8()
+    flake_failed = test_flake8()
     print('-- pylint test --')
-    test_pylint()
+    pylint_failed = test_pylint()
+
+    if flake_failed or pylint_failed:
+        sys.exit(1)
