@@ -7,7 +7,6 @@ from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
                      QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStartEvent, TrackStuckEvent)
 from .exceptions import InvalidTrack
-from .node import Node
 
 
 class AudioTrack:
@@ -78,7 +77,7 @@ class BasePlayer(ABC):
     node: :class:`Node`
         The node that the player is connected to.
     """
-    def __init__(self, guild_id: int, node: Node):
+    def __init__(self, guild_id, node):
         self.guild_id = str(guild_id)
         self.node = node
         self._original_node = None  # This is used internally for failover.
@@ -121,7 +120,7 @@ class BasePlayer(ABC):
             await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
 
     @abstractmethod
-    async def change_node(self, node: Node):
+    async def change_node(self, node):
         raise NotImplementedError
 
 
@@ -152,7 +151,7 @@ class DefaultPlayer(BasePlayer):
     current: :class:``AudioTrack`
         The track that is playing currently.
     """
-    def __init__(self, guild_id: int, node: Node):
+    def __init__(self, guild_id, node):
         super().__init__(guild_id, node)
 
         self._user_data = {}
@@ -434,7 +433,7 @@ class DefaultPlayer(BasePlayer):
         event = PlayerUpdateEvent(self, self._last_position, self.position_timestamp)
         await self.node._dispatch_event(event)
 
-    async def change_node(self, node: Node):
+    async def change_node(self, node):
         """
         Changes the player's node
 
