@@ -52,7 +52,7 @@ def decode_track(track, decode_errors='ignore'):
     flags = (reader.read_int() & 0xC0000000) >> 30
     version, = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1  # pylint: disable=unused-variable
 
-    title = reader.read_utf().decode(encoding=decode_errors)
+    title = reader.read_utf().decode(errors=decode_errors)
     author = reader.read_utf().decode()
     length = reader.read_long()
     identifier = reader.read_utf().decode()
