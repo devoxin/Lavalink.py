@@ -55,8 +55,8 @@ class WebSocket:
 
         while not self.connected and attempt < 3:
             attempt += 1
-            self._lavalink._logger.info('[NODE-{}] Attempting to establish WebSocket connection ({}/3)...',
-                                        self._node.name, attempt)
+            self._lavalink._logger.info('[NODE-{}] Attempting to establish WebSocket '
+                                        'connection ({}/3)...'.format(self._node.name, attempt))
 
             try:
                 self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers,
