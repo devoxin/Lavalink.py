@@ -276,7 +276,6 @@ class DefaultPlayer(BasePlayer):
         if self.repeat and self.current:
             self.queue.append(self.current)
 
-        self.current = None
         self._last_update = 0
         self._last_position = 0
         self.position_timestamp = 0
@@ -284,14 +283,12 @@ class DefaultPlayer(BasePlayer):
 
         if not track:
             if not self.queue:
-                await self.stop()
+                await self.stop()  # Also sets current to None.
                 await self.node._dispatch_event(QueueEndEvent(self))
                 return
 
-            if self.shuffle:
-                track = self.queue.pop(randrange(len(self.queue)))
-            else:
-                track = self.queue.pop(0)
+            pop_at = randrange(len(self.queue)) if self.shuffle else 0
+            track = self.queue.pop(pop_at)
 
         self.current = track
         options = {}
@@ -315,7 +312,6 @@ class DefaultPlayer(BasePlayer):
     async def stop(self):
         """ Stops the player. """
         await self.node._send(op='stop', guildId=self.guild_id)
-        await self.reset_equalizer()
         self.current = None
 
     async def skip(self):
