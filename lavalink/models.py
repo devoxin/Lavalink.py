@@ -62,6 +62,9 @@ class AudioTrack:
             missing_key, = ke.args
             raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
 
+    def __getitem__(self, name):
+        return super().__getattribute__(name)
+
     def __repr__(self):
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
 
@@ -277,6 +280,9 @@ class DefaultPlayer(BasePlayer):
             If set to true, operation will be ignored if a track is already playing or paused.
             Defaults to `False`
         """
+        if track is not None and isinstance(track, dict):
+            track = AudioTrack(track, 0)
+
         if self.repeat and self.current:
             self.queue.append(self.current)
 
