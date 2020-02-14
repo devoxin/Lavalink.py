@@ -121,7 +121,8 @@ class Client:
 
         Returns
         -------
-        A dict representing tracks.
+        :class:`dict`
+            A dict representing tracks.
         """
         if not self.node_manager.available_nodes:
             raise NodeException('No available nodes!')
@@ -153,7 +154,8 @@ class Client:
 
         Returns
         -------
-        A dict representing the track's information.
+        :class:`dict`
+            A dict representing the track's information.
         """
         if not self.node_manager.available_nodes:
             raise NodeException('No available nodes!')
@@ -185,7 +187,8 @@ class Client:
 
         Returns
         -------
-        An array of dicts representing track information.
+        List[:class:`dict`]
+            A list of dicts representing track information.
         """
         if not self.node_manager.available_nodes:
             raise NodeException('No available nodes!')
@@ -215,7 +218,8 @@ class Client:
 
         Returns
         -------
-        A dict representing the routeplanner information.
+        :class:`dict`
+            A dict representing the routeplanner information.
         """
         destination = 'http://{}:{}/routeplanner/status'.format(node.host, node.port)
         headers = {
@@ -244,7 +248,8 @@ class Client:
 
         Returns
         -------
-        A bool - True if the address was freed, False otherwise.
+        :class:`bool`
+            True if the address was freed, False otherwise.
         """
         destination = 'http://{}:{}/routeplanner/free/address'.format(node.host, node.port)
         headers = {
@@ -265,7 +270,8 @@ class Client:
 
         Returns
         -------
-        A bool - True if all failing addresses were freed, False otherwise.
+        :class:`bool`
+            True if all failing addresses were freed, False otherwise.
         """
         destination = 'http://{}:{}/routeplanner/free/all'.format(node.host, node.port)
         headers = {

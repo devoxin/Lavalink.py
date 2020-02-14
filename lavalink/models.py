@@ -213,6 +213,10 @@ class DefaultPlayer(BasePlayer):
             The key to fetch.
         default: Optional[:class:`any`]
             The object that should be returned if the key doesn't exist. Defaults to `None`.
+
+        Returns
+        -------
+        :class:`any`
         """
         return self._user_data.get(key, default)
 

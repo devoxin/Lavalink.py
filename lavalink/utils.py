@@ -12,6 +12,10 @@ def format_time(time):
     ----------
     time: :class:`int`
         The time in milliseconds.
+
+    Returns
+    -------
+    :class:`str`
     """
     hours, remainder = divmod(time / 1000, 3600)
     minutes, seconds = divmod(remainder, 60)
@@ -28,6 +32,10 @@ def parse_time(time):
     ----------
     time: :class:`int`
         The time in milliseconds.
+
+    Returns
+    -------
+    Tuple[:class:`int`, :class:`int`, :class:`int`, :class:`int`]
     """
     days, remainder = divmod(time / 1000, 86400)
     hours, remainder = divmod(remainder, 3600)
@@ -46,6 +54,10 @@ def decode_track(track, decode_errors='ignore'):
         The base64 track string.
     decode_errors: :class:`str`
         The action to take upon encountering erroneous characters within track titles.
+
+    Returns
+    -------
+    :class:`AudioTrack`
     """
     reader = DataReader(track)
 

@@ -72,7 +72,8 @@ class Node:
 
         Returns
         -------
-        A dict representing tracks.
+        :class:`dict`
+            A dict representing an AudioTrack.
         """
         return await self._manager._lavalink.get_tracks(query, self)
 
@@ -82,7 +83,8 @@ class Node:
 
         Returns
         -------
-        A dict representing the routeplanner information.
+        :class:`dict`
+            A dict representing the routeplanner information.
         """
         return await self._manager._lavalink.routeplanner_status(self)
 
@@ -97,7 +99,8 @@ class Node:
 
         Returns
         -------
-        A bool - True if the address was freed, False otherwise.
+        bool
+            True if the address was freed, False otherwise.
         """
         return await self._manager._lavalink.routeplanner_free_address(self, address)
 
@@ -107,7 +110,8 @@ class Node:
 
         Returns
         -------
-        A bool - True if all failing addresses were freed, False otherwise.
+        bool
+            True if all failing addresses were freed, False otherwise.
         """
         return await self._manager._lavalink.routeplanner_free_all_failing(self)
 
@@ -128,7 +132,7 @@ class Node:
 
         Parameters
         ----------
-        data: any
+        data: class:`any`
             The dict to send to Lavalink.
         """
         await self._ws._send(**data)

@@ -85,6 +85,10 @@ class NodeManager:
         ----------
         endpoint: :class:`str`
             The address of the Discord voice server.
+
+        Returns
+        -------
+        Optional[:class:`str`]
         """
         if not endpoint:
             return None
@@ -110,6 +114,10 @@ class NodeManager:
         ----------
         region: Optional[:class:`str`]
             The region to find a node in. Defaults to `None`.
+
+        Returns
+        -------
+        Optional[:class:`Node`]
         """
         nodes = None
         if region:

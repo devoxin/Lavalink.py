@@ -7,8 +7,6 @@ Documentation
 
 .. autofunction:: add_event_hook
 
-.. autofunction:: on
-
 Client
 ------
 .. autoclass:: Client
@@ -89,3 +87,5 @@ Utilities
 .. autofunction:: format_time
 
 .. autofunction:: parse_time
+
+.. autofunction:: decode_track

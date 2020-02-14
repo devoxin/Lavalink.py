@@ -14,7 +14,7 @@ import sys
 from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, \
     NodeConnectedEvent, NodeChangedEvent, NodeDisconnectedEvent, WebSocketClosedEvent
 from .models import BasePlayer, DefaultPlayer, AudioTrack
-from .utils import format_time, parse_time
+from .utils import format_time, parse_time, decode_track
 from .client import Client
 from .playermanager import PlayerManager
 from .exceptions import NodeException, InvalidTrack

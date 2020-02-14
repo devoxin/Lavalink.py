@@ -43,9 +43,8 @@ class PlayerManager:
 
         Warning
         -------
-        ONLY USE THIS IF YOU KNOW WHAT YOU'RE DOING!
-
-        Usage of this function may lead to invalid cache states!
+        This should only be used if you know what you're doing. Players should never be
+        destroyed unless they have been moved to another :class:`Node`.
 
         Parameters
         ----------
@@ -76,6 +75,10 @@ class PlayerManager:
         ----------
         predicate: Optional[:class:`function`]
             A predicate to return specific players. Defaults to `None`.
+
+        Returns
+        -------
+        List[:class:`DefaultPlayer`]
         """
         if not predicate:
             return list(self.players.values())
@@ -103,6 +106,10 @@ class PlayerManager:
         ----------
         guild_id: :class:`int`
             The guild_id associated with the player to get.
+
+        Returns
+        -------
+        Optional[:class:`DefaultPlayer`]
         """
         return self.players.get(guild_id)
 
@@ -130,6 +137,10 @@ class PlayerManager:
             The address of the Discord voice server. Defaults to `None`.
         node: :class:`Node`
             The node to put the player on. Defaults to `None` and a node with the lowest penalty is chosen.
+
+        Returns
+        -------
+        :class:`DefaultPlayer`
         """
         if guild_id in self.players:
             return self.players[guild_id]
