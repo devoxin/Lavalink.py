@@ -1,9 +1,9 @@
 <img align="right" src="https://serux.pro/9e83af1581.png" height="150" width="150">
 
 # Lavalink.py
-[![Python](https://img.shields.io/badge/Python-3+-blue.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity) [![Build Status](https://travis-ci.com/SoulSen/Lavalink.py.svg?branch=docs)](https://travis-ci.com/SoulSen/Lavalink.py) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ef190e67fe6b42e4b717ae00a3bef9f1)](https://app.codacy.com/app/SoulSen/Lavalink.py?utm_source=github.com&utm_medium=referral&utm_content=SoulSen/Lavalink.py&utm_campaign=Badge_Grade_Dashboard) [![License](https://img.shields.io/github/license/SoulSen/Lavalink.py.svg)](LICENSE) [![Documentation Status](https://readthedocs.org/projects/llpy/badge/?version=latest)](https://llpy.readthedocs.io/en/latest/?badge=latest)
+[![Python](https://img.shields.io/badge/Python-3.6%20%7C%203.7%20%7C%203.8-blue.svg)](https://www.python.org) [![Build Status](https://travis-ci.com/devoxin/Lavalink.py.svg)](https://travis-ci.com/SoulSen/Lavalink.py) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5f4c2517818042c593c57f911ff61062)](https://www.codacy.com/manual/Devoxin/Lavalink.py?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Devoxin/Lavalink.py&amp;utm_campaign=Badge_Grade) [![License](https://img.shields.io/github/license/Devoxin/Lavalink.py.svg)](LICENSE) [![Documentation Status](https://readthedocs.org/projects/lavalink/badge/?version=latest)](https://lavalink.readthedocs.io/en/latest/?badge=latest)
 
-Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
+Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink, allowing for easier integration into your projects, while still promising full API coverage and powerful tools to get the most out of it.
 
 # Getting Started
 First you need to run a command to install the library,
@@ -24,6 +24,7 @@ compatibility may be possible, it's not encouraged nor is support guaranteed.
 - Equalizer
 
 ## Optional Dependencies
+*These are used by aiohttp.*
 
 `aiodns`   - Speed up DNS resolving.
 
