@@ -5,7 +5,7 @@ from time import time
 
 from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
                      QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
-                     TrackStartEvent, TrackStuckEvent)
+                     TrackStuckEvent)
 from .exceptions import InvalidTrack
 
 
@@ -300,7 +300,6 @@ class DefaultPlayer(BasePlayer):
             pop_at = randrange(len(self.queue)) if self.shuffle else 0
             track = self.queue.pop(pop_at)
 
-        self.current = track
         options = {}
 
         if start_time:
@@ -316,6 +315,7 @@ class DefaultPlayer(BasePlayer):
         if no_replace:
             options['noReplace'] = no_replace
 
+        self.current = track
         await self.node._send(op='play', guildId=self.guild_id, track=track.track, **options)
         #  await self.node._dispatch_event(TrackStartEvent(self, track))
 
