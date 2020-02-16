@@ -317,7 +317,7 @@ class DefaultPlayer(BasePlayer):
             options['noReplace'] = no_replace
 
         await self.node._send(op='play', guildId=self.guild_id, track=track.track, **options)
-        await self.node._dispatch_event(TrackStartEvent(self, track))
+        #  await self.node._dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
         """ Stops the player. """
