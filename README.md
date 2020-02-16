@@ -2,6 +2,8 @@
 
 # Lavalink.py
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1aae6967abed494abd897e951b5a743c)](https://app.codacy.com/manual/Devoxin/Lavalink.py?utm_source=github.com&utm_medium=referral&utm_content=Devoxin/Lavalink.py&utm_campaign=Badge_Grade_Dashboard)
+
 Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
 
 ## Features
