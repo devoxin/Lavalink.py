@@ -19,9 +19,11 @@ class PlayerManager:
     default_player: :class:`BasePlayer`
         The player that the player manager is initialized with.
     """
+
     def __init__(self, lavalink, player):
         if not issubclass(player, BasePlayer):
-            raise ValueError('Player must implement BasePlayer or DefaultPlayer.')
+            raise ValueError(
+                'Player must implement BasePlayer or DefaultPlayer.')
 
         self._lavalink = lavalink
         self.players = {}
@@ -60,7 +62,8 @@ class PlayerManager:
             await player.node._send(op='destroy', guildId=player.guild_id)
             player.cleanup()
 
-        self._lavalink._logger.info('[NODE-{}] Successfully destroyed its player'.format(player.node.name))
+        self._lavalink._logger.info(
+            '[NODE-{}] Successfully destroyed its player'.format(player.node.name))
 
     def values(self):
         """ Returns an iterator that yields only values. """
@@ -145,17 +148,14 @@ class PlayerManager:
         if guild_id in self.players:
             return self.players[guild_id]
 
-        if node:
-            return node
-
         if endpoint:
             region = self._lavalink.node_manager.get_region(endpoint)
-
-        node = self._lavalink.node_manager.find_ideal_node(region)
+            node = self._lavalink.node_manager.find_ideal_node(region)
 
         if not node:
             raise NodeException('No available nodes!')
 
         self.players[guild_id] = player = self.default_player(guild_id, node)
-        self._lavalink._logger.info('[NODE-{}] Successfully created a player'.format(node.name))
+        self._lavalink._logger.info(
+            '[NODE-{}] Successfully created a player'.format(node.name))
         return player
