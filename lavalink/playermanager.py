@@ -148,14 +148,15 @@ class PlayerManager:
         if guild_id in self.players:
             return self.players[guild_id]
 
-        if endpoint:
+        if endpoint:  # Prioritise endpoint over region parameter
             region = self._lavalink.node_manager.get_region(endpoint)
-            node = self._lavalink.node_manager.find_ideal_node(region)
 
-        if not node:
+        best_node = node or self._lavalink.node_manager.find_ideal_node(region)
+
+        if not best_node:
             raise NodeException('No available nodes!')
 
-        self.players[guild_id] = player = self.default_player(guild_id, node)
+        self.players[guild_id] = player = self.default_player(guild_id, best_node)
         self._lavalink._logger.info(
-            '[NODE-{}] Successfully created a player'.format(node.name))
+            '[NODE-{}] Successfully created a player'.format(best_node.name))
         return player
