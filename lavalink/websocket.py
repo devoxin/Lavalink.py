@@ -63,8 +63,8 @@ class WebSocket:
                                                           heartbeat=60)
             except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError) as ce:
                 if isinstance(ce, aiohttp.ClientConnectorError):
-                    self._lavalink._logger.warning('[NODE-{}] This may indicate that Lavalink is not running, '
-                                                   'or is running on a port different '
+                    self._lavalink._logger.warning('[NODE-{}] Invalid response received; this may indicate that '
+                                                   'Lavalink is not running, or is running on a port different '
                                                    'to the one you passed to `add_node`.'.format(self._node.name))
                 elif isinstance(ce, aiohttp.WSServerHandshakeError):
                     if ce.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
