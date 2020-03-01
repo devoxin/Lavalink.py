@@ -5,7 +5,7 @@ from time import time
 
 from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
                      QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
-                     TrackStuckEvent)
+                     TrackStartEvent, TrackStuckEvent)
 from .exceptions import InvalidTrack
 
 
@@ -317,7 +317,7 @@ class DefaultPlayer(BasePlayer):
 
         self.current = track
         await self.node._send(op='play', guildId=self.guild_id, track=track.track, **options)
-        #  await self.node._dispatch_event(TrackStartEvent(self, track))
+        await self.node._dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
         """ Stops the player. """

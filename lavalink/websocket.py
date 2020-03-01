@@ -2,7 +2,7 @@ import asyncio
 
 import aiohttp
 
-from .events import (TrackEndEvent, TrackExceptionEvent, TrackStartEvent,
+from .events import (TrackEndEvent, TrackExceptionEvent,
                      TrackStuckEvent, WebSocketClosedEvent)
 from .stats import Stats
 from .utils import decode_track
@@ -184,8 +184,8 @@ class WebSocket:
             event = TrackEndEvent(player, track, data['reason'])
         elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
-        elif event_type == 'TrackStartEvent':
-            event = TrackStartEvent(player, player.current)
+        # elif event_type == 'TrackStartEvent':
+        #    event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackStuckEvent':
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
         elif event_type == 'WebSocketClosedEvent':
