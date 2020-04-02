@@ -32,7 +32,7 @@ compatibility may be possible, it's not encouraged nor is support guaranteed.
 
 ## Supported Platforms
 While Lavalink.py supports any platform Python will run on, the same can not be said for the Lavalink server.
-The Lavalink server requires an x86 (32-bit) or x86-64 (64-bit) machine running either Windows, or any Linux-based distro.
+The Lavalink server requires an x86-64 (64-bit) machine running either Windows, or any Linux-based distro.
 It is highly recommended that you invest in a dedicated server or a [VPS](https://en.wikipedia.org/wiki/Virtual_private_server). "Hosts" like Glitch, Heroku, etc... are not guaranteed to work with Lavalink, therefore you should try to avoid them. Support will not be offered should you choose to try and host Lavalink on these platforms.
 
 ### Exceptions
