@@ -112,6 +112,9 @@ class WebSocket:
 
             if msg.type == aiohttp.WSMsgType.TEXT:
                 await self._handle_message(msg.json())
+            elif msg.type == aiohttp.WSMsgType.ERROR:
+                exc = self._ws.exception()
+                self._lavalink._logger.debug('[NODE-{}] Exception in WebSocket! {}.'.format(self._node.name, exc))
             elif msg.type in self._closers:
                 self._lavalink._logger.debug('[NODE-{}] Received close frame with code {}.'.format(self._node.name, msg.data))
                 await self._websocket_closed(msg.data, msg.extra)
