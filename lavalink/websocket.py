@@ -187,7 +187,8 @@ class WebSocket:
             event = TrackEndEvent(player, track, data['reason'])
         elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
-        # elif event_type == 'TrackStartEvent':
+        elif event_type == 'TrackStartEvent':
+            pass
         #    event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackStuckEvent':
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
