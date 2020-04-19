@@ -1,20 +1,36 @@
-.. Lavalink.py documentation master file, created by
-   sphinx-quickstart on Sun Nov 11 18:33:34 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to Lavalink.py's documentation!
 =======================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :hidden:
+
+    lavalink
+    overview
+    quickstart
+    whatsnew
+    license
 
 
+.. image:: https://serux.pro/9e83af1581.png
+    :width: 150px
+    :align: right
 
-Indices and tables
-==================
+\
+    Lavalink.py is a wrapper for which `Lavalink
+    <https://github.com/Frederikam/Lavalink/>`_ abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    **Features:**
+
+    - Regions
+    - Multi-Node Support
+    - Load Balancing (this includes region-based load balancing)
+    - Equalizer
+
+    **Support:**
+
+    `Discord Server <https://discord.gg/SbJXU9s>`_
+
+
+:ref:`genindex`
+
+:ref:`search`

@@ -1,18 +1,18 @@
 import asyncio
+import itertools
 import logging
 import random
-import inspect
+from collections import defaultdict
 from urllib.parse import quote
 
 import aiohttp
 
+from .events import Event
+from .exceptions import NodeException, Unauthorized
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
-from .events import Event
-
-log = logging.getLogger('lavalink')
 
 
 class Client:
@@ -23,75 +23,109 @@ class Client:
 
     Parameters
     ----------
-    user_id: int
+    user_id: :class:`int`
         The user id of the bot.
-    shard_count: Optional[int]
-        The amount of shards your bot has.
-    pool_size: Optional[int]
-        The amount of connections to keep in a pool,
-        used for HTTP requests and WS connections.
-    loop: Optional[event loop]
-        The `event loop`_ to use for asynchronous operations.
-    player: Optional[BasePlayer]
+    shard_count: Optional[:class:`int`]
+        The amount of shards your bot has. Defaults to `1`.
+    player: Optional[:class:`BasePlayer`]
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
         Do not change this unless you know what you are doing!
-    regions: Optional[dict]
+    regions: Optional[:class:`dict`]
         A dictionary representing region -> discord endpoint. You should only
         change this if you know what you're doing and want more control over
-        which regions handle specific locations.
+        which regions handle specific locations. Defaults to `None`.
+    connect_back: Optional[:class:`bool`]
+        A boolean that determines if a player will connect back to the
+        node it was originally connected to. This is not recommended to do since
+        the player will most likely be performing better in the new node. Defaults to `False`.
+
+        Warning
+        -------
+        If this option is enabled and the player's node is changed through `Player.change_node` after
+        the player was moved via the failover mechanism, the player will still move back to the original
+        node when it becomes available. This behaviour can be avoided in custom player implementations by
+        setting `self._original_node` to `None` in the `change_node` function.
+
+    Attributes
+    ----------
+    node_manager: :class:`NodeManager`
+        Represents the node manager that contains all lavalink nodes.
+    player_manager: :class:`PlayerManager`
+        Represents the player manager that contains all the players.
     """
+    _event_hooks = defaultdict(list)
 
     def __init__(self, user_id: int, shard_count: int = 1,
-                 loop=None, player=DefaultPlayer, regions: dict = None):
+                 player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
+        if not isinstance(user_id, int):
+            raise TypeError('user_id must be an int (got {}). If the type is None, '
+                            'ensure your bot has fired "on_ready" before instantiating '
+                            'the Lavalink client. Alternatively, you can hardcode your user ID.'
+                            .format(user_id))
+
+        if not isinstance(shard_count, int):
+            raise TypeError('shard_count must be an int with a positive value.')
+
         self._user_id = str(user_id)
         self._shard_count = str(shard_count)
-        self._loop = loop or asyncio.get_event_loop()
         self.node_manager = NodeManager(self, regions)
-        self.players = PlayerManager(self, player)
-
-        self._event_hooks = []
+        self.player_manager = PlayerManager(self, player)
+        self._connect_back = connect_back
+        self._logger = logging.getLogger('lavalink')
 
         self._session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(loop=loop),
             timeout=aiohttp.ClientTimeout(total=30)
-        )  # This session will be used for websocket and http requests.
+        )
 
     def add_event_hook(self, hook):
-        if hook not in self._event_hooks:
-            self._event_hooks.append(hook)
+        if hook not in self._event_hooks['Generic']:
+            self._event_hooks['Generic'].append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None):
         """
         Adds a node to Lavalink's node manager.
+
+        Parameters
         ----------
-        :param host:
+        host: :class:`str`
             The address of the Lavalink node.
-        :param port:
+        port: :class:`int`
             The port to use for websocket and REST connections.
-        :param password:
+        password: :class:`str`
             The password used for authentication.
-        :param region:
+        region: :class:`str`
             The region to assign this node to.
-        :param resume_key:
+        resume_key: Optional[:class:`str`]
             A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-        :param resume_timeout:
+            Defaults to `None`.
+        resume_timeout: Optional[:class:`int`]
             How long the node should wait for a connection while disconnected before clearing all players.
-        :param name:
-            An identifier for the node that will show in logs.
+            Defaults to `60`.
+        name: Optional[:class:`str`]
+            An identifier for the node that will show in logs. Defaults to `None`
         """
-        self.node_manager.add_node(host, port, password, region, name, resume_key, resume_timeout)
+        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name)
 
     async def get_tracks(self, query: str, node: Node = None):
         """|coro|
-
         Gets all tracks associated with the given query.
-        -----------------
-        :param query:
+
+        Parameters
+        ----------
+        query: :class:`str`
             The query to perform a search for.
-        :param node:
+        node: Optional[:class:`Node`]
             The node to use for track lookup. Leave this blank to use a random node.
+            Defaults to `None` which is a random node.
+
+        Returns
+        -------
+        :class:`dict`
+            A dict representing tracks.
         """
+        if not self.node_manager.available_nodes:
+            raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
         headers = {
@@ -102,24 +136,29 @@ class Client:
             if res.status == 200:
                 return await res.json()
 
+            if res.status == 401 or res.status == 403:
+                raise Unauthorized
+
             return []
 
     async def decode_track(self, track: str, node: Node = None):
         """|coro|
-
         Decodes a base64-encoded track string into a dict.
 
         Parameters
         ----------
-        track: str
+        track: :class:`str`
             The base64-encoded `track` string.
-        node: Node
-            The node to use for the query. ``None`` means random.
+        node: Optional[:class:`Node`]
+            The node to use for the query. Defaults to `None` which is a random node.
 
         Returns
-        ---------
-        A dict representing the track's information.
+        -------
+        :class:`dict`
+            A dict representing the track's information.
         """
+        if not self.node_manager.available_nodes:
+            raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/decodetrack?track={}'.format(node.host, node.port, track)
         headers = {
@@ -130,24 +169,29 @@ class Client:
             if res.status == 200:
                 return await res.json()
 
+            if res.status == 401 or res.status == 403:
+                raise Unauthorized
+
             return None
 
     async def decode_tracks(self, tracks: list, node: Node = None):
         """|coro|
-
         Decodes a list of base64-encoded track strings into a dict.
 
         Parameters
         ----------
-        tracks: list[str]
+        tracks: list[:class:`str`]
             A list of base64-encoded `track` strings.
-        node: Node
-            The node to use for the query. ``None`` means random.
+        node: Optional[:class:`Node`]
+            The node to use for the query. Defaults to `None` which is a random node.
 
         Returns
-        ---------
-        An array of dicts representing track information.
+        -------
+        List[:class:`dict`]
+            A list of dicts representing track information.
         """
+        if not self.node_manager.available_nodes:
+            raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/decodetracks'.format(node.host, node.port)
         headers = {
@@ -158,20 +202,100 @@ class Client:
             if res.status == 200:
                 return await res.json()
 
+            if res.status == 401 or res.status == 403:
+                raise Unauthorized
+
             return None
+
+    async def routeplanner_status(self, node: Node):
+        """|coro|
+        Gets the routeplanner status of the target node.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to use for the query.
+
+        Returns
+        -------
+        :class:`dict`
+            A dict representing the routeplanner information.
+        """
+        destination = 'http://{}:{}/routeplanner/status'.format(node.host, node.port)
+        headers = {
+            'Authorization': node.password
+        }
+
+        async with self._session.get(destination, headers=headers) as res:
+            if res.status == 200:
+                return await res.json()
+
+            if res.status == 401 or res.status == 403:
+                raise Unauthorized
+
+            return None
+
+    async def routeplanner_free_address(self, node: Node, address: str):
+        """|coro|
+        Gets the routeplanner status of the target node.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to use for the query.
+        address: :class:`str`
+            The address to free.
+
+        Returns
+        -------
+        :class:`bool`
+            True if the address was freed, False otherwise.
+        """
+        destination = 'http://{}:{}/routeplanner/free/address'.format(node.host, node.port)
+        headers = {
+            'Authorization': node.password
+        }
+
+        async with self._session.post(destination, headers=headers, json={'address': address}) as res:
+            return res.status == 204
+
+    async def routeplanner_free_all_failing(self, node: Node):
+        """|coro|
+        Gets the routeplanner status of the target node.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to use for the query.
+
+        Returns
+        -------
+        :class:`bool`
+            True if all failing addresses were freed, False otherwise.
+        """
+        destination = 'http://{}:{}/routeplanner/free/all'.format(node.host, node.port)
+        headers = {
+            'Authorization': node.password
+        }
+
+        async with self._session.post(destination, headers=headers) as res:
+            return res.status == 204
 
     async def voice_update_handler(self, data):
         """|coro|
-
         This function intercepts websocket data from your Discord library and
         forwards the relevant information on to Lavalink, which is used to
         establish a websocket connection and send audio packets to Discord.
 
-        -------------
-        :example:
+        Example
+        -------
+        .. code:: python
+
             bot.add_listener(lavalink_client.voice_update_handler, 'on_socket_response')
 
-        :param data:
+        Parameters
+        ----------
+        data: :class:`dict`
             The payload received from Discord.
         """
         if not data or 't' not in data:
@@ -179,7 +303,7 @@ class Client:
 
         if data['t'] == 'VOICE_SERVER_UPDATE':
             guild_id = int(data['d']['guild_id'])
-            player = self.players.get(guild_id)
+            player = self.player_manager.get(guild_id)
 
             if player:
                 await player._voice_server_update(data['d'])
@@ -188,26 +312,30 @@ class Client:
                 return
 
             guild_id = int(data['d']['guild_id'])
-            player = self.players.get(guild_id)
+            player = self.player_manager.get(guild_id)
 
             if player:
                 await player._voice_state_update(data['d'])
-        else:
-            return
 
     async def _dispatch_event(self, event: Event):
         """|coro|
-
         Dispatches the given event to all registered hooks.
+
+        Parameters
         ----------
-        :param event:
+        event: :class:`Event`
             The event to dispatch to the hooks.
         """
-        for hook in self._event_hooks:
-            try:
-                if inspect.iscoroutinefunction(hook):
-                    await hook(event)
-                else:
-                    hook(event)
-            except Exception as e:  # pylint: disable=W0703
-                log.warning('Event hook {} encountered an exception!'.format(hook.__name__), e)
+        generic_hooks = Client._event_hooks['Generic']
+        targeted_hooks = Client._event_hooks[type(event).__name__]
+
+        tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
+
+        results = await asyncio.gather(*tasks)
+
+        for index, result in enumerate(results):
+            if isinstance(result, Exception):
+                self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
+                raise result
+
+        self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
