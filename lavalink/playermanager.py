@@ -1,12 +1,29 @@
-from .node import Node
-from .models import BasePlayer
 from .exceptions import NodeException
+from .models import BasePlayer
+from .node import Node
 
 
 class PlayerManager:
+    """
+    Represents the player manager that contains all the players.
+
+    len(x):
+        Returns the total amount of cached players.
+    iter(x):
+        Returns an iterator of all the players cached.
+
+    Attributes
+    ----------
+    players: :class:`dict`
+        Cache of all the players that Lavalink has created.
+    default_player: :class:`BasePlayer`
+        The player that the player manager is initialized with.
+    """
+
     def __init__(self, lavalink, player):
         if not issubclass(player, BasePlayer):
-            raise ValueError('Player must implement BasePlayer or DefaultPlayer.')
+            raise ValueError(
+                'Player must implement BasePlayer or DefaultPlayer.')
 
         self._lavalink = lavalink
         self.players = {}
@@ -26,11 +43,14 @@ class PlayerManager:
         Ensure you have disconnected the given guild_id from the voicechannel
         first, if connected.
 
-        ONLY USE THIS IF YOU KNOW WHAT YOU'RE DOING!
-        Usage of this function may lead to invalid cache states!
+        Warning
+        -------
+        This should only be used if you know what you're doing. Players should never be
+        destroyed unless they have been moved to another :class:`Node`.
 
+        Parameters
         ----------
-        :param guild_id:
+        guild_id: int
             The guild_id associated with the player to remove.
         """
         if guild_id not in self.players:
@@ -40,21 +60,43 @@ class PlayerManager:
 
         if player.node and player.node.available:
             await player.node._send(op='destroy', guildId=player.guild_id)
+            player.cleanup()
+
+        self._lavalink._logger.info(
+            '[NODE-{}] Successfully destroyed its player'.format(player.node.name))
 
     def values(self):
         """ Returns an iterator that yields only values. """
         for player in self.players.values():
             yield player
 
-    def find_all(self, predicate):
-        """ Returns a list of players that match the given predicate. """
+    def find_all(self, predicate=None):
+        """
+        Returns a list of players that match the given predicate.
+
+        Parameters
+        ----------
+        predicate: Optional[:class:`function`]
+            A predicate to return specific players. Defaults to `None`.
+
+        Returns
+        -------
+        List[:class:`DefaultPlayer`]
+        """
         if not predicate:
             return list(self.players.values())
 
         return [p for p in self.players.values() if bool(predicate(p))]
 
     def remove(self, guild_id: int):
-        """ Removes a player from the internal cache. """
+        """
+        Removes a player from the internal cache.
+
+        Parameters
+        ----------
+        guild_id: :class:`int`
+            The player that will be removed.
+        """
         if guild_id in self.players:
             player = self.players.pop(guild_id)
             player.cleanup()
@@ -62,9 +104,15 @@ class PlayerManager:
     def get(self, guild_id: int):
         """
         Gets a player from cache.
+
+        Parameters
         ----------
-        :param guild_id:
+        guild_id: :class:`int`
             The guild_id associated with the player to get.
+
+        Returns
+        -------
+        Optional[:class:`DefaultPlayer`]
         """
         return self.players.get(guild_id)
 
@@ -81,29 +129,34 @@ class PlayerManager:
         Lavalink.py will fall back to the node with the lowest penalty.
 
         Region can be omitted if node is specified and vice-versa.
+
+        Parameters
         ----------
-        :param guild_id:
+        guild_id: :class:`int`
             The guild_id to associate with the player.
-        :param region:
-            The region to use when selecting a Lavalink node.
-        :param endpoint:
-            The address of the Discord voice server.
-        :param node:
-            The node to put the player on.
+        region: :class:`str`
+            The region to use when selecting a Lavalink node. Defaults to `eu`.
+        endpoint: :class:`str`
+            The address of the Discord voice server. Defaults to `None`.
+        node: :class:`Node`
+            The node to put the player on. Defaults to `None` and a node with the lowest penalty is chosen.
+
+        Returns
+        -------
+        :class:`DefaultPlayer`
         """
         if guild_id in self.players:
             return self.players[guild_id]
 
-        if node:
-            return node
-
-        if endpoint:
+        if endpoint:  # Prioritise endpoint over region parameter
             region = self._lavalink.node_manager.get_region(endpoint)
 
-        node = self._lavalink.node_manager.find_ideal_node(region)
+        best_node = node or self._lavalink.node_manager.find_ideal_node(region)
 
-        if not node:
+        if not best_node:
             raise NodeException('No available nodes!')
 
-        self.players[guild_id] = player = self.default_player(guild_id, node)
+        self.players[guild_id] = player = self.default_player(guild_id, best_node)
+        self._lavalink._logger.info(
+            '[NODE-{}] Successfully created a player'.format(best_node.name))
         return player
