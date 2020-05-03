@@ -59,9 +59,9 @@ class WebSocket:
             attempt += 1
             self._lavalink._logger.info(
                 '[NODE-{}] Attempting to establish WebSocket '
-                'connection ({}/{}})...'.format(self._node.name, attempt,
-                                                'infinite' if self._max_reconn_attempts == -1 else
-                                                self._max_reconn_attempts)
+                'connection ({}/{})...'.format(self._node.name, attempt,
+                                               'infinite' if self._max_reconn_attempts == -1 else
+                                               self._max_reconn_attempts)
             )
 
             try:
