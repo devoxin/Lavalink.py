@@ -26,6 +26,7 @@ class Node:
     stats: :class:`Stats`
         The statistics of how the :class:`Node` is performing.
     """
+
     def __init__(self, manager, host: str, port: int, password: str,
                  region: str, resume_key: str, resume_timeout: int, name: str = None):
         self._manager = manager

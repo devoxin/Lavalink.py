@@ -60,7 +60,8 @@ class AudioTrack:
             self.extra = extra
         except KeyError as ke:
             missing_key, = ke.args
-            raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
+            raise InvalidTrack(
+                'Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
 
     def __getitem__(self, name):
         return super().__getattribute__(name)
@@ -80,6 +81,7 @@ class BasePlayer(ABC):
     node: :class:`Node`
         The node that the player is connected to.
     """
+
     def __init__(self, guild_id, node):
         self.guild_id = str(guild_id)
         self.node = node
@@ -154,6 +156,7 @@ class DefaultPlayer(BasePlayer):
     current: :class:``AudioTrack`
         The track that is playing currently.
     """
+
     def __init__(self, guild_id, node):
         super().__init__(guild_id, node)
 

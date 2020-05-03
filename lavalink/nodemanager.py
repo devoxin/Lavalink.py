@@ -15,6 +15,7 @@ class NodeManager:
     regions: :class:`dict`
         All the regions that Discord supports.
     """
+
     def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
         self._player_queue = []
