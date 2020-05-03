@@ -62,8 +62,8 @@ class PlayerManager:
             await player.node._send(op='destroy', guildId=player.guild_id)
             player.cleanup()
 
-        self._lavalink._logger.info(
-            '[NODE-{}] Successfully destroyed its player'.format(player.node.name))
+        self._lavalink._logger.debug(
+            '[NODE-{}] Successfully destroyed player {}'.format(player.node.name, guild_id))
 
     def values(self):
         """ Returns an iterator that yields only values. """
@@ -157,6 +157,6 @@ class PlayerManager:
             raise NodeException('No available nodes!')
 
         self.players[guild_id] = player = self.default_player(guild_id, best_node)
-        self._lavalink._logger.info(
-            '[NODE-{}] Successfully created a player'.format(best_node.name))
+        self._lavalink._logger.debug(
+            '[NODE-{}] Successfully created player for {}'.format(best_node.name, guild_id))
         return player
