@@ -88,7 +88,6 @@ def decode_track(track, decode_errors='ignore'):
 
     return AudioTrack(track_object, 0, source=source)
 
-
 # def encode_track(track: dict):
 #     assert {'title', 'author', 'length', 'identifier', 'is_stream', 'uri', 'source', 'position'} == track.keys()
 

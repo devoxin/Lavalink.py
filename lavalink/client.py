@@ -27,6 +27,9 @@ class Client:
         The user id of the bot.
     shard_count: Optional[:class:`int`]
         The amount of shards your bot has. Defaults to `1`.
+    reconnect_attempts: Optional[:class:`int`]
+        The amount of times connection with the node will be reattempted before giving up.
+        Set to `-1` for infinite. Defaults to `3`.
     player: Optional[:class:`BasePlayer`]
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
         Do not change this unless you know what you are doing!
@@ -55,7 +58,7 @@ class Client:
     """
     _event_hooks = defaultdict(list)
 
-    def __init__(self, user_id: int, shard_count: int = 1,
+    def __init__(self, user_id: int, shard_count: int = 1, reconnect_attempts: int = 3,
                  player=DefaultPlayer, regions: dict = None, connect_back: bool = False):
         if not isinstance(user_id, int):
             raise TypeError('user_id must be an int (got {}). If the type is None, '
@@ -71,6 +74,7 @@ class Client:
         self.node_manager = NodeManager(self, regions)
         self.player_manager = PlayerManager(self, player)
         self._connect_back = connect_back
+        self._reconnect_attempts = reconnect_attempts
         self._logger = logging.getLogger('lavalink')
 
         self._session = aiohttp.ClientSession(

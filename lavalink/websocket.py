@@ -10,6 +10,7 @@ from .utils import decode_track
 
 class WebSocket:
     """ Represents the WebSocket connection with Lavalink. """
+
     def __init__(self, node, host: str, port: int, password: str, resume_key: str, resume_timeout: int):
         self._node = node
         self._lavalink = self._node._manager._lavalink
@@ -23,6 +24,7 @@ class WebSocket:
         self._password = password
         self._resume_key = resume_key
         self._resume_timeout = resume_timeout
+        self._max_reconn_attempts = self._lavalink._reconnect_attempts
 
         self._resuming_configured = False
 
@@ -53,10 +55,14 @@ class WebSocket:
 
         attempt = 0
 
-        while not self.connected and attempt < 3:
+        while not self.connected and (attempt < self._max_reconn_attempts or self._max_reconn_attempts == -1):
             attempt += 1
-            self._lavalink._logger.info('[NODE-{}] Attempting to establish WebSocket '
-                                        'connection ({}/3)...'.format(self._node.name, attempt))
+            self._lavalink._logger.info(
+                '[NODE-{}] Attempting to establish WebSocket '
+                'connection ({}/{})...'.format(self._node.name, attempt,
+                                               'infinite' if self._max_reconn_attempts == -1 else
+                                               self._max_reconn_attempts)
+            )
 
             try:
                 self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers,
@@ -117,7 +123,8 @@ class WebSocket:
                 self._lavalink._logger.error('[NODE-{}] Exception in WebSocket! {}.'.format(self._node.name, exc))
                 break
             elif msg.type in self._closers:
-                self._lavalink._logger.debug('[NODE-{}] Received close frame with code {}.'.format(self._node.name, msg.data))
+                self._lavalink._logger.debug(
+                    '[NODE-{}] Received close frame with code {}.'.format(self._node.name, msg.data))
                 await self._websocket_closed(msg.data, msg.extra)
                 return
         await self._websocket_closed()

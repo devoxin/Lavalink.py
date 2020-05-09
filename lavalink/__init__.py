@@ -6,22 +6,21 @@ __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-2020 Devoxin'
 __version__ = '3.1.0'
 
-
-import logging
 import inspect
+import logging
 import sys
 
+from .client import Client
 from .events import Event, TrackStartEvent, TrackStuckEvent, TrackExceptionEvent, TrackEndEvent, QueueEndEvent, \
     NodeConnectedEvent, NodeChangedEvent, NodeDisconnectedEvent, WebSocketClosedEvent
-from .models import BasePlayer, DefaultPlayer, AudioTrack
-from .utils import format_time, parse_time, decode_track
-from .client import Client
-from .playermanager import PlayerManager
 from .exceptions import NodeException, InvalidTrack
-from .nodemanager import NodeManager
-from .stats import Penalty, Stats
-from .websocket import WebSocket
+from .models import BasePlayer, DefaultPlayer, AudioTrack
 from .node import Node
+from .nodemanager import NodeManager
+from .playermanager import PlayerManager
+from .stats import Penalty, Stats
+from .utils import format_time, parse_time, decode_track
+from .websocket import WebSocket
 
 
 def enable_debug_logging():
