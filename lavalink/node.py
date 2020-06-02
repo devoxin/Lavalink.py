@@ -27,9 +27,10 @@ class Node:
         The statistics of how the :class:`Node` is performing.
     """
     def __init__(self, manager, host: str, port: int, password: str,
-                 region: str, resume_key: str, resume_timeout: int, name: str = None):
+                 region: str, resume_key: str, resume_timeout: int, name: str = None,
+                 reconnect_attempts: int = 3):
         self._manager = manager
-        self._ws = WebSocket(self, host, port, password, resume_key, resume_timeout)
+        self._ws = WebSocket(self, host, port, password, resume_key, resume_timeout, reconnect_attempts)
 
         self.host = host
         self.port = port

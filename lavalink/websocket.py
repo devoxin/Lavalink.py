@@ -10,7 +10,8 @@ from .utils import decode_track
 
 class WebSocket:
     """ Represents the WebSocket connection with Lavalink. """
-    def __init__(self, node, host: str, port: int, password: str, resume_key: str, resume_timeout: int):
+    def __init__(self, node, host: str, port: int, password: str, resume_key: str, resume_timeout: int,
+                 reconnect_attempts: int):
         self._node = node
         self._lavalink = self._node._manager._lavalink
 
@@ -21,9 +22,10 @@ class WebSocket:
         self._host = host
         self._port = port
         self._password = password
+        self._max_reconnect_attempts = reconnect_attempts
+
         self._resume_key = resume_key
         self._resume_timeout = resume_timeout
-
         self._resuming_configured = False
 
         self._shards = self._lavalink._shard_count
@@ -51,12 +53,14 @@ class WebSocket:
         if self._resuming_configured and self._resume_key:
             headers['Resume-Key'] = self._resume_key
 
+        is_finite_retry = self._max_reconnect_attempts != -1
+        max_attempts_str = 'inf' if is_finite_retry else self._max_reconnect_attempts
         attempt = 0
 
-        while not self.connected and attempt < 3:
+        while not self.connected and (not is_finite_retry or attempt < self._max_reconnect_attempts):
             attempt += 1
             self._lavalink._logger.info('[NODE-{}] Attempting to establish WebSocket '
-                                        'connection ({}/3)...'.format(self._node.name, attempt))
+                                        'connection ({}/{})...'.format(self._node.name, attempt, max_attempts_str))
 
             try:
                 self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers,
