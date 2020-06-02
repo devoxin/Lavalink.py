@@ -82,7 +82,8 @@ class Client:
             self._event_hooks['Generic'].append(hook)
 
     def add_node(self, host: str, port: int, password: str, region: str,
-                 resume_key: str = None, resume_timeout: int = 60, name: str = None):
+                 resume_key: str = None, resume_timeout: int = 60, name: str = None,
+                 reconnect_attempts: int = 3):
         """
         Adds a node to Lavalink's node manager.
 
@@ -104,8 +105,11 @@ class Client:
             Defaults to `60`.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to `None`
+        reconnect_attempts: Optional[:class:`int`]
+            The amount of times connection with the node will be reattempted before giving up.
+            Set to `-1` for infinite. Defaults to `3`.
         """
-        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name)
+        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts)
 
     async def get_tracks(self, query: str, node: Node = None):
         """|coro|

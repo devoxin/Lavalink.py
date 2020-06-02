@@ -37,7 +37,8 @@ class NodeManager:
         return [n for n in self.nodes if n.available]
 
     def add_node(self, host: str, port: int, password: str, region: str,
-                 resume_key: str = None, resume_timeout: int = 60, name: str = None):
+                 resume_key: str = None, resume_timeout: int = 60, name: str = None,
+                 reconnect_attempts: int = 3):
         """
         Adds a node to Lavalink's node manager.
 
@@ -59,8 +60,11 @@ class NodeManager:
             Defaults to `60`.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to `None`.
+        reconnect_attempts: Optional[:class:`int`]
+            The amount of times connection with the node will be reattempted before giving up.
+            Set to `-1` for infinite. Defaults to `3`.
         """
-        node = Node(self, host, port, password, region, resume_key, resume_timeout, name)
+        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts)
         self.nodes.append(node)
 
         self._lavalink._logger.info('[NODE-{}] Successfully added to Node Manager'.format(node.name))

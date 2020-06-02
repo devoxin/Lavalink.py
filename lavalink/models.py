@@ -328,6 +328,26 @@ class DefaultPlayer(BasePlayer):
         """ Plays the next track in the queue, if any. """
         await self.play()
 
+    def set_repeat(self, repeat: bool):
+        """
+        Sets the player's repeat state.
+        Parameters
+        ----------
+        repeat: :class:`bool`
+            Whether to repeat the player or not.
+        """
+        self.repeat = repeat
+
+    def set_shuffle(self, shuffle: bool):
+        """
+        Sets the player's shuffle state.
+        Parameters
+        ----------
+        shuffle: :class:`bool`
+            Whether to shuffle the player or not.
+        """
+        self.shuffle = shuffle
+
     async def set_pause(self, pause: bool):
         """
         Sets the player's paused state.
