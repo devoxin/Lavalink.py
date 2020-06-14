@@ -334,12 +334,10 @@ class Client:
         targeted_hooks = Client._event_hooks[type(event).__name__]
 
         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
-
         results = await asyncio.gather(*tasks)
 
         for index, result in enumerate(results):
             if isinstance(result, Exception):
                 self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
-                raise result
 
         self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
