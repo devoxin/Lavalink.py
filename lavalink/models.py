@@ -265,7 +265,7 @@ class DefaultPlayer(BasePlayer):
 
         Parameters
         ----------
-        track: Union[:class:`AudioTrack`, :class:`dict`]
+        track: Optional[Union[:class:`AudioTrack`, :class:`dict`]]
             The track to play. If left unspecified, this will default
             to the first track in the queue. Defaults to `None` so plays the next
             song in queue. Accepts either an AudioTrack or a dict representing a track
