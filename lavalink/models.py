@@ -311,7 +311,7 @@ class DefaultPlayer(BasePlayer):
 
         if end_time is not None:
             if not isinstance(end_time, int) or not 0 <= end_time <= track.duration:
-                raise ValueError('end_time is either less than 0 or greater than the track\'s duration')
+                raise ValueError('end_time must be an int with a value equal to, or greater than 0, and less than the track duration')
             options['endTime'] = end_time
 
         options['noReplace'] = no_replace
