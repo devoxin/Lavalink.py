@@ -306,7 +306,7 @@ class DefaultPlayer(BasePlayer):
 
         if start_time is not None:
             if not isinstance(start_time, int) or not 0 <= start_time <= track.duration:
-                raise ValueError('start_time is either less than 0 or greater than the track\'s duration')
+                raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
             options['startTime'] = start_time
 
         if end_time is not None:
