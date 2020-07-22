@@ -314,6 +314,10 @@ class DefaultPlayer(BasePlayer):
                 raise ValueError('end_time must be an int with a value equal to, or greater than 0, and less than the track duration')
             options['endTime'] = end_time
 
+        if no_replace is None:
+            no_replace = False
+        if not isinstance(no_replace, bool):
+            raise TypeError('no_replace must be a bool')
         options['noReplace'] = no_replace
 
         self.current = track
