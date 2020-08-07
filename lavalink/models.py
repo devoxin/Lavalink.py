@@ -237,7 +237,7 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: typing.Union[dict, AudioTrack], index: int = None):
+    def add(self, requester: int, track: typing.Union[AudioTrack, dict], index: int = None):
         """
         Adds a track to the queue.
 
@@ -245,8 +245,9 @@ class DefaultPlayer(BasePlayer):
         ----------
         requester: :class:`int`
             The ID of the user who requested the track.
-        track: :class:`dict`
-            A dict representing a track returned from Lavalink.
+        track: Union[:class:`AudioTrack`, :class:`dict`]
+            The track to add. Accepts either an AudioTrack or
+            a dict representing a track returned from Lavalink.
         index: Optional[:class:`int`]
             The index at which to add the track.
             If index is left unspecified, the default behaviour is to append the track. Defaults to `None`.
@@ -258,16 +259,17 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
-    async def play(self, track: AudioTrack = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
+    async def play(self, track: typing.Union[AudioTrack, dict] = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
         """
         Plays the given track.
 
         Parameters
         ----------
-        track: :class:`AudioTrack`
+        track: Optional[Union[:class:`AudioTrack`, :class:`dict`]]
             The track to play. If left unspecified, this will default
             to the first track in the queue. Defaults to `None` so plays the next
-            song in queue.
+            song in queue. Accepts either an AudioTrack or a dict representing a track
+            returned from Lavalink.
         start_time: Optional[:class:`int`]
             Setting that determines the number of milliseconds to offset the track by.
             If left unspecified, it will start the track at its beginning. Defaults to `0`,
@@ -302,18 +304,21 @@ class DefaultPlayer(BasePlayer):
 
         options = {}
 
-        if start_time:
-            if 0 > start_time > track.duration:
-                raise ValueError('start_time is either less than 0 or greater than the track\'s duration')
+        if start_time is not None:
+            if not isinstance(start_time, int) or not 0 <= start_time <= track.duration:
+                raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
             options['startTime'] = start_time
 
-        if end_time:
-            if 0 > end_time > track.duration:
-                raise ValueError('end_time is either less than 0 or greater than the track\'s duration')
+        if end_time is not None:
+            if not isinstance(end_time, int) or not 0 <= end_time <= track.duration:
+                raise ValueError('end_time must be an int with a value equal to, or greater than 0, and less than the track duration')
             options['endTime'] = end_time
 
-        if no_replace:
-            options['noReplace'] = no_replace
+        if no_replace is None:
+            no_replace = False
+        if not isinstance(no_replace, bool):
+            raise TypeError('no_replace must be a bool')
+        options['noReplace'] = no_replace
 
         self.current = track
         await self.node._send(op='play', guildId=self.guild_id, track=track.track, **options)
