@@ -332,11 +332,11 @@ class Client:
         """
         generic_hooks = Client._event_hooks['Generic']
         targeted_hooks = Client._event_hooks[type(event).__name__]
-        
+
         async def _hook_wrapper(hook, event):
             try:
                 await hook(event)
-            except:
+            except Exception:
                 self._logger.exception('Event hook {} encountered an exception!'.format(hook.__name__))
                 #  According to https://stackoverflow.com/questions/5191830/how-do-i-log-a-python-error-with-debug-information
                 #  the exception information should automatically be attached here. We're just including a message for
