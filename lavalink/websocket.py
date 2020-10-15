@@ -65,7 +65,7 @@ class WebSocket:
             try:
                 self._ws = await self._session.ws_connect('ws://{}:{}'.format(self._host, self._port), headers=headers,
                                                           heartbeat=60)
-            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError) as ce:
+            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as ce:
                 if isinstance(ce, aiohttp.ClientConnectorError):
                     self._lavalink._logger.warning('[NODE-{}] Invalid response received; this may indicate that '
                                                    'Lavalink is not running, or is running on a port different '
