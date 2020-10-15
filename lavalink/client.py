@@ -332,12 +332,26 @@ class Client:
         """
         generic_hooks = Client._event_hooks['Generic']
         targeted_hooks = Client._event_hooks[type(event).__name__]
+        
+        async def _hook_wrapper(hook, event):
+            try:
+                await hook(event)
+            except:
+                self._logger.exception('Event hook {} encountered an exception!'.format(hook.__name__))
+                #  According to https://stackoverflow.com/questions/5191830/how-do-i-log-a-python-error-with-debug-information
+                #  the exception information should automatically be attached here. We're just including a message for
+                #  clarity.
 
-        tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        for index, result in enumerate(results):
-            if isinstance(result, Exception):
-                self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
+        tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
+        await asyncio.wait(*tasks)
 
         self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
+
+#         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
+#         results = await asyncio.gather(*tasks, return_exceptions=True)
+
+#         for index, result in enumerate(results):
+#             if isinstance(result, Exception):
+#                 self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
+
+#         self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
