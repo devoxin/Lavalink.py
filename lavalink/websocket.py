@@ -46,9 +46,10 @@ class WebSocket:
         """ Attempts to establish a connection to Lavalink. """
         headers = {
             'Authorization': self._password,
-            'Num-Shards': self._shards,
-            'User-Id': str(self._user_id)
-        }
+            'User-Id': str(self._user_id),
+            'Client-Name': 'Lavalink.py',
+            'Num-Shards': 1  # Legacy header that is no longer used. Here for compatibility.
+        }  # TODO: User-Agent? Also include version in Client-Name as per optional implementation format.
 
         if self._resuming_configured and self._resume_key:
             headers['Resume-Key'] = self._resume_key
