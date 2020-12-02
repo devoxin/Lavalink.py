@@ -28,7 +28,6 @@ class WebSocket:
         self._resume_timeout = resume_timeout
         self._resuming_configured = False
 
-        self._shards = self._lavalink._shard_count
         self._user_id = self._lavalink._user_id
 
         self._closers = (aiohttp.WSMsgType.CLOSE,
@@ -49,7 +48,7 @@ class WebSocket:
             'User-Id': str(self._user_id),
             'Client-Name': 'Lavalink.py',
             'Num-Shards': 1  # Legacy header that is no longer used. Here for compatibility.
-        }  # TODO: User-Agent? Also include version in Client-Name as per optional implementation format.
+        }  # soonTM: User-Agent? Also include version in Client-Name as per optional implementation format.
 
         if self._resuming_configured and self._resume_key:
             headers['Resume-Key'] = self._resume_key
