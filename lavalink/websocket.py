@@ -47,7 +47,7 @@ class WebSocket:
             'Authorization': self._password,
             'User-Id': str(self._user_id),
             'Client-Name': 'Lavalink.py',
-            'Num-Shards': 1  # Legacy header that is no longer used. Here for compatibility.
+            'Num-Shards': '1'  # Legacy header that is no longer used. Here for compatibility.
         }  # soonTM: User-Agent? Also include version in Client-Name as per optional implementation format.
 
         if self._resuming_configured and self._resume_key:
