@@ -64,11 +64,11 @@ class Client:
                             .format(user_id))
 
         self._logger = logging.getLogger('lavalink')
-        self._user_id = str(user_id)
-        self._connect_back = connect_back
-        self.node_manager = NodeManager(self, regions)
-        self.player_manager = PlayerManager(self, player)
         self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
+        self._user_id: str = str(user_id)
+        self._connect_back: bool = connect_back
+        self.node_manager: NodeManager = NodeManager(self, regions)
+        self.player_manager: PlayerManager = PlayerManager(self, player)
 
     def add_event_hook(self, hook):
         if hook not in self._event_hooks['Generic']:
@@ -136,7 +136,8 @@ class Client:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
 
-            return []
+            raise NodeError('An invalid response was received from the node: code={}, body={}'
+                            .format(res.status, await res.text()))
 
     async def decode_track(self, track: str, node: Node = None):
         """|coro|
@@ -169,7 +170,8 @@ class Client:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
 
-            return None
+            raise NodeError('An invalid response was received from the node: code={}, body={}'
+                            .format(res.status, await res.text()))
 
     async def decode_tracks(self, tracks: list, node: Node = None):
         """|coro|
@@ -200,9 +202,10 @@ class Client:
                 return await res.json()
 
             if res.status == 401 or res.status == 403:
-                raise NodeError
+                raise AuthenticationError
 
-            return None
+            raise NodeError('An invalid response was received from the node: code={}, body={}'
+                            .format(res.status, await res.text()))
 
     async def routeplanner_status(self, node: Node):
         """|coro|
@@ -230,7 +233,8 @@ class Client:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
 
-            return None
+            raise NodeError('An invalid response was received from the node: code={}, body={}'
+                            .format(res.status, await res.text()))
 
     async def routeplanner_free_address(self, node: Node, address: str):
         """|coro|
