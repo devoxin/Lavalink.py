@@ -119,7 +119,7 @@ class Client:
         Returns
         -------
         :class:`dict`
-            A dict representing tracks.
+            A dict representing the load response from Lavalink.
         """
         if not self.node_manager.available_nodes:
             raise NodeError('No available nodes!')
