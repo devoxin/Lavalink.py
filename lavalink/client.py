@@ -3,12 +3,13 @@ import itertools
 import logging
 import random
 from collections import defaultdict
+from typing import Union
 from urllib.parse import quote
 
 import aiohttp
 
 from .events import Event
-from .exceptions import NodeException, Unauthorized
+from .exceptions import NodeError, AuthenticationError
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
@@ -23,7 +24,7 @@ class Client:
 
     Parameters
     ----------
-    user_id: :class:`int`
+    user_id: Union[:class:`int`, :class:`str`]
         The user id of the bot.
     player: Optional[:class:`BasePlayer`]
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
@@ -53,23 +54,21 @@ class Client:
     """
     _event_hooks = defaultdict(list)
 
-    def __init__(self, user_id: int, player=DefaultPlayer, regions: dict = None,
+    def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
                  connect_back: bool = False):
-        if not isinstance(user_id, int):
-            raise TypeError('user_id must be an int (got {}). If the type is None, '
+        if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
+            # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
+            raise TypeError('user_id must be either an int or str (not {}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
                             'the Lavalink client. Alternatively, you can hardcode your user ID.'
                             .format(user_id))
 
+        self._logger = logging.getLogger('lavalink')
         self._user_id = str(user_id)
+        self._connect_back = connect_back
         self.node_manager = NodeManager(self, regions)
         self.player_manager = PlayerManager(self, player)
-        self._connect_back = connect_back
-        self._logger = logging.getLogger('lavalink')
-
-        self._session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=30)
-        )
+        self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
 
     def add_event_hook(self, hook):
         if hook not in self._event_hooks['Generic']:
@@ -123,7 +122,7 @@ class Client:
             A dict representing tracks.
         """
         if not self.node_manager.available_nodes:
-            raise NodeException('No available nodes!')
+            raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
         headers = {
@@ -135,7 +134,7 @@ class Client:
                 return await res.json()
 
             if res.status == 401 or res.status == 403:
-                raise Unauthorized
+                raise AuthenticationError
 
             return []
 
@@ -156,7 +155,7 @@ class Client:
             A dict representing the track's information.
         """
         if not self.node_manager.available_nodes:
-            raise NodeException('No available nodes!')
+            raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/decodetrack?track={}'.format(node.host, node.port, track)
         headers = {
@@ -168,7 +167,7 @@ class Client:
                 return await res.json()
 
             if res.status == 401 or res.status == 403:
-                raise Unauthorized
+                raise AuthenticationError
 
             return None
 
@@ -189,7 +188,7 @@ class Client:
             A list of dicts representing track information.
         """
         if not self.node_manager.available_nodes:
-            raise NodeException('No available nodes!')
+            raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/decodetracks'.format(node.host, node.port)
         headers = {
@@ -201,7 +200,7 @@ class Client:
                 return await res.json()
 
             if res.status == 401 or res.status == 403:
-                raise Unauthorized
+                raise NodeError
 
             return None
 
@@ -229,7 +228,7 @@ class Client:
                 return await res.json()
 
             if res.status == 401 or res.status == 403:
-                raise Unauthorized
+                raise AuthenticationError
 
             return None
 
@@ -340,12 +339,3 @@ class Client:
         await asyncio.wait(tasks)
 
         self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
-
-#         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
-#         results = await asyncio.gather(*tasks, return_exceptions=True)
-
-#         for index, result in enumerate(results):
-#             if isinstance(result, Exception):
-#                 self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
-
-#         self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))

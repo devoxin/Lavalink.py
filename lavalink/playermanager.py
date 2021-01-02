@@ -1,4 +1,4 @@
-from .exceptions import NodeException
+from .exceptions import NodeError
 from .models import BasePlayer
 from .node import Node
 
@@ -154,7 +154,7 @@ class PlayerManager:
         best_node = node or self._lavalink.node_manager.find_ideal_node(region)
 
         if not best_node:
-            raise NodeException('No available nodes!')
+            raise NodeError('No available nodes!')
 
         self.players[guild_id] = player = self.default_player(guild_id, best_node)
         self._lavalink._logger.debug(

@@ -4,7 +4,7 @@ __title__ = 'Lavalink'
 __author__ = 'Devoxin'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-2021 Devoxin'
-__version__ = '3.1.3'
+__version__ = '3.2.0'
 
 
 import logging
@@ -17,7 +17,7 @@ from .models import BasePlayer, DefaultPlayer, AudioTrack
 from .utils import format_time, parse_time, decode_track
 from .client import Client
 from .playermanager import PlayerManager
-from .exceptions import NodeException, InvalidTrack
+from .exceptions import NodeError, InvalidTrack
 from .nodemanager import NodeManager
 from .stats import Penalty, Stats
 from .websocket import WebSocket
