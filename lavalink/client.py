@@ -327,6 +327,9 @@ class Client:
         generic_hooks = Client._event_hooks['Generic']
         targeted_hooks = Client._event_hooks[type(event).__name__]
 
+        if not generic_hooks and not targeted_hooks:
+            return
+
         async def _hook_wrapper(hook, event):
             try:
                 await hook(event)
