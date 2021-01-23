@@ -5,6 +5,9 @@
 
 Lavalink.py is a wrapper for [Lavalink](https://github.com/Frederikam/Lavalink) which abstracts away most of the code necessary to use Lavalink, allowing for easier integration into your projects, while still promising full API coverage and powerful tools to get the most out of it.
 
+# What is Lavalink?
+Lavalink is standalone audio sending software capable of transmitting audio to Discord, utilising Lavaplayer for audio transcoding. It can be configured to work independently, or as part of a cluster depending on needs, which allows it to be highly scalable and performant. You can check out more [by clicking here.](https://github.com/Frederikam/Lavalink)
+
 # Getting Started
 First you need to run a command to install the library,
 ```shell
