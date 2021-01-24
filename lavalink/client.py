@@ -76,7 +76,7 @@ class Client:
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3):
+                 reconnect_attempts: int = 3, filters: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -101,8 +101,14 @@ class Client:
         reconnect_attempts: Optional[:class:`int`]
             The amount of times connection with the node will be reattempted before giving up.
             Set to `-1` for infinite. Defaults to `3`.
+        filters: Optional[:class:`bool`]
+            Whether to use the new ``filters`` op. This setting currently only applies to development
+            Lavalink builds, where the ``equalizer`` op was swapped out for the broader ``filters`` op which
+            offers more than just equalizer functionality. Ideally, you should only change this setting if you
+            know what you're doing, as this can prevent the effects from working.
         """
-        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts)
+        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
+                                   filters)
 
     async def get_tracks(self, query: str, node: Node = None):
         """|coro|

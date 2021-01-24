@@ -16,8 +16,6 @@ class PlayerManager:
     ----------
     players: :class:`dict`
         Cache of all the players that Lavalink has created.
-    default_player: :class:`BasePlayer`
-        The player that the player manager is initialized with.
     """
 
     def __init__(self, lavalink, player):
@@ -26,8 +24,8 @@ class PlayerManager:
                 'Player must implement BasePlayer or DefaultPlayer.')
 
         self._lavalink = lavalink
+        self._player_cls = player
         self.players = {}
-        self.default_player = player
 
     def __len__(self):
         return len(self.players)
@@ -143,7 +141,10 @@ class PlayerManager:
 
         Returns
         -------
-        :class:`DefaultPlayer`
+        :class:`BasePlayer`
+            A class that inherits ``BasePlayer``. By default, the actual class returned will
+            be ``DefaultPlayer``, however if you have specified a custom player implementation,
+            then this will be different.
         """
         if guild_id in self.players:
             return self.players[guild_id]
@@ -156,7 +157,7 @@ class PlayerManager:
         if not best_node:
             raise NodeError('No available nodes!')
 
-        self.players[guild_id] = player = self.default_player(guild_id, best_node)
+        self.players[guild_id] = player = self._player_cls(guild_id, best_node)
         self._lavalink._logger.debug(
             '[NODE-{}] Successfully created player for {}'.format(best_node.name, guild_id))
         return player

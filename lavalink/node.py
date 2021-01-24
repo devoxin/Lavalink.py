@@ -23,12 +23,15 @@ class Node:
         The region to assign this node to.
     name: :class:`str`
         The name the :class:`Node` is identified by.
+    filters: :class:`bool`
+        Whether or not to use the new ``filters`` op instead of ``equalizer``.
+        This setting is only used by players.
     stats: :class:`Stats`
         The statistics of how the :class:`Node` is performing.
     """
     def __init__(self, manager, host: str, port: int, password: str,
                  region: str, resume_key: str, resume_timeout: int, name: str = None,
-                 reconnect_attempts: int = 3):
+                 reconnect_attempts: int = 3, filters: bool = False):
         self._manager = manager
         self._ws = WebSocket(self, host, port, password, resume_key, resume_timeout, reconnect_attempts)
 
@@ -37,6 +40,7 @@ class Node:
         self.password = password
         self.region = region
         self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
+        self.filters = filters
         self.stats = None
 
     @property

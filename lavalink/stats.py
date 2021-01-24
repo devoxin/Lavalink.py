@@ -5,10 +5,15 @@ class Penalty:
     Attributes
     ----------
     player_penalty: :class:`int`
+        The number of playing players. 1 player = 1 penalty point.
     cpu_penalty: :class:`int`
+        The penalty incurred from system CPU usage.
     null_frame_penalty: :class:`int`
+        The penalty incurred from the average number of null frames per minute.
     deficit_frame_penalty: :class:`int`
+        The penalty incurred from the average number of deficit frames per minute.
     total: :class:`int`
+        The overall penalty, as a sum of all other penalties.
     """
     __slots__ = ('player_penalty', 'cpu_penalty', 'null_frame_penalty', 'deficit_frame_penalty', 'total')
 

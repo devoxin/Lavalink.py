@@ -166,7 +166,8 @@ class DefaultPlayer(BasePlayer):
         self.volume = 100
         self.shuffle = False
         self.repeat = False
-        self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
+        # self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
+        self.filters = set()
 
         self.queue = []
         self.current = None
@@ -391,6 +392,19 @@ class DefaultPlayer(BasePlayer):
             The new position to seek to in milliseconds.
         """
         await self.node._send(op='seek', guildId=self.guild_id, position=position)
+
+    async def set_filter(self, filter: str, data: dict):
+        """
+        Updates the values of a single filter.
+        The ideal use-case for this function is a specific filter in Lavalink
+        """
+        ...
+
+    async def update_filter(self, filter: str, data: dict):
+        ...
+
+    async def clear_filter(self, filter: str):
+        ...
 
     async def set_gain(self, band: int, gain: float = 0.0):
         """

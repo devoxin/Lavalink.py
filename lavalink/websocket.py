@@ -2,8 +2,8 @@ import asyncio
 
 import aiohttp
 
-from .events import (TrackEndEvent, TrackExceptionEvent,
-                     TrackStuckEvent, WebSocketClosedEvent)
+from .events import (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent,
+                     WebSocketClosedEvent)
 from .stats import Stats
 from .utils import decode_track
 
