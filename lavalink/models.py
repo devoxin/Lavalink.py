@@ -174,7 +174,7 @@ class DefaultPlayer(BasePlayer):
         The changes to audio frequencies on tracks.
     queue: :class:`list`
         The order of which tracks are played.
-    current: :class:``AudioTrack`
+    current: :class:`AudioTrack`
         The track that is playing currently.
     """
     def __init__(self, guild_id, node):
