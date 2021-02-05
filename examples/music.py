@@ -79,7 +79,7 @@ class Music(commands.Cog):
                 raise commands.CommandInvokeError('I need the `CONNECT` and `SPEAK` permissions.')
 
             player.store('channel', ctx.channel.id)
-            await self.connect_to(ctx.guild.id, str(ctx.author.voice.channel.id))
+            await ctx.guild.change_voice_state(channel=ctx.author.voice.channel)
         else:
             if int(player.channel_id) != ctx.author.voice.channel.id:
                 raise commands.CommandInvokeError('You need to be in my voicechannel.')
@@ -90,14 +90,8 @@ class Music(commands.Cog):
             # it indicates that there are no tracks left in the player's queue.
             # To save on resources, we can tell the bot to disconnect from the voicechannel.
             guild_id = int(event.player.guild_id)
-            await self.connect_to(guild_id, None)
-
-    async def connect_to(self, guild_id: int, channel_id: str):
-        """ Connects to the given voicechannel ID. A channel_id of `None` means disconnect. """
-        ws = self.bot._connection._get_websocket(guild_id)
-        await ws.voice_state(str(guild_id), channel_id)
-        # The above looks dirty, we could alternatively use `bot.shards[shard_id].ws` but that assumes
-        # the bot instance is an AutoShardedBot.
+            guild = self.bot.get_guild(guild_id)
+            await guild.change_voice_state(channel=None)
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query: str):
@@ -174,7 +168,7 @@ class Music(commands.Cog):
         # Stop the current track so Lavalink consumes less resources.
         await player.stop()
         # Disconnect from the voice channel.
-        await self.connect_to(ctx.guild.id, None)
+        await ctx.guild.change_voice_state(channel=None)
         await ctx.send('*⃣ | Disconnected.')
 
 
