@@ -21,15 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import typing
 from abc import ABC, abstractmethod
 from random import randrange
 from time import time
+from typing import Dict, Union
 
 from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
                      QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStartEvent, TrackStuckEvent)
 from .exceptions import InvalidTrack
+from .filters import Equalizer, Filter
 
 
 class AudioTrack:
@@ -190,7 +191,7 @@ class DefaultPlayer(BasePlayer):
         self.shuffle = False
         self.repeat = False
         # self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
-        self.filters = set()
+        self.filters: Dict[str, Filter] = {}
 
         self.queue = []
         self.current = None
@@ -261,7 +262,7 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: typing.Union[AudioTrack, dict], index: int = None):
+    def add(self, requester: int, track: Union[AudioTrack, dict], index: int = None):
         """
         Adds a track to the queue.
 
@@ -283,7 +284,7 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
-    async def play(self, track: typing.Union[AudioTrack, dict] = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
+    async def play(self, track: Union[AudioTrack, dict] = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
         """
         Plays the given track.
 
@@ -416,18 +417,64 @@ class DefaultPlayer(BasePlayer):
         """
         await self.node._send(op='seek', guildId=self.guild_id, position=position)
 
-    async def set_filter(self, filter: str, data: dict):
+    async def set_filter(self, _filter: Filter):
         """
-        Updates the values of a single filter.
-        The ideal use-case for this function is a specific filter in Lavalink
+        Applies the corresponding filter within Lavalink.
+        This will overwrite the filter if it's already applied.
+
+        Example
+        -------
+        .. code:: python
+
+            equalizer = Equalizer()
+            equalizer.update(bands=[(0, 0.2), (1, 0.3), (2, 0.17)])
+            player.set_filter(equalizer)
         """
-        ...
+        if not isinstance(_filter, Filter):
+            raise TypeError('Expected object of type Filter, not ' + type(_filter).__name__)
 
-    async def update_filter(self, filter: str, data: dict):
-        ...
+        filter_name = type(_filter).__name__
+        self.filters[filter_name] = _filter
+        self._apply_filters()
 
-    async def clear_filter(self, filter: str):
-        ...
+    async def get_filter(self, _filter: Filter):
+        """
+        Returns the corresponding filter, if it's enabled.
+
+        Example
+        -------
+        .. code:: python
+
+            from lavalink.filters import Timescale
+            timescale = player.get_filter(Timescale)
+
+        Returns
+        -------
+        Optional[:class:`Filter`]
+        """
+        if isinstance(_filter, Filter):  # User passed an instance of.
+            filter_name = type(_filter).__name__
+        else:
+            filter_name = _filter.__name__
+
+        return self.filters.get(filter_name, None)
+
+    async def remove_filter(self, _filter: Filter):
+        """
+        Example
+        -------
+        .. code:: python
+
+            player.remove_filter(Timescale)
+        """
+        if isinstance(_filter, Filter):  # User passed an instance of.
+            filter_name = type(_filter).__name__
+        else:
+            filter_name = _filter.__name__
+
+        if filter_name in self.filters:
+            self.filters.pop(filter_name)
+            await self._apply_filters()
 
     async def set_gain(self, band: int, gain: float = 0.0):
         """
@@ -442,7 +489,7 @@ class DefaultPlayer(BasePlayer):
         """
         await self.set_gains((band, gain))
 
-    async def set_gains(self, *gain_list):
+    async def set_gains(self, *bands):
         """
         Modifies the player's equalizer settings.
 
@@ -451,26 +498,21 @@ class DefaultPlayer(BasePlayer):
         gain_list: :class:`any`
             A list of tuples denoting (`band`, `gain`).
         """
-        update_package = []
-        for value in gain_list:
-            if not isinstance(value, tuple):
-                raise TypeError('gain_list must be a list of tuples')
-
-            band = value[0]
-            gain = value[1]
-
-            if not -1 < value[0] < 15:
-                raise IndexError('{} is an invalid band, must be 0-14'.format(band))
-
-            gain = max(min(float(gain), 1.0), -0.25)
-            update_package.append({'band': band, 'gain': gain})
-            self.equalizer[band] = gain
-
-        await self.node._send(op='equalizer', guildId=self.guild_id, bands=update_package)
+        equalizer = Equalizer()
+        equalizer.update(bands=bands)
+        await self.set_filter(equalizer)
 
     async def reset_equalizer(self):
         """ Resets equalizer to default values. """
-        await self.set_gains(*[(x, 0.0) for x in range(15)])
+        await self.remove_filter(Equalizer)
+
+    async def _apply_filters(self):
+        payload = {}
+
+        for _filter in self.filters.values():
+            payload.update(_filter.serialize())
+
+        await self.node._send(op='filters', guildId=self.guild_id, **payload)
 
     async def _handle_event(self, event):
         """
@@ -529,8 +571,7 @@ class DefaultPlayer(BasePlayer):
         if self.volume != 100:
             await self.node._send(op='volume', guildId=self.guild_id, volume=self.volume)
 
-        if any(self.equalizer):  # If any bands of the equalizer was modified
-            payload = [{'band': b, 'gain': g} for b, g in enumerate(self.equalizer)]
-            await self.node._send(op='equalizer', guildId=self.guild_id, bands=payload)
+        if self.filters:
+            await self._apply_filters()
 
         await self.node._dispatch_event(NodeChangedEvent(self, old_node, node))
