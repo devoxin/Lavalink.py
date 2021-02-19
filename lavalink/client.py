@@ -31,8 +31,8 @@ from urllib.parse import quote
 
 import aiohttp
 
+from .errors import AuthenticationError, NodeError
 from .events import Event
-from .exceptions import NodeError, AuthenticationError
 from .models import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager

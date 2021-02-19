@@ -26,10 +26,10 @@ from random import randrange
 from time import time
 from typing import Dict, Union
 
+from .errors import InvalidTrack
 from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
                      QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStartEvent, TrackStuckEvent)
-from .exceptions import InvalidTrack
 from .filters import Equalizer, Filter
 
 

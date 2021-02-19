@@ -22,13 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
-
+from typing import Optional
+from aiohttp.client_ws import ClientWebSocketResponse
 import aiohttp
 
 from .events import (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent,
                      WebSocketClosedEvent)
 from .stats import Stats
 from .utils import decode_track
+
+
+CLOSERS = (
+    aiohttp.WSMsgType.CLOSE,
+    aiohttp.WSMsgType.CLOSING,
+    aiohttp.WSMsgType.CLOSED
+)
 
 
 class WebSocket:
@@ -39,7 +47,7 @@ class WebSocket:
         self._lavalink = self._node._manager._lavalink
 
         self._session = self._lavalink._session
-        self._ws = None
+        self._ws: Optional[ClientWebSocketResponse] = None
         self._message_queue = []
 
         self._host = host
@@ -50,12 +58,6 @@ class WebSocket:
         self._resume_key = resume_key
         self._resume_timeout = resume_timeout
         self._resuming_configured = False
-
-        self._user_id = self._lavalink._user_id
-
-        self._closers = (aiohttp.WSMsgType.CLOSE,
-                         aiohttp.WSMsgType.CLOSING,
-                         aiohttp.WSMsgType.CLOSED)
 
         asyncio.ensure_future(self.connect())
 
@@ -68,7 +70,7 @@ class WebSocket:
         """ Attempts to establish a connection to Lavalink. """
         headers = {
             'Authorization': self._password,
-            'User-Id': str(self._user_id),
+            'User-Id': str(self._lavalink._user_id),
             'Client-Name': 'Lavalink.py',
             'Num-Shards': '1'  # Legacy header that is no longer used. Here for compatibility.
         }  # soonTM: User-Agent? Also include version in Client-Name as per optional implementation format.
@@ -143,11 +145,11 @@ class WebSocket:
                 exc = self._ws.exception()
                 self._lavalink._logger.error('[NODE-{}] Exception in WebSocket! {}.'.format(self._node.name, exc))
                 break
-            elif msg.type in self._closers:
+            elif msg.type in CLOSERS:
                 self._lavalink._logger.debug('[NODE-{}] Received close frame with code {}.'.format(self._node.name, msg.data))
                 await self._websocket_closed(msg.data, msg.extra)
                 return
-        await self._websocket_closed()
+        await self._websocket_closed(self._ws.close_code)
 
     async def _websocket_closed(self, code: int = None, reason: str = None):
         """
@@ -155,9 +157,9 @@ class WebSocket:
 
         Parameters
         ----------
-        code: :class:`int`
+        code: Optional[:class:`int`]
             The response code.
-        reason: :class:`str`
+        reason: Optional[:class:`str`]
             Reason why the websocket was closed. Defaults to `None`
         """
         self._lavalink._logger.debug('[NODE-{}] WebSocket disconnected with the following: code={} '
@@ -180,9 +182,12 @@ class WebSocket:
         if op == 'stats':
             self._node.stats = Stats(self._node, data)
         elif op == 'playerUpdate':
-            player = self._lavalink.player_manager.get(int(data['guildId']))
+            player_id = data['guildId']
+            player = self._lavalink.player_manager.get(int(player_id))
 
             if not player:
+                self._lavalink._logger.debug('[NODE-{}] Received playerUpdate for non-existent player! GuildId: {}'
+                                             .format(self._node.name, str(data)))
                 return
 
             await player._update_state(data['state'])
@@ -240,9 +245,13 @@ class WebSocket:
         data: :class:`dict`
             The data sent to Lavalink.
         """
-        if self.connected:
-            self._lavalink._logger.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(data)))
-            await self._ws.send_json(data)
-        else:
+        if not self.connected:
             self._lavalink._logger.debug('[NODE-{}] Send called before WebSocket ready!'.format(self._node.name))
             self._message_queue.append(data)
+            return
+
+        self._lavalink._logger.debug('[NODE-{}] Sending payload {}'.format(self._node.name, str(data)))
+        try:
+            await self._ws.send_json(data)
+        except ConnectionResetError:
+            self._lavalink._logger.warning('[NODE-{}] Failed to send payload due to connection reset!'.format(self._node.name))

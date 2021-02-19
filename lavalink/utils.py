@@ -85,7 +85,7 @@ def decode_track(track, decode_errors='ignore'):
     reader = DataReader(track)
 
     flags = (reader.read_int() & 0xC0000000) >> 30
-    version = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1  # pylint: disable=unused-variable
+    version = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1  # noqa: F841 pylint: disable=unused-variable
 
     title = reader.read_utf().decode(errors=decode_errors)
     author = reader.read_utf().decode(errors=decode_errors)
