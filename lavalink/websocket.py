@@ -22,15 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
-from typing import Optional
-from aiohttp.client_ws import ClientWebSocketResponse
+
 import aiohttp
 
 from .events import (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent,
                      WebSocketClosedEvent)
 from .stats import Stats
 from .utils import decode_track
-
 
 CLOSERS = (
     aiohttp.WSMsgType.CLOSE,
@@ -47,7 +45,7 @@ class WebSocket:
         self._lavalink = self._node._manager._lavalink
 
         self._session = self._lavalink._session
-        self._ws: Optional[ClientWebSocketResponse] = None
+        self._ws = None
         self._message_queue = []
 
         self._host = host
