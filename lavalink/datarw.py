@@ -25,6 +25,8 @@ import struct
 from base64 import b64decode
 from io import BytesIO
 
+from .utfm_codec import read_utfm
+
 
 class DataReader:
     def __init__(self, ts):
@@ -55,6 +57,11 @@ class DataReader:
     def read_utf(self):
         text_length = self.read_unsigned_short()
         return self._read(text_length)
+
+    def read_utfm(self):
+        text_length = self.read_unsigned_short()
+        utf_string = self._read(text_length)
+        return read_utfm(text_length, utf_string)
 
 
 class DataWriter:
