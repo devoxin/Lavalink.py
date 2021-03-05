@@ -96,7 +96,7 @@ class Equalizer(Filter):
             raise KeyError('Expected parameter bands OR band and gain, but neither were provided')
 
     def serialize(self) -> dict:
-        return {'equalizer': [{'band': band, 'gain': gain} for band, gain in self.values]}
+        return {'equalizer': [{'band': band, 'gain': gain} for band, gain in enumerate(self.values)]}
 
 
 class Karaoke(Filter):
