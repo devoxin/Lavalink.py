@@ -435,7 +435,7 @@ class DefaultPlayer(BasePlayer):
 
         filter_name = type(_filter).__name__
         self.filters[filter_name] = _filter
-        self._apply_filters()
+        await self._apply_filters()
 
     async def get_filter(self, _filter: Filter):
         """
