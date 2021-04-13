@@ -1,4 +1,4 @@
-[Lavalink]: https://github.com/Frederikam/Lavalink
+[Lavalink]: https://github.com/freyacodes/Lavalink
 
 <img align="right" src="https://serux.pro/9e83af1581.png" height="150" width="150">
 
@@ -16,8 +16,8 @@ First you need to run a command to install the library,
 pip install lavalink
 ```
 
-Then you need to setup the Lavalink server, you will need to install Java, and then download the latest [Lavalink.jar](https://github.com/Frederikam/Lavalink/releases/).
-Then place an ``application.yml`` file in the same directory. The file should look like [this](https://github.com/Frederikam/Lavalink/blob/master/LavalinkServer/application.yml.example/). Finally run `java -jar Lavalink.jar` in the directory of the jar.
+Then you need to setup the Lavalink server, you will need to install Java, and then download the latest [Lavalink.jar](https://github.com/freyacodes/Lavalink/releases/).
+Then place an ``application.yml`` file in the same directory. The file should look like [this](https://github.com/freyacodes/Lavalink/blob/master/LavalinkServer/application.yml.example/). Finally run `java -jar Lavalink.jar` in the directory of the jar.
 
 Additionally, there is an [example cog](examples). It should be noted that the example cog is oriented towards usage with Discord.py rewrite and Lavalink v3.1+, although backwards
 compatibility may be possible, it's not encouraged nor is support guaranteed.
@@ -44,7 +44,7 @@ It is highly recommended that you invest in a dedicated server or a [VPS](https:
 The exception to the "unsupported platforms" rule are ARM-based machines, for example; a Raspberry Pi. While official Lavalink builds do not support the ARM architecture, there are [custom builds by Cog-Creators](https://github.com/Cog-Creators/Lavalink-Jars/releases) that offer ARM support. These are the official builds, with additional native libraries for running on otherwise unsupported platforms.
 
 
-## Need Further Help? 
-[Discord Server](https://discord.gg/SbJXU9s) 
+## Need Further Help?
+[Discord Server](https://discord.gg/SbJXU9s)
 
 [Documentation](https://lavalink.readthedocs.io/en/latest/)
