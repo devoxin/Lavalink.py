@@ -217,7 +217,10 @@ class WebSocket:
             track = decode_track(data['track'])
             event = TrackEndEvent(player, track, data['reason'])
         elif event_type == 'TrackExceptionEvent':
-            event = TrackExceptionEvent(player, player.current, data['error'])
+            exc_inner = data.get('exception', {})
+            exception = data.get('error') or exc_inner.get('cause', 'Unknown exception')
+            severity = exc_inner.get('severity', 'UNKNOWN')
+            event = TrackExceptionEvent(player, player.current, exception, severity)
         elif event_type == 'TrackStartEvent':
             pass
         #    event = TrackStartEvent(player, player.current)
