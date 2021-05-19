@@ -75,15 +75,18 @@ class TrackExceptionEvent(Event):
         The player that had the exception occur while playing a track.
     track: :class:`AudioTrack`
         The track that had the exception while playing.
-    exception: :class:`Exception`
+    exception: :class:`str`
         The type of exception that the track had while playing.
+    severity: :class:`str`
+        The level of severity of the exception.
     """
-    __slots__ = ('player', 'track', 'exception')
+    __slots__ = ('player', 'track', 'exception', 'severity')
 
-    def __init__(self, player, track, exception):
+    def __init__(self, player, track, exception, severity):
         self.player = player
         self.track = track
         self.exception = exception
+        self.severity = severity
 
 
 class TrackEndEvent(Event):
