@@ -63,7 +63,7 @@ class PlayerManager:
             player.cleanup()
 
         self._lavalink._logger.debug(
-            '[NODE-{}] Successfully destroyed player {}'.format(player.node.name, guild_id))
+            f'[NODE-{player.node.name}] Successfully destroyed player {guild_id}')
 
     def values(self):
         """ Returns an iterator that yields only values. """
@@ -158,5 +158,5 @@ class PlayerManager:
 
         self.players[guild_id] = player = self.default_player(guild_id, best_node)
         self._lavalink._logger.debug(
-            '[NODE-{}] Successfully created player for {}'.format(best_node.name, guild_id))
+            f'[NODE-{best_node.name}] Successfully created player for {guild_id}')
         return player

@@ -67,7 +67,7 @@ class NodeManager:
         node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts)
         self.nodes.append(node)
 
-        self._lavalink._logger.info('[NODE-{}] Successfully added to Node Manager'.format(node.name))
+        self._lavalink._logger.info(f'[NODE-{node.name}] Successfully added to Node Manager')
 
     def remove_node(self, node: Node):
         """
@@ -79,7 +79,7 @@ class NodeManager:
             The node to remove from the list.
         """
         self.nodes.remove(node)
-        self._lavalink._logger.info('[NODE-{}] Successfully removed Node'.format(node.name))
+        self._lavalink._logger.info(f'[NODE-{node.name}] Successfully removed Node')
 
     def get_region(self, endpoint: str):
         """
@@ -145,11 +145,11 @@ class NodeManager:
         node: :class:`Node`
             The node that has just connected.
         """
-        self._lavalink._logger.info('[NODE-{}] Successfully established connection'.format(node.name))
+        self._lavalink._logger.info(f'[NODE-{node.name}] Successfully established connection')
 
         for player in self._player_queue:
             await player.change_node(node)
-            self._lavalink._logger.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
+            self._lavalink._logger.debug(f'[NODE-{node.name}] Successfully moved {player.guild_id}')
 
         if self._lavalink._connect_back:
             for player in node._original_players:
@@ -172,8 +172,7 @@ class NodeManager:
         reason: :class:`str`
             The reason why the node was disconnected.
         """
-        self._lavalink._logger.warning('[NODE-{}] Disconnected with code {} and reason {}'.format(node.name, code,
-                                                                                                  reason))
+        self._lavalink._logger.warning(f'[NODE-{node.name}] Disconnected with code {code} and reason {reason}')
         await self._lavalink._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)

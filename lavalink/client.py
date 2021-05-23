@@ -56,10 +56,9 @@ class Client:
     def __init__(self, user_id: int, player=DefaultPlayer, regions: dict = None,
                  connect_back: bool = False):
         if not isinstance(user_id, int):
-            raise TypeError('user_id must be an int (got {}). If the type is None, '
+            raise TypeError(f'user_id must be an int (got {user_id}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
-                            'the Lavalink client. Alternatively, you can hardcode your user ID.'
-                            .format(user_id))
+                            'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
         self._user_id = str(user_id)
         self.node_manager = NodeManager(self, regions)
@@ -125,7 +124,7 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
+        destination = f'http://{node.host}:{node.port}/loadtracks?identifier={quote(query)}'
         headers = {
             'Authorization': node.password
         }
@@ -158,7 +157,7 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/decodetrack?track={}'.format(node.host, node.port, track)
+        destination = f'http://{node.host}:{node.port}/decodetrack?track={track}'
         headers = {
             'Authorization': node.password
         }
@@ -191,7 +190,7 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeException('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/decodetracks'.format(node.host, node.port)
+        destination = f'http://{node.host}:{node.port}/decodetracks'
         headers = {
             'Authorization': node.password
         }
@@ -219,7 +218,7 @@ class Client:
         :class:`dict`
             A dict representing the routeplanner information.
         """
-        destination = 'http://{}:{}/routeplanner/status'.format(node.host, node.port)
+        destination = f'http://{node.host}:{node.port}/routeplanner/status'
         headers = {
             'Authorization': node.password
         }
@@ -249,7 +248,7 @@ class Client:
         :class:`bool`
             True if the address was freed, False otherwise.
         """
-        destination = 'http://{}:{}/routeplanner/free/address'.format(node.host, node.port)
+        destination = f'http://{node.host}:{node.port}/routeplanner/free/address'
         headers = {
             'Authorization': node.password
         }
@@ -271,7 +270,7 @@ class Client:
         :class:`bool`
             True if all failing addresses were freed, False otherwise.
         """
-        destination = 'http://{}:{}/routeplanner/free/all'.format(node.host, node.port)
+        destination = f'http://{node.host}:{node.port}/routeplanner/free/all'
         headers = {
             'Authorization': node.password
         }
@@ -334,7 +333,7 @@ class Client:
             try:
                 await hook(event)
             except:  # noqa: E722 pylint: disable=bare-except
-                self._logger.exception('Event hook {} encountered an exception!'.format(hook.__name__))
+                self._logger.exception('Event hook %s encountered an exception!', hook.__name__)
                 #  According to https://stackoverflow.com/questions/5191830/how-do-i-log-a-python-error-with-debug-information
                 #  the exception information should automatically be attached here. We're just including a message for
                 #  clarity.
@@ -342,13 +341,13 @@ class Client:
         tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
         await asyncio.wait(tasks)
 
-        self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
+        self._logger.debug('Dispatched %s to all registered hooks', type(event).__name__)
 
 #         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
 #         results = await asyncio.gather(*tasks, return_exceptions=True)
 
 #         for index, result in enumerate(results):
 #             if isinstance(result, Exception):
-#                 self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
+#                 self._logger.warning(f'Event hook {tasks[index].__name__} encountered an exception!', result)
 
-#         self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
+#         self._logger.debug('Dispatched {type(event).__name__} to all registered hooks')

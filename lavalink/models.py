@@ -60,13 +60,13 @@ class AudioTrack:
             self.extra = extra
         except KeyError as ke:
             missing_key, = ke.args
-            raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
+            raise InvalidTrack(f'Cannot build a track from partial data! (Missing key: {missing_key})') from None
 
     def __getitem__(self, name):
         return super().__getattribute__(name)
 
     def __repr__(self):
-        return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
+        return f'<AudioTrack title={self.title} identifier={self.identifier}>'
 
 
 class BasePlayer(ABC):
@@ -423,7 +423,7 @@ class DefaultPlayer(BasePlayer):
             gain = value[1]
 
             if not -1 < value[0] < 15:
-                raise IndexError('{} is an invalid band, must be 0-14'.format(band))
+                raise IndexError(f'{band} is an invalid band, must be 0-14')
 
             gain = max(min(float(gain), 1.0), -0.25)
             update_package.append({'band': band, 'gain': gain})

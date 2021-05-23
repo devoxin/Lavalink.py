@@ -36,7 +36,7 @@ class Node:
         self.port = port
         self.password = password
         self.region = region
-        self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
+        self.name = name or f'{self.region}-{self.host}:{self.port}'
         self.stats = None
 
     @property
@@ -139,4 +139,4 @@ class Node:
         await self._ws._send(**data)
 
     def __repr__(self):
-        return '<Node name={0.name} region={0.region}>'.format(self)
+        return f'<Node name={self.name} region={self.region}>'
