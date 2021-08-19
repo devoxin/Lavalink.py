@@ -38,7 +38,7 @@ class SocketFix(commands.Cog):
             self._buffer = bytearray()
 
         msg = discord.utils.from_json(msg)
-        self.bot.dispatch("socket_custom_receive", msg)
+        self.bot.dispatch('socket_custom_receive', msg)
 
 
 def setup(bot):
