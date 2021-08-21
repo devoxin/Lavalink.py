@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from random import randrange
 from time import time
 
+from discord import abc, voice_client
+
 from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
                      QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStartEvent, TrackStuckEvent)
@@ -125,6 +127,42 @@ class BasePlayer(ABC):
     @abstractmethod
     async def change_node(self, node):
         raise NotImplementedError
+
+    async def connect(self, channel: abc.Connectable):
+        """
+        Connects to a voice channel.
+
+        Parameters
+        ----------
+        channel: :class:`abc.Connectable`
+            The channel to connect to.
+        """
+        client = LavalinkVoice
+        client.player = self
+        await channel.connect(cls=client)
+
+
+class LavalinkVoice(voice_client.VoiceProtocol):
+    """
+    A custom client which sends voice server and state update events to Lavalink.
+    """
+
+    player: BasePlayer = None
+
+    async def on_voice_state_update(self, data: dict) -> None:
+        if int(data['user_id']) != int(self.client.user.id):
+            return
+
+        await self.player._voice_state_update(data)
+
+    async def on_voice_server_update(self, data: dict) -> None:
+        await self.player._voice_server_update(data)
+
+    async def connect(self, *, timeout: float = 60.0, reconnect: bool = True):
+        await self.channel.guild.change_voice_state(channel=self.channel)
+
+    async def disconnect(self, *, force: bool = False):
+        await self.channel.guild.change_voice_state(channel=None)
 
 
 class DefaultPlayer(BasePlayer):
