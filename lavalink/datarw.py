@@ -56,8 +56,8 @@ class DataWriter:
         enc = struct.pack('>i', i)
         self._write(enc)
 
-    def write_long(self, l):
-        enc = struct.pack('>Q', l)
+    def write_long(self, i):
+        enc = struct.pack('>Q', i)
         self._write(enc)
 
     def write_utf(self, s):
