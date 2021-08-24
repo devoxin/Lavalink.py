@@ -118,7 +118,7 @@ class Node:
 
     async def routeplanner_free_address(self, address: str):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Frees an address of the target node.
 
         Parameters
         ----------
@@ -134,7 +134,7 @@ class Node:
 
     async def routeplanner_free_all_failing(self):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Frees all failing addresses of the target node.
 
         Returns
         -------
