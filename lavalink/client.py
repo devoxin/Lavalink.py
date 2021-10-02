@@ -135,7 +135,7 @@ class Client:
 
     async def get_tracks(self, query: str, node: Node = None):
         """|coro|
-        Gets all tracks associated with the given query.
+        Retrieves a list of results pertaining to the provided query.
 
         Parameters
         ----------
@@ -238,7 +238,7 @@ class Client:
 
     async def routeplanner_status(self, node: Node):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Retrieves the status of the target node's routeplanner.
 
         Parameters
         ----------
@@ -267,7 +267,7 @@ class Client:
 
     async def routeplanner_free_address(self, node: Node, address: str):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Frees up the provided IP address in the target node's routeplanner.
 
         Parameters
         ----------
@@ -291,7 +291,7 @@ class Client:
 
     async def routeplanner_free_all_failing(self, node: Node):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Frees up all IP addresses in the target node that have been marked as failing.
 
         Parameters
         ----------

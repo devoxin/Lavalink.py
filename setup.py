@@ -14,7 +14,7 @@ setup(
     name='lavalink',
     packages=['lavalink'],
     version=version,
-    description='A lavalink interface built for discord.py',
+    description='A Lavalink WebSocket & API wrapper built around coverage, reliability and performance.',
     author='Devoxin',
     author_email='luke@serux.pro',
     url='https://github.com/Devoxin/Lavalink.py',

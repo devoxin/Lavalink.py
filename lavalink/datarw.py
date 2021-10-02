@@ -32,8 +32,8 @@ class DataReader:
     def __init__(self, ts):
         self._buf = BytesIO(b64decode(ts))
 
-    def _read(self, n):
-        return self._buf.read(n)
+    def _read(self, count):
+        return self._buf.read(count)
 
     def read_byte(self):
         return self._read(1)
@@ -74,24 +74,24 @@ class DataWriter:
     def write_byte(self, byte):
         self._buf.write(byte)
 
-    def write_boolean(self, b):
-        enc = struct.pack('B', 1 if b else 0)
+    def write_boolean(self, boolean):
+        enc = struct.pack('B', 1 if boolean else 0)
         self.write_byte(enc)
 
-    def write_unsigned_short(self, s):
-        enc = struct.pack('>H', s)
+    def write_unsigned_short(self, short):
+        enc = struct.pack('>H', short)
         self._write(enc)
 
-    def write_int(self, i):
-        enc = struct.pack('>i', i)
+    def write_int(self, integer):
+        enc = struct.pack('>i', integer)
         self._write(enc)
 
     def write_long(self, long_value):
         enc = struct.pack('>Q', long_value)
         self._write(enc)
 
-    def write_utf(self, s):
-        utf = s.encode('utf8')
+    def write_utf(self, utf_string):
+        utf = utf_string.encode('utf8')
         byte_len = len(utf)
 
         if byte_len > 65535:
