@@ -15,6 +15,79 @@ from discord.ext import commands
 url_rx = re.compile(r'https?://(?:www\.)?.+')
 
 
+class LavalinkVoiceClient(discord.VoiceClient):
+    """
+    This is the preferred way to handle external voice sending
+    This client will be created via a cls in the connect method of the channel
+    see the following documentation:
+    https://discordpy.readthedocs.io/en/latest/api.html#voiceprotocol
+    """
+
+    def __init__(self, client: discord.Client, channel: discord.abc.Connectable):
+        self.client = client
+        self.channel = channel
+        # ensure there exists a client already
+        if hasattr(self.client, 'lavalink'):
+            self.lavalink = self.client.lavalink
+        else:
+            self.client.lavalink = lavalink.Client(client.user.id)
+            self.client.lavalink.add_node(
+                    'localhost',
+                    2333,
+                    'youshallnotpass',
+                    'us',
+                    'default-node')
+            self.lavalink = self.client.lavalink
+
+    async def on_voice_server_update(self, data):
+        # the data needs to be transformed before being handed down to
+        # voice_update_handler
+        lavalink_data = {
+                't': 'VOICE_SERVER_UPDATE',
+                'd': data
+                }
+        await self.lavalink.voice_update_handler(lavalink_data)
+
+    async def on_voice_state_update(self, data):
+        # the data needs to be transformed before being handed down to
+        # voice_update_handler
+        lavalink_data = {
+                't': 'VOICE_STATE_UPDATE',
+                'd': data
+                }
+        await self.lavalink.voice_update_handler(lavalink_data)
+
+    async def connect(self, *, timeout: float, reconnect: bool) -> None:
+        """
+        Connect the bot to the voice channel and create a player_manager
+        if it doesn't exist yet.
+        """
+        # ensure there is a player_manager when creating a new voice_client
+        self.lavalink.player_manager.create(guild_id=self.channel.guild.id)
+        await self.channel.guild.change_voice_state(channel=self.channel)
+
+    async def disconnect(self, *, force: bool) -> None:
+        """
+        Handles the disconnect.
+        Cleans up running player and leaves the voice client.
+        """
+        player = self.lavalink.player_manager.get(self.channel.guild.id)
+
+        # no need to disconnect if we are not connected
+        if not force and not player.is_connected:
+            return
+
+        # None means disconnect
+        await self.channel.guild.change_voice_state(channel=None)
+
+        # update the channel_id of the player to None
+        # this must be done because the on_voice_state_update that
+        # would set channel_id to None doesn't get dispatched after the 
+        # disconnect
+        player.channel_id = None
+        self.cleanup()
+
+
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -22,7 +95,6 @@ class Music(commands.Cog):
         if not hasattr(bot, 'lavalink'):  # This ensures the client isn't overwritten during cog reloads.
             bot.lavalink = lavalink.Client(bot.user.id)
             bot.lavalink.add_node('127.0.0.1', 2333, 'youshallnotpass', 'eu', 'default-node')  # Host, Port, Password, Region, Name
-            bot.add_listener(bot.lavalink.voice_update_handler, 'on_socket_response')
 
         lavalink.add_event_hook(self.track_hook)
 
@@ -79,7 +151,7 @@ class Music(commands.Cog):
                 raise commands.CommandInvokeError('I need the `CONNECT` and `SPEAK` permissions.')
 
             player.store('channel', ctx.channel.id)
-            await ctx.guild.change_voice_state(channel=ctx.author.voice.channel)
+            await ctx.author.voice.channel.connect(cls=LavalinkVoiceClient)
         else:
             if int(player.channel_id) != ctx.author.voice.channel.id:
                 raise commands.CommandInvokeError('You need to be in my voicechannel.')
@@ -91,7 +163,7 @@ class Music(commands.Cog):
             # To save on resources, we can tell the bot to disconnect from the voicechannel.
             guild_id = int(event.player.guild_id)
             guild = self.bot.get_guild(guild_id)
-            await guild.change_voice_state(channel=None)
+            await guild.voice_client.disconnect(force=True)
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query: str):
@@ -168,7 +240,7 @@ class Music(commands.Cog):
         # Stop the current track so Lavalink consumes less resources.
         await player.stop()
         # Disconnect from the voice channel.
-        await ctx.guild.change_voice_state(channel=None)
+        await ctx.voice_client.disconnect(force=True)
         await ctx.send('*⃣ | Disconnected.')
 
 
