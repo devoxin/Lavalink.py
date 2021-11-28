@@ -6,6 +6,7 @@ from .events import (TrackEndEvent, TrackExceptionEvent,
                      TrackStuckEvent, WebSocketClosedEvent)
 from .stats import Stats
 from .utils import decode_track
+from .models import AudioTrack
 
 
 class WebSocket:
@@ -188,7 +189,25 @@ class WebSocket:
         event = None
 
         if event_type == 'TrackEndEvent':
-            track = decode_track(data['track'])
+            try:
+                track = decode_track(data['track'])
+            except Exception as e:
+                track = {
+                    'track': 'FakeTrack', 
+                    'info': {
+                        'identifier': 'XXXXXXXXX', 
+                        'isSeekable': False, 
+                        'author': 'FakeTrack', 
+                        'length': 1, 
+                        'isStream': False, 
+                        'position': 1, 
+                        'title': 'FakeTrack', 
+                        'uri': 'https://www.youtube.com/watch?v=XXXXXXXX'
+                    }
+                }
+
+                self._lavalink._logger.warning("[NODE-{}] Unknown Websocket Data Received (TrackEndEvent): {}".format(self._node.name, e))
+                track = AudioTrack(track, 0)
             event = TrackEndEvent(player, track, data['reason'])
         elif event_type == 'TrackExceptionEvent':
             event = TrackExceptionEvent(player, player.current, data['error'])
