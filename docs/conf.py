@@ -89,6 +89,9 @@ html_show_sourcelink = False
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-html_context = {
-    'css_files': ['_static/style.css']
-}
+# html_context = {
+#     'css_files': ['_static/style.css']
+# }
+# The above stops default stylesheets from being used, for whatever reason.
+# A possible workaround is to declare @import("guzzle.css") if a custom stylesheet
+# is absolutely necessary.
