@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'Lavalink.py'
-copyright = '2020, Devoxin'
+copyright = '2021, Devoxin'
 author = 'Devoxin'
 master_doc = 'index'
 
