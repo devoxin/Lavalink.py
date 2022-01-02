@@ -92,7 +92,7 @@ class WebSocket:
                 if isinstance(ce, aiohttp.ClientConnectorError):
                     self._lavalink._logger.warning('[NODE-{}] Invalid response received; this may indicate that '
                                                    'Lavalink is not running, or is running on a port different '
-                                                   'to the one you passed to `add_node`.'.format(self._node.name))
+                                                   'to the one you provided to `add_node`.'.format(self._node.name))
                 elif isinstance(ce, aiohttp.WSServerHandshakeError):
                     if ce.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
                         self._lavalink._logger.warning('[NODE-{}] Authentication failed while trying to '
@@ -147,7 +147,7 @@ class WebSocket:
                 self._lavalink._logger.debug('[NODE-{}] Received close frame with code {}.'.format(self._node.name, msg.data))
                 await self._websocket_closed(msg.data, msg.extra)
                 return
-        await self._websocket_closed(self._ws.close_code)
+        await self._websocket_closed(self._ws.close_code, 'AsyncIterator loop exited')
 
     async def _websocket_closed(self, code: int = None, reason: str = None):
         """
@@ -229,7 +229,7 @@ class WebSocket:
         elif event_type == 'WebSocketClosedEvent':
             event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
         else:
-            self._lavalink._logger.warning('[NODE-{}] Unknown event received: {}'.format(self._node.name, event_type))
+            self._lavalink._logger.warning('[NODE-{}] Unknown event received of type \'{}\''.format(self._node.name, event_type))
             return
 
         await self._lavalink._dispatch_event(event)
@@ -247,7 +247,7 @@ class WebSocket:
             The data sent to Lavalink.
         """
         if not self.connected:
-            self._lavalink._logger.debug('[NODE-{}] Send called before WebSocket ready!'.format(self._node.name))
+            self._lavalink._logger.debug('[NODE-{}] WebSocket not ready; queued outgoing payload'.format(self._node.name))
             self._message_queue.append(data)
             return
 
