@@ -200,8 +200,6 @@ class NodeManager:
         reason: :class:`str`
             The reason why the node was disconnected.
         """
-        self._lavalink._logger.warning('[NODE-{}] Disconnected with code {} and reason {}'.format(node.name, code,
-                                                                                                  reason))
         await self._lavalink._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
