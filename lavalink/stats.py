@@ -68,7 +68,7 @@ class Stats:
     Attributes
     ----------
     is_fake: :class:`bool`
-        Whether or not the stats are accurate. This should only be False when
+        Whether or not the stats are accurate. This should only be True when
         the node has not yet received any statistics from the Lavalink server.
     uptime: :class:`int`
         How long the node has been running for, in milliseconds.
