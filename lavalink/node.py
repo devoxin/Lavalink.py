@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from .events import Event
+from .stats import Stats
 from .websocket import WebSocket
 
 
@@ -64,7 +65,7 @@ class Node:
         self.region = region
         self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
         self.filters = filters
-        self.stats = None
+        self.stats = Stats.empty(self)
 
     @property
     def available(self):

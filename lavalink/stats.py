@@ -55,7 +55,10 @@ class Penalty:
         if stats.frames_deficit != -1:
             self.deficit_frame_penalty = (1.03 ** (500 * (stats.frames_deficit / 3000))) * 600 - 600
 
-        self.total = self.player_penalty + self.cpu_penalty + self.null_frame_penalty + self.deficit_frame_penalty
+        if stats.is_fake:
+            self.total = 0
+        else:
+            self.total = self.player_penalty + self.cpu_penalty + self.null_frame_penalty + self.deficit_frame_penalty
 
 
 class Stats:
@@ -64,6 +67,9 @@ class Stats:
 
     Attributes
     ----------
+    is_fake: :class:`bool`
+        Whether or not the stats are accurate. This should only be False when
+        the node has not yet received any statistics from the Lavalink server.
     uptime: :class:`int`
         How long the node has been running for, in milliseconds.
     players: :class:`int`
@@ -100,13 +106,14 @@ class Stats:
         generating frames as quickly as it should be.
     penalty: :class:`Penalty`
     """
-    __slots__ = ('_node', 'uptime', 'players', 'playing_players', 'memory_free', 'memory_used', 'memory_allocated',
+    __slots__ = ('_node', 'is_fake', 'uptime', 'players', 'playing_players', 'memory_free', 'memory_used', 'memory_allocated',
                  'memory_reservable', 'cpu_cores', 'system_load', 'lavalink_load', 'frames_sent', 'frames_nulled',
                  'frames_deficit', 'penalty')
 
     def __init__(self, node, data):
         self._node = node
 
+        self.is_fake = data.get('isFake', False)
         self.uptime = data['uptime']
 
         self.players = data['players']
@@ -128,3 +135,25 @@ class Stats:
         self.frames_nulled = frame_stats.get('nulled', -1)
         self.frames_deficit = frame_stats.get('deficit', -1)
         self.penalty = Penalty(self)
+
+    @classmethod
+    def empty(cls, node):
+        data = {
+            'isFake': True,
+            'uptime': 0,
+            'players': 0,
+            'playingPlayers': 0,
+            'memory': {
+                'free': 0,
+                'used': 0,
+                'allocated': 0,
+                'reservable': 0
+            },
+            'cpu': {
+                'cores': 0,
+                'systemLoad': 0,
+                'lavalinkLoad': 0
+            }
+        }
+
+        return cls(node, data)
