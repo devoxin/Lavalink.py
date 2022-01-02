@@ -107,7 +107,7 @@ def decode_track(track):
         }
     }
 
-    return AudioTrack(track_object, 0, source=source)
+    return AudioTrack(track_object, 0, source=source, position=position, encoder_version=version)
 
 
 # def encode_track(track: dict):
