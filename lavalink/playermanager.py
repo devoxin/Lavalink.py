@@ -153,8 +153,8 @@ class PlayerManager:
             raise NodeError('No available nodes!')
 
         self.players[guild_id] = player = self._player_cls(guild_id, best_node)
-        self._lavalink._logger.debug(
-            '[NODE-{}] Created player with GuildId {}'.format(best_node.name, guild_id))
+        self._lavalink._logger.debug('[PlayerManager] Created player with GuildId {} on node \'{}\''
+                                     .format(guild_id, best_node.name))
         return player
 
     async def destroy(self, guild_id: int):
@@ -182,5 +182,5 @@ class PlayerManager:
             await player.node._send(op='destroy', guildId=player.guild_id)
             player.cleanup()
 
-        self._lavalink._logger.debug(
-            '[NODE-{}] Destroyed player with GuildId {}'.format(player.node.name, guild_id))
+        self._lavalink._logger.debug('[PlayerManager] Destroyed player with GuildId {} on node \'{}\''
+                                     .format(guild_id, player.node.name))

@@ -111,6 +111,7 @@ class WebSocket:
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
             else:
+                self._lavalink._logger.info('[NODE-{}] WebSocket connection established'.format(self._node.name))
                 await self._node._manager._node_connect(self._node)
                 #  asyncio.ensure_future(self._listen())
 
@@ -161,7 +162,7 @@ class WebSocket:
             Reason why the websocket was closed. Defaults to `None`
         """
         self._lavalink._logger.warning('[NODE-{}] WebSocket disconnected with the following: code={} '
-                                     'reason={}'.format(self._node.name, code, reason))
+                                       'reason={}'.format(self._node.name, code, reason))
         self._ws = None
         await self._node._manager._node_disconnect(self._node, code, reason)
         await self.connect()

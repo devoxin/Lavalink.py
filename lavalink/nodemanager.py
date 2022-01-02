@@ -95,7 +95,7 @@ class NodeManager:
         node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts, filters)
         self.nodes.append(node)
 
-        self._lavalink._logger.info('[NODE-{}] Successfully added to Node Manager'.format(node.name))
+        self._lavalink._logger.info('[NodeManager] Added node \'{}\''.format(node.name))
 
     def remove_node(self, node: Node):
         """
@@ -107,7 +107,7 @@ class NodeManager:
             The node to remove from the list.
         """
         self.nodes.remove(node)
-        self._lavalink._logger.info('[NODE-{}] Successfully removed Node'.format(node.name))
+        self._lavalink._logger.info('[NodeManager] Removed node \'{}\''.format(node.name))
 
     def get_region(self, endpoint: str):
         """
@@ -173,11 +173,11 @@ class NodeManager:
         node: :class:`Node`
             The node that has just connected.
         """
-        self._lavalink._logger.info('[NODE-{}] Successfully established connection'.format(node.name))
-
         for player in self._player_queue:
             await player.change_node(node)
-            self._lavalink._logger.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
+            original_node_name = player._original_node.name if player._original_node else '[no node]'
+            self._lavalink._logger.debug('[NodeManager] Moved player {} from node \'{}\' to node \'{}\''
+                                         .format(player.guild_id, original_node_name, node.name))
 
         if self._lavalink._connect_back:
             for player in node._original_players:
@@ -206,7 +206,7 @@ class NodeManager:
 
         if not best_node:
             self._player_queue.extend(node.players)
-            self._lavalink._logger.error('Unable to move players, no available nodes! '
+            self._lavalink._logger.error('[NodeManager] Unable to move players, no available nodes! '
                                          'Waiting for a node to become available.')
             return
 

@@ -366,7 +366,7 @@ class Client:
             try:
                 await hook(event)
             except:  # noqa: E722 pylint: disable=bare-except
-                self._logger.exception('Event hook {} encountered an exception!'.format(hook.__name__))
+                self._logger.exception('[EventDispatcher] Event hook \'{}\' encountered an exception!'.format(hook.__name__))
                 #  According to https://stackoverflow.com/questions/5191830/how-do-i-log-a-python-error-with-debug-information
                 #  the exception information should automatically be attached here. We're just including a message for
                 #  clarity.
@@ -374,4 +374,4 @@ class Client:
         tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
         await asyncio.wait(tasks)
 
-        self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
+        self._logger.debug('[EventDispatcher] Dispatched \'{}\' to all registered hooks'.format(type(event).__name__))
