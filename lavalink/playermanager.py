@@ -154,7 +154,7 @@ class PlayerManager:
 
         self.players[guild_id] = player = self._player_cls(guild_id, best_node)
         self._lavalink._logger.debug(
-            '[NODE-{}] Successfully created player for {}'.format(best_node.name, guild_id))
+            '[NODE-{}] Created player with GuildId {}'.format(best_node.name, guild_id))
         return player
 
     async def destroy(self, guild_id: int):
@@ -183,4 +183,4 @@ class PlayerManager:
             player.cleanup()
 
         self._lavalink._logger.debug(
-            '[NODE-{}] Successfully destroyed player {}'.format(player.node.name, guild_id))
+            '[NODE-{}] Destroyed player with GuildId {}'.format(player.node.name, guild_id))

@@ -67,9 +67,9 @@ class Stats:
     uptime: :class:`int`
         How long the node has been running for, in milliseconds.
     players: :class:`int`
-        The amount of players connected to the node.
+        The number of players connected to the node.
     playing_players: :class:`int`
-        The amount of players that are playing in the node.
+        The number of players that are playing in the node.
     memory_free: :class:`int`
         The amount of memory free to the node, in bytes.
     memory_used: :class:`int`
