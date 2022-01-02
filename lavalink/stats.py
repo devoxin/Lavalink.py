@@ -55,10 +55,7 @@ class Penalty:
         if stats.frames_deficit != -1:
             self.deficit_frame_penalty = (1.03 ** (500 * (stats.frames_deficit / 3000))) * 600 - 600
 
-        if stats.is_fake:
-            self.total = 0
-        else:
-            self.total = self.player_penalty + self.cpu_penalty + self.null_frame_penalty + self.deficit_frame_penalty
+        self.total = self.player_penalty + self.cpu_penalty + self.null_frame_penalty + self.deficit_frame_penalty
 
 
 class Stats:
