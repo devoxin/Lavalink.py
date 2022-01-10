@@ -138,7 +138,7 @@ class PlayerManager:
         -------
         :class:`BasePlayer`
             A class that inherits ``BasePlayer``. By default, the actual class returned will
-            be ``DefaultPlayer``, however if you have specified a custom player implementation,
+            be :class:`DefaultPlayer`, however if you have specified a custom player implementation,
             then this will be different.
         """
         if guild_id in self.players:
@@ -152,7 +152,8 @@ class PlayerManager:
         if not best_node:
             raise NodeError('No available nodes!')
 
-        self.players[guild_id] = player = self._player_cls(guild_id, best_node)
+        id_int = int(guild_id)
+        self.players[id_int] = player = self._player_cls(id_int, best_node)
         self._lavalink._logger.debug('[PlayerManager] Created player with GuildId {} on node \'{}\''
                                      .format(guild_id, best_node.name))
         return player
