@@ -109,6 +109,7 @@ class BasePlayer(ABC):
     """
     def __init__(self, guild_id, node):
         self.guild_id = guild_id
+        self._internal_id = str(guild_id)
         self.node = node
         self._original_node = None  # This is used internally for failover.
         self._voice_state = {}
@@ -148,7 +149,7 @@ class BasePlayer(ABC):
 
     async def _dispatch_voice_update(self):
         if {'sessionId', 'event'} == self._voice_state.keys():
-            await self.node._send(op='voiceUpdate', guildId=self.guild_id, **self._voice_state)
+            await self.node._send(op='voiceUpdate', guildId=self._internal_id, **self._voice_state)
 
     @abstractmethod
     async def change_node(self, node):
@@ -350,12 +351,12 @@ class DefaultPlayer(BasePlayer):
         options['noReplace'] = no_replace
 
         self.current = track
-        await self.node._send(op='play', guildId=self.guild_id, track=track.track, **options)
+        await self.node._send(op='play', guildId=self._internal_id, track=track.track, **options)
         await self.node._dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
         """ Stops the player. """
-        await self.node._send(op='stop', guildId=self.guild_id)
+        await self.node._send(op='stop', guildId=self._internal_id)
         self.current = None
 
     async def skip(self):
@@ -391,7 +392,7 @@ class DefaultPlayer(BasePlayer):
         pause: :class:`bool`
             Whether to pause the player or not.
         """
-        await self.node._send(op='pause', guildId=self.guild_id, pause=pause)
+        await self.node._send(op='pause', guildId=self._internal_id, pause=pause)
         self.paused = pause
 
     async def set_volume(self, vol: int):
@@ -408,7 +409,7 @@ class DefaultPlayer(BasePlayer):
             The new volume level.
         """
         self.volume = max(min(vol, 1000), 0)
-        await self.node._send(op='volume', guildId=self.guild_id, volume=self.volume)
+        await self.node._send(op='volume', guildId=self._internal_id, volume=self.volume)
 
     async def seek(self, position: int):
         """
@@ -419,7 +420,7 @@ class DefaultPlayer(BasePlayer):
         position: :class:`int`
             The new position to seek to in milliseconds.
         """
-        await self.node._send(op='seek', guildId=self.guild_id, position=position)
+        await self.node._send(op='seek', guildId=self._internal_id, position=position)
 
     async def set_filter(self, _filter: Filter):
         """
@@ -516,7 +517,7 @@ class DefaultPlayer(BasePlayer):
         for _filter in self.filters.values():
             payload.update(_filter.serialize())
 
-        await self.node._send(op='filters', guildId=self.guild_id, **payload)
+        await self.node._send(op='filters', guildId=self._internal_id, **payload)
 
     async def _handle_event(self, event):
         """
@@ -557,7 +558,7 @@ class DefaultPlayer(BasePlayer):
             The node the player is changed to.
         """
         if self.node.available:
-            await self.node._send(op='destroy', guildId=self.guild_id)
+            await self.node._send(op='destroy', guildId=self._internal_id)
 
         old_node = self.node
         self.node = node
@@ -566,14 +567,14 @@ class DefaultPlayer(BasePlayer):
             await self._dispatch_voice_update()
 
         if self.current:
-            await self.node._send(op='play', guildId=self.guild_id, track=self.current.track, startTime=self.position)
+            await self.node._send(op='play', guildId=self._internal_id, track=self.current.track, startTime=self.position)
             self._last_update = time() * 1000
 
             if self.paused:
-                await self.node._send(op='pause', guildId=self.guild_id, pause=self.paused)
+                await self.node._send(op='pause', guildId=self._internal_id, pause=self.paused)
 
         if self.volume != 100:
-            await self.node._send(op='volume', guildId=self.guild_id, volume=self.volume)
+            await self.node._send(op='volume', guildId=self._internal_id, volume=self.volume)
 
         if self.filters:
             await self._apply_filters()
