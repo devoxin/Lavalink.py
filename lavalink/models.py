@@ -103,7 +103,7 @@ class BasePlayer(ABC):
         The guild id of the player.
     node: :class:`Node`
         The node that the player is connected to.
-    channel_id: Optional[:class:`str`]
+    channel_id: Optional[:class:`int`]
         The ID of the voice channel the player is connected to.
         This could be None if the player isn't connected.
     """
@@ -112,7 +112,7 @@ class BasePlayer(ABC):
         self.node = node
         self._original_node = None  # This is used internally for failover.
         self._voice_state = {}
-        self.channel_id: Optional[str] = None
+        self.channel_id: Optional[int] = None
 
     @abstractmethod
     async def _handle_event(self, event):
@@ -137,7 +137,8 @@ class BasePlayer(ABC):
             'sessionId': data['session_id']
         })
 
-        self.channel_id = data['channel_id']
+        raw_channel_id = data['channel_id']
+        self.channel_id = int(raw_channel_id) if raw_channel_id else None
 
         if not self.channel_id:  # We're disconnecting
             self._voice_state.clear()
@@ -174,8 +175,8 @@ class DefaultPlayer(BasePlayer):
         Whether or not to mix the queue up in a random playing order.
     repeat: :class:`bool`
         Whether or not to continuously to play a track.
-    equalizer: :class:`list`
-        The changes to audio frequencies on tracks.
+    filters: :class:`dict`
+        A mapping of filter names, to their respective :class:`Filter` instance.
     queue: :class:`list`
         The order of which tracks are played.
     current: :class:`AudioTrack`
@@ -200,18 +201,18 @@ class DefaultPlayer(BasePlayer):
         self.current = None
 
     @property
-    def is_playing(self):
+    def is_playing(self) -> bool:
         """ Returns the player's track state. """
         return self.is_connected and self.current is not None
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """ Returns whether the player is connected to a voicechannel or not. """
         return self.channel_id is not None
 
     @property
-    def position(self):
-        """ Returns the position in the track, adjusted for Lavalink's 5-second stats interval. """
+    def position(self) -> float:
+        """ Returns the track's elapsed playback time in milliseconds, adjusted for Lavalink stat interval. """
         if not self.is_playing:
             return 0
 
