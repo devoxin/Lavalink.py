@@ -74,7 +74,9 @@ class PlayerManager:
 
         Returns
         -------
-        List[:class:`DefaultPlayer`]
+        List[:class:`BasePlayer`]
+            This could be a :class:`DefaultPlayer` if no custom player implementation
+            was provided.
         """
         if not predicate:
             return list(self.players.values())
@@ -92,7 +94,9 @@ class PlayerManager:
 
         Returns
         -------
-        Optional[:class:`DefaultPlayer`]
+        Optional[:class:`BasePlayer`]
+            This could be a :class:`DefaultPlayer` if no custom player implementation
+            was provided.
         """
         return self.players.get(guild_id)
 
@@ -103,7 +107,7 @@ class PlayerManager:
         Parameters
         ----------
         guild_id: :class:`int`
-            The player that will be removed.
+            The player to remove from cache.
         """
         if guild_id in self.players:
             player = self.players.pop(guild_id)
