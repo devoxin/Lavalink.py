@@ -24,7 +24,7 @@ SOFTWARE.
 from abc import ABC, abstractmethod
 from random import randrange
 from time import time
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from .errors import InvalidTrack
 from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
@@ -99,17 +99,20 @@ class BasePlayer(ABC):
 
     Attributes
     ----------
-    guild_id: :class:`str`
+    guild_id: :class:`int`
         The guild id of the player.
     node: :class:`Node`
         The node that the player is connected to.
+    channel_id: Optional[:class:`str`]
+        The ID of the voice channel the player is connected to.
+        This could be None if the player isn't connected.
     """
     def __init__(self, guild_id, node):
-        self.guild_id = str(guild_id)
+        self.guild_id = guild_id
         self.node = node
         self._original_node = None  # This is used internally for failover.
         self._voice_state = {}
-        self.channel_id = None
+        self.channel_id: Optional[str] = None
 
     @abstractmethod
     async def _handle_event(self, event):
