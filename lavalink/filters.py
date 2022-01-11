@@ -39,7 +39,7 @@ class Filter:
 
 class Equalizer(Filter):
     def __init__(self):
-        super().__init__([1.0] * 15)
+        super().__init__([0.0] * 15)
 
     def update(self, **kwargs):
         """
