@@ -222,14 +222,16 @@ class WebSocket:
             exception = data.get('error') or exc_inner.get('cause', 'Unknown exception')
             severity = exc_inner.get('severity', 'UNKNOWN')
             event = TrackExceptionEvent(player, player.current, exception, severity)
-        elif event_type == 'TrackStartEvent':
-            pass
+        #elif event_type == 'TrackStartEvent':
         #    event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackStuckEvent':
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
         elif event_type == 'WebSocketClosedEvent':
             event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
         else:
+            if event_type == 'TrackStartEvent':
+                return
+
             self._lavalink._logger.warning('[NODE-{}] Unknown event received of type \'{}\''.format(self._node.name, event_type))
             return
 
