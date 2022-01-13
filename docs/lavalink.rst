@@ -12,6 +12,14 @@ Client
 .. autoclass:: Client
     :members:
 
+Errors
+------
+.. autoclass:: NodeError
+
+.. autoclass:: AuthenticationError
+
+.. autoclass:: InvalidTrack
+
 Events
 ------
 All Events are derived from :class:`Event`
