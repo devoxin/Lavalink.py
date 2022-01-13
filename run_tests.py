@@ -19,8 +19,8 @@ def test_flake8():
 def test_pylint():
     stdout = StringIO()
     reporter = text.TextReporter(stdout)
-    opts = ['--max-line-length=150', '--score=no', '--disable=missing-docstring, wildcard-import, '
-                                                   'attribute-defined-outside-init, too-few-public-methods, '
+    opts = ['--max-line-length=150', '--score=no', '--disable=missing-docstring,wildcard-import,'
+                                                   'attribute-defined-outside-init,too-few-public-methods,'
                                                    'old-style-class,import-error,invalid-name,no-init,'
                                                    'too-many-instance-attributes,protected-access,too-many-arguments,'
                                                    'too-many-public-methods,logging-format-interpolation,'

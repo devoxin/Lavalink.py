@@ -61,15 +61,17 @@ def timestamp_to_millis(timestamp: str) -> int:
     if len(sections) == 4:
         d, h, m, s = map(int, sections)
         return (d * 86400000) + (h * 3600000) + (m * 60000) + (s * 1000)
-    elif len(sections) == 3:
+
+    if len(sections) == 3:
         h, m, s = map(int, sections)
         return (h * 3600000) + (m * 60000) + (s * 1000)
-    elif len(sections) == 2:
+
+    if len(sections) == 2:
         m, s = map(int, sections)
         return (m * 60000) + (s * 1000)
-    else:
-        s, = map(int, sections)
-        return s * 1000
+
+    s, = map(int, sections)
+    return s * 1000
 
 
 def format_time(time):
