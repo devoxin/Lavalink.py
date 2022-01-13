@@ -164,13 +164,28 @@ class Timescale(Filter):
             The playback rate.
         """
         if 'speed' in kwargs:
-            self.values['speed'] = float(kwargs.pop('speed'))
+            speed = float(kwargs.pop('speed'))
+
+            if speed <= 0:
+                raise ValueError('Speed must be bigger than 0')
+
+            self.values['speed'] = speed
 
         if 'pitch' in kwargs:
-            self.values['pitch'] = float(kwargs.pop('pitch'))
+            pitch = float(kwargs.pop('pitch'))
+
+            if pitch <= 0:
+                raise ValueError('Pitch must be bigger than 0')
+
+            self.values['pitch'] = pitch
 
         if 'rate' in kwargs:
-            self.values['rate'] = float(kwargs.pop('rate'))
+            rate = float(kwargs.pop('rate'))
+
+            if rate <= 0:
+                raise ValueError('Rate must be bigger than 0')
+
+            self.values['rate'] = rate
 
     def serialize(self) -> dict:
         return {'timescale': self.values}
@@ -257,7 +272,35 @@ class Vibrato(Filter):
     def serialize(self) -> dict:
         return {'vibrato': self.values}
 
-# TODO: Rotation
+
+class Rotation(Filter):
+    def __init__(self):
+        super().__init__({'rotationHz': 0.0})
+
+    def update(self, **kwargs):
+        """
+        Note
+        ----
+        The limits are:
+
+            0 ≤ rotationHz
+
+        Parameters
+        ----------
+        rotationHz: :class:`float`
+            How frequently the effect should occur.
+        """
+        if 'rotationHz' in kwargs:
+            rotationHz = float(kwargs.pop('rotationHz'))
+
+            if 0 > rotationHz:
+                raise ValueError('rotationHz must be bigger than or equal to 0')
+
+            self.values['rotationHz'] = rotationHz
+
+    def serialize(self) -> dict:
+        return {'rotation': self.values}
+
 # TODO: Distortion
 # TODO: ChannelMix
 # TODO: LowPass
