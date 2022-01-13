@@ -27,6 +27,51 @@ from .datarw import DataReader
 from .models import AudioTrack
 
 
+def timestamp_to_millis(timestamp: str) -> int:
+    """
+    Converts a timestamp such as 03:28 or 02:15:53 to milliseconds.
+
+    Example
+    -------
+    .. code:: python
+
+        await player.play(track, start_time=timestamp_to_millis('01:13'))
+
+    Parameters
+    ----------
+    timestamp: :class:`str`
+        The timestamp to convert into milliseconds.
+
+    Returns
+    -------
+    :class:`int`
+        The millisecond value of the timestamp.
+    """
+    try:
+        sections = map(int, timestamp.split(':'))
+    except ValueError:
+        raise ValueError('Timestamp should consist of integers and colons only')
+
+    if not sections:
+        raise TypeError('An invalid timestamp was provided, a timestamp should look like 1:30')
+
+    if len(sections) > 4:
+        raise TypeError('Too many segments within the provided timestamp! Provide no more than 4 segments.')
+
+    if len(sections) == 4:
+        d, h, m, s = map(int, sections)
+        return (d * 86400000) + (h * 3600000) + (m * 60000) + (s * 1000)
+    elif len(sections) == 3:
+        h, m, s = map(int, sections)
+        return (h * 3600000) + (m * 60000) + (s * 1000)
+    elif len(sections) == 2:
+        m, s = map(int, sections)
+        return (m * 60000) + (s * 1000)
+    else:
+        s, = map(int, sections)
+        return s * 1000
+
+
 def format_time(time):
     """
     Formats the given time into HH:MM:SS.
