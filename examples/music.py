@@ -11,6 +11,8 @@ import re
 import discord
 import lavalink
 from discord.ext import commands
+from lavalink.filters import LowPass
+from lavalink.models import AudioTrack
 
 url_rx = re.compile(r'https?://(?:www\.)?.+')
 
@@ -210,7 +212,7 @@ class Music(commands.Cog):
 
             # You can attach additional information to audiotracks through kwargs, however this involves
             # constructing the AudioTrack class yourself.
-            track = lavalink.models.AudioTrack(track, ctx.author.id, recommended=True)
+            track = AudioTrack(track, ctx.author.id, recommended=True)
             player.add(requester=ctx.author.id, track=track)
 
         await ctx.send(embed=embed)
@@ -219,6 +221,39 @@ class Music(commands.Cog):
         # the current track.
         if not player.is_playing:
             await player.play()
+
+    @commands.command(aliases=['lp'])
+    async def lowpass(self, ctx, strength: float):
+        """ Sets the strength of the low pass filter. """
+        # Get the player for this guild from cache.
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+
+        # This enforces that strength should be a minimum of 0.
+        # There's no upper limit on this filter.
+        strength = max(0.0, strength)
+
+        # Even though there's no upper limit, we will enforce one anyway to prevent
+        # extreme values from being entered. This will enforce a maximum of 100.
+        strength = min(100, strength)
+
+        embed = discord.Embed(color=discord.Color.blurple(), title='Low Pass Filter')
+
+        # A strength of 0 effectively means this filter won't function, so we can disable it.
+        if strength == 0.0:
+            player.remove_filter('lowpass')
+            embed.description = 'Disabled **Low Pass Filter**'
+            return await ctx.send(embed=embed)
+
+        # Lets create our filter.
+        low_pass = LowPass()
+        low_pass.update(smoothing=strength)  # Set the filter strength to the user's desired level.
+
+        # This applies our filter. If the filter is already enabled on the player, then this will
+        # just overwrite the filter with the new values.
+        await player.set_filter(low_pass)
+
+        embed.description = f'Set **Low Pass Filter** strength to {strength}.'
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
