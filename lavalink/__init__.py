@@ -17,7 +17,8 @@ from .events import (Event, NodeChangedEvent, NodeConnectedEvent,
                      NodeDisconnectedEvent, PlayerUpdateEvent, QueueEndEvent,
                      TrackEndEvent, TrackExceptionEvent, TrackStartEvent,
                      TrackStuckEvent, WebSocketClosedEvent)
-from .filters import Equalizer, Filter, Karaoke, Timescale, Tremolo, Vibrato
+from .filters import (ChannelMix, Equalizer, Filter, Karaoke, LowPass,
+                      Rotation, Timescale, Tremolo, Vibrato)
 from .models import AudioTrack, BasePlayer, DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager

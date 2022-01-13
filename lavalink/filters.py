@@ -293,7 +293,7 @@ class Rotation(Filter):
         if 'rotationHz' in kwargs:
             rotationHz = float(kwargs.pop('rotationHz'))
 
-            if 0 > rotationHz:
+            if rotationHz < 0:
                 raise ValueError('rotationHz must be bigger than or equal to 0')
 
             self.values['rotationHz'] = rotationHz
@@ -303,22 +303,88 @@ class Rotation(Filter):
 
 
 class LowPass(Filter):
-  def __init__(self):
-    super().__init__({'smoothing': 20.0})
+    def __init__(self):
+        super().__init__({'smoothing': 20.0})
 
-  def update(self, **kwargs):
-    """
-    Parameters
-    ----------
-    smoothing: :class:`float`
-        The strength of the effect.
-    """
-    if 'smoothing' in kwargs:
-      self.values['smoothing'] = float(kwargs.pop('smoothing'))
+    def update(self, **kwargs):
+        """
+        Parameters
+        ----------
+        smoothing: :class:`float`
+            The strength of the effect.
+        """
+        if 'smoothing' in kwargs:
+            self.values['smoothing'] = float(kwargs.pop('smoothing'))
 
-  def serialize(self):
-    return {'lowPass': self.values}
+    def serialize(self):
+        return {'lowPass': self.values}
+
+
+class ChannelMix(Filter):
+    def init(self):
+        super().__init__({'leftToLeft': 1.0, 'leftToRight': 0.0, 'rightToLeft': 0.0, 'rightToRight': 1.0})
+
+    def update(self, **kwargs):
+        """
+        Note
+        ----
+        The limits are:
+
+            0 ≤ leftToLeft ≤ 1.0
+
+            0 ≤ leftToRight ≤ 1.0
+
+            0 ≤ rightToLeft ≤ 1.0
+
+            0 ≤ rightToRight ≤ 1.0
+
+        Parameters
+        ----------
+        leftToLeft: :class:`float`
+            The volume level of the audio going from the "Left" channel to the "Left" channel.
+        leftToRight: :class:`float`
+            The volume level of the audio going from the "Left" channel to the "Right" channel.
+        rightToLeft: :class:`float`
+            The volume level of the audio going from the "Right" channel to the "Left" channel.
+        rightToRight: :class:`float`
+            The volume level of the audio going from the "Right" channel to the "Left" channel.
+        """
+        if 'leftToLeft' in kwargs:
+            leftToLeft = float(kwargs.pop('leftToLeft'))
+
+            if not 0 <= leftToLeft <= 1:
+                raise ValueError('leftToLeft must be bigger than or equal to 0, and less than or equal to 1.')
+
+            self.values['leftToLeft'] = leftToLeft
+
+        if 'leftToRight' in kwargs:
+            leftToRight = float(kwargs.pop('leftToRight'))
+
+            if not 0 <= leftToRight <= 1:
+                raise ValueError('leftToRight must be bigger than or equal to 0, and less than or equal to 1.')
+
+            self.values['leftToRight'] = leftToRight
+
+        if 'rightToLeft' in kwargs:
+            rightToLeft = float(kwargs.pop('rightToLeft'))
+
+            if not 0 <= rightToLeft <= 1:
+                raise ValueError('rightToLeft must be bigger than or equal to 0, and less than or equal to 1.')
+
+            self.values['rightToLeft'] = rightToLeft
+
+        if 'rightToRight' in kwargs:
+            rightToRight = float(kwargs.pop('rightToRight'))
+
+            if not 0 <= rightToRight <= 1:
+                raise ValueError('rightToRight must be bigger than or equal to 0, and less than or equal to 1.')
+
+            self.values['rightToRight'] = rightToRight
+
+    def serialize(self):
+        return {'channelMix': self.values}
 
 
 # TODO: Distortion
 # TODO: ChannelMix
+# TODO: Filter descriptions

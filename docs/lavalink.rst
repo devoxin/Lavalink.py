@@ -79,6 +79,15 @@ Filters
 .. autoclass:: Vibrato
     :members:
 
+.. autoclass:: Rotation
+    :members:
+
+.. autoclass:: LowPass
+    :members:
+
+.. autoclass:: ChannelMix
+    :members:
+
 Models
 ------
 **All** custom players must derive from :class:`BasePlayer`
