@@ -321,7 +321,7 @@ class LowPass(Filter):
 
 
 class ChannelMix(Filter):
-    def init(self):
+    def __init__(self):
         super().__init__({'leftToLeft': 1.0, 'leftToRight': 0.0, 'rightToLeft': 0.0, 'rightToRight': 1.0})
 
     def update(self, **kwargs):
@@ -386,5 +386,4 @@ class ChannelMix(Filter):
 
 
 # TODO: Distortion
-# TODO: ChannelMix
 # TODO: Filter descriptions
