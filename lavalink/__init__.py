@@ -23,7 +23,7 @@ from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 from .stats import Penalty, Stats
-from .utils import decode_track, format_time, parse_time
+from .utils import decode_track, format_time, parse_time, timestamp_to_millis
 from .websocket import WebSocket
 
 

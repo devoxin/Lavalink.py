@@ -4,7 +4,7 @@ Licensed using the `MIT license <http://opensource.org/licenses/MIT>`_.
 
     MIT License
 
-    Copyright (c) 2021 devoxin
+    Copyright (c) 2021 Devoxin
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal

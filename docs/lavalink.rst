@@ -51,6 +51,11 @@ All Events are derived from :class:`Event`
 
 Filters
 -------
+**All** custom filters must derive from :class:`Filter`
+
+.. autoclass:: Filter
+    :members:
+
 .. autoclass:: Equalizer
     :members:
 
