@@ -301,6 +301,24 @@ class Rotation(Filter):
     def serialize(self) -> dict:
         return {'rotation': self.values}
 
+
+class LowPass(Filter):
+  def __init__(self):
+    super().__init__({'smoothing': 20.0})
+
+  def update(self, **kwargs):
+    """
+    Parameters
+    ----------
+    smoothing: :class:`float`
+        The strength of the effect.
+    """
+    if 'smoothing' in kwargs:
+      self.values['smoothing'] = float(kwargs.pop('smoothing'))
+
+  def serialize(self):
+    return {'lowPass': self.values}
+
+
 # TODO: Distortion
 # TODO: ChannelMix
-# TODO: LowPass
