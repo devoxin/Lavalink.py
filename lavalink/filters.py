@@ -55,7 +55,7 @@ class Equalizer(Filter):
 
         Note
         ----
-        You can provide either ``bands`` OR ``band`` and ``gain` for the parameters.
+        You can provide either ``bands`` OR ``band`` and ``gain`` for the parameters.
 
         Parameters
         ----------
