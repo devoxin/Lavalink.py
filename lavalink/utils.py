@@ -48,7 +48,7 @@ def timestamp_to_millis(timestamp: str) -> int:
         The millisecond value of the timestamp.
     """
     try:
-        sections = map(int, timestamp.split(':'))
+        sections = list(map(int, timestamp.split(':')))
     except ValueError:
         raise ValueError('Timestamp should consist of integers and colons only')
 
