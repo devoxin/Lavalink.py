@@ -169,7 +169,7 @@ class DefaultPlayer(BasePlayer):
     paused: :class:`bool`
         Whether or not a player is paused.
     position_timestamp: :class:`int`
-        The position of how far a track has gone.
+        Returns the track's elapsed playback time as an epoch timestamp.
     volume: :class:`int`
         The volume at which the player is playing at.
     shuffle: :class:`bool`
@@ -438,11 +438,11 @@ class DefaultPlayer(BasePlayer):
         if not isinstance(_filter, Filter):
             raise TypeError('Expected object of type Filter, not ' + type(_filter).__name__)
 
-        filter_name = type(_filter).__name__
+        filter_name = type(_filter).__name__.lower()
         self.filters[filter_name] = _filter
         await self._apply_filters()
 
-    async def get_filter(self, _filter: Filter):
+    async def get_filter(self, _filter: Union[Filter, str]):
         """
         Returns the corresponding filter, if it's enabled.
 
@@ -452,33 +452,43 @@ class DefaultPlayer(BasePlayer):
 
             from lavalink.filters import Timescale
             timescale = player.get_filter(Timescale)
+            # or
+            timescale = player.get_filter('timescale')
 
         Returns
         -------
         Optional[:class:`Filter`]
         """
-        if isinstance(_filter, Filter):  # User passed an instance of.
+        if isinstance(_filter, str):
+            filter_name = _filter
+        elif isinstance(_filter, Filter):  # User passed an instance of.
             filter_name = type(_filter).__name__
         else:
             filter_name = _filter.__name__
 
-        return self.filters.get(filter_name, None)
+        return self.filters.get(filter_name.lower(), None)
 
-    async def remove_filter(self, _filter: Filter):
+    async def remove_filter(self, _filter: Union[Filter, str]):
         """
         Example
         -------
         .. code:: python
 
             player.remove_filter(Timescale)
+            # or
+            player.remove_filter('timescale')
         """
-        if isinstance(_filter, Filter):  # User passed an instance of.
+        if isinstance(_filter, str):
+            filter_name = _filter
+        elif isinstance(_filter, Filter):  # User passed an instance of.
             filter_name = type(_filter).__name__
         else:
             filter_name = _filter.__name__
 
-        if filter_name in self.filters:
-            self.filters.pop(filter_name)
+        fn_lowered = filter_name.lower()
+
+        if fn_lowered in self.filters:
+            self.filters.pop(fn_lowered)
             await self._apply_filters()
 
     async def set_gain(self, band: int, gain: float = 0.0):
