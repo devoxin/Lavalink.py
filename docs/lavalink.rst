@@ -22,28 +22,48 @@ All Events are derived from :class:`Event`
 .. autoclass:: TrackStartEvent
     :members:
 
-.. autoclass:: TrackEndEvent
-    :members:
-
 .. autoclass:: TrackStuckEvent
     :members:
 
 .. autoclass:: TrackExceptionEvent
     :members:
 
+.. autoclass:: TrackEndEvent
+    :members:
+
 .. autoclass:: QueueEndEvent
+    :members:
+
+.. autoclass:: PlayerUpdateEvent
     :members:
 
 .. autoclass:: NodeConnectedEvent
     :members:
 
-.. autoclass:: NodeChangedEvent
-    :members:
-
 .. autoclass:: NodeDisconnectedEvent
     :members:
 
+.. autoclass:: NodeChangedEvent
+    :members:
+
 .. autoclass:: WebSocketClosedEvent
+    :members:
+
+Filters
+-------
+.. autoclass:: Equalizer
+    :members:
+
+.. autoclass:: Karaoke
+    :members:
+
+.. autoclass:: Timescale
+    :members:
+
+.. autoclass:: Tremolo
+    :members:
+
+.. autoclass:: Vibrato
     :members:
 
 Models
@@ -84,6 +104,8 @@ Stats
 
 Utilities
 ---------
+.. autofunction:: timestamp_to_millis
+
 .. autofunction:: format_time
 
 .. autofunction:: parse_time
