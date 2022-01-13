@@ -56,8 +56,11 @@ class Equalizer(Filter):
         Note
         ----
         You can provide either ``bands`` OR ``band`` and ``gain`` for the parameters.
+
         The limits are:
+
             0 ≤ band ≤ 14
+
             -0.25 ≤ gain ≤ 1.0
 
         Parameters
@@ -144,8 +147,11 @@ class Timescale(Filter):
         Note
         ----
         The limits are:
+
             0.1 ≤ speed
+
             0.1 ≤ pitch
+
             0.1 ≤ rate
 
         Parameters
@@ -179,7 +185,9 @@ class Tremolo(Filter):
         Note
         ----
         The limits are:
+
             0 < frequency
+
             0 < depth ≤ 1
 
         Parameters
@@ -218,7 +226,9 @@ class Vibrato(Filter):
         Note
         ----
         The limits are:
+
             0 < frequency ≤ 14
+
             0 < depth ≤ 1
 
         Parameters
