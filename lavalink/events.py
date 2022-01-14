@@ -100,8 +100,9 @@ class TrackEndEvent(Event):
     ----------
     player: :class:`BasePlayer`
         The player that finished playing a track.
-    track: :class:`AudioTrack`
+    track: Optional[:class:`AudioTrack`]
         The track that finished playing.
+        This could be ``None`` if Lavalink fails to encode the track.
     reason: :class:`str`
         The reason why the track stopped playing.
     """

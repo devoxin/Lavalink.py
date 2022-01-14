@@ -215,7 +215,7 @@ class WebSocket:
         event = None
 
         if event_type == 'TrackEndEvent':
-            track = decode_track(data['track'])
+            track = decode_track(data['track']) if data['track'] else None
             event = TrackEndEvent(player, track, data['reason'])
         elif event_type == 'TrackExceptionEvent':
             exc_inner = data.get('exception', {})

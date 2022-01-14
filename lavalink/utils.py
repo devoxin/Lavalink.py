@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import struct
+from typing import Tuple
 
 from .datarw import DataReader
 from .models import AudioTrack
@@ -74,7 +75,7 @@ def timestamp_to_millis(timestamp: str) -> int:
     return s * 1000
 
 
-def format_time(time):
+def format_time(time: int) -> str:
     """
     Formats the given time into HH:MM:SS.
 
@@ -93,7 +94,7 @@ def format_time(time):
     return '%02d:%02d:%02d' % (hours, minutes, seconds)
 
 
-def parse_time(time):
+def parse_time(time: int) -> Tuple[int, int, int, int]:
     """
     Parses the given time into days, hours, minutes and seconds.
     Useful for formatting time yourself.
@@ -114,7 +115,7 @@ def parse_time(time):
     return days, hours, minutes, seconds
 
 
-def decode_track(track):
+def decode_track(track: str) -> AudioTrack:
     """
     Decodes a base64 track string into an AudioTrack object.
 
