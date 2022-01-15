@@ -470,6 +470,8 @@ class DefaultPlayer(BasePlayer):
 
     async def remove_filter(self, _filter: Union[Filter, str]):
         """
+        Removes a filter from the player, undoing any effects applied to the audio.
+
         Example
         -------
         .. code:: python
@@ -493,6 +495,9 @@ class DefaultPlayer(BasePlayer):
 
     async def set_gain(self, band: int, gain: float = 0.0):
         """
+        .. deprecated:: 4.0.0
+            Use :func:`set_filter` to apply the :class:`Equalizer` filter instead.
+
         Sets the equalizer band gain to the given amount.
 
         Parameters
@@ -506,6 +511,9 @@ class DefaultPlayer(BasePlayer):
 
     async def set_gains(self, *bands):
         """
+        .. deprecated:: 4.0.0
+            Use :func:`set_filter` to apply the :class:`Equalizer` filter instead.
+
         Modifies the player's equalizer settings.
 
         Parameters
@@ -518,7 +526,12 @@ class DefaultPlayer(BasePlayer):
         await self.set_filter(equalizer)
 
     async def reset_equalizer(self):
-        """ Resets equalizer to default values. """
+        """
+        .. deprecated:: 4.0.0
+            Use :func:`remove_filter` to remove the :class:`Equalizer` filter instead.
+
+        Resets equalizer to default values.
+        """
         await self.remove_filter(Equalizer)
 
     async def _apply_filters(self):
