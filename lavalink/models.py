@@ -495,10 +495,10 @@ class DefaultPlayer(BasePlayer):
 
     async def set_gain(self, band: int, gain: float = 0.0):
         """
+        Sets the equalizer band gain to the given amount.
+
         .. deprecated:: 4.0.0
             Use :func:`set_filter` to apply the :class:`Equalizer` filter instead.
-
-        Sets the equalizer band gain to the given amount.
 
         Parameters
         ----------
@@ -511,10 +511,10 @@ class DefaultPlayer(BasePlayer):
 
     async def set_gains(self, *bands):
         """
+        Modifies the player's equalizer settings.
+
         .. deprecated:: 4.0.0
             Use :func:`set_filter` to apply the :class:`Equalizer` filter instead.
-
-        Modifies the player's equalizer settings.
 
         Parameters
         ----------
@@ -527,10 +527,10 @@ class DefaultPlayer(BasePlayer):
 
     async def reset_equalizer(self):
         """
+        Resets equalizer to default values.
+
         .. deprecated:: 4.0.0
             Use :func:`remove_filter` to remove the :class:`Equalizer` filter instead.
-
-        Resets equalizer to default values.
         """
         await self.remove_filter(Equalizer)
 
