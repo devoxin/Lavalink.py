@@ -385,5 +385,59 @@ class ChannelMix(Filter):
         return {'channelMix': self.values}
 
 
-# TODO: Distortion
+class Distortion(Filter):
+    def __init__(self):
+        super().__init__({'sinOffset': 0.0, 'sinScale': 1.0, 'cosOffset': 0.0, 'cosScale': 1.0,
+                          'tanOffset': 0.0, 'tanScale': 1.0, 'offset': 0.0, 'scale': 1.0})
+
+    def update(self, **kwargs):
+        """
+        Parameters
+        ----------
+        sinOffset: :class:`float`
+            The sin offset.
+        sinScale: :class:`float`
+            The sin scale.
+        cosOffset: :class:`float`
+            The sin offset.
+        cosScale: :class:`float`
+            The sin scale.
+        tanOffset: :class:`float`
+            The sin offset.
+        tanScale: :class:`float`
+            The sin scale.
+        offset: :class:`float`
+            The sin offset.
+        scale: :class:`float`
+            The sin scale.
+        
+        """
+        if 'sinOffset' in kwargs:
+            self.values['sinOffset'] = float(kwargs.pop('sinOffset'))
+
+        if 'sinScale' in kwargs:
+            self.values['sinScale'] = float(kwargs.pop('sinScale'))
+
+        if 'cosOffset' in kwargs:
+            self.values['cosOffset'] = float(kwargs.pop('cosOffset'))
+
+        if 'cosScale' in kwargs:
+            self.values['cosScale'] = float(kwargs.pop('cosScale'))
+
+        if 'tanOffset' in kwargs:
+            self.values['tanOffset'] = float(kwargs.pop('tanOffset'))
+
+        if 'tanScale' in kwargs:
+            self.values['tanScale'] = float(kwargs.pop('tanScale'))
+
+        if 'offset' in kwargs:
+            self.values['offset'] = float(kwargs.pop('offset'))
+
+        if 'scale' in kwargs:
+            self.values['scale'] = float(kwargs.pop('scale'))
+
+    def serialize(self):
+        return {'distortion': self.values}
+
+
 # TODO: Filter descriptions
