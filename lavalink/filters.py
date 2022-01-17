@@ -410,7 +410,6 @@ class Distortion(Filter):
             The sin offset.
         scale: :class:`float`
             The sin scale.
-        
         """
         if 'sinOffset' in kwargs:
             self.values['sinOffset'] = float(kwargs.pop('sinOffset'))
