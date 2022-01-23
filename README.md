@@ -26,7 +26,7 @@ compatibility may be possible, it's not encouraged nor is support guaranteed.
 - Regions
 - Multi-Node Support
 - Load Balancing (this includes region-based load balancing)
-- Equalizer
+- Audio Filters
 
 ## Optional Dependencies
 *These are used by aiohttp.*

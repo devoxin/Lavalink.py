@@ -365,7 +365,14 @@ class DefaultPlayer(BasePlayer):
 
     def set_repeat(self, repeat: bool):
         """
-        Sets the player's repeat state.
+        Sets whether tracks should be repeated.
+
+        This only works as a "queue loop". For single-track looping, you should
+        utilise the :class:`TrackEndEvent` event to feed the track back into 
+        :func:`play`.
+
+        Also known as ``loop``.
+
         Parameters
         ----------
         repeat: :class:`bool`
