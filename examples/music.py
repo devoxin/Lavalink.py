@@ -84,7 +84,7 @@ class LavalinkVoiceClient(discord.VoiceClient):
 
         # update the channel_id of the player to None
         # this must be done because the on_voice_state_update that
-        # would set channel_id to None doesn't get dispatched after the 
+        # would set channel_id to None doesn't get dispatched after the
         # disconnect
         player.channel_id = None
         self.cleanup()

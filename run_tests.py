@@ -15,6 +15,8 @@ def test_flake8():
     if not failed:
         print('OK')
 
+    return failed
+
 
 def test_pylint():
     stdout = StringIO()
