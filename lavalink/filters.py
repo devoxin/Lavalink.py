@@ -60,6 +60,10 @@ class Volume(Filter):
         """
         if 'volume' in kwargs:
             volume = float(kwargs.pop('volume'))
+
+            if not 0 <= volume <= 5:
+                raise ValueError('volume must be bigger than or equal to 0, and less than or equal to 5.')
+
             self.values = volume
 
     def serialize(self) -> dict:
