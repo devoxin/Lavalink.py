@@ -138,16 +138,19 @@ class PlayerUpdateEvent(Event):
     player: :class:`BasePlayer`
         The player that's progress was updated.
     position: :class:`int`
-        The position of the player that was changed to.
+        The track's elapsed playback time in milliseconds.
     timestamp: :class:`int`
-        The timestamp that the player is currently on.
+        The track's elapsed playback time as an epoch timestamp in milliseconds.
+    connected: :class:`bool`
+        Whether or not the player is connected to the voice gateway.
     """
-    __slots__ = ('player', 'position', 'timestamp')
+    __slots__ = ('player', 'position', 'timestamp', 'connected')
 
-    def __init__(self, player, position, timestamp):
+    def __init__(self, player, raw_state):
         self.player = player
-        self.position = position
-        self.timestamp = timestamp
+        self.position = raw_state.get('position')
+        self.timestamp = raw_state.get('time')
+        self.connected = raw_state.get('connected')
 
 
 class NodeConnectedEvent(Event):

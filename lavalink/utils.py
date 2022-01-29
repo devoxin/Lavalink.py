@@ -131,7 +131,7 @@ def decode_track(track: str) -> AudioTrack:
     reader = DataReader(track)
 
     flags = (reader.read_int() & 0xC0000000) >> 30
-    version = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1  # noqa: F841 pylint: disable=unused-variable
+    version = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1
 
     title = reader.read_utfm()
     author = reader.read_utfm()
@@ -140,7 +140,7 @@ def decode_track(track: str) -> AudioTrack:
     is_stream = reader.read_boolean()
     uri = reader.read_utf().decode() if reader.read_boolean() else None
     source = reader.read_utf().decode()
-    position = reader.read_long()  # noqa: F841 pylint: disable=unused-variable
+    position = reader.read_long()
 
     track_object = {
         'track': track,

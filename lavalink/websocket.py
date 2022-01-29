@@ -25,8 +25,8 @@ import asyncio
 
 import aiohttp
 
-from .events import (TrackEndEvent, TrackExceptionEvent, TrackStuckEvent,
-                     WebSocketClosedEvent)
+from .events import (PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
+                     TrackStuckEvent, WebSocketClosedEvent)
 from .stats import Stats
 from .utils import decode_track
 
@@ -190,6 +190,7 @@ class WebSocket:
                 return
 
             await player._update_state(data['state'])
+            await self._lavalink._dispatch_event(PlayerUpdateEvent(player, data['state']))
         elif op == 'event':
             await self._handle_event(data)
         else:

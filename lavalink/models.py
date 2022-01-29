@@ -575,9 +575,6 @@ class DefaultPlayer(BasePlayer):
         self._last_position = state.get('position', 0)
         self.position_timestamp = state.get('time', 0)
 
-        event = PlayerUpdateEvent(self, self._last_position, self.position_timestamp)
-        await self.node._dispatch_event(event)
-
     async def change_node(self, node):
         """
         Changes the player's node
