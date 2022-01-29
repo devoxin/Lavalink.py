@@ -27,8 +27,7 @@ from time import time
 from typing import Dict, Optional, Union
 
 from .errors import InvalidTrack
-from .events import (NodeChangedEvent, PlayerUpdateEvent,  # noqa: F401
-                     QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
+from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStartEvent, TrackStuckEvent)
 from .filters import Equalizer, Filter
 
@@ -368,7 +367,7 @@ class DefaultPlayer(BasePlayer):
         Sets whether tracks should be repeated.
 
         This only works as a "queue loop". For single-track looping, you should
-        utilise the :class:`TrackEndEvent` event to feed the track back into 
+        utilise the :class:`TrackEndEvent` event to feed the track back into
         :func:`play`.
 
         Also known as ``loop``.
