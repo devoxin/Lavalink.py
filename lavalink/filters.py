@@ -25,7 +25,7 @@ from typing import Union
 
 
 class Filter:
-    def __init__(self, values: Union[dict, list]):
+    def __init__(self, values: Union[dict, list, float]):
         self.values = values
 
     def update(self, **kwargs):
@@ -35,6 +35,35 @@ class Filter:
     def serialize(self) -> dict:
         """ Transforms the internal values into a dict matching the structure Lavalink expects. """
         raise NotImplementedError
+
+
+class Volume(Filter):
+    def __init__(self):
+        super().__init__(1.0)
+
+    def update(self, **kwargs):
+        """
+        Modifies the player volume.
+        This uses LavaDSP's volume filter, rather than Lavaplayer's native
+        volume changer.
+
+        Note
+        ----
+        The limits are:
+
+            0 ≤ volume ≤ 5
+
+        Parameters
+        ----------
+        volume: :class:`float`
+            The new volume of the player. 1.0 means 100%/default.
+        """
+        if 'volume' in kwargs:
+            volume = float(kwargs.pop('volume'))
+            self.values = volume
+
+    def serialize(self) -> dict:
+        return {'volume': self.values}
 
 
 class Equalizer(Filter):
@@ -316,7 +345,7 @@ class LowPass(Filter):
         if 'smoothing' in kwargs:
             self.values['smoothing'] = float(kwargs.pop('smoothing'))
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {'lowPass': self.values}
 
 
@@ -381,7 +410,7 @@ class ChannelMix(Filter):
 
             self.values['rightToRight'] = rightToRight
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {'channelMix': self.values}
 
 
@@ -435,7 +464,7 @@ class Distortion(Filter):
         if 'scale' in kwargs:
             self.values['scale'] = float(kwargs.pop('scale'))
 
-    def serialize(self):
+    def serialize(self) -> dict:
         return {'distortion': self.values}
 
 

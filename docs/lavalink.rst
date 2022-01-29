@@ -88,6 +88,9 @@ Filters
 .. autoclass:: ChannelMix
     :members:
 
+.. autoclass:: Volume
+    :members:
+
 Models
 ------
 **All** custom players must derive from :class:`BasePlayer`
