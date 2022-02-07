@@ -92,6 +92,40 @@ class AudioTrack:
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
 
 
+class DeferredAudioTrack(AudioTrack):
+    """
+    Similar to an :class:`AudioTrack`, however this track only stores metadata up until it's
+    played, at which time :func:`load` is called to retrieve a base64 string which is then used for playing.
+
+    Note
+    ----
+    For implementation: The ``track`` field need not be populated as this is done later via
+    the :func:`load` method. You can optionally set ``self.track`` to the result of :func:`load`
+    during implementation, as a means of caching the base64 string to avoid fetching it again later.
+    This should serve the purpose of speeding up subsequent play calls in the event of repeat being enabled,
+    for example.
+    """
+    __slots__ = ('track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
+                 'extra')
+
+    def __init__(self, data: dict, requester: int, **extra):
+        super().__init__(data, requester, **extra)
+
+    @abstractmethod
+    async def load(self, client):
+        """
+        Retrieves a base64 string that's playable by Lavalink.
+        For example, you can use this method to search Lavalink for an identical track from other sources,
+        which you can then use the base64 string of to play the track on Lavalink.
+
+        Parameters
+        ----------
+        client: :class:`Client`
+            This will be an instance of the Lavalink client 'linked' to this track.
+        """
+        raise NotImplementedError
+
+
 class BasePlayer(ABC):
     """
     Represents the BasePlayer all players must be inherited from.
@@ -288,13 +322,14 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
-    async def play(self, track: Union[AudioTrack, dict] = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
+    async def play(self, track: Union[DeferredAudioTrack, AudioTrack, dict] = None, start_time: int = 0, end_time: int = 0,
+                   no_replace: bool = False):
         """
         Plays the given track.
 
         Parameters
         ----------
-        track: Optional[Union[:class:`AudioTrack`, :class:`dict`]]
+        track: Optional[Union[:class:`DeferredAudioTrack`, :class:`AudioTrack`, :class:`dict`]]
             The track to play. If left unspecified, this will default
             to the first track in the queue. Defaults to `None` so plays the next
             song in queue. Accepts either an AudioTrack or a dict representing a track
@@ -347,10 +382,15 @@ class DefaultPlayer(BasePlayer):
             no_replace = False
         if not isinstance(no_replace, bool):
             raise TypeError('no_replace must be a bool')
-        options['noReplace'] = no_replace
 
+        options['noReplace'] = no_replace
         self.current = track
-        await self.node._send(op='play', guildId=self._internal_id, track=track.track, **options)
+        playable_track = track.track
+
+        if type(track) is DeferredAudioTrack and playable_track is None:
+            playable_track = await track.load(self.node._manager._lavalink)
+
+        await self.node._send(op='play', guildId=self._internal_id, track=playable_track, **options)
         await self.node._dispatch_event(TrackStartEvent(self, track))
 
     async def stop(self):
@@ -414,8 +454,8 @@ class DefaultPlayer(BasePlayer):
         vol: :class:`int`
             The new volume level.
         """
-        self.volume = max(min(vol, 1000), 0)
         await self.node._send(op='volume', guildId=self._internal_id, volume=self.volume)
+        self.volume = max(min(vol, 1000), 0)
 
     async def seek(self, position: int):
         """
@@ -593,7 +633,12 @@ class DefaultPlayer(BasePlayer):
             await self._dispatch_voice_update()
 
         if self.current:
-            await self.node._send(op='play', guildId=self._internal_id, track=self.current.track, startTime=self.position)
+            playable_track = self.current.track
+
+            if type(self.current) is DeferredAudioTrack and playable_track is None:
+                playable_track = await self.current.load(self.node._manager._lavalink)
+
+            await self.node._send(op='play', guildId=self._internal_id, track=playable_track, startTime=self.position)
             self._last_update = time() * 1000
 
             if self.paused:
