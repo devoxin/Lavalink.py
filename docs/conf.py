@@ -41,6 +41,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'guzzle_sphinx_theme',
+    'enum_tools.autoenum'
 ]
 
 rst_prolog = """

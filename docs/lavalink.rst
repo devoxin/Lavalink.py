@@ -101,7 +101,7 @@ Models
 .. autoclass:: DeferredAudioTrack
     :members:
 
-.. autoclass:: LoadType
+.. autoenum:: LoadType
     :members:
 
 .. autoclass:: PlaylistInfo
