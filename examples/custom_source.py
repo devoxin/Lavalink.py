@@ -30,13 +30,16 @@ class CustomSource(Source):
         super().__init__(name='custom')  # Initialising our custom source with the name 'source'.
 
     async def load_item(self, client, query: str):
-        track = CustomAudioTrack({  # Create an instance of our CustomAudioTrack.
-            'identifier': '27cgqh0VRhVeM61ugTnorD',  # Fill it with metadata that we've obtained from our source's provider.
-            'isSeekable': True,
-            'author': 'DJ Seinfeld',
-            'length': 296000,
-            'isStream': False,
-            'title': 'These Things Will Come To Be',
-            'uri': 'https://open.spotify.com/track/27cgqh0VRhVeM61ugTnorD'
-            }, requester=0)  # Init requester with a default value.
-        return LoadResult(LoadType.TRACK, [track], playlist_info=PlaylistInfo.none())
+        if 'keyword' in query:
+            # track_metadata = http.get("https://our.provider/api/{}".format(query))
+
+            track = CustomAudioTrack({  # Create an instance of our CustomAudioTrack.
+                'identifier': '27cgqh0VRhVeM61ugTnorD',  # Fill it with metadata that we've obtained from our source's provider.
+                'isSeekable': True,
+                'author': 'DJ Seinfeld',
+                'length': 296000,
+                'isStream': False,
+                'title': 'These Things Will Come To Be',
+                'uri': 'https://open.spotify.com/track/27cgqh0VRhVeM61ugTnorD'
+                }, requester=0)  # Init requester with a default value.
+            return LoadResult(LoadType.TRACK, [track], playlist_info=PlaylistInfo.none())
