@@ -73,8 +73,9 @@ class AudioTrack:
 
     def __init__(self, data: dict, requester: int, **extra):
         try:
-            info = data.get('info', data)
+            self._raw = data
 
+            info = data.get('info', data)
             self.track: Optional[str] = data.get('track')
             self.identifier: str = info['identifier']
             self.is_seekable: bool = info['isSeekable']
