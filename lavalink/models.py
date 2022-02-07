@@ -73,16 +73,16 @@ class AudioTrack:
 
     def __init__(self, data: dict, requester: int, **extra):
         try:
-            data = data.get('info', data)
+            info = data.get('info', data)
 
             self.track: Optional[str] = data.get('track')
-            self.identifier: str = data['info']['identifier']
-            self.is_seekable: bool = data['info']['isSeekable']
-            self.author: str = data['info']['author']
-            self.duration: int = data['info']['length']
-            self.stream: bool = data['info']['isStream']
-            self.title: str = data['info']['title']
-            self.uri: str = data['info']['uri']
+            self.identifier: str = info['identifier']
+            self.is_seekable: bool = info['isSeekable']
+            self.author: str = info['author']
+            self.duration: int = info['length']
+            self.stream: bool = info['isStream']
+            self.title: str = info['title']
+            self.uri: str = info['uri']
             self.requester: int = requester
             self.extra: dict = extra
         except KeyError as ke:
