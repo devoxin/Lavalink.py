@@ -113,9 +113,6 @@ class DeferredAudioTrack(ABC, AudioTrack):
     This should serve the purpose of speeding up subsequent play calls in the event of repeat being enabled,
     for example.
     """
-    __slots__ = ('track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
-                 'extra')
-
     @abstractmethod
     async def load(self, client):
         """
