@@ -88,6 +88,9 @@ class AudioTrack:
             raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
 
     def __getitem__(self, name):
+        if name == 'info':
+            return self
+
         return super().__getattribute__(name)
 
     def __repr__(self):
