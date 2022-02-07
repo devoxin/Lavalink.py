@@ -27,7 +27,7 @@ class CustomAudioTrack(DeferredAudioTrack):
 
 class CustomSource(Source):
     def __init__(self):
-        super().__init__(name='custom')  # Initialising our custom source with the name 'source'.
+        super().__init__(name='custom')  # Initialising our custom source with the name 'custom'.
 
     async def load_item(self, client, query: str):
         if 'keyword' in query:
