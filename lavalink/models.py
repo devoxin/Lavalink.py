@@ -192,7 +192,9 @@ class LoadResult:
     tracks: List[Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`]]
         The tracks in this result.
     playlist_info: :class:`PlaylistInfo`
-        The playlist metadata for this result. Could be empty if the result is not a playlist.
+        The playlist metadata for this result.
+        The :class:`PlaylistInfo` could contain empty/false data if the :class:`LoadType`
+        is not ``LoadType.PLAYLIST``.
     """
     def __init__(self, load_type: LoadType, tracks: List[Union[AudioTrack, DeferredAudioTrack]],
                  playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()):
