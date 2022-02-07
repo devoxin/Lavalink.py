@@ -98,6 +98,9 @@ Models
 .. autoclass:: AudioTrack
     :members:
 
+.. autoclass:: DeferredAudioTrack
+    :members:
+
 .. autoclass:: BasePlayer
     :members:
 
