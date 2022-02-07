@@ -73,7 +73,9 @@ class AudioTrack:
 
     def __init__(self, data: dict, requester: int, **extra):
         try:
-            self.track: Optional[str] = data['track']
+            data = data.get('info', data)
+
+            self.track: Optional[str] = data.get('track')
             self.identifier: str = data['info']['identifier']
             self.is_seekable: bool = data['info']['isSeekable']
             self.author: str = data['info']['author']
@@ -124,6 +126,11 @@ class DeferredAudioTrack(ABC, AudioTrack):
         ----------
         client: :class:`Client`
             This will be an instance of the Lavalink client 'linked' to this track.
+
+        Returns
+        -------
+        :class:`str`
+            A Lavalink-compatible base64 string containing encoded track metadata.
         """
         raise NotImplementedError
 
