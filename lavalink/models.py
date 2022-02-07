@@ -213,6 +213,9 @@ class Source(ABC):
 
         raise NotImplementedError
 
+    def __hash__(self):
+        return hash(self.name)
+
     @abstractmethod
     async def load_item(self, client, query: str) -> Optional[LoadResult]:
         """
