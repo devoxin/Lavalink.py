@@ -68,8 +68,8 @@ class AudioTrack:
     extra: :class:`dict`
         Any extra properties given to this AudioTrack will be stored here.
     """
-    __slots__ = ('track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
-                 'extra')
+    __slots__ = ('raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri',
+                 'requester', 'extra')
 
     def __init__(self, data: dict, requester: int, **extra):
         try:
