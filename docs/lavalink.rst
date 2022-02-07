@@ -101,6 +101,18 @@ Models
 .. autoclass:: DeferredAudioTrack
     :members:
 
+.. autoclass:: LoadType
+    :members:
+
+.. autoclass:: PlaylistInfo
+    :members:
+
+.. autoclass:: LoadResult
+    :members:
+
+.. autoclass:: Source
+    :members:
+
 .. autoclass:: BasePlayer
     :members:
 

@@ -184,11 +184,21 @@ class PlaylistInfo:
 
 
 class LoadResult:
-    def __init__(self, load_type: LoadType, tracks: List[Union[DeferredAudioTrack, AudioTrack]],
+    """
+    Attributes
+    ----------
+    load_type: :class:`LoadType`
+        The load type of this result.
+    tracks: List[Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`]]
+        The tracks in this result.
+    playlist_info: :class:`PlaylistInfo`
+        The playlist metadata for this result. Could be empty if the result is not a playlist.
+    """
+    def __init__(self, load_type: LoadType, tracks: List[Union[AudioTrack, DeferredAudioTrack]],
                  playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()):
         self.load_type: LoadType = load_type
         self.playlist_info: PlaylistInfo = playlist_info
-        self.tracks: List[Union[DeferredAudioTrack, AudioTrack]] = tracks
+        self.tracks: List[Union[AudioTrack, DeferredAudioTrack]] = tracks
 
     def __getitem__(self, k):  # Exists only for compatibility, don't blame me
         if k == 'loadType':
@@ -414,7 +424,7 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: Union[AudioTrack, dict], index: int = None):
+    def add(self, requester: int, track: Union[AudioTrack, Dict], index: int = None):
         """
         Adds a track to the queue.
 
@@ -436,7 +446,7 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
-    async def play(self, track: Union[DeferredAudioTrack, AudioTrack, dict] = None, start_time: int = 0, end_time: int = 0,
+    async def play(self, track: Union[AudioTrack, DeferredAudioTrack, Dict] = None, start_time: int = 0, end_time: int = 0,
                    no_replace: bool = False):
         """
         Plays the given track.

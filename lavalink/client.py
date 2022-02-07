@@ -146,12 +146,17 @@ class Client:
         self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
                                    filters)
 
-    async def get_tracks(self, query: str, node: Node = None, check_local: bool = True) -> LoadResult:
+    async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
         Retrieves a list of results pertaining to the provided query.
 
         If ``check_local`` is set to ``True`` and any of the sources return a :class:`LoadResult`
         then that result will be returned, and Lavalink will not be queried.
+
+        Warning
+        -------
+        Avoid setting ``check_local`` to ``True`` if you call this method from a custom :class:`Source` to avoid
+        recursion issues!
 
         Parameters
         ----------
@@ -165,8 +170,7 @@ class Client:
 
         Returns
         -------
-        :class:`dict`
-            A dict representing the load response from Lavalink.
+        :class:`LoadResult`
         """
         if check_local:
             for source in self.sources:
