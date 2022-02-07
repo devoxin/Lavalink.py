@@ -108,9 +108,6 @@ class DeferredAudioTrack(AudioTrack):
     __slots__ = ('track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri', 'requester',
                  'extra')
 
-    def __init__(self, data: dict, requester: int, **extra):
-        super().__init__(data, requester, **extra)
-
     @abstractmethod
     async def load(self, client):
         """
@@ -387,7 +384,7 @@ class DefaultPlayer(BasePlayer):
         self.current = track
         playable_track = track.track
 
-        if type(track) is DeferredAudioTrack and playable_track is None:
+        if isinstance(track, DeferredAudioTrack) and playable_track is None:
             playable_track = await track.load(self.node._manager._lavalink)
 
         await self.node._send(op='play', guildId=self._internal_id, track=playable_track, **options)
@@ -635,7 +632,7 @@ class DefaultPlayer(BasePlayer):
         if self.current:
             playable_track = self.current.track
 
-            if type(self.current) is DeferredAudioTrack and playable_track is None:
+            if isinstance(self.current, DeferredAudioTrack) and playable_track is None:
                 playable_track = await self.current.load(self.node._manager._lavalink)
 
             await self.node._send(op='play', guildId=self._internal_id, track=playable_track, startTime=self.position)
