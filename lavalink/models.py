@@ -426,22 +426,28 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, requester: int, track: Union[AudioTrack, Dict], index: int = None):
+    def add(self, track: Union[AudioTrack, DeferredAudioTrack, Dict], requester: int = 0, index: int = None):
         """
         Adds a track to the queue.
 
         Parameters
         ----------
-        requester: :class:`int`
-            The ID of the user who requested the track.
-        track: Union[:class:`AudioTrack`, :class:`dict`]
+        track: Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`, :class:`dict`]
             The track to add. Accepts either an AudioTrack or
             a dict representing a track returned from Lavalink.
+        requester: :class:`int`
+            The ID of the user who requested the track.
         index: Optional[:class:`int`]
             The index at which to add the track.
             If index is left unspecified, the default behaviour is to append the track. Defaults to `None`.
         """
-        at = AudioTrack(track, requester) if isinstance(track, dict) else track
+        at = track
+
+        if isinstance(track, dict):
+            at = AudioTrack(track, requester)
+
+        if requester != 0:
+            at.requester = requester
 
         if index is None:
             self.queue.append(at)
