@@ -96,14 +96,24 @@ class Client:
 
     def add_event_hook(self, hook):
         """
-        hello yes TODO
+        Registers a function to recieve and process Lavalink events.
+
+        Parameters
+        ----------
+        hook: :class:`function`
+            The function to register.
         """
         if hook not in self._event_hooks['Generic']:
             self._event_hooks['Generic'].append(hook)
 
     def register_source(self, source: Source):
         """
-        hello yes TODO
+        Registers a :class:`Source` that Lavalink.py will use for looking up tracks.
+
+        Parameters
+        ----------
+        source: :class:`Source`
+            The source to register.
         """
         if not isinstance(source, Source):
             raise TypeError('source must inherit from Source!')
