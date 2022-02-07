@@ -98,7 +98,7 @@ class Equalizer(Filter):
 
         Parameters
         ----------
-        bands: list[tuple[:class:`int`, :class:`float`]]
+        bands: List[Tuple[:class:`int`, :class:`float`]]
             The bands to modify, and their respective gains.
         band: :class:`int`
             The band to modify.

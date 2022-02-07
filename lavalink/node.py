@@ -104,7 +104,7 @@ class Node:
         :class:`dict`
             A dict representing an AudioTrack.
         """
-        return await self._manager._lavalink.get_tracks(query, self)
+        return await self._manager._lavalink.get_tracks(query, self, check_local=False)
 
     async def routeplanner_status(self):
         """|coro|

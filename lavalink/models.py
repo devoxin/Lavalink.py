@@ -22,13 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from abc import ABC, abstractmethod
+from enum import Enum
 from random import randrange
 from time import time
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from .errors import InvalidTrack
-from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent, TrackExceptionEvent,
-                     TrackStartEvent, TrackStuckEvent)
+from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
+                     TrackExceptionEvent, TrackStartEvent, TrackStuckEvent)
 from .filters import Equalizer, Filter
 
 
@@ -49,6 +50,7 @@ class AudioTrack:
     ----------
     track: :class:`str`
         The base64-encoded string representing a Lavalink-readable AudioTrack.
+        THIS COULD BE ``None`` IN THE CASE OF :class:`DeferredAudioTrack`.
     identifier: :class:`str`
         The track's id. For example, a youtube track's identifier will look like dQw4w9WgXcQ.
     is_seekable: :class:`bool`
@@ -71,16 +73,16 @@ class AudioTrack:
 
     def __init__(self, data: dict, requester: int, **extra):
         try:
-            self.track = data['track']
-            self.identifier = data['info']['identifier']
-            self.is_seekable = data['info']['isSeekable']
-            self.author = data['info']['author']
-            self.duration = data['info']['length']
-            self.stream = data['info']['isStream']
-            self.title = data['info']['title']
-            self.uri = data['info']['uri']
-            self.requester = requester
-            self.extra = extra
+            self.track: Optional[str] = data['track']
+            self.identifier: str = data['info']['identifier']
+            self.is_seekable: bool = data['info']['isSeekable']
+            self.author: str = data['info']['author']
+            self.duration: int = data['info']['length']
+            self.stream: bool = data['info']['isStream']
+            self.title: str = data['info']['title']
+            self.uri: str = data['info']['uri']
+            self.requester: int = requester
+            self.extra: dict = extra
         except KeyError as ke:
             missing_key, = ke.args
             raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
@@ -92,7 +94,7 @@ class AudioTrack:
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
 
 
-class DeferredAudioTrack(AudioTrack):
+class DeferredAudioTrack(ABC, AudioTrack):
     """
     Similar to an :class:`AudioTrack`, however this track only stores metadata up until it's
     played, at which time :func:`load` is called to retrieve a base64 string which is then used for playing.
@@ -119,6 +121,115 @@ class DeferredAudioTrack(AudioTrack):
         ----------
         client: :class:`Client`
             This will be an instance of the Lavalink client 'linked' to this track.
+        """
+        raise NotImplementedError
+
+
+class LoadType(Enum):
+    TRACK = 'TRACK_LOADED'
+    PLAYLIST = 'PLAYLIST_LOADED'
+    SEARCH = 'SEARCH_RESULT'
+    NO_MATCHES = 'NO_MATCHES'
+    LOAD_FAILED = 'LOAD_FAILED'
+
+    def __eq__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value == other.value  # pylint: disable=comparison-with-callable
+
+        if isinstance(other, str):
+            return self.value == other  # pylint: disable=comparison-with-callable
+
+        raise NotImplementedError
+
+    @classmethod
+    def from_str(cls, other: str):
+        try:
+            return cls[other.upper()]
+        except KeyError:
+            try:
+                return cls(other.upper())
+            except ValueError as ve:
+                raise ValueError('{} is not a valid LoadType enum!'.format(other)) from ve
+
+
+class PlaylistInfo:
+    """
+    Attributes
+    ----------
+    name: :class:`str`
+        The name of the playlist.
+    selected_track: :class:`int`
+        The index of the selected/highlighted track.
+        This will be -1 if there is no selected track.
+    """
+    def __init__(self, name: str, selected_track: int = -1):
+        self.name: str = name
+        self.selected_track: int = selected_track
+
+    def __getitem__(self, k):  # Exists only for compatibility, don't blame me
+        if k == 'selectedTrack':
+            k = 'selected_track'
+        return self.__getattribute__(k)
+
+    @classmethod
+    def from_dict(cls, mapping: dict):
+        return cls(mapping.get('name'), mapping.get('selectedTrack', -1))
+
+    @classmethod
+    def none(cls):
+        return cls('', -1)
+
+
+class LoadResult:
+    def __init__(self, load_type: LoadType, tracks: List[Union[DeferredAudioTrack, AudioTrack]],
+                 playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()):
+        self.load_type: LoadType = load_type
+        self.playlist_info: PlaylistInfo = playlist_info
+        self.tracks: List[Union[DeferredAudioTrack, AudioTrack]] = tracks
+
+    def __getitem__(self, k):  # Exists only for compatibility, don't blame me
+        if k == 'loadType':
+            k = 'load_type'
+        elif k == 'playlistInfo':
+            k = 'playlist_info'
+
+        return self.__getattribute__(k)
+
+    @classmethod
+    def from_dict(cls, mapping: dict):
+        load_type = LoadType.from_str(mapping.get('loadType'))
+        playlist_info = PlaylistInfo.from_dict(mapping.get('playlistInfo'))
+        tracks = [AudioTrack(track, 0) for track in mapping.get('tracks')]
+        return cls(load_type, tracks, playlist_info)
+
+
+class Source(ABC):
+    def __init__(self, name: str):
+        self.name: str = name
+
+    def __eq__(self, other):
+        if self.__class__ is other.__class__:
+            return self.name == other.name
+
+        raise NotImplementedError
+
+    @abstractmethod
+    async def load_item(self, client, query: str) -> Optional[LoadResult]:
+        """
+        Loads a track with the given query.
+
+        Parameters
+        ----------
+        client: :class:`Client`
+            The Lavalink client. This could be useful for performing a Lavalink search
+            for an identical track from other sources, if needed.
+        query: :class:`str`
+            The search query that was provided.
+
+        Returns
+        -------
+        Optional[:class:`LoadResult`]
+            A LoadResult, or None if there were no matches for the provided query.
         """
         raise NotImplementedError
 

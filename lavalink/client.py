@@ -26,14 +26,14 @@ import itertools
 import logging
 import random
 from collections import defaultdict
-from typing import Union
+from typing import Set, Union
 from urllib.parse import quote
 
 import aiohttp
 
 from .errors import AuthenticationError, NodeError
 from .events import Event
-from .models import DefaultPlayer
+from .models import DefaultPlayer, LoadResult, Source
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
@@ -92,10 +92,23 @@ class Client:
         self._connect_back: bool = connect_back
         self.node_manager: NodeManager = NodeManager(self, regions)
         self.player_manager: PlayerManager = PlayerManager(self, player)
+        self.sources: Set[Source] = set()
 
     def add_event_hook(self, hook):
+        """
+        hello yes TODO
+        """
         if hook not in self._event_hooks['Generic']:
             self._event_hooks['Generic'].append(hook)
+
+    def register_source(self, source: Source):
+        """
+        hello yes TODO
+        """
+        if not isinstance(source, Source):
+            raise TypeError('source must inherit from Source!')
+
+        self.sources.add(source)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
@@ -133,9 +146,12 @@ class Client:
         self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
                                    filters)
 
-    async def get_tracks(self, query: str, node: Node = None):
+    async def get_tracks(self, query: str, node: Node = None, check_local: bool = True) -> LoadResult:
         """|coro|
         Retrieves a list of results pertaining to the provided query.
+
+        If ``check_local`` is set to ``True`` and any of the sources return a :class:`LoadResult`
+        then that result will be returned, and Lavalink will not be queried.
 
         Parameters
         ----------
@@ -144,12 +160,21 @@ class Client:
         node: Optional[:class:`Node`]
             The node to use for track lookup. Leave this blank to use a random node.
             Defaults to `None` which is a random node.
+        check_local: :class:`bool`
+            Whether to also search the query on sources registered with this Lavalink client.
 
         Returns
         -------
         :class:`dict`
             A dict representing the load response from Lavalink.
         """
+        if check_local:
+            for source in self.sources:
+                load_result = await source.load_item(self, query)
+
+                if load_result:
+                    return load_result
+
         if not self.node_manager.available_nodes:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
@@ -160,7 +185,7 @@ class Client:
 
         async with self._session.get(destination, headers=headers) as res:
             if res.status == 200:
-                return await res.json()
+                return LoadResult.from_dict(await res.json())
 
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
@@ -208,7 +233,7 @@ class Client:
 
         Parameters
         ----------
-        tracks: list[:class:`str`]
+        tracks: List[:class:`str`]
             A list of base64-encoded `track` strings.
         node: Optional[:class:`Node`]
             The node to use for the query. Defaults to `None` which is a random node.
