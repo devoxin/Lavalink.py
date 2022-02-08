@@ -75,7 +75,6 @@ class AudioTrack:
         try:
             if isinstance(data, AudioTrack):
                 extra = data.extra
-                requester = data.requester
                 data = data._raw
 
             self._raw = data
