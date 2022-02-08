@@ -38,6 +38,9 @@ class Filter:
 
 
 class Volume(Filter):
+    """
+    Adjusts the audio output volume.
+    """
     def __init__(self):
         super().__init__(1.0)
 
@@ -71,6 +74,10 @@ class Volume(Filter):
 
 
 class Equalizer(Filter):
+    """
+    Allows modifying the gain of 15 bands, to boost or reduce the volume of specific frequency ranges.
+    For example, this could be used to boost the low (bass) frequencies to act as a 'bass boost'.
+    """
     def __init__(self):
         super().__init__([0.0] * 15)
 
@@ -139,6 +146,10 @@ class Equalizer(Filter):
 
 
 class Karaoke(Filter):
+    """
+    Allows for isolating a frequency range (commonly, the vocal range).
+    Useful for 'karaoke'/sing-along.
+    """
     def __init__(self):
         super().__init__({'level': 1.0, 'monoLevel': 1.0, 'filterBand': 220.0, 'filterWidth': 100.0})
 
@@ -172,6 +183,9 @@ class Karaoke(Filter):
 
 
 class Timescale(Filter):
+    """
+    Allows speeding up/slowing down the audio, adjusting the pitch and playback rate.
+    """
     def __init__(self):
         super().__init__({'speed': 1.0, 'pitch': 1.0, 'rate': 1.0})
 
@@ -225,6 +239,9 @@ class Timescale(Filter):
 
 
 class Tremolo(Filter):
+    """
+    Applies a 'tremble' effect to the audio.
+    """
     def __init__(self):
         super().__init__({'frequency': 2.0, 'depth': 0.5})
 
@@ -266,6 +283,9 @@ class Tremolo(Filter):
 
 
 class Vibrato(Filter):
+    """
+    Applies a 'wobble' effect to the audio.
+    """
     def __init__(self):
         super().__init__({'frequency': 2.0, 'depth': 0.5})
 
@@ -307,6 +327,10 @@ class Vibrato(Filter):
 
 
 class Rotation(Filter):
+    """
+    Phases the audio in and out of the left and right channels in an alternating manner.
+    This is commonly used to create the 8D effect.
+    """
     def __init__(self):
         super().__init__({'rotationHz': 0.0})
 
@@ -336,6 +360,10 @@ class Rotation(Filter):
 
 
 class LowPass(Filter):
+    """
+    Applies an low-pass effect to the audio, whereby only low frequencies can pass,
+    effectively cutting off high frequencies meaning more emphasis is put on lower frequencies.
+    """
     def __init__(self):
         super().__init__({'smoothing': 20.0})
 
@@ -354,6 +382,10 @@ class LowPass(Filter):
 
 
 class ChannelMix(Filter):
+    """
+    Allows passing the audio from one channel to the other, or isolating individual
+    channels.
+    """
     def __init__(self):
         super().__init__({'leftToLeft': 1.0, 'leftToRight': 0.0, 'rightToLeft': 0.0, 'rightToRight': 1.0})
 
@@ -419,6 +451,9 @@ class ChannelMix(Filter):
 
 
 class Distortion(Filter):
+    """
+    As the name suggests, this distorts the audio.
+    """
     def __init__(self):
         super().__init__({'sinOffset': 0.0, 'sinScale': 1.0, 'cosOffset': 0.0, 'cosScale': 1.0,
                           'tanOffset': 0.0, 'tanScale': 1.0, 'offset': 0.0, 'scale': 1.0})
@@ -470,6 +505,3 @@ class Distortion(Filter):
 
     def serialize(self) -> dict:
         return {'distortion': self.values}
-
-
-# TODO: Filter descriptions
