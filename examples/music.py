@@ -185,8 +185,8 @@ class Music(commands.Cog):
         results = await player.node.get_tracks(query)
 
         # Results could be None if Lavalink returns an invalid response (non-JSON/non-200 (OK)).
-        # ALternatively, resullts['tracks'] could be an empty array if the query yielded no tracks.
-        if not results or not results['tracks']:
+        # ALternatively, resullts.tracks could be an empty array if the query yielded no tracks.
+        if not results or not results.tracks:
             return await ctx.send('Nothing found!')
 
         embed = discord.Embed(color=discord.Color.blurple())
@@ -197,19 +197,19 @@ class Music(commands.Cog):
         #   SEARCH_RESULT   - query prefixed with either ytsearch: or scsearch:.
         #   NO_MATCHES      - query yielded no results
         #   LOAD_FAILED     - most likely, the video encountered an exception during loading.
-        if results['loadType'] == 'PLAYLIST_LOADED':
-            tracks = results['tracks']
+        if results.load_type == 'PLAYLIST_LOADED':
+            tracks = results.tracks
 
             for track in tracks:
                 # Add all of the tracks from the playlist to the queue.
                 player.add(requester=ctx.author.id, track=track)
 
             embed.title = 'Playlist Enqueued!'
-            embed.description = f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks'
+            embed.description = f'{results.playlist_info.name} - {len(tracks)} tracks'
         else:
-            track = results['tracks'][0]
+            track = results.tracks[0]
             embed.title = 'Track Enqueued'
-            embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
+            embed.description = f'[{track.title}]({track.uri})'
 
             player.add(requester=ctx.author.id, track=track)
 
