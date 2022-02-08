@@ -182,10 +182,10 @@ class PlayerManager:
             return
 
         player = self.players.pop(guild_id)
+        player.cleanup()
 
-        if player.node and player.node.available:
+        if player.node:
             await player.node._send(op='destroy', guildId=player._internal_id)
-            player.cleanup()
 
         self._lavalink._logger.debug('[PlayerManager] Destroyed player with GuildId {} on node \'{}\''
-                                     .format(guild_id, player.node.name))
+                                     .format(guild_id, player.node.name if player.node else 'UNASSIGNED'))

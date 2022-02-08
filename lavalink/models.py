@@ -272,8 +272,9 @@ class BasePlayer(ABC):
         This could be None if the player isn't connected.
     """
     def __init__(self, guild_id, node):
-        self.guild_id = guild_id
-        self._internal_id = str(guild_id)
+        self._lavalink = node._manager._lavalink
+        self.guild_id: int = guild_id
+        self._internal_id: str = str(guild_id)
         self.node = node
         self._original_node = None  # This is used internally for failover.
         self._voice_state = {}
@@ -289,6 +290,13 @@ class BasePlayer(ABC):
 
     def cleanup(self):
         pass
+
+    async def destroy(self):
+        """
+        Destroys the current player instance.
+        Shortcut for :func:`PlayerManager.destroy`.
+        """
+        await self._lavalink.player_manager.destroy(self.guild.id)
 
     async def _voice_server_update(self, data):
         self._voice_state.update({
@@ -317,6 +325,14 @@ class BasePlayer(ABC):
 
     @abstractmethod
     async def change_node(self, node):
+        """
+        Called when a node change is requested for the current player instance.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The new node to switch to.
+        """
         raise NotImplementedError
 
 
