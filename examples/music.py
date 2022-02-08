@@ -28,35 +28,36 @@ class LavalinkVoiceClient(discord.VoiceClient):
     def __init__(self, client: discord.Client, channel: discord.abc.Connectable):
         self.client = client
         self.channel = channel
-        # ensure there exists a client already
+        # ensure a client already exists
         if hasattr(self.client, 'lavalink'):
             self.lavalink = self.client.lavalink
         else:
             self.client.lavalink = lavalink.Client(client.user.id)
             self.client.lavalink.add_node(
-                    'localhost',
-                    2333,
-                    'youshallnotpass',
-                    'us',
-                    'default-node')
+                'localhost',
+                2333,
+                'youshallnotpass',
+                'us',
+                'default-node'
+            )
             self.lavalink = self.client.lavalink
 
     async def on_voice_server_update(self, data):
         # the data needs to be transformed before being handed down to
         # voice_update_handler
         lavalink_data = {
-                't': 'VOICE_SERVER_UPDATE',
-                'd': data
-                }
+            't': 'VOICE_SERVER_UPDATE',
+            'd': data
+        }
         await self.lavalink.voice_update_handler(lavalink_data)
 
     async def on_voice_state_update(self, data):
         # the data needs to be transformed before being handed down to
         # voice_update_handler
         lavalink_data = {
-                't': 'VOICE_STATE_UPDATE',
-                'd': data
-                }
+            't': 'VOICE_STATE_UPDATE',
+            'd': data
+        }
         await self.lavalink.voice_update_handler(lavalink_data)
 
     async def connect(self, *, timeout: float, reconnect: bool) -> None:
@@ -210,9 +211,6 @@ class Music(commands.Cog):
             embed.title = 'Track Enqueued'
             embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
 
-            # You can attach additional information to audiotracks through kwargs, however this involves
-            # constructing the AudioTrack class yourself.
-            track = AudioTrack(track, ctx.author.id, recommended=True)
             player.add(requester=ctx.author.id, track=track)
 
         await ctx.send(embed=embed)
