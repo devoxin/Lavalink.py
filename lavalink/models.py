@@ -39,7 +39,7 @@ class AudioTrack:
 
     Parameters
     ----------
-    data: :class:`dict`
+    data: Union[:class:`dict`, :class:`AudioTrack`]
         The data to initialise an AudioTrack from.
     requester: :class:`any`
         The requester of the track.
@@ -73,6 +73,11 @@ class AudioTrack:
 
     def __init__(self, data: dict, requester: int, **extra):
         try:
+            if isinstance(data, AudioTrack):
+                extra = data.extra
+                requester = data.requester
+                data = data._raw
+
             self._raw = data
 
             info = data.get('info', data)
@@ -296,7 +301,7 @@ class BasePlayer(ABC):
         Destroys the current player instance.
         Shortcut for :func:`PlayerManager.destroy`.
         """
-        await self._lavalink.player_manager.destroy(self.guild.id)
+        await self._lavalink.player_manager.destroy(self.guild_id)
 
     async def _voice_server_update(self, data):
         self._voice_state.update({
