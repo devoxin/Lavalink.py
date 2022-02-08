@@ -361,7 +361,7 @@ class Rotation(Filter):
 
 class LowPass(Filter):
     """
-    Applies an low-pass effect to the audio, whereby only low frequencies can pass,
+    Applies a low-pass effect to the audio, whereby only low frequencies can pass,
     effectively cutting off high frequencies meaning more emphasis is put on lower frequencies.
     """
     def __init__(self):
