@@ -48,9 +48,10 @@ class AudioTrack:
 
     Attributes
     ----------
-    track: :class:`str`
+    track: Optional[:class:`str`]
         The base64-encoded string representing a Lavalink-readable AudioTrack.
-        THIS COULD BE ``None`` IN THE CASE OF :class:`DeferredAudioTrack`.
+        This is marked optional as it could be None when it's not set by a custom :class:`Source`,
+        which is expected behaviour when the subclass is a :class:`DeferredAudioTrack`.
     identifier: :class:`str`
         The track's id. For example, a youtube track's identifier will look like dQw4w9WgXcQ.
     is_seekable: :class:`bool`
