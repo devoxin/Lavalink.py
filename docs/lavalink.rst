@@ -5,6 +5,8 @@ Documentation
 
 .. autofunction:: enable_debug_logging
 
+.. autofunction:: listener
+
 .. autofunction:: add_event_hook
 
 Client
