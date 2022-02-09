@@ -64,14 +64,24 @@ class WebSocket:
         """ Returns whether the websocket is connected to Lavalink. """
         return self._ws is not None and not self._ws.closed
 
+    async def close(self):
+        """ Shuts down the websocket connection if there is one. """
+        if self._ws:
+            self._ws.close(code=aiohttp.WSCloseCode.OK)
+            self._ws = None
+
     async def connect(self):
         """ Attempts to establish a connection to Lavalink. """
+        if self._ws:
+            await self.close()
+
         headers = {
             'Authorization': self._password,
             'User-Id': str(self._lavalink._user_id),
             'Client-Name': 'Lavalink.py',
             'Num-Shards': '1'  # Legacy header that is no longer used. Here for compatibility.
-        }  # soonTM: User-Agent? Also include version in Client-Name as per optional implementation format.
+        }
+        # TODO: 'User-Agent': 'Lavalink.py/{} (https://github.com/devoxin/lavalink.py)'.format(__version__)
 
         if self._resuming_configured and self._resume_key:
             headers['Resume-Key'] = self._resume_key

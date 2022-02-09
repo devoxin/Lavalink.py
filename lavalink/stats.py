@@ -60,7 +60,7 @@ class Penalty:
 
 class Stats:
     """
-    Represents the stats of Lavalink node.
+    Encapsulates the 'Statistics' emitted by Lavalink, usually every minute.
 
     Attributes
     ----------
