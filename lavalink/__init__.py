@@ -48,6 +48,33 @@ def enable_debug_logging():
     log.setLevel(logging.DEBUG)
 
 
+def listener(*events: Event):
+    """
+    Marks this function as an event listener for Lavalink.py.
+
+    Example:
+
+        .. code:: python
+
+            @listener()
+            async def on_lavalink_event(self, event):  # Event can be ANY Lavalink event
+                ...
+
+            @listener(TrackStartEvent)
+            async def on_track_start(self, event: TrackStartEvent):
+                ...
+
+    Parameters
+    ----------
+    events: List[:class:`Event`]
+        The events to listen for. Leave this empty to listen for all events.
+    """
+    def wrapper(func):
+        setattr(func, '_lavalink_events', events)
+        return func
+    return wrapper
+
+
 def add_event_hook(*hooks, event: Event = None):
     """
     Adds an event hook to be dispatched on an event.

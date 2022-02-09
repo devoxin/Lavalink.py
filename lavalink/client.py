@@ -26,6 +26,7 @@ import itertools
 import logging
 import random
 from collections import defaultdict
+from inspect import getmembers, ismethod
 from typing import Set, Union
 from urllib.parse import quote
 
@@ -106,6 +107,38 @@ class Client:
         if hook not in self._event_hooks['Generic']:
             self._event_hooks['Generic'].append(hook)
 
+    def add_event_hooks(self, cls):
+        """
+        Scans the provided class ``cls`` for functions decorated with :func:`listener`,
+        and sets them up to process Lavalink events.
+
+        Example:
+
+            .. code:: python
+
+                # Inside a class __init__ method
+                self.client = lavalink.Client(...)
+                self.client.add_event_hooks(self)
+
+        Parameters
+        ----------
+        cls: :class:`Class`
+            An instance of a class.
+        """
+        methods = getmembers(cls, predicate=lambda meth: hasattr(meth, '__name__')
+                             and not meth.__name__.startswith('_') and ismethod(meth)
+                             and hasattr(meth, '_lavalink_events'))
+
+        for _, listener in methods:  # _ = meth_name
+            # wrapped = partial(listener, cls)
+            events = listener._lavalink_events
+
+            if events:
+                for event in events:
+                    self._event_hooks[event.__name__].append(listener)
+            else:
+                self._event_hooks['Generic'].append(listener)
+
     def register_source(self, source: Source):
         """
         Registers a :class:`Source` that Lavalink.py will use for looking up tracks.
@@ -122,7 +155,7 @@ class Client:
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3, filters: bool = False):
+                 reconnect_attempts: int = 3, filters: bool = True):
         """
         Adds a node to Lavalink's node manager.
 
@@ -148,10 +181,8 @@ class Client:
             The amount of times connection with the node will be reattempted before giving up.
             Set to `-1` for infinite. Defaults to `3`.
         filters: Optional[:class:`bool`]
-            Whether to use the new ``filters`` op. This setting currently only applies to development
-            Lavalink builds, where the ``equalizer`` op was swapped out for the broader ``filters`` op which
-            offers more than just equalizer functionality. Ideally, you should only change this setting if you
-            know what you're doing, as this can prevent the effects from working.
+            Whether to use the new ``filters`` op instead of the ``equalizer`` op.
+            If you're running a build without filter support, set this to ``False``.
         """
         self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
                                    filters)
