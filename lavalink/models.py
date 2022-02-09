@@ -488,7 +488,7 @@ class DefaultPlayer(BasePlayer):
             self.queue.insert(index, at)
 
     async def play(self, track: Union[AudioTrack, DeferredAudioTrack, Dict] = None, start_time: int = 0, end_time: int = 0,
-                   no_replace: bool = False):
+                   no_replace: bool = False, volume: Optional[int] = None, pause: bool = False):
         """
         Plays the given track.
 
@@ -510,6 +510,11 @@ class DefaultPlayer(BasePlayer):
         no_replace: Optional[:class:`bool`]
             If set to true, operation will be ignored if a track is already playing or paused.
             Defaults to `False`
+        volume: Optional[:class:`int`]
+            The initial volume to set. This is useful for changing the volume between tracks etc.
+            If ``None`` is provided, the volume will remain unchanged from :attr:`volume`.
+        pause: Optional[:class:`bool`]
+            Whether to immediately pause the track after loading it.
         """
         if track is not None and isinstance(track, dict):
             track = AudioTrack(track, 0)
@@ -520,7 +525,7 @@ class DefaultPlayer(BasePlayer):
         self._last_update = 0
         self._last_position = 0
         self.position_timestamp = 0
-        self.paused = False
+        self.paused = pause
 
         if not track:
             if not self.queue:
@@ -543,12 +548,22 @@ class DefaultPlayer(BasePlayer):
                 raise ValueError('end_time must be an int with a value equal to, or greater than 0, and less than the track duration')
             options['endTime'] = end_time
 
-        if no_replace is None:
-            no_replace = False
-        if not isinstance(no_replace, bool):
-            raise TypeError('no_replace must be a bool')
+        if no_replace is not None:
+            if not isinstance(no_replace, bool):
+                raise TypeError('no_replace must be a bool')
+            options['noReplace'] = no_replace
 
-        options['noReplace'] = no_replace
+        if volume is not None:
+            if not isinstance(volume, int):
+                raise TypeError('volume must be an int')
+            self.volume = max(min(volume, 1000), 0)
+            options['volume'] = self.volume
+
+        if pause is not None:
+            if not isinstance(pause, bool):
+                raise TypeError('pause must be a bool')
+            options['pause'] = pause
+
         self.current = track
         playable_track = track.track
 
