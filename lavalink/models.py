@@ -618,8 +618,8 @@ class DefaultPlayer(BasePlayer):
         pause: :class:`bool`
             Whether to pause the player or not.
         """
-        await self.node._send(op='pause', guildId=self._internal_id, pause=pause)
         self.paused = pause
+        await self.node._send(op='pause', guildId=self._internal_id, pause=pause)
 
     async def set_volume(self, vol: int):
         """
@@ -634,8 +634,8 @@ class DefaultPlayer(BasePlayer):
         vol: :class:`int`
             The new volume level.
         """
-        await self.node._send(op='volume', guildId=self._internal_id, volume=self.volume)
         self.volume = max(min(vol, 1000), 0)
+        await self.node._send(op='volume', guildId=self._internal_id, volume=self.volume)
 
     async def seek(self, position: int):
         """
