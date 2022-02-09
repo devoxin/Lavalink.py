@@ -44,13 +44,14 @@ def enable_debug_logging():
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(fmt)
     log.addHandler(handler)
-
     log.setLevel(logging.DEBUG)
 
 
 def listener(*events: Event):
     """
     Marks this function as an event listener for Lavalink.py.
+    This **must** be used on class methods, and you must ensure that you register
+    decorated methods by using :func:`Client.add_event_hooks`.
 
     Example:
 
