@@ -65,11 +65,16 @@ class AudioTrack:
         The title of the track.
     uri: :class:`str`
         The full URL of track.
+    position: :class:`int`
+        The playback position of the track, in milliseconds.
+        This is a read-only property; setting it won't have any effect.
+    source_name: :class:`str`
+        The name of the source that this track was created by.
     extra: :class:`dict`
         Any extra properties given to this AudioTrack will be stored here.
     """
     __slots__ = ('_raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri',
-                 'requester', 'extra')
+                 'position', 'source_name', 'requester', 'extra')
 
     def __init__(self, data: dict, requester: int, **extra):
         try:
@@ -88,6 +93,8 @@ class AudioTrack:
             self.stream: bool = info['isStream']
             self.title: str = info['title']
             self.uri: str = info['uri']
+            self.position: int = info.get('position', 0)
+            self.source_name: str = info.get('source', 'unknown')
             self.requester: int = requester
             self.extra: dict = extra
         except KeyError as ke:
