@@ -374,12 +374,12 @@ class Client:
             raise NodeError('An invalid response was received from the node: code={}, body={}'
                             .format(res.status, await res.text()))
 
-    async def _post_request(self, url, json=False, **kwargs):
+    async def _post_request(self, url, **kwargs):
         async with self._session.post(url, **kwargs) as res:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
 
-            if json:
+            if 'json' in kwargs:
                 if res.status == 200:
                     return await res.json()
 
