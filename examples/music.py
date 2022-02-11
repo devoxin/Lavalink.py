@@ -12,7 +12,6 @@ import discord
 import lavalink
 from discord.ext import commands
 from lavalink.filters import LowPass
-from lavalink.models import AudioTrack
 
 url_rx = re.compile(r'https?://(?:www\.)?.+')
 
