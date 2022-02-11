@@ -27,6 +27,7 @@ compatibility may be possible, it's not encouraged nor is support guaranteed.
 - Multi-Node Support
 - Load Balancing (this includes region-based load balancing)
 - Audio Filters
+- [Custom Sources](examples/custom_source.py)
 
 ## Optional Dependencies
 *These are used by aiohttp.*
