@@ -368,12 +368,12 @@ class DefaultPlayer(BasePlayer):
         Whether or not to mix the queue up in a random playing order.
     repeat: :class:`bool`
         Whether or not to continuously to play a track.
-    filters: :class:`dict`
-        A mapping of filter names, to their respective :class:`Filter` instance.
-    queue: :class:`list`
-        The order of which tracks are played.
-    current: :class:`AudioTrack`
-        The track that is playing currently.
+    filters: Dict[:class:`str`, :class:`Filter`]
+        A mapping of str to :class:`Filter`, representing currently active filters.
+    queue: List[:class:`AudioTrack`]
+        A list of AudioTracks to play.
+    current: Optional[:class:`AudioTrack`]
+        The track that is playing currently, if any.
     """
     def __init__(self, guild_id, node):
         super().__init__(guild_id, node)
@@ -441,7 +441,7 @@ class DefaultPlayer(BasePlayer):
 
         Returns
         -------
-        :class:`any`
+        Optional[:class:`any`]
         """
         return self._user_data.get(key, default)
 
@@ -453,6 +453,11 @@ class DefaultPlayer(BasePlayer):
         ----------
         key: :class:`object`
             The key to delete.
+
+        Raises
+        ------
+        :class:`KeyError`
+            If the key doesn't exist.
         """
         try:
             del self._user_data[key]
@@ -515,6 +520,13 @@ class DefaultPlayer(BasePlayer):
             If ``None`` is provided, the volume will remain unchanged from :attr:`volume`.
         pause: Optional[:class:`bool`]
             Whether to immediately pause the track after loading it.
+
+        Raises
+        ------
+        :class:`ValueError`
+            If invalid values were provided for ``start_time`` or ``end_time``.
+        :class:`TypeError`
+            If wrong types were provided for ``no_replace``, ``volume`` or ``pause``.
         """
         if track is not None and isinstance(track, dict):
             track = AudioTrack(track, 0)
@@ -602,6 +614,7 @@ class DefaultPlayer(BasePlayer):
     def set_shuffle(self, shuffle: bool):
         """
         Sets the player's shuffle state.
+
         Parameters
         ----------
         shuffle: :class:`bool`
@@ -660,12 +673,62 @@ class DefaultPlayer(BasePlayer):
             equalizer = Equalizer()
             equalizer.update(bands=[(0, 0.2), (1, 0.3), (2, 0.17)])
             player.set_filter(equalizer)
+
+        Parameters
+        ----------
+        _filter: :class:`Filter`
+            The filter instance to set.
+
+        Raises
+        ------
+        :class:`TypeError`
+            If the provided ``_filter`` is not of type :class:`Filter`.
         """
         if not isinstance(_filter, Filter):
             raise TypeError('Expected object of type Filter, not ' + type(_filter).__name__)
 
         filter_name = type(_filter).__name__.lower()
         self.filters[filter_name] = _filter
+        await self._apply_filters()
+
+    async def update_filter(self, _filter: Filter, **kwargs):
+        """
+        Updates a filter using the upsert method;
+        if the filter exists within the player, its values will be updated;
+        if the filter does not exist, it will be created with the provided values.
+
+        This will not overwrite any values that have not been provided.
+
+        Example
+        -------
+        .. code :: python
+
+            player.update_filter(Timescale, speed=1.5)
+            # This means that, if the Timescale filter is already applied
+            # and it already has set values of "speed=1, pitch=1.2", pitch will remain
+            # the same, however speed will be changed to 1.5 so the result is
+            # "speed=1.5, pitch=1.2"
+
+        Parameters
+        ----------
+        _filter: :class:`Filter`
+            The filter class (**not** an instance of, see above example) to upsert.
+        **kwargs: :class:`any`
+            The kwargs to pass to the filter.
+
+        Raises
+        ------
+        :class:`TypeError`
+            If the provided ``_filter`` is not of type :class:`Filter`.
+        """
+        if not isinstance(_filter, Filter):
+            raise TypeError('Expected object of type Filter, not ' + type(_filter).__name__)
+
+        filter_name = type(_filter).__name__.lower()
+
+        filter_instance = self.filters.get(filter_name, _filter())
+        filter_instance.update(**kwargs)
+        self.filters[filter_name] = filter_instance
         await self._apply_filters()
 
     async def get_filter(self, _filter: Union[Filter, str]):
@@ -680,6 +743,11 @@ class DefaultPlayer(BasePlayer):
             timescale = player.get_filter(Timescale)
             # or
             timescale = player.get_filter('timescale')
+
+        Parameters
+        ----------
+        _filter: Union[:class:`Filter`, :class:`str`]
+            The filter name, or filter class (**not** an instance of, see above example), to get.
 
         Returns
         -------
@@ -705,6 +773,11 @@ class DefaultPlayer(BasePlayer):
             player.remove_filter(Timescale)
             # or
             player.remove_filter('timescale')
+
+        Parameters
+        ----------
+        _filter: Union[:class:`Filter`, :class:`str`]
+            The filter name, or filter class (**not** an instance of, see above example), to remove.
         """
         if isinstance(_filter, str):
             filter_name = _filter
