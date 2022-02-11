@@ -1,4 +1,6 @@
 [Lavalink]: https://github.com/freyacodes/Lavalink
+[Documentation]: https://lavalink.readthedocs.io/en/master/
+[Latest Docs]: https://lavalink.readthedocs.io/en/latest/
 
 <img align="right" src="https://serux.pro/9e83af1581.png" height="150" width="150">
 
@@ -48,4 +50,4 @@ The exception to the "unsupported platforms" rule are ARM-based machines, for ex
 ## Need Further Help?
 [Discord Server](https://discord.gg/SbJXU9s)
 
-[Documentation](https://lavalink.readthedocs.io/en/latest/)
+[Documentation] or [Latest Docs] (for Lavalink.py 4.0)
