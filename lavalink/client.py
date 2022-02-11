@@ -224,19 +224,8 @@ class Client:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
-        headers = {
-            'Authorization': node.password
-        }
-
-        async with self._session.get(destination, headers=headers) as res:
-            if res.status == 200:
-                return LoadResult.from_dict(await res.json())
-
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            raise NodeError('An invalid response was received from the node: code={}, body={}'
-                            .format(res.status, await res.text()))
+        res = await self._get_request(destination, headers={'Authorization': node.password})
+        return LoadResult.from_dict(res)
 
     async def decode_track(self, track: str, node: Node = None):
         """|coro|
@@ -258,19 +247,7 @@ class Client:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/decodetrack?track={}'.format(node.host, node.port, track)
-        headers = {
-            'Authorization': node.password
-        }
-
-        async with self._session.get(destination, headers=headers) as res:
-            if res.status == 200:
-                return await res.json()
-
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            raise NodeError('An invalid response was received from the node: code={}, body={}'
-                            .format(res.status, await res.text()))
+        return await self._get_request(destination, headers={'Authorization': node.password})
 
     async def decode_tracks(self, tracks: list, node: Node = None):
         """|coro|
@@ -292,19 +269,9 @@ class Client:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
         destination = 'http://{}:{}/decodetracks'.format(node.host, node.port)
-        headers = {
-            'Authorization': node.password
-        }
 
-        async with self._session.post(destination, headers=headers, json=tracks) as res:
-            if res.status == 200:
-                return await res.json()
-
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            raise NodeError('An invalid response was received from the node: code={}, body={}'
-                            .format(res.status, await res.text()))
+        return await self._post_request(destination, headers={'Authorization': node.password},
+                                        json=tracks)
 
     async def routeplanner_status(self, node: Node):
         """|coro|
@@ -321,19 +288,7 @@ class Client:
             A dict representing the routeplanner information.
         """
         destination = 'http://{}:{}/routeplanner/status'.format(node.host, node.port)
-        headers = {
-            'Authorization': node.password
-        }
-
-        async with self._session.get(destination, headers=headers) as res:
-            if res.status == 200:
-                return await res.json()
-
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            raise NodeError('An invalid response was received from the node: code={}, body={}'
-                            .format(res.status, await res.text()))
+        return await self._get_request(destination, headers={'Authorization': node.password})
 
     async def routeplanner_free_address(self, node: Node, address: str):
         """|coro|
@@ -352,12 +307,8 @@ class Client:
             True if the address was freed, False otherwise.
         """
         destination = 'http://{}:{}/routeplanner/free/address'.format(node.host, node.port)
-        headers = {
-            'Authorization': node.password
-        }
-
-        async with self._session.post(destination, headers=headers, json={'address': address}) as res:
-            return res.status == 204
+        return await self._post_request(destination, headers={'Authorization': node.password},
+                                        json={'address': address})
 
     async def routeplanner_free_all_failing(self, node: Node):
         """|coro|
@@ -374,12 +325,7 @@ class Client:
             True if all failing addresses were freed, False otherwise.
         """
         destination = 'http://{}:{}/routeplanner/free/all'.format(node.host, node.port)
-        headers = {
-            'Authorization': node.password
-        }
-
-        async with self._session.post(destination, headers=headers) as res:
-            return res.status == 204
+        return await self._post_request(destination, headers={'Authorization': node.password})
 
     async def voice_update_handler(self, data):
         """|coro|
@@ -416,6 +362,31 @@ class Client:
 
             if player:
                 await player._voice_state_update(data['d'])
+
+    async def _get_request(self, url, **kwargs):
+        async with self._session.get(url, **kwargs) as res:
+            if res.status == 200:
+                return await res.json()
+
+            if res.status == 401 or res.status == 403:
+                raise AuthenticationError
+
+            raise NodeError('An invalid response was received from the node: code={}, body={}'
+                            .format(res.status, await res.text()))
+
+    async def _post_request(self, url, json=False, **kwargs):
+        async with self._session.post(url, **kwargs) as res:
+            if res.status == 401 or res.status == 403:
+                raise AuthenticationError
+
+            if json:
+                if res.status == 200:
+                    return await res.json()
+
+                raise NodeError('An invalid response was received from the node: code={}, body={}'
+                                .format(res.status, await res.text()))
+
+            return res.status == 204
 
     async def _dispatch_event(self, event: Event):
         """|coro|
