@@ -761,6 +761,9 @@ class DefaultPlayer(BasePlayer):
         elif isinstance(_filter, Filter):  # User passed an instance of.
             filter_name = type(_filter).__name__
         else:
+            if not issubclass(_filter, Filter):
+                raise TypeError('Expected subclass of type Filter, not ' + _filter.__name__)
+
             filter_name = _filter.__name__
 
         return self.filters.get(filter_name.lower(), None)
@@ -787,6 +790,9 @@ class DefaultPlayer(BasePlayer):
         elif isinstance(_filter, Filter):  # User passed an instance of.
             filter_name = type(_filter).__name__
         else:
+            if not issubclass(_filter, Filter):
+                raise TypeError('Expected subclass of type Filter, not ' + _filter.__name__)
+
             filter_name = _filter.__name__
 
         fn_lowered = filter_name.lower()
