@@ -721,10 +721,10 @@ class DefaultPlayer(BasePlayer):
         :class:`TypeError`
             If the provided ``_filter`` is not of type :class:`Filter`.
         """
-        if not isinstance(_filter, Filter):
-            raise TypeError('Expected object of type Filter, not ' + type(_filter).__name__)
+        if not issubclass(_filter, Filter):
+            raise TypeError('Expected subclass of type Filter, not ' + _filter.__name__)
 
-        filter_name = type(_filter).__name__.lower()
+        filter_name = _filter.__name__.lower()
 
         filter_instance = self.filters.get(filter_name, _filter())
         filter_instance.update(**kwargs)
