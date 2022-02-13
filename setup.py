@@ -17,6 +17,7 @@ setup(
     description='A Lavalink WebSocket & API wrapper built around coverage, reliability and performance.',
     author='Devoxin',
     author_email='luke@serux.pro',
+    entry_points={'console_scripts': ['lavalink = lavalink.__main__:main']},
     url='https://github.com/Devoxin/Lavalink.py',
     download_url='https://github.com/Devoxin/Lavalink.py/archive/{}.tar.gz'.format(version),
     keywords=['lavalink'],
