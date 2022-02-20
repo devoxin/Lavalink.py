@@ -155,7 +155,7 @@ class Client:
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3, filters: bool = True):
+                 reconnect_attempts: int = 3, filters: bool = True, ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -183,9 +183,13 @@ class Client:
         filters: Optional[:class:`bool`]
             Whether to use the new ``filters`` op instead of the ``equalizer`` op.
             If you're running a build without filter support, set this to ``False``.
+        ssl: Optional[:class:`bool`]
+            Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
+            respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
+            other methods. Only enable this if you know what you're doing.
         """
         self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
-                                   filters)
+                                   filters, ssl)
 
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
@@ -223,8 +227,8 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
-        res = await self._get_request(destination, headers={'Authorization': node.password})
+        res = await self._get_request('{}/loadtracks?identifier={}'.format(node.http_uri, quote(query)),
+                                      headers={'Authorization': node.password})
         return LoadResult.from_dict(res)
 
     async def decode_track(self, track: str, node: Node = None):
@@ -246,8 +250,8 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/decodetrack?track={}'.format(node.host, node.port, track)
-        return await self._get_request(destination, headers={'Authorization': node.password})
+        return await self._get_request('{}/decodetrack?track={}'.format(node.http_uri, track),
+                                       headers={'Authorization': node.password})
 
     async def decode_tracks(self, tracks: list, node: Node = None):
         """|coro|
@@ -268,10 +272,9 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/decodetracks'.format(node.host, node.port)
 
-        return await self._post_request(destination, headers={'Authorization': node.password},
-                                        json=tracks)
+        return await self._post_request('{}/decodetracks'.format(node.http_uri),
+                                        headers={'Authorization': node.password}, json=tracks)
 
     async def routeplanner_status(self, node: Node):
         """|coro|
@@ -287,10 +290,10 @@ class Client:
         :class:`dict`
             A dict representing the routeplanner information.
         """
-        destination = 'http://{}:{}/routeplanner/status'.format(node.host, node.port)
-        return await self._get_request(destination, headers={'Authorization': node.password})
+        return await self._get_request('{}/routeplanner/status'.format(node.http_uri),
+                                       headers={'Authorization': node.password})
 
-    async def routeplanner_free_address(self, node: Node, address: str):
+    async def routeplanner_free_address(self, node: Node, address: str) -> bool:
         """|coro|
         Frees up the provided IP address in the target node's routeplanner.
 
@@ -306,11 +309,10 @@ class Client:
         :class:`bool`
             True if the address was freed, False otherwise.
         """
-        destination = 'http://{}:{}/routeplanner/free/address'.format(node.host, node.port)
-        return await self._post_request(destination, headers={'Authorization': node.password},
-                                        json={'address': address})
+        return await self._post_request('{}/routeplanner/free/address'.format(node.http_uri),
+                                        headers={'Authorization': node.password}, json={'address': address})
 
-    async def routeplanner_free_all_failing(self, node: Node):
+    async def routeplanner_free_all_failing(self, node: Node) -> bool:
         """|coro|
         Frees up all IP addresses in the target node that have been marked as failing.
 
@@ -324,8 +326,8 @@ class Client:
         :class:`bool`
             True if all failing addresses were freed, False otherwise.
         """
-        destination = 'http://{}:{}/routeplanner/free/all'.format(node.host, node.port)
-        return await self._post_request(destination, headers={'Authorization': node.password})
+        return await self._post_request('{}/routeplanner/free/all'.format(node.http_uri),
+                                        headers={'Authorization': node.password})
 
     async def voice_update_handler(self, data):
         """|coro|

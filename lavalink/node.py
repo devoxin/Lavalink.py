@@ -43,6 +43,8 @@ class Node:
         The port to use for websocket and REST connections.
     password: :class:`str`
         The password used for authentication.
+    ssl: :class:`bool`
+        Whether this node uses SSL (wss/https).
     region: :class:`str`
         The region to assign this node to.
     name: :class:`str`
@@ -55,40 +57,58 @@ class Node:
     """
     def __init__(self, manager, host: str, port: int, password: str,
                  region: str, resume_key: str, resume_timeout: int, name: str = None,
-                 reconnect_attempts: int = 3, filters: bool = False):
+                 reconnect_attempts: int = 3, filters: bool = False, ssl: bool = False):
         self._manager = manager
-        self._ws = WebSocket(self, host, port, password, resume_key, resume_timeout, reconnect_attempts)
+        self._ws = WebSocket(self, host, port, password, ssl, resume_key, resume_timeout, reconnect_attempts)
 
         self.host = host
         self.port = port
         self.password = password
+        self.ssl = ssl
         self.region = region
         self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
         self.filters = filters
         self.stats = Stats.empty(self)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """ Returns whether the node is available for requests. """
         return self._ws.connected
 
     @property
     def _original_players(self):
-        """ Returns a list of players that were assigned to this node, but were moved due to failover etc. """
+        """
+        Returns a list of players that were assigned to this node, but were moved due to failover etc.
+
+        Returns
+        -------
+        List[:class:`BasePlayer`]
+        """
         return [p for p in self._manager._lavalink.player_manager.values() if p._original_node == self]
 
     @property
     def players(self):
-        """ Returns a list of all players on this node. """
+        """
+        Returns a list of all players on this node.
+
+        Returns
+        -------
+        List[:class:`BasePlayer`]
+        """
         return [p for p in self._manager._lavalink.player_manager.values() if p.node == self]
 
     @property
-    def penalty(self):
+    def penalty(self) -> int:
         """ Returns the load-balancing penalty for this node. """
         if not self.available or not self.stats:
             return 9e30
 
         return self.stats.penalty.total
+
+    @property
+    def http_uri(self) -> str:
+        """ Returns a 'base' URI pointing to the node's address and port, also factoring in SSL. """
+        return '{}://{}:{}'.format('https' if self.ssl else 'http', self.host, self.port)
 
     async def get_tracks(self, query: str):
         """|coro|

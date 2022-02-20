@@ -61,7 +61,7 @@ class NodeManager:
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3, filters: bool = False):
+                 reconnect_attempts: int = 3, filters: bool = False, ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -91,8 +91,12 @@ class NodeManager:
             Lavalink builds, where the ``equalizer`` op was swapped out for the broader ``filters`` op which
             offers more than just equalizer functionality. Ideally, you should only change this setting if you
             know what you're doing, as this can prevent the effects from working.
+        ssl: Optional[:class:`bool`]
+            Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
+            respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
+            other methods. Only enable this if you know what you're doing.
         """
-        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts, filters)
+        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts, filters, ssl)
         self.nodes.append(node)
 
         self._lavalink._logger.info('[NodeManager] Added node \'{}\''.format(node.name))
