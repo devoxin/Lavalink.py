@@ -801,6 +801,13 @@ class DefaultPlayer(BasePlayer):
             self.filters.pop(fn_lowered)
             await self._apply_filters()
 
+    async def clear_filters(self):
+        """
+        Clears all currently-enabled filters.
+        """
+        self.filters.clear()
+        await self._apply_filters()
+
     async def set_gain(self, band: int, gain: float = 0.0):
         """
         Sets the equalizer band gain to the given amount.
