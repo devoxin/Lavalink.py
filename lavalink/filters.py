@@ -159,24 +159,24 @@ class Karaoke(Filter):
         ----------
         level: :class:`float`
             The level of the Karaoke effect.
-        monoLevel: :class:`float`
+        mono_level: :class:`float`
             The mono level of the Karaoke effect.
-        filterBand: :class:`float`
+        filter_band: :class:`float`
             The frequency of the band to filter.
-        filterWidth: :class:`float`
+        filter_width: :class:`float`
             The width of the filter.
         """
         if 'level' in kwargs:
             self.values['level'] = float(kwargs.pop('level'))
 
-        if 'monoLevel' in kwargs:
-            self.values['monoLevel'] = float(kwargs.pop('monoLevel'))
+        if 'mono_level' in kwargs:
+            self.values['monoLevel'] = float(kwargs.pop('mono_level'))
 
-        if 'filterBand' in kwargs:
-            self.values['filterBand'] = float(kwargs.pop('filterBand'))
+        if 'filter_band' in kwargs:
+            self.values['filterBand'] = float(kwargs.pop('filter_band'))
 
-        if 'filterWidth' in kwargs:
-            self.values['filterWidth'] = float(kwargs.pop('filterWidth'))
+        if 'filter_width' in kwargs:
+            self.values['filterWidth'] = float(kwargs.pop('filter_width'))
 
     def serialize(self) -> dict:
         return {'karaoke': self.values}
@@ -344,16 +344,16 @@ class Rotation(Filter):
 
         Parameters
         ----------
-        rotationHz: :class:`float`
+        rotation_hz: :class:`float`
             How frequently the effect should occur.
         """
-        if 'rotationHz' in kwargs:
-            rotationHz = float(kwargs.pop('rotationHz'))
+        if 'rotation_hz' in kwargs:
+            rotation_hz = float(kwargs.pop('rotation_hz'))
 
-            if rotationHz < 0:
+            if rotation_hz < 0:
                 raise ValueError('rotationHz must be bigger than or equal to 0')
 
-            self.values['rotationHz'] = rotationHz
+            self.values['rotationHz'] = rotation_hz
 
     def serialize(self) -> dict:
         return {'rotation': self.values}
@@ -405,46 +405,46 @@ class ChannelMix(Filter):
 
         Parameters
         ----------
-        leftToLeft: :class:`float`
+        left_to_left: :class:`float`
             The volume level of the audio going from the "Left" channel to the "Left" channel.
-        leftToRight: :class:`float`
+        left_to_right: :class:`float`
             The volume level of the audio going from the "Left" channel to the "Right" channel.
-        rightToLeft: :class:`float`
+        right_to_left: :class:`float`
             The volume level of the audio going from the "Right" channel to the "Left" channel.
-        rightToRight: :class:`float`
+        right_to_right: :class:`float`
             The volume level of the audio going from the "Right" channel to the "Left" channel.
         """
-        if 'leftToLeft' in kwargs:
-            leftToLeft = float(kwargs.pop('leftToLeft'))
+        if 'left_to_left' in kwargs:
+            left_to_left = float(kwargs.pop('left_to_left'))
 
-            if not 0 <= leftToLeft <= 1:
-                raise ValueError('leftToLeft must be bigger than or equal to 0, and less than or equal to 1.')
+            if not 0 <= left_to_left <= 1:
+                raise ValueError('left_to_left must be bigger than or equal to 0, and less than or equal to 1.')
 
-            self.values['leftToLeft'] = leftToLeft
+            self.values['leftToLeft'] = left_to_left
 
-        if 'leftToRight' in kwargs:
-            leftToRight = float(kwargs.pop('leftToRight'))
+        if 'left_to_right' in kwargs:
+            left_to_right = float(kwargs.pop('left_to_right'))
 
-            if not 0 <= leftToRight <= 1:
-                raise ValueError('leftToRight must be bigger than or equal to 0, and less than or equal to 1.')
+            if not 0 <= left_to_right <= 1:
+                raise ValueError('left_to_right must be bigger than or equal to 0, and less than or equal to 1.')
 
-            self.values['leftToRight'] = leftToRight
+            self.values['leftToRight'] = left_to_right
 
-        if 'rightToLeft' in kwargs:
-            rightToLeft = float(kwargs.pop('rightToLeft'))
+        if 'right_to_left' in kwargs:
+            right_to_left = float(kwargs.pop('right_to_left'))
 
-            if not 0 <= rightToLeft <= 1:
-                raise ValueError('rightToLeft must be bigger than or equal to 0, and less than or equal to 1.')
+            if not 0 <= right_to_left <= 1:
+                raise ValueError('right_to_left must be bigger than or equal to 0, and less than or equal to 1.')
 
-            self.values['rightToLeft'] = rightToLeft
+            self.values['rightToLeft'] = right_to_left
 
-        if 'rightToRight' in kwargs:
-            rightToRight = float(kwargs.pop('rightToRight'))
+        if 'right_to_right' in kwargs:
+            right_to_right = float(kwargs.pop('right_to_right'))
 
-            if not 0 <= rightToRight <= 1:
-                raise ValueError('rightToRight must be bigger than or equal to 0, and less than or equal to 1.')
+            if not 0 <= right_to_right <= 1:
+                raise ValueError('right_to_right must be bigger than or equal to 0, and less than or equal to 1.')
 
-            self.values['rightToRight'] = rightToRight
+            self.values['rightToRight'] = right_to_right
 
     def serialize(self) -> dict:
         return {'channelMix': self.values}
@@ -462,40 +462,40 @@ class Distortion(Filter):
         """
         Parameters
         ----------
-        sinOffset: :class:`float`
+        sin_offset: :class:`float`
             The sin offset.
-        sinScale: :class:`float`
+        sin_scale: :class:`float`
             The sin scale.
-        cosOffset: :class:`float`
+        cos_offset: :class:`float`
             The sin offset.
-        cosScale: :class:`float`
+        cos_scale: :class:`float`
             The sin scale.
-        tanOffset: :class:`float`
+        tan_offset: :class:`float`
             The sin offset.
-        tanScale: :class:`float`
+        tan_scale: :class:`float`
             The sin scale.
         offset: :class:`float`
             The sin offset.
         scale: :class:`float`
             The sin scale.
         """
-        if 'sinOffset' in kwargs:
-            self.values['sinOffset'] = float(kwargs.pop('sinOffset'))
+        if 'sin_offset' in kwargs:
+            self.values['sinOffset'] = float(kwargs.pop('sin_offset'))
 
-        if 'sinScale' in kwargs:
-            self.values['sinScale'] = float(kwargs.pop('sinScale'))
+        if 'sin_scale' in kwargs:
+            self.values['sinScale'] = float(kwargs.pop('sin_scale'))
 
-        if 'cosOffset' in kwargs:
-            self.values['cosOffset'] = float(kwargs.pop('cosOffset'))
+        if 'cos_offset' in kwargs:
+            self.values['cosOffset'] = float(kwargs.pop('cos_offset'))
 
-        if 'cosScale' in kwargs:
-            self.values['cosScale'] = float(kwargs.pop('cosScale'))
+        if 'cos_scale' in kwargs:
+            self.values['cosScale'] = float(kwargs.pop('cos_scale'))
 
-        if 'tanOffset' in kwargs:
-            self.values['tanOffset'] = float(kwargs.pop('tanOffset'))
+        if 'tan_offset' in kwargs:
+            self.values['tanOffset'] = float(kwargs.pop('tan_offset'))
 
-        if 'tanScale' in kwargs:
-            self.values['tanScale'] = float(kwargs.pop('tanScale'))
+        if 'tan_scale' in kwargs:
+            self.values['tanScale'] = float(kwargs.pop('tan_scale'))
 
         if 'offset' in kwargs:
             self.values['offset'] = float(kwargs.pop('offset'))
