@@ -11,8 +11,82 @@ import re
 import discord
 import lavalink
 from discord.ext import commands
+from lavalink.filters import LowPass
 
 url_rx = re.compile(r'https?://(?:www\.)?.+')
+
+
+class LavalinkVoiceClient(discord.VoiceClient):
+    """
+    This is the preferred way to handle external voice sending
+    This client will be created via a cls in the connect method of the channel
+    see the following documentation:
+    https://discordpy.readthedocs.io/en/latest/api.html#voiceprotocol
+    """
+
+    def __init__(self, client: discord.Client, channel: discord.abc.Connectable):
+        self.client = client
+        self.channel = channel
+        # ensure a client already exists
+        if hasattr(self.client, 'lavalink'):
+            self.lavalink = self.client.lavalink
+        else:
+            self.client.lavalink = lavalink.Client(client.user.id)
+            self.client.lavalink.add_node(
+                'localhost',
+                2333,
+                'youshallnotpass',
+                'us',
+                'default-node'
+            )
+            self.lavalink = self.client.lavalink
+
+    async def on_voice_server_update(self, data):
+        # the data needs to be transformed before being handed down to
+        # voice_update_handler
+        lavalink_data = {
+            't': 'VOICE_SERVER_UPDATE',
+            'd': data
+        }
+        await self.lavalink.voice_update_handler(lavalink_data)
+
+    async def on_voice_state_update(self, data):
+        # the data needs to be transformed before being handed down to
+        # voice_update_handler
+        lavalink_data = {
+            't': 'VOICE_STATE_UPDATE',
+            'd': data
+        }
+        await self.lavalink.voice_update_handler(lavalink_data)
+
+    async def connect(self, *, timeout: float, reconnect: bool) -> None:
+        """
+        Connect the bot to the voice channel and create a player_manager
+        if it doesn't exist yet.
+        """
+        # ensure there is a player_manager when creating a new voice_client
+        self.lavalink.player_manager.create(guild_id=self.channel.guild.id)
+        await self.channel.guild.change_voice_state(channel=self.channel)
+
+    async def disconnect(self, *, force: bool) -> None:
+        """
+        Handles the disconnect.
+        Cleans up running player and leaves the voice client.
+        """
+        player = self.lavalink.player_manager.get(self.channel.guild.id)
+
+        # no need to disconnect if we are not connected
+        if not force and not player.is_connected:
+            return
+
+        # None means disconnect
+        await self.channel.guild.change_voice_state(channel=None)
+
+        # update the channel_id of the player to None
+        # this must be done because the on_voice_state_update that would set channel_id
+        # to None doesn't get dispatched after the disconnect
+        player.channel_id = None
+        self.cleanup()
 
 
 class Music(commands.Cog):
@@ -22,7 +96,6 @@ class Music(commands.Cog):
         if not hasattr(bot, 'lavalink'):  # This ensures the client isn't overwritten during cog reloads.
             bot.lavalink = lavalink.Client(bot.user.id)
             bot.lavalink.add_node('127.0.0.1', 2333, 'youshallnotpass', 'eu', 'default-node')  # Host, Port, Password, Region, Name
-            bot.add_listener(bot.lavalink.voice_update_handler, 'on_socket_response')
 
         lavalink.add_event_hook(self.track_hook)
 
@@ -79,7 +152,7 @@ class Music(commands.Cog):
                 raise commands.CommandInvokeError('I need the `CONNECT` and `SPEAK` permissions.')
 
             player.store('channel', ctx.channel.id)
-            await self.connect_to(ctx.guild.id, str(ctx.author.voice.channel.id))
+            await ctx.author.voice.channel.connect(cls=LavalinkVoiceClient)
         else:
             if int(player.channel_id) != ctx.author.voice.channel.id:
                 raise commands.CommandInvokeError('You need to be in my voicechannel.')
@@ -89,15 +162,9 @@ class Music(commands.Cog):
             # When this track_hook receives a "QueueEndEvent" from lavalink.py
             # it indicates that there are no tracks left in the player's queue.
             # To save on resources, we can tell the bot to disconnect from the voicechannel.
-            guild_id = int(event.player.guild_id)
-            await self.connect_to(guild_id, None)
-
-    async def connect_to(self, guild_id: int, channel_id: str):
-        """ Connects to the given voicechannel ID. A channel_id of `None` means disconnect. """
-        ws = self.bot._connection._get_websocket(guild_id)
-        await ws.voice_state(str(guild_id), channel_id)
-        # The above looks dirty, we could alternatively use `bot.shards[shard_id].ws` but that assumes
-        # the bot instance is an AutoShardedBot.
+            guild_id = event.player.guild_id
+            guild = self.bot.get_guild(guild_id)
+            await guild.voice_client.disconnect(force=True)
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, query: str):
@@ -116,8 +183,8 @@ class Music(commands.Cog):
         results = await player.node.get_tracks(query)
 
         # Results could be None if Lavalink returns an invalid response (non-JSON/non-200 (OK)).
-        # ALternatively, resullts['tracks'] could be an empty array if the query yielded no tracks.
-        if not results or not results['tracks']:
+        # ALternatively, resullts.tracks could be an empty array if the query yielded no tracks.
+        if not results or not results.tracks:
             return await ctx.send('Nothing found!')
 
         embed = discord.Embed(color=discord.Color.blurple())
@@ -128,23 +195,20 @@ class Music(commands.Cog):
         #   SEARCH_RESULT   - query prefixed with either ytsearch: or scsearch:.
         #   NO_MATCHES      - query yielded no results
         #   LOAD_FAILED     - most likely, the video encountered an exception during loading.
-        if results['loadType'] == 'PLAYLIST_LOADED':
-            tracks = results['tracks']
+        if results.load_type == 'PLAYLIST_LOADED':
+            tracks = results.tracks
 
             for track in tracks:
                 # Add all of the tracks from the playlist to the queue.
                 player.add(requester=ctx.author.id, track=track)
 
             embed.title = 'Playlist Enqueued!'
-            embed.description = f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks'
+            embed.description = f'{results.playlist_info.name} - {len(tracks)} tracks'
         else:
-            track = results['tracks'][0]
+            track = results.tracks[0]
             embed.title = 'Track Enqueued'
-            embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
+            embed.description = f'[{track.title}]({track.uri})'
 
-            # You can attach additional information to audiotracks through kwargs, however this involves
-            # constructing the AudioTrack class yourself.
-            track = lavalink.models.AudioTrack(track, ctx.author.id, recommended=True)
             player.add(requester=ctx.author.id, track=track)
 
         await ctx.send(embed=embed)
@@ -153,6 +217,39 @@ class Music(commands.Cog):
         # the current track.
         if not player.is_playing:
             await player.play()
+
+    @commands.command(aliases=['lp'])
+    async def lowpass(self, ctx, strength: float):
+        """ Sets the strength of the low pass filter. """
+        # Get the player for this guild from cache.
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+
+        # This enforces that strength should be a minimum of 0.
+        # There's no upper limit on this filter.
+        strength = max(0.0, strength)
+
+        # Even though there's no upper limit, we will enforce one anyway to prevent
+        # extreme values from being entered. This will enforce a maximum of 100.
+        strength = min(100, strength)
+
+        embed = discord.Embed(color=discord.Color.blurple(), title='Low Pass Filter')
+
+        # A strength of 0 effectively means this filter won't function, so we can disable it.
+        if strength == 0.0:
+            player.remove_filter('lowpass')
+            embed.description = 'Disabled **Low Pass Filter**'
+            return await ctx.send(embed=embed)
+
+        # Lets create our filter.
+        low_pass = LowPass()
+        low_pass.update(smoothing=strength)  # Set the filter strength to the user's desired level.
+
+        # This applies our filter. If the filter is already enabled on the player, then this will
+        # just overwrite the filter with the new values.
+        await player.set_filter(low_pass)
+
+        embed.description = f'Set **Low Pass Filter** strength to {strength}.'
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=['dc'])
     async def disconnect(self, ctx):
@@ -174,7 +271,7 @@ class Music(commands.Cog):
         # Stop the current track so Lavalink consumes less resources.
         await player.stop()
         # Disconnect from the voice channel.
-        await self.connect_to(ctx.guild.id, None)
+        await ctx.voice_client.disconnect(force=True)
         await ctx.send('*⃣ | Disconnected.')
 
 

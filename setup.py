@@ -14,9 +14,10 @@ setup(
     name='lavalink',
     packages=['lavalink'],
     version=version,
-    description='A lavalink interface built for discord.py',
+    description='A Lavalink WebSocket & API wrapper built around coverage, reliability and performance.',
     author='Devoxin',
     author_email='luke@serux.pro',
+    entry_points={'console_scripts': ['lavalink = lavalink.__main__:main']},
     url='https://github.com/Devoxin/Lavalink.py',
     download_url='https://github.com/Devoxin/Lavalink.py/archive/{}.tar.gz'.format(version),
     keywords=['lavalink'],
@@ -24,7 +25,9 @@ setup(
     install_requires=['aiohttp>=3.7.4,<3.9.0'],
     extras_require={'docs': ['sphinx',
                              'pygments',
-                             'guzzle_sphinx_theme'],
+                             'guzzle_sphinx_theme',
+                             'enum_tools',
+                             'sphinx_toolbox'],
                     'development': ['pylint',
                                     'flake8']}
 )

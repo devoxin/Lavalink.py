@@ -61,7 +61,7 @@ class NodeManager:
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3):
+                 reconnect_attempts: int = 3, filters: bool = False, ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -86,11 +86,20 @@ class NodeManager:
         reconnect_attempts: Optional[:class:`int`]
             The amount of times connection with the node will be reattempted before giving up.
             Set to `-1` for infinite. Defaults to `3`.
+        filters: Optional[:class:`bool`]
+            Whether to use the new ``filters`` op. This setting currently only applies to development
+            Lavalink builds, where the ``equalizer`` op was swapped out for the broader ``filters`` op which
+            offers more than just equalizer functionality. Ideally, you should only change this setting if you
+            know what you're doing, as this can prevent the effects from working.
+        ssl: Optional[:class:`bool`]
+            Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
+            respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
+            other methods. Only enable this if you know what you're doing.
         """
-        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts)
+        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts, filters, ssl)
         self.nodes.append(node)
 
-        self._lavalink._logger.info('[NODE-{}] Successfully added to Node Manager'.format(node.name))
+        self._lavalink._logger.info('[NodeManager] Added node \'{}\''.format(node.name))
 
     def remove_node(self, node: Node):
         """
@@ -102,7 +111,7 @@ class NodeManager:
             The node to remove from the list.
         """
         self.nodes.remove(node)
-        self._lavalink._logger.info('[NODE-{}] Successfully removed Node'.format(node.name))
+        self._lavalink._logger.info('[NodeManager] Removed node \'{}\''.format(node.name))
 
     def get_region(self, endpoint: str):
         """
@@ -168,11 +177,11 @@ class NodeManager:
         node: :class:`Node`
             The node that has just connected.
         """
-        self._lavalink._logger.info('[NODE-{}] Successfully established connection'.format(node.name))
-
         for player in self._player_queue:
             await player.change_node(node)
-            self._lavalink._logger.debug('[NODE-{}] Successfully moved {}'.format(node.name, player.guild_id))
+            original_node_name = player._original_node.name if player._original_node else '[no node]'
+            self._lavalink._logger.debug('[NodeManager] Moved player {} from node \'{}\' to node \'{}\''
+                                         .format(player.guild_id, original_node_name, node.name))
 
         if self._lavalink._connect_back:
             for player in node._original_players:
@@ -195,15 +204,13 @@ class NodeManager:
         reason: :class:`str`
             The reason why the node was disconnected.
         """
-        self._lavalink._logger.warning('[NODE-{}] Disconnected with code {} and reason {}'.format(node.name, code,
-                                                                                                  reason))
         await self._lavalink._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
 
         if not best_node:
             self._player_queue.extend(node.players)
-            self._lavalink._logger.error('Unable to move players, no available nodes! '
+            self._lavalink._logger.error('[NodeManager] Unable to move players, no available nodes! '
                                          'Waiting for a node to become available.')
             return
 

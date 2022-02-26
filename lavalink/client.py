@@ -26,13 +26,15 @@ import itertools
 import logging
 import random
 from collections import defaultdict
+from inspect import getmembers, ismethod
+from typing import Set, Union
 from urllib.parse import quote
 
 import aiohttp
 
+from .errors import AuthenticationError, NodeError
 from .events import Event
-from .exceptions import NodeException, Unauthorized
-from .models import DefaultPlayer
+from .models import DefaultPlayer, LoadResult, Source
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
@@ -46,7 +48,7 @@ class Client:
 
     Parameters
     ----------
-    user_id: :class:`int`
+    user_id: Union[:class:`int`, :class:`str`]
         The user id of the bot.
     player: Optional[:class:`BasePlayer`]
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
@@ -76,31 +78,84 @@ class Client:
     """
     _event_hooks = defaultdict(list)
 
-    def __init__(self, user_id: int, player=DefaultPlayer, regions: dict = None,
+    def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
                  connect_back: bool = False):
-        if not isinstance(user_id, int):
-            raise TypeError('user_id must be an int (got {}). If the type is None, '
+        if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
+            # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
+            raise TypeError('user_id must be either an int or str (not {}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
                             'the Lavalink client. Alternatively, you can hardcode your user ID.'
                             .format(user_id))
 
-        self._user_id = str(user_id)
-        self.node_manager = NodeManager(self, regions)
-        self.player_manager = PlayerManager(self, player)
-        self._connect_back = connect_back
         self._logger = logging.getLogger('lavalink')
-
-        self._session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=30)
-        )
+        self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
+        self._user_id: str = str(user_id)
+        self._connect_back: bool = connect_back
+        self.node_manager: NodeManager = NodeManager(self, regions)
+        self.player_manager: PlayerManager = PlayerManager(self, player)
+        self.sources: Set[Source] = set()
 
     def add_event_hook(self, hook):
+        """
+        Registers a function to recieve and process Lavalink events.
+
+        Parameters
+        ----------
+        hook: :class:`function`
+            The function to register.
+        """
         if hook not in self._event_hooks['Generic']:
             self._event_hooks['Generic'].append(hook)
 
+    def add_event_hooks(self, cls):
+        """
+        Scans the provided class ``cls`` for functions decorated with :func:`listener`,
+        and sets them up to process Lavalink events.
+
+        Example:
+
+            .. code:: python
+
+                # Inside a class __init__ method
+                self.client = lavalink.Client(...)
+                self.client.add_event_hooks(self)
+
+        Parameters
+        ----------
+        cls: :class:`Class`
+            An instance of a class.
+        """
+        methods = getmembers(cls, predicate=lambda meth: hasattr(meth, '__name__')
+                             and not meth.__name__.startswith('_') and ismethod(meth)
+                             and hasattr(meth, '_lavalink_events'))
+
+        for _, listener in methods:  # _ = meth_name
+            # wrapped = partial(listener, cls)
+            events = listener._lavalink_events
+
+            if events:
+                for event in events:
+                    self._event_hooks[event.__name__].append(listener)
+            else:
+                self._event_hooks['Generic'].append(listener)
+
+    def register_source(self, source: Source):
+        """
+        Registers a :class:`Source` that Lavalink.py will use for looking up tracks.
+
+        Parameters
+        ----------
+        source: :class:`Source`
+            The source to register.
+        """
+        if not isinstance(source, Source):
+            raise TypeError('source must inherit from Source!')
+
+        self.sources.add(source)
+
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3):
+                 reconnect_attempts: int = 3, filters: bool = True, ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -125,12 +180,28 @@ class Client:
         reconnect_attempts: Optional[:class:`int`]
             The amount of times connection with the node will be reattempted before giving up.
             Set to `-1` for infinite. Defaults to `3`.
+        filters: Optional[:class:`bool`]
+            Whether to use the new ``filters`` op instead of the ``equalizer`` op.
+            If you're running a build without filter support, set this to ``False``.
+        ssl: Optional[:class:`bool`]
+            Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
+            respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
+            other methods. Only enable this if you know what you're doing.
         """
-        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts)
+        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
+                                   filters, ssl)
 
-    async def get_tracks(self, query: str, node: Node = None):
+    async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
-        Gets all tracks associated with the given query.
+        Retrieves a list of results pertaining to the provided query.
+
+        If ``check_local`` is set to ``True`` and any of the sources return a :class:`LoadResult`
+        then that result will be returned, and Lavalink will not be queried.
+
+        Warning
+        -------
+        Avoid setting ``check_local`` to ``True`` if you call this method from a custom :class:`Source` to avoid
+        recursion issues!
 
         Parameters
         ----------
@@ -139,28 +210,26 @@ class Client:
         node: Optional[:class:`Node`]
             The node to use for track lookup. Leave this blank to use a random node.
             Defaults to `None` which is a random node.
+        check_local: :class:`bool`
+            Whether to also search the query on sources registered with this Lavalink client.
 
         Returns
         -------
-        :class:`dict`
-            A dict representing tracks.
+        :class:`LoadResult`
         """
+        if check_local:
+            for source in self.sources:
+                load_result = await source.load_item(self, query)
+
+                if load_result:
+                    return load_result
+
         if not self.node_manager.available_nodes:
-            raise NodeException('No available nodes!')
+            raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/loadtracks?identifier={}'.format(node.host, node.port, quote(query))
-        headers = {
-            'Authorization': node.password
-        }
-
-        async with self._session.get(destination, headers=headers) as res:
-            if res.status == 200:
-                return await res.json()
-
-            if res.status == 401 or res.status == 403:
-                raise Unauthorized
-
-            return []
+        res = await self._get_request('{}/loadtracks?identifier={}'.format(node.http_uri, quote(query)),
+                                      headers={'Authorization': node.password})
+        return LoadResult.from_dict(res)
 
     async def decode_track(self, track: str, node: Node = None):
         """|coro|
@@ -179,21 +248,10 @@ class Client:
             A dict representing the track's information.
         """
         if not self.node_manager.available_nodes:
-            raise NodeException('No available nodes!')
+            raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/decodetrack?track={}'.format(node.host, node.port, track)
-        headers = {
-            'Authorization': node.password
-        }
-
-        async with self._session.get(destination, headers=headers) as res:
-            if res.status == 200:
-                return await res.json()
-
-            if res.status == 401 or res.status == 403:
-                raise Unauthorized
-
-            return None
+        return await self._get_request('{}/decodetrack?track={}'.format(node.http_uri, track),
+                                       headers={'Authorization': node.password})
 
     async def decode_tracks(self, tracks: list, node: Node = None):
         """|coro|
@@ -201,7 +259,7 @@ class Client:
 
         Parameters
         ----------
-        tracks: list[:class:`str`]
+        tracks: List[:class:`str`]
             A list of base64-encoded `track` strings.
         node: Optional[:class:`Node`]
             The node to use for the query. Defaults to `None` which is a random node.
@@ -212,25 +270,15 @@ class Client:
             A list of dicts representing track information.
         """
         if not self.node_manager.available_nodes:
-            raise NodeException('No available nodes!')
+            raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        destination = 'http://{}:{}/decodetracks'.format(node.host, node.port)
-        headers = {
-            'Authorization': node.password
-        }
 
-        async with self._session.post(destination, headers=headers, json=tracks) as res:
-            if res.status == 200:
-                return await res.json()
-
-            if res.status == 401 or res.status == 403:
-                raise Unauthorized
-
-            return None
+        return await self._post_request('{}/decodetracks'.format(node.http_uri),
+                                        headers={'Authorization': node.password}, json=tracks)
 
     async def routeplanner_status(self, node: Node):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Retrieves the status of the target node's routeplanner.
 
         Parameters
         ----------
@@ -242,23 +290,12 @@ class Client:
         :class:`dict`
             A dict representing the routeplanner information.
         """
-        destination = 'http://{}:{}/routeplanner/status'.format(node.host, node.port)
-        headers = {
-            'Authorization': node.password
-        }
+        return await self._get_request('{}/routeplanner/status'.format(node.http_uri),
+                                       headers={'Authorization': node.password})
 
-        async with self._session.get(destination, headers=headers) as res:
-            if res.status == 200:
-                return await res.json()
-
-            if res.status == 401 or res.status == 403:
-                raise Unauthorized
-
-            return None
-
-    async def routeplanner_free_address(self, node: Node, address: str):
+    async def routeplanner_free_address(self, node: Node, address: str) -> bool:
         """|coro|
-        Gets the routeplanner status of the target node.
+        Frees up the provided IP address in the target node's routeplanner.
 
         Parameters
         ----------
@@ -272,17 +309,12 @@ class Client:
         :class:`bool`
             True if the address was freed, False otherwise.
         """
-        destination = 'http://{}:{}/routeplanner/free/address'.format(node.host, node.port)
-        headers = {
-            'Authorization': node.password
-        }
+        return await self._post_request('{}/routeplanner/free/address'.format(node.http_uri),
+                                        headers={'Authorization': node.password}, json={'address': address})
 
-        async with self._session.post(destination, headers=headers, json={'address': address}) as res:
-            return res.status == 204
-
-    async def routeplanner_free_all_failing(self, node: Node):
+    async def routeplanner_free_all_failing(self, node: Node) -> bool:
         """|coro|
-        Gets the routeplanner status of the target node.
+        Frees up all IP addresses in the target node that have been marked as failing.
 
         Parameters
         ----------
@@ -294,13 +326,8 @@ class Client:
         :class:`bool`
             True if all failing addresses were freed, False otherwise.
         """
-        destination = 'http://{}:{}/routeplanner/free/all'.format(node.host, node.port)
-        headers = {
-            'Authorization': node.password
-        }
-
-        async with self._session.post(destination, headers=headers) as res:
-            return res.status == 204
+        return await self._post_request('{}/routeplanner/free/all'.format(node.http_uri),
+                                        headers={'Authorization': node.password})
 
     async def voice_update_handler(self, data):
         """|coro|
@@ -338,6 +365,31 @@ class Client:
             if player:
                 await player._voice_state_update(data['d'])
 
+    async def _get_request(self, url, **kwargs):
+        async with self._session.get(url, **kwargs) as res:
+            if res.status == 200:
+                return await res.json()
+
+            if res.status == 401 or res.status == 403:
+                raise AuthenticationError
+
+            raise NodeError('An invalid response was received from the node: code={}, body={}'
+                            .format(res.status, await res.text()))
+
+    async def _post_request(self, url, **kwargs):
+        async with self._session.post(url, **kwargs) as res:
+            if res.status == 401 or res.status == 403:
+                raise AuthenticationError
+
+            if 'json' in kwargs:
+                if res.status == 200:
+                    return await res.json()
+
+                raise NodeError('An invalid response was received from the node: code={}, body={}'
+                                .format(res.status, await res.text()))
+
+            return res.status == 204
+
     async def _dispatch_event(self, event: Event):
         """|coro|
         Dispatches the given event to all registered hooks.
@@ -357,7 +409,7 @@ class Client:
             try:
                 await hook(event)
             except:  # noqa: E722 pylint: disable=bare-except
-                self._logger.exception('Event hook {} encountered an exception!'.format(hook.__name__))
+                self._logger.exception('[EventDispatcher] Event hook \'{}\' encountered an exception!'.format(hook.__name__))
                 #  According to https://stackoverflow.com/questions/5191830/how-do-i-log-a-python-error-with-debug-information
                 #  the exception information should automatically be attached here. We're just including a message for
                 #  clarity.
@@ -365,13 +417,4 @@ class Client:
         tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
         await asyncio.wait(tasks)
 
-        self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
-
-#         tasks = [hook(event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
-#         results = await asyncio.gather(*tasks, return_exceptions=True)
-
-#         for index, result in enumerate(results):
-#             if isinstance(result, Exception):
-#                 self._logger.warning('Event hook {} encountered an exception!'.format(tasks[index].__name__), result)
-
-#         self._logger.debug('Dispatched {} to all registered hooks'.format(type(event).__name__))
+        self._logger.debug('[EventDispatcher] Dispatched \'{}\' to all registered hooks'.format(type(event).__name__))

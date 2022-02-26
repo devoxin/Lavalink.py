@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from .exceptions import NodeException
+from .errors import NodeError
 from .models import BasePlayer
 from .node import Node
 
@@ -39,8 +39,6 @@ class PlayerManager:
     ----------
     players: :class:`dict`
         Cache of all the players that Lavalink has created.
-    default_player: :class:`BasePlayer`
-        The player that the player manager is initialized with.
     """
 
     def __init__(self, lavalink, player):
@@ -49,8 +47,8 @@ class PlayerManager:
                 'Player must implement BasePlayer or DefaultPlayer.')
 
         self._lavalink = lavalink
+        self._player_cls = player
         self.players = {}
-        self.default_player = player
 
     def __len__(self):
         return len(self.players)
@@ -59,34 +57,6 @@ class PlayerManager:
         """ Returns an iterator that yields a tuple of (guild_id, player). """
         for guild_id, player in self.players.items():
             yield guild_id, player
-
-    async def destroy(self, guild_id: int):
-        """
-        Removes a player from cache, and also Lavalink if applicable.
-        Ensure you have disconnected the given guild_id from the voicechannel
-        first, if connected.
-
-        Warning
-        -------
-        This should only be used if you know what you're doing. Players should never be
-        destroyed unless they have been moved to another :class:`Node`.
-
-        Parameters
-        ----------
-        guild_id: int
-            The guild_id associated with the player to remove.
-        """
-        if guild_id not in self.players:
-            return
-
-        player = self.players.pop(guild_id)
-
-        if player.node and player.node.available:
-            await player.node._send(op='destroy', guildId=player.guild_id)
-            player.cleanup()
-
-        self._lavalink._logger.debug(
-            '[NODE-{}] Successfully destroyed player {}'.format(player.node.name, guild_id))
 
     def values(self):
         """ Returns an iterator that yields only values. """
@@ -104,25 +74,14 @@ class PlayerManager:
 
         Returns
         -------
-        List[:class:`DefaultPlayer`]
+        List[:class:`BasePlayer`]
+            This could be a :class:`DefaultPlayer` if no custom player implementation
+            was provided.
         """
         if not predicate:
             return list(self.players.values())
 
         return [p for p in self.players.values() if bool(predicate(p))]
-
-    def remove(self, guild_id: int):
-        """
-        Removes a player from the internal cache.
-
-        Parameters
-        ----------
-        guild_id: :class:`int`
-            The player that will be removed.
-        """
-        if guild_id in self.players:
-            player = self.players.pop(guild_id)
-            player.cleanup()
 
     def get(self, guild_id: int):
         """
@@ -135,9 +94,24 @@ class PlayerManager:
 
         Returns
         -------
-        Optional[:class:`DefaultPlayer`]
+        Optional[:class:`BasePlayer`]
+            This could be a :class:`DefaultPlayer` if no custom player implementation
+            was provided.
         """
         return self.players.get(guild_id)
+
+    def remove(self, guild_id: int):
+        """
+        Removes a player from the internal cache.
+
+        Parameters
+        ----------
+        guild_id: :class:`int`
+            The player to remove from cache.
+        """
+        if guild_id in self.players:
+            player = self.players.pop(guild_id)
+            player.cleanup()
 
     def create(self, guild_id: int, region: str = 'eu', endpoint: str = None, node: Node = None):
         """
@@ -166,7 +140,10 @@ class PlayerManager:
 
         Returns
         -------
-        :class:`DefaultPlayer`
+        :class:`BasePlayer`
+            A class that inherits ``BasePlayer``. By default, the actual class returned will
+            be :class:`DefaultPlayer`, however if you have specified a custom player implementation,
+            then this will be different.
         """
         if guild_id in self.players:
             return self.players[guild_id]
@@ -177,9 +154,38 @@ class PlayerManager:
         best_node = node or self._lavalink.node_manager.find_ideal_node(region)
 
         if not best_node:
-            raise NodeException('No available nodes!')
+            raise NodeError('No available nodes!')
 
-        self.players[guild_id] = player = self.default_player(guild_id, best_node)
-        self._lavalink._logger.debug(
-            '[NODE-{}] Successfully created player for {}'.format(best_node.name, guild_id))
+        id_int = int(guild_id)
+        self.players[id_int] = player = self._player_cls(id_int, best_node)
+        self._lavalink._logger.debug('[PlayerManager] Created player with GuildId {} on node \'{}\''
+                                     .format(guild_id, best_node.name))
         return player
+
+    async def destroy(self, guild_id: int):
+        """
+        Removes a player from cache, and also Lavalink if applicable.
+        Ensure you have disconnected the given guild_id from the voicechannel
+        first, if connected.
+
+        Warning
+        -------
+        This should only be used if you know what you're doing. Players should never be
+        destroyed unless they have been moved to another :class:`Node`.
+
+        Parameters
+        ----------
+        guild_id: int
+            The guild_id associated with the player to remove.
+        """
+        if guild_id not in self.players:
+            return
+
+        player = self.players.pop(guild_id)
+        player.cleanup()
+
+        if player.node:
+            await player.node._send(op='destroy', guildId=player._internal_id)
+
+        self._lavalink._logger.debug('[PlayerManager] Destroyed player with GuildId {} on node \'{}\''
+                                     .format(guild_id, player.node.name if player.node else 'UNASSIGNED'))
