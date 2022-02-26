@@ -23,12 +23,12 @@ SOFTWARE.
 """
 
 
-class NodeException(Exception):
+class NodeError(Exception):
     """ Raised when something went wrong with a node. """
 
 
-class Unauthorized(Exception):
-    """ Raised when a REST request fails due to an incorrect password. """
+class AuthenticationError(Exception):
+    """ Raised when a request fails due to invalid authentication. """
 
 
 class InvalidTrack(Exception):

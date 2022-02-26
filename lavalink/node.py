@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from .events import Event
+from .stats import Stats
 from .websocket import WebSocket
 
 
@@ -42,52 +43,76 @@ class Node:
         The port to use for websocket and REST connections.
     password: :class:`str`
         The password used for authentication.
+    ssl: :class:`bool`
+        Whether this node uses SSL (wss/https).
     region: :class:`str`
         The region to assign this node to.
     name: :class:`str`
         The name the :class:`Node` is identified by.
+    filters: :class:`bool`
+        Whether or not to use the new ``filters`` op instead of ``equalizer``.
+        This setting is only used by players.
     stats: :class:`Stats`
         The statistics of how the :class:`Node` is performing.
     """
     def __init__(self, manager, host: str, port: int, password: str,
                  region: str, resume_key: str, resume_timeout: int, name: str = None,
-                 reconnect_attempts: int = 3):
+                 reconnect_attempts: int = 3, filters: bool = False, ssl: bool = False):
         self._manager = manager
-        self._ws = WebSocket(self, host, port, password, resume_key, resume_timeout, reconnect_attempts)
+        self._ws = WebSocket(self, host, port, password, ssl, resume_key, resume_timeout, reconnect_attempts)
 
         self.host = host
         self.port = port
         self.password = password
+        self.ssl = ssl
         self.region = region
         self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
-        self.stats = None
+        self.filters = filters
+        self.stats = Stats.empty(self)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """ Returns whether the node is available for requests. """
         return self._ws.connected
 
     @property
     def _original_players(self):
-        """ Returns a list of players that were assigned to this node, but were moved due to failover etc. """
+        """
+        Returns a list of players that were assigned to this node, but were moved due to failover etc.
+
+        Returns
+        -------
+        List[:class:`BasePlayer`]
+        """
         return [p for p in self._manager._lavalink.player_manager.values() if p._original_node == self]
 
     @property
     def players(self):
-        """ Returns a list of all players on this node. """
+        """
+        Returns a list of all players on this node.
+
+        Returns
+        -------
+        List[:class:`BasePlayer`]
+        """
         return [p for p in self._manager._lavalink.player_manager.values() if p.node == self]
 
     @property
-    def penalty(self):
+    def penalty(self) -> int:
         """ Returns the load-balancing penalty for this node. """
         if not self.available or not self.stats:
             return 9e30
 
         return self.stats.penalty.total
 
+    @property
+    def http_uri(self) -> str:
+        """ Returns a 'base' URI pointing to the node's address and port, also factoring in SSL. """
+        return '{}://{}:{}'.format('https' if self.ssl else 'http', self.host, self.port)
+
     async def get_tracks(self, query: str):
         """|coro|
-        Gets all tracks associated with the given query.
+        Retrieves a list of results pertaining to the provided query.
 
         Parameters
         ----------
@@ -99,11 +124,11 @@ class Node:
         :class:`dict`
             A dict representing an AudioTrack.
         """
-        return await self._manager._lavalink.get_tracks(query, self)
+        return await self._manager._lavalink.get_tracks(query, self, check_local=False)
 
     async def routeplanner_status(self):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Retrieves the status of the target node's routeplanner.
 
         Returns
         -------
@@ -114,7 +139,7 @@ class Node:
 
     async def routeplanner_free_address(self, address: str):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Frees up the provided IP address in the target node's routeplanner.
 
         Parameters
         ----------
@@ -130,7 +155,7 @@ class Node:
 
     async def routeplanner_free_all_failing(self):
         """|coro|
-        Gets the routeplanner status of the target node.
+        Frees up all IP addresses in the target node that have been marked as failing.
 
         Returns
         -------
