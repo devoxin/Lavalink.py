@@ -65,10 +65,10 @@ class WebSocket:
         """ Returns whether the websocket is connected to Lavalink. """
         return self._ws is not None and not self._ws.closed
 
-    async def close(self):
+    async def close(self, code=aiohttp.WSCloseCode.OK):
         """ Shuts down the websocket connection if there is one. """
         if self._ws:
-            self._ws.close(code=aiohttp.WSCloseCode.OK)
+            self._ws.close(code=code)
             self._ws = None
 
     async def connect(self):
@@ -125,7 +125,6 @@ class WebSocket:
             else:
                 self._lavalink._logger.info('[Node:{}] WebSocket connection established'.format(self._node.name))
                 await self._node._manager._node_connect(self._node)
-                #  asyncio.ensure_future(self._listen())
 
                 if not self._resuming_configured and self._resume_key \
                         and (self._resume_timeout and self._resume_timeout > 0):
@@ -142,8 +141,8 @@ class WebSocket:
                 # Ensure this loop doesn't proceed if _listen returns control back to this function.
                 return
 
-        self._lavalink._logger.warning('[Node:{}] A WebSocket connection could not be established within 3 '
-                                       'attempts.'.format(self._node.name))
+        self._lavalink._logger.warning('[Node:{}] A WebSocket connection could not be established within {} '
+                                       'attempts.'.format(self._node.name, max_attempts_str))
 
     async def _listen(self):
         """ Listens for websocket messages. """
