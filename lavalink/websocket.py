@@ -68,7 +68,7 @@ class WebSocket:
     async def close(self, code=aiohttp.WSCloseCode.OK):
         """ Shuts down the websocket connection if there is one. """
         if self._ws:
-            self._ws.close(code=code)
+            await self._ws.close(code=code)
             self._ws = None
 
     async def connect(self):
