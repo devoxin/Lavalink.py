@@ -142,7 +142,7 @@ class Music(commands.Cog):
             # execution state of the command goes no further.
             raise commands.CommandInvokeError('Join a voicechannel first.')
 
-        if not player.is_connected:
+        if not ctx.voice_client:
             if not should_connect:
                 raise commands.CommandInvokeError('Not connected.')
 
@@ -256,7 +256,7 @@ class Music(commands.Cog):
         """ Disconnects the player from the voice channel and clears its queue. """
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
-        if not player.is_connected:
+        if not ctx.voice_client:
             # We can't disconnect, if we're not connected.
             return await ctx.send('Not connected.')
 
