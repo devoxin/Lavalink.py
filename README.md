@@ -9,8 +9,17 @@
 
 Lavalink.py is a wrapper for [Lavalink] which abstracts away most of the code necessary to use Lavalink, allowing for easier integration into your projects, while still promising full API coverage and powerful tools to get the most out of it.
 
+## Features
+- Regions
+- Multi-Node Support
+- Load Balancing (this includes region-based load balancing)
+- Audio Filters
+- [Custom Sources](examples/custom_source.py)
+
+
 # What is Lavalink?
 Lavalink is standalone audio sending software capable of transmitting audio to Discord, utilising Lavaplayer for audio transcoding. It can be configured to work independently, or as part of a cluster depending on needs, which allows it to be highly scalable and performant. Head over to the [Lavalink] repository to find out more.
+
 
 # Getting Started
 First you need to run a command to install the library,
@@ -24,19 +33,9 @@ Then place an ``application.yml`` file in the same directory. The file should lo
 Additionally, there is an [example cog](examples). It should be noted that the example cog is oriented towards usage with Discord.py rewrite and Lavalink v3.1+, although backwards
 compatibility may be possible, it's not encouraged nor is support guaranteed.
 
-## Features
-- Regions
-- Multi-Node Support
-- Load Balancing (this includes region-based load balancing)
-- Audio Filters
-- [Custom Sources](examples/custom_source.py)
-
-## Optional Dependencies
-*These are used by aiohttp.*
-
-`aiodns`   - Speed up DNS resolving.
-
-`cchardet` - A faster alternative to `chardet`.
+## Custom Sources
+As of Lavalink.py 4.0, custom sources can be registered to a client instance to allow searching more audio sources. These aren't "true" sources in the sense that you can play from them (unless you support HTTP playback and are able to retrieve a playable HTTP URL).
+This means you can build sources that allow retrieving track metadata from third party services, such as Spotify, whilst the underlying stream is played from elsewhere. This is a popular method for providing support for otherwise unsupported services. You can find an [example source here](examples/custom_source.py).
 
 ## Supported Platforms
 While Lavalink.py supports any platform Python will run on, the same can not be said for the Lavalink server.
@@ -46,6 +45,12 @@ It is highly recommended that you invest in a dedicated server or a [VPS](https:
 ### Exceptions
 The exception to the "unsupported platforms" rule are ARM-based machines, for example; a Raspberry Pi. While official Lavalink builds do not support the ARM architecture, there are [custom builds by Cog-Creators](https://github.com/Cog-Creators/Lavalink-Jars/releases) that offer ARM support. These are the official builds, with additional native libraries for running on otherwise unsupported platforms.
 
+## Optional Dependencies
+*These are used by aiohttp.*
+
+`aiodns`   - Speed up DNS resolving.
+
+`cchardet` - A faster alternative to `chardet`.
 
 ## Need Further Help?
 [Discord Server](https://discord.gg/SbJXU9s)
