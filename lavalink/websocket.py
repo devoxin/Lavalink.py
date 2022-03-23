@@ -170,7 +170,7 @@ class WebSocket:
         code: Optional[:class:`int`]
             The response code.
         reason: Optional[:class:`str`]
-            Reason why the websocket was closed. Defaults to `None`
+            Reason why the websocket was closed. Defaults to ``None``
         """
         self._lavalink._logger.warning('[Node:{}] WebSocket disconnected with the following: code={} '
                                        'reason={}'.format(self._node.name, code, reason))
