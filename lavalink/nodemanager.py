@@ -80,12 +80,12 @@ class NodeManager:
             Defaults to ``None``.
         resume_timeout: Optional[:class:`int`]
             How long the node should wait for a connection while disconnected before clearing all players.
-            Defaults to `60`.
+            Defaults to ``60``.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
         reconnect_attempts: Optional[:class:`int`]
             The amount of times connection with the node will be reattempted before giving up.
-            Set to `-1` for infinite. Defaults to `3`.
+            Set to `-1` for infinite. Defaults to ``3``.
         filters: Optional[:class:`bool`]
             Whether to use the new ``filters`` op. This setting currently only applies to development
             Lavalink builds, where the ``equalizer`` op was swapped out for the broader ``filters`` op which

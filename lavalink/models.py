@@ -506,15 +506,15 @@ class DefaultPlayer(BasePlayer):
             returned from Lavalink.
         start_time: Optional[:class:`int`]
             Setting that determines the number of milliseconds to offset the track by.
-            If left unspecified, it will start the track at its beginning. Defaults to `0`,
+            If left unspecified, it will start the track at its beginning. Defaults to ``0``,
             which is the normal start time.
         end_time: Optional[:class:`int`]
             Settings that determines the number of milliseconds the track will stop playing.
-            By default track plays until it ends as per encoded data. Defaults to `0`, which is
+            By default track plays until it ends as per encoded data. Defaults to ``0``, which is
             the normal end time.
         no_replace: Optional[:class:`bool`]
             If set to true, operation will be ignored if a track is already playing or paused.
-            Defaults to `False`
+            Defaults to ``False``
         volume: Optional[:class:`int`]
             The initial volume to set. This is useful for changing the volume between tracks etc.
             If ``None`` is provided, the volume will remain unchanged from :attr:`volume`.
@@ -836,7 +836,7 @@ class DefaultPlayer(BasePlayer):
         Parameters
         ----------
         gain_list: :class:`any`
-            A list of tuples denoting (`band`, `gain`).
+            A list of tuples denoting (``band``, ``gain``).
         """
         equalizer = Equalizer()
         equalizer.update(bands=bands)
