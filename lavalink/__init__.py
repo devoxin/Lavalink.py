@@ -84,7 +84,7 @@ def add_event_hook(*hooks, event: Event = None):
     ----------
     hooks: :class:`function`
         The hooks to register for the given event type.
-        If `event` parameter is left empty, then it will run when any event is dispatched.
+        If ``event`` parameter is left empty, then it will run when any event is dispatched.
     event: :class:`Event`
         The event the hook belongs to. This will dispatch when that specific event is
         dispatched. Defaults to ``None`` which means the hook is dispatched on all events.

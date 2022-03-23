@@ -60,7 +60,7 @@ class Client:
     connect_back: Optional[:class:`bool`]
         A boolean that determines if a player will connect back to the
         node it was originally connected to. This is not recommended to do since
-        the player will most likely be performing better in the new node. Defaults to `False`.
+        the player will most likely be performing better in the new node. Defaults to ``False``.
 
         Warning
         -------
@@ -174,12 +174,12 @@ class Client:
             Defaults to ``None``.
         resume_timeout: Optional[:class:`int`]
             How long the node should wait for a connection while disconnected before clearing all players.
-            Defaults to `60`.
+            Defaults to ``60``.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
         reconnect_attempts: Optional[:class:`int`]
             The amount of times connection with the node will be reattempted before giving up.
-            Set to `-1` for infinite. Defaults to `3`.
+            Set to `-1` for infinite. Defaults to ``3``.
         filters: Optional[:class:`bool`]
             Whether to use the new ``filters`` op instead of the ``equalizer`` op.
             If you're running a build without filter support, set this to ``False``.
@@ -238,7 +238,7 @@ class Client:
         Parameters
         ----------
         track: :class:`str`
-            The base64-encoded `track` string.
+            The base64-encoded ``track`` string.
         node: Optional[:class:`Node`]
             The node to use for the query. Defaults to ``None`` which is a random node.
 
@@ -260,7 +260,7 @@ class Client:
         Parameters
         ----------
         tracks: List[:class:`str`]
-            A list of base64-encoded `track` strings.
+            A list of base64-encoded ``track`` strings.
         node: Optional[:class:`Node`]
             The node to use for the query. Defaults to ``None`` which is a random node.
 
