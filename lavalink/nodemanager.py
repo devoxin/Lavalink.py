@@ -149,7 +149,7 @@ class NodeManager:
         Parameters
         ----------
         region: Optional[:class:`str`]
-            The region to find a node in. Defaults to `None`.
+            The region to find a node in. Defaults to ``None``.
 
         Returns
         -------
