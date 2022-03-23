@@ -1,4 +1,5 @@
 [Lavalink]: https://github.com/freyacodes/Lavalink
+[Lavaplayer]: https://github.com/sedmelluq/lavaplayer
 [Documentation]: https://lavalink.readthedocs.io/en/master/
 [Latest Docs]: https://lavalink.readthedocs.io/en/latest/
 
@@ -18,7 +19,7 @@ Lavalink.py is a wrapper for [Lavalink] which abstracts away most of the code ne
 
 
 # What is Lavalink?
-Lavalink is standalone audio sending software capable of transmitting audio to Discord, utilising Lavaplayer for audio transcoding. It can be configured to work independently, or as part of a cluster depending on needs, which allows it to be highly scalable and performant. Head over to the [Lavalink] repository to find out more.
+Lavalink is standalone audio sending software capable of transmitting audio to Discord, utilising [Lavaplayer] for audio transcoding. It can be configured to work independently, or as part of a cluster depending on needs, which allows it to be highly scalable and performant. Head over to the [Lavalink] repository to find out more.
 
 
 # Getting Started
