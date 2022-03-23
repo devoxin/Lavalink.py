@@ -77,12 +77,12 @@ class NodeManager:
             The region to assign this node to.
         resume_key: Optional[:class:`str`]
             A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-            Defaults to `None`.
+            Defaults to ``None``.
         resume_timeout: Optional[:class:`int`]
             How long the node should wait for a connection while disconnected before clearing all players.
             Defaults to `60`.
         name: Optional[:class:`str`]
-            An identifier for the node that will show in logs. Defaults to `None`.
+            An identifier for the node that will show in logs. Defaults to ``None``.
         reconnect_attempts: Optional[:class:`int`]
             The amount of times connection with the node will be reattempted before giving up.
             Set to `-1` for infinite. Defaults to `3`.

@@ -56,7 +56,7 @@ class Client:
     regions: Optional[:class:`dict`]
         A dictionary representing region -> discord endpoint. You should only
         change this if you know what you're doing and want more control over
-        which regions handle specific locations. Defaults to `None`.
+        which regions handle specific locations. Defaults to ``None``.
     connect_back: Optional[:class:`bool`]
         A boolean that determines if a player will connect back to the
         node it was originally connected to. This is not recommended to do since
@@ -67,7 +67,7 @@ class Client:
         If this option is enabled and the player's node is changed through `Player.change_node` after
         the player was moved via the failover mechanism, the player will still move back to the original
         node when it becomes available. This behaviour can be avoided in custom player implementations by
-        setting `self._original_node` to `None` in the `change_node` function.
+        setting ``self._original_node`` to ``None`` in the :func:`change_node` function.
 
     Attributes
     ----------
@@ -171,12 +171,12 @@ class Client:
             The region to assign this node to.
         resume_key: Optional[:class:`str`]
             A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-            Defaults to `None`.
+            Defaults to ``None``.
         resume_timeout: Optional[:class:`int`]
             How long the node should wait for a connection while disconnected before clearing all players.
             Defaults to `60`.
         name: Optional[:class:`str`]
-            An identifier for the node that will show in logs. Defaults to `None`
+            An identifier for the node that will show in logs. Defaults to ``None``.
         reconnect_attempts: Optional[:class:`int`]
             The amount of times connection with the node will be reattempted before giving up.
             Set to `-1` for infinite. Defaults to `3`.
@@ -209,7 +209,7 @@ class Client:
             The query to perform a search for.
         node: Optional[:class:`Node`]
             The node to use for track lookup. Leave this blank to use a random node.
-            Defaults to `None` which is a random node.
+            Defaults to ``None`` which is a random node.
         check_local: :class:`bool`
             Whether to also search the query on sources registered with this Lavalink client.
 
@@ -240,7 +240,7 @@ class Client:
         track: :class:`str`
             The base64-encoded `track` string.
         node: Optional[:class:`Node`]
-            The node to use for the query. Defaults to `None` which is a random node.
+            The node to use for the query. Defaults to ``None`` which is a random node.
 
         Returns
         -------
@@ -262,7 +262,7 @@ class Client:
         tracks: List[:class:`str`]
             A list of base64-encoded `track` strings.
         node: Optional[:class:`Node`]
-            The node to use for the query. Defaults to `None` which is a random node.
+            The node to use for the query. Defaults to ``None`` which is a random node.
 
         Returns
         -------

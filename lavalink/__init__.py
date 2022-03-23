@@ -87,7 +87,7 @@ def add_event_hook(*hooks, event: Event = None):
         If `event` parameter is left empty, then it will run when any event is dispatched.
     event: :class:`Event`
         The event the hook belongs to. This will dispatch when that specific event is
-        dispatched. Defaults to `None` which means the hook is dispatched on all events.
+        dispatched. Defaults to ``None`` which means the hook is dispatched on all events.
     """
     if event is not None and Event not in event.__bases__:
         raise TypeError('Event parameter is not of type Event or None')

@@ -70,7 +70,7 @@ class PlayerManager:
         Parameters
         ----------
         predicate: Optional[:class:`function`]
-            A predicate to return specific players. Defaults to `None`.
+            A predicate to return specific players. Defaults to ``None``.
 
         Returns
         -------

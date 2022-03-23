@@ -437,7 +437,7 @@ class DefaultPlayer(BasePlayer):
         key: :class:`object`
             The key to fetch.
         default: Optional[:class:`any`]
-            The object that should be returned if the key doesn't exist. Defaults to `None`.
+            The object that should be returned if the key doesn't exist. Defaults to ``None``.
 
         Returns
         -------
@@ -477,7 +477,7 @@ class DefaultPlayer(BasePlayer):
             The ID of the user who requested the track.
         index: Optional[:class:`int`]
             The index at which to add the track.
-            If index is left unspecified, the default behaviour is to append the track. Defaults to `None`.
+            If index is left unspecified, the default behaviour is to append the track. Defaults to ``None``.
         """
         at = track
 
@@ -501,7 +501,7 @@ class DefaultPlayer(BasePlayer):
         ----------
         track: Optional[Union[:class:`DeferredAudioTrack`, :class:`AudioTrack`, :class:`dict`]]
             The track to play. If left unspecified, this will default
-            to the first track in the queue. Defaults to `None` so plays the next
+            to the first track in the queue. Defaults to ``None`` so plays the next
             song in queue. Accepts either an AudioTrack or a dict representing a track
             returned from Lavalink.
         start_time: Optional[:class:`int`]
