@@ -113,7 +113,7 @@ class PlayerManager:
             player = self.players.pop(guild_id)
             player.cleanup()
 
-    def create(self, guild_id: int, region: str = 'eu', endpoint: str = None, node: Node = None):
+    def create(self, guild_id: int, region: str = None, endpoint: str = None, node: Node = None):
         """
         Creates a player if one doesn't exist with the given information.
 
@@ -131,12 +131,12 @@ class PlayerManager:
         ----------
         guild_id: :class:`int`
             The guild_id to associate with the player.
-        region: :class:`str`
-            The region to use when selecting a Lavalink node. Defaults to `eu`.
-        endpoint: :class:`str`
-            The address of the Discord voice server. Defaults to `None`.
-        node: :class:`Node`
-            The node to put the player on. Defaults to `None` and a node with the lowest penalty is chosen.
+        region: Optional[:class:`str`]
+            The region to use when selecting a Lavalink node. Defaults to ``None``.
+        endpoint: Optional[:class:`str`]
+            The address of the Discord voice server. Defaults to ``None``.
+        node: Optional[:class:`Node`]
+            The node to put the player on. Defaults to ``None`` and a node with the lowest penalty is chosen.
 
         Returns
         -------
