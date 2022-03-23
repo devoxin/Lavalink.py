@@ -67,7 +67,7 @@ class Client:
         If this option is enabled and the player's node is changed through `Player.change_node` after
         the player was moved via the failover mechanism, the player will still move back to the original
         node when it becomes available. This behaviour can be avoided in custom player implementations by
-        setting ``self._original_node`` to ``None`` in the :func:`change_node` function.
+        setting ``self._original_node`` to ``None`` in the :func:`BasePlayer.change_node` function.
 
     Attributes
     ----------
