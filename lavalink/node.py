@@ -174,8 +174,7 @@ class Node:
         List[:class:`Plugin`]
             A list of active plugins.
         """
-        data = await self._manager._lavalink.get_node_plugins(self)
-        return [Plugin(plugin['name'], plugin['version']) for plugin in data]
+        return await self._manager._lavalink.get_node_plugins(self)
 
     async def _dispatch_event(self, event: Event):
         """|coro|

@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from enum import Enum
 from random import randrange
 from time import time
@@ -925,10 +924,14 @@ class DefaultPlayer(BasePlayer):
         await self.node._dispatch_event(NodeChangedEvent(self, old_node, node))
 
 
-@dataclass
 class Plugin:
     """
     Represents a Lavalink server plugin.
+
+    Parameters
+    ----------
+    data: :class:`dict`
+        The data to initialise a Plugin from.
 
     Attributes
     ----------
@@ -937,6 +940,8 @@ class Plugin:
     version: :class:`str`
         The version of the plugin.
     """
+    __slots__ = ('name', 'version')
 
-    name: str
-    version: str
+    def __init__(self, data: dict):
+        self.name: str = data['name']
+        self.version: str = data['version']

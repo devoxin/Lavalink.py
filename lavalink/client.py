@@ -34,7 +34,7 @@ import aiohttp
 
 from .errors import AuthenticationError, NodeError
 from .events import Event
-from .models import DefaultPlayer, LoadResult, Source
+from .models import DefaultPlayer, LoadResult, Plugin, Source
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
@@ -329,7 +329,7 @@ class Client:
         return await self._post_request('{}/routeplanner/free/all'.format(node.http_uri),
                                         headers={'Authorization': node.password})
 
-    async def get_node_plugins(self, node: Node) -> List[dict]:
+    async def get_node_plugins(self, node: Node) -> List[Plugin]:
         """|coro|
         Retrieves a list of plugins active on the target node.
 
@@ -340,11 +340,12 @@ class Client:
 
         Returns
         -------
-        List[:class:`dict`]
-            A list of dicts representing the currently active plugins.
+        List[:class:`Plugin`]
+            A list of Plugins active on the target node.
         """
-        return await self._post_request('{}/plugins'.format(node.http_uri),
+        data = await self._post_request('{}/plugins'.format(node.http_uri),
                                         headers={'Authorization': node.password})
+        return [Plugin(plugin) for plugin in data]
 
     async def voice_update_handler(self, data):
         """|coro|
