@@ -27,7 +27,7 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import Set, Union
+from typing import List, Set, Union
 from urllib.parse import quote
 
 import aiohttp
@@ -327,6 +327,23 @@ class Client:
             True if all failing addresses were freed, False otherwise.
         """
         return await self._post_request('{}/routeplanner/free/all'.format(node.http_uri),
+                                        headers={'Authorization': node.password})
+
+    async def get_node_plugins(self, node: Node) -> List[dict]:
+        """|coro|
+        Retrieves a list of plugins active on the target node.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to use for the query.
+
+        Returns
+        -------
+        List[:class:`dict`]
+            A list of dicts representing the currently active plugins.
+        """
+        return await self._post_request('{}/plugins'.format(node.http_uri),
                                         headers={'Authorization': node.password})
 
     async def voice_update_handler(self, data):

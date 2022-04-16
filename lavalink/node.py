@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from .events import Event
+from .models import Plugin
 from .stats import Stats
 from .websocket import WebSocket
 
@@ -163,6 +164,18 @@ class Node:
             True if all failing addresses were freed, False otherwise.
         """
         return await self._manager._lavalink.routeplanner_free_all_failing(self)
+
+    async def get_plugins(self):
+        """|coro|
+        Retrieves a list of plugins active on this node.
+
+        Returns
+        -------
+        List[:class:`Plugin`]
+            A list of active plugins.
+        """
+        data = await self._manager._lavalink.get_node_plugins(self)
+        return [Plugin(plugin['name'], plugin['version']) for plugin in data]
 
     async def _dispatch_event(self, event: Event):
         """|coro|
