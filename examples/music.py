@@ -59,14 +59,14 @@ class LavalinkVoiceClient(discord.VoiceClient):
         }
         await self.lavalink.voice_update_handler(lavalink_data)
 
-    async def connect(self, *, timeout: float, reconnect: bool) -> None:
+    async def connect(self, *, timeout: float, reconnect: bool, self_deaf: bool = False, self_mute: bool = False) -> None:
         """
         Connect the bot to the voice channel and create a player_manager
         if it doesn't exist yet.
         """
         # ensure there is a player_manager when creating a new voice_client
         self.lavalink.player_manager.create(guild_id=self.channel.guild.id)
-        await self.channel.guild.change_voice_state(channel=self.channel)
+        await self.channel.guild.change_voice_state(channel=self.channel, self_mute=self_mute, self_deaf=self_deaf)
 
     async def disconnect(self, *, force: bool = False) -> None:
         """
