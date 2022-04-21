@@ -12,7 +12,7 @@ import logging
 import sys
 
 from .client import Client
-from .errors import AuthenticationError, InvalidTrack, NodeError
+from .errors import AuthenticationError, InvalidTrack, NodeError, LoadError
 from .events import (Event, NodeChangedEvent, NodeConnectedEvent,
                      NodeDisconnectedEvent, PlayerUpdateEvent, QueueEndEvent,
                      TrackEndEvent, TrackExceptionEvent, TrackLoadFailedEvent,
