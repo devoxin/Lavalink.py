@@ -33,3 +33,7 @@ class AuthenticationError(Exception):
 
 class InvalidTrack(Exception):
     """ Raised when an invalid track was passed. """
+
+
+class LoadError(Exception):
+    """ Raised when a track fails to load. E.g. if a DeferredAudioTrack fails to find an equivalent. """

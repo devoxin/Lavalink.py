@@ -493,7 +493,7 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
-    async def play(self, track: Union[AudioTrack, DeferredAudioTrack, Dict] = None, start_time: int = 0, end_time: int = 0,
+    async def play(self, track: Union[AudioTrack, DeferredAudioTrack, Dict] = None, start_time: int = 0, end_time: int = 0,  # pylint: disable=too-many-statements
                    no_replace: bool = False, volume: Optional[int] = None, pause: bool = False):
         """
         Plays the given track.
