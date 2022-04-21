@@ -41,6 +41,9 @@ All Events are derived from :class:`Event`
 .. autoclass:: TrackEndEvent
     :members:
 
+.. autoclass:: TrackLoadFailedEvent
+    :members:
+
 .. autoclass:: QueueEndEvent
     :members:
 

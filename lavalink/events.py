@@ -114,6 +114,31 @@ class TrackEndEvent(Event):
         self.reason = reason
 
 
+class TrackLoadFailedEvent(Event):
+    """
+    This is a custom event emitted when a deferred audio track fails to
+    produce a playable track. The player will not do anything by itself,
+    so it is up to you to skip the broken track.
+
+    Attributes
+    ----------
+    player: :class:`BasePlayer`
+        The player responsible for playing the track.
+    track: :class:`DeferredAudioTrack`
+        The track that failed to produce a playable track.
+    original: Optional[:class:`Exception`]
+        The original error, emitted by the track.
+        This may be ``None`` if the track did not raise an error,
+        but rather returned ``None`` in place of a playable track.
+    """
+    __slots__ = ('player', 'track', 'original')
+
+    def __init__(self, player, track, original):
+        self.player = player
+        self.track = track
+        self.original = original
+
+
 class QueueEndEvent(Event):
     """
     This event is dispatched when there are no more songs in the queue.

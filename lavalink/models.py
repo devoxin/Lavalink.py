@@ -27,9 +27,10 @@ from random import randrange
 from time import time
 from typing import Dict, List, Optional, Union
 
-from .errors import InvalidTrack
+from .errors import InvalidTrack, LoadError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
-                     TrackExceptionEvent, TrackStartEvent, TrackStuckEvent)
+                     TrackExceptionEvent, TrackLoadFailedEvent,
+                     TrackStartEvent, TrackStuckEvent)
 from .filters import Equalizer, Filter
 
 
@@ -582,7 +583,16 @@ class DefaultPlayer(BasePlayer):
         playable_track = track.track
 
         if isinstance(track, DeferredAudioTrack) and playable_track is None:
-            playable_track = await track.load(self.node._manager._lavalink)
+            try:
+                playable_track = await track.load(self.node._manager._lavalink)
+            except LoadError as load_error:
+                await self.node._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
+            else:
+                if playable_track is None:
+                    await self.node._dispatch_event(TrackLoadFailedEvent(self, track, None))
+
+        if playable_track is None:
+            return await self.play()  # Usually indicative of a DeferredAudioTrack failing to load.
 
         await self.node._send(op='play', guildId=self._internal_id, track=playable_track, **options)
         await self.node._dispatch_event(TrackStartEvent(self, track))
