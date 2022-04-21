@@ -592,7 +592,7 @@ class DefaultPlayer(BasePlayer):
                     await self.node._dispatch_event(TrackLoadFailedEvent(self, track, None))
 
         if playable_track is None:
-            return await self.play()  # Usually indicative of a DeferredAudioTrack failing to load.
+            return
 
         await self.node._send(op='play', guildId=self._internal_id, track=playable_track, **options)
         await self.node._dispatch_event(TrackStartEvent(self, track))
