@@ -376,6 +376,10 @@ class DefaultPlayer(BasePlayer):
     current: Optional[:class:`AudioTrack`]
         The track that is playing currently, if any.
     """
+    LOOP_NONE = 0
+    LOOP_SINGLE = 1
+    LOOP_QUEUE = 2
+
     def __init__(self, guild_id, node):
         super().__init__(guild_id, node)
 
@@ -387,12 +391,23 @@ class DefaultPlayer(BasePlayer):
         self.position_timestamp = 0
         self.volume = 100
         self.shuffle = False
-        self.repeat = False
+        self.loop = 0  # 0 = off, 1 = single track, 2 = queue
         # self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
         self.filters: Dict[str, Filter] = {}
 
         self.queue = []
         self.current = None
+
+    @property
+    def repeat(self) -> bool:
+        """
+        Returns the player's loop status. This exists for backwards compatibility, and also as an alias.
+
+        If ``self.loop`` is 0, the player is NOT looping.
+        If ``self.loop`` is 1, the player is looping the single (current) track.
+        If ``self.loop`` is 2, the player is looping the entire queue.
+        """
+        return self.loop == 1 or self.loop == 2
 
     @property
     def is_playing(self) -> bool:
@@ -532,8 +547,14 @@ class DefaultPlayer(BasePlayer):
         if track is not None and isinstance(track, dict):
             track = AudioTrack(track, 0)
 
-        if self.repeat and self.current:
-            self.queue.append(self.current)
+        if self.loop > 0 and self.current:
+            if self.loop == 1:
+                if track is not None:
+                    self.queue.insert(0, self.current)
+                else:
+                    track = self.current
+            if self.loop == 2:
+                self.queue.append(self.current)
 
         self._last_update = 0
         self._last_position = 0
@@ -610,6 +631,9 @@ class DefaultPlayer(BasePlayer):
         """
         Sets whether tracks should be repeated.
 
+        .. deprecated:: 4.0.0
+            Use :func:`set_loop` to instead.
+
         This only works as a "queue loop". For single-track looping, you should
         utilise the :class:`TrackEndEvent` event to feed the track back into
         :func:`play`.
@@ -621,7 +645,23 @@ class DefaultPlayer(BasePlayer):
         repeat: :class:`bool`
             Whether to repeat the player or not.
         """
-        self.repeat = repeat
+        self.loop = 2 if repeat else 0
+
+    def set_loop(self, loop: int):
+        """
+        Sets whether the player loops between a single track, queue or none.
+
+        0 = off, 1 = single track, 2 = queue.
+
+        Parameters
+        ----------
+        loop: :class:`int`
+            The loop setting. 0 = off, 1 = single track, 2 = queue.
+        """
+        if not 0 <= loop <= 2:
+            raise ValueError('Loop must be 0, 1 or 2.')
+
+        self.loop = loop
 
     def set_shuffle(self, shuffle: bool):
         """
