@@ -335,6 +335,7 @@ class BasePlayer(ABC):
     async def _dispatch_voice_update(self):
         if {'sessionId', 'event'} == self._voice_state.keys():
             await self.node._send(op='voiceUpdate', guildId=self._internal_id, **self._voice_state)
+            self._voice_state.pop('event')
 
     @abstractmethod
     async def change_node(self, node):
