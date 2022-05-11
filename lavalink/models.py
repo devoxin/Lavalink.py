@@ -319,10 +319,6 @@ class BasePlayer(ABC):
         await self._dispatch_voice_update()
 
     async def _voice_state_update(self, data):
-        self._voice_state.update({
-            'sessionId': data['session_id']
-        })
-
         raw_channel_id = data['channel_id']
         self.channel_id = int(raw_channel_id) if raw_channel_id else None
 
@@ -330,12 +326,16 @@ class BasePlayer(ABC):
             self._voice_state.clear()
             return
 
-        await self._dispatch_voice_update()
+        if data['session_id'] != self._voice_state.get('sessionId'):
+            self._voice_state.update({
+                'sessionId': data['session_id']
+            })
+
+            await self._dispatch_voice_update()
 
     async def _dispatch_voice_update(self):
         if {'sessionId', 'event'} == self._voice_state.keys():
             await self.node._send(op='voiceUpdate', guildId=self._internal_id, **self._voice_state)
-            self._voice_state.pop('event')
 
     @abstractmethod
     async def change_node(self, node):
