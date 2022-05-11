@@ -31,9 +31,9 @@ class PlayerManager:
     Represents the player manager that contains all the players.
 
     len(x):
-        Returns the total amount of cached players.
+        Returns the total number of stored players.
     iter(x):
-        Returns an iterator of all the players cached.
+        Returns an iterator of all the stored players.
 
     Attributes
     ----------

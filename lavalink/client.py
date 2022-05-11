@@ -418,3 +418,6 @@ class Client:
         await asyncio.wait(tasks)
 
         self._logger.debug('[EventDispatcher] Dispatched \'{}\' to all registered hooks'.format(type(event).__name__))
+
+    def __repr__(self):
+        return '<Client user_id={} nodes={} players={}>'.format(self._user_id, len(self.node_manager), len(self.player_manager))
