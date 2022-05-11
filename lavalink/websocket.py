@@ -217,13 +217,13 @@ class WebSocket:
             The data given from Lavalink.
         """
         player = self._lavalink.player_manager.get(int(data['guildId']))
+        event_type = data['type']
 
         if not player:
-            self._lavalink._logger.warning('[Node:{}] Received event for non-existent player! GuildId: {}'
-                                           .format(self._node.name, data['guildId']))
+            self._lavalink._logger.warning('[Node:{}] Received event type {} for non-existent player! GuildId: {}'
+                                           .format(self._node.name, event_type, data['guildId']))
             return
 
-        event_type = data['type']
         event = None
 
         if event_type == 'TrackEndEvent':
