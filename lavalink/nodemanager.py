@@ -24,12 +24,20 @@ SOFTWARE.
 from .events import NodeConnectedEvent, NodeDisconnectedEvent
 from .node import Node
 
+DEFAULT_REGIONS = {
+    'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica', 'india'),
+    'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'london'),
+    'us': ('us', 'brazil')
+}
+
 
 class NodeManager:
     """Represents the node manager that contains all lavalink nodes.
 
+    len(x):
+        Returns the total number of nodes.
     iter(x):
-        Returns an iterator of all the nodes cached.
+        Returns an iterator of all the stored nodes.
 
     Attributes
     ----------
@@ -41,14 +49,11 @@ class NodeManager:
     def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
         self._player_queue = []
-
         self.nodes = []
+        self.regions = regions or DEFAULT_REGIONS
 
-        self.regions = regions or {
-            'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica', 'india'),
-            'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'london'),
-            'us': ('us', 'brazil')
-        }
+    def __len__(self):
+        return len(self.nodes)
 
     def __iter__(self):
         for n in self.nodes:

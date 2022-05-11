@@ -200,6 +200,9 @@ class PlaylistInfo:
     def none(cls):
         return cls('', -1)
 
+    def __repr__(self):
+        return '<PlaylistInfo name={0.name} selected_track={0.selected_track}>'.format(self)
+
 
 class LoadResult:
     """
@@ -235,6 +238,9 @@ class LoadResult:
         tracks = [AudioTrack(track, 0) for track in mapping.get('tracks')]
         return cls(load_type, tracks, playlist_info)
 
+    def __repr__(self):
+        return '<LoadResult load_type={0.load_type} playlist_info={0.playlist_info} tracks=[{1} item(s)]>'.format(self, len(self.tracks))
+
 
 class Source(ABC):
     def __init__(self, name: str):
@@ -268,6 +274,9 @@ class Source(ABC):
             A LoadResult, or None if there were no matches for the provided query.
         """
         raise NotImplementedError
+
+    def __repr__(self):
+        return '<Source name={0.name}>'.format(self)
 
 
 class BasePlayer(ABC):
@@ -386,18 +395,18 @@ class DefaultPlayer(BasePlayer):
 
         self._user_data = {}
 
-        self.paused = False
+        self.paused: bool = False
         self._last_update = 0
         self._last_position = 0
-        self.position_timestamp = 0
-        self.volume = 100
-        self.shuffle = False
-        self.loop = 0  # 0 = off, 1 = single track, 2 = queue
+        self.position_timestamp: int = 0
+        self.volume: int = 100
+        self.shuffle: bool = False
+        self.loop: int = 0  # 0 = off, 1 = single track, 2 = queue
         # self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
         self.filters: Dict[str, Filter] = {}
 
-        self.queue = []
-        self.current = None
+        self.queue: List[AudioTrack] = []
+        self.current: Optional[AudioTrack] = None
 
     @property
     def repeat(self) -> bool:
@@ -973,3 +982,6 @@ class DefaultPlayer(BasePlayer):
             await self._apply_filters()
 
         await self.node._dispatch_event(NodeChangedEvent(self, old_node, node))
+
+    def __repr__(self):
+        return '<DefaultPlayer volume={0.volume} current={0.current}>'.format(self)
