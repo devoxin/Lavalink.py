@@ -4,7 +4,7 @@ __title__ = 'Lavalink'
 __author__ = 'Devoxin'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-2022 Devoxin'
-__version__ = '3.1.6'
+__version__ = '3.1.7'
 
 
 import logging
