@@ -86,8 +86,8 @@ class WebSocket:
                                                    'and not Lavalink. Check your ports, and try again.'
                                                    .format(self._node.name, ce.status))
                 else:
-                    self._lavalink._logger.warning('[Node:{}] An unknown error occurred whilst trying to establish '
-                                                   'a connection to Lavalink'.format(self._node.name), ce)
+                    self._lavalink._logger.exception('[Node:{}] An unknown error occurred whilst trying to establish '
+                                                     'a connection to Lavalink'.format(self._node.name))
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
             else:
