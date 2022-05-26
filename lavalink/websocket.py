@@ -68,13 +68,17 @@ class WebSocket:
         return self._ws is not None and not self._ws.closed
 
     async def close(self, code=aiohttp.WSCloseCode.OK):
-        """ Shuts down the websocket connection if there is one. """
+        """|coro|
+        Shuts down the websocket connection if there is one.
+        """
         if self._ws:
             await self._ws.close(code=code)
             self._ws = None
 
     async def connect(self):
-        """ Attempts to establish a connection to Lavalink. """
+        """|coro|
+        Attempts to establish a connection to Lavalink.
+        """
         if self._ws:
             await self.close()
 
