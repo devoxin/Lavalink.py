@@ -21,9 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import logging
+
 from .events import NodeConnectedEvent, NodeDisconnectedEvent
 from .node import Node
 
+_log = logging.getLogger(__name__)
 DEFAULT_REGIONS = {
     'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica', 'india'),
     'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'london'),
@@ -104,7 +107,7 @@ class NodeManager:
         node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts, filters, ssl)
         self.nodes.append(node)
 
-        self._lavalink._logger.info('[NodeManager] Added node \'{}\''.format(node.name))
+        _log.info('[NodeManager] Added node \'%s\'', node.name)
 
     def remove_node(self, node: Node):
         """
@@ -116,7 +119,7 @@ class NodeManager:
             The node to remove from the list.
         """
         self.nodes.remove(node)
-        self._lavalink._logger.info('[NodeManager] Removed node \'{}\''.format(node.name))
+        _log.info('[NodeManager] Removed node \'%s\'', node.name)
 
     def get_region(self, endpoint: str):
         """
@@ -185,8 +188,7 @@ class NodeManager:
         for player in self._player_queue:
             await player.change_node(node)
             original_node_name = player._original_node.name if player._original_node else '[no node]'
-            self._lavalink._logger.debug('[NodeManager] Moved player {} from node \'{}\' to node \'{}\''
-                                         .format(player.guild_id, original_node_name, node.name))
+            _log.debug('[NodeManager] Moved player %d from node \'%s\' to node \'%s\'', player.guild_id, original_node_name, node.name)
 
         if self._lavalink._connect_back:
             for player in node._original_players:
@@ -215,8 +217,7 @@ class NodeManager:
 
         if not best_node:
             self._player_queue.extend(node.players)
-            self._lavalink._logger.error('[NodeManager] Unable to move players, no available nodes! '
-                                         'Waiting for a node to become available.')
+            _log.error('[NodeManager] Unable to move players, no available nodes! Waiting for a node to become available.')
             return
 
         for player in node.players:

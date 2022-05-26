@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
+import logging
 
 import aiohttp
 
@@ -30,6 +31,7 @@ from .events import (PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
 from .stats import Stats
 from .utils import decode_track
 
+_log = logging.getLogger(__name__)
 CLOSERS = (
     aiohttp.WSMsgType.CLOSE,
     aiohttp.WSMsgType.CLOSING,
@@ -93,8 +95,7 @@ class WebSocket:
 
         while not self.connected and (not is_finite_retry or attempt < self._max_reconnect_attempts):
             attempt += 1
-            self._lavalink._logger.info('[Node:{}] Attempting to establish WebSocket '
-                                        'connection ({}/{})...'.format(self._node.name, attempt, max_attempts_str))
+            _log.info('[Node:%s] Attempting to establish WebSocket connection (%d/%d)...', self._node.name, attempt, max_attempts_str)
 
             protocol = 'wss' if self._ssl else 'ws'
             try:
@@ -102,31 +103,28 @@ class WebSocket:
                                                           headers=headers, heartbeat=60)
             except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as ce:
                 if isinstance(ce, aiohttp.ClientConnectorError):
-                    self._lavalink._logger.warning('[Node:{}] Invalid response received; this may indicate that '
-                                                   'Lavalink is not running, or is running on a port different '
-                                                   'to the one you provided to `add_node`.'.format(self._node.name))
+                    _log.warning('[Node:%s] Invalid response received; this may indicate that '
+                                 'Lavalink is not running, or is running on a port different '
+                                 'to the one you provided to `add_node`.', self._node.name)
                 elif isinstance(ce, aiohttp.WSServerHandshakeError):
                     if ce.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
-                        self._lavalink._logger.warning('[Node:{}] Authentication failed while trying to '
-                                                       'establish a connection to the node.'
-                                                       .format(self._node.name))
+                        _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.',
+                                     self._node.name)
                         # We shouldn't try to establish any more connections as correcting this particular error
                         # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
                         # would be futile, and a waste of resources.
                         return
 
-                    self._lavalink._logger.warning('[Node:{}] The remote server returned code {}, '
-                                                   'the expected code was 101. This usually '
-                                                   'indicates that the remote server is a webserver '
-                                                   'and not Lavalink. Check your ports, and try again.'
-                                                   .format(self._node.name, ce.status))
+                    _log.warning('[Node:%s] The remote server returned code %d, the expected code was 101. This usually '
+                                 'indicates that the remote server is a webserver and not Lavalink. Check your ports, '
+                                 'and try again.', self._node.name, ce.status)
                 else:
-                    self._lavalink._logger.exception('[Node:{}] An unknown error occurred whilst trying to establish '
-                                                     'a connection to Lavalink'.format(self._node.name))
+                    _log.exception('[Node:%s] An unknown error occurred whilst trying to establish '
+                                   'a connection to Lavalink', self._node.name)
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
             else:
-                self._lavalink._logger.info('[Node:{}] WebSocket connection established'.format(self._node.name))
+                _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 await self._node._manager._node_connect(self._node)
 
                 if not self._resuming_configured and self._resume_key \
@@ -144,22 +142,21 @@ class WebSocket:
                 # Ensure this loop doesn't proceed if _listen returns control back to this function.
                 return
 
-        self._lavalink._logger.warning('[Node:{}] A WebSocket connection could not be established within {} '
-                                       'attempts.'.format(self._node.name, max_attempts_str))
+        _log.warning('[Node:%s] A WebSocket connection could not be established within %s attempts.', self._node.name, max_attempts_str)
 
     async def _listen(self):
         """ Listens for websocket messages. """
         async for msg in self._ws:
-            self._lavalink._logger.debug('[Node:{}] Received WebSocket message: {}'.format(self._node.name, msg.data))
+            _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
 
             if msg.type == aiohttp.WSMsgType.TEXT:
                 await self._handle_message(msg.json())
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 exc = self._ws.exception()
-                self._lavalink._logger.error('[Node:{}] Exception in WebSocket! {}.'.format(self._node.name, exc))
+                _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
                 break
             elif msg.type in CLOSERS:
-                self._lavalink._logger.debug('[Node:{}] Received close frame with code {}.'.format(self._node.name, msg.data))
+                _log.debug('[Node:%s] Received close frame with code %d.', self._node.name, msg.data)
                 await self._websocket_closed(msg.data, msg.extra)
                 return
         await self._websocket_closed(self._ws.close_code, 'AsyncIterator loop exited')
@@ -175,8 +172,7 @@ class WebSocket:
         reason: Optional[:class:`str`]
             Reason why the websocket was closed. Defaults to ``None``
         """
-        self._lavalink._logger.warning('[Node:{}] WebSocket disconnected with the following: code={} '
-                                       'reason={}'.format(self._node.name, code, reason))
+        _log.warning('[Node:%s] WebSocket disconnected with the following: code=%d reason=%s', self._node.name, code, reason)
         self._ws = None
         await self._node._manager._node_disconnect(self._node, code, reason)
         await self.connect()
@@ -199,8 +195,7 @@ class WebSocket:
             player = self._lavalink.player_manager.get(int(player_id))
 
             if not player:
-                self._lavalink._logger.debug('[Node:{}] Received playerUpdate for non-existent player! GuildId: {}'
-                                             .format(self._node.name, str(data)))
+                _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %s', self._node.name, player_id)
                 return
 
             await player._update_state(data['state'])
@@ -208,7 +203,7 @@ class WebSocket:
         elif op == 'event':
             await self._handle_event(data)
         else:
-            self._lavalink._logger.warning('[Node:{}] Received unknown op: {}'.format(self._node.name, op))
+            _log.warning('[Node:%s] Received unknown op: %s', self._node.name, op)
 
     async def _handle_event(self, data: dict):
         """
@@ -223,8 +218,7 @@ class WebSocket:
         event_type = data['type']
 
         if not player:
-            self._lavalink._logger.warning('[Node:{}] Received event type {} for non-existent player! GuildId: {}'
-                                           .format(self._node.name, event_type, data['guildId']))
+            _log.warning('[Node:%s] Received event type %s for non-existent player! GuildId: %s', self._node.name, event_type, data['guildId'])
             return
 
         event = None
@@ -247,7 +241,7 @@ class WebSocket:
             if event_type == 'TrackStartEvent':
                 return
 
-            self._lavalink._logger.warning('[Node:{}] Unknown event received of type \'{}\''.format(self._node.name, event_type))
+            _log.warning('[Node:%s] Unknown event received of type \'%s\'', self._node.name, event_type)
             return
 
         await self._lavalink._dispatch_event(event)
@@ -265,12 +259,12 @@ class WebSocket:
             The data sent to Lavalink.
         """
         if not self.connected:
-            self._lavalink._logger.debug('[Node:{}] WebSocket not ready; queued outgoing payload'.format(self._node.name))
+            _log.debug('[Node:%s] WebSocket not ready; queued outgoing payload', self._node.name)
             self._message_queue.append(data)
             return
 
-        self._lavalink._logger.debug('[Node:{}] Sending payload {}'.format(self._node.name, str(data)))
+        _log.debug('[Node:%s] Sending payload %s', self._node.name, str(data))
         try:
             await self._ws.send_json(data)
         except ConnectionResetError:
-            self._lavalink._logger.warning('[Node:{}] Failed to send payload due to connection reset!'.format(self._node.name))
+            _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
