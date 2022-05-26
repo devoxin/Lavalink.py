@@ -27,14 +27,14 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import Set, Union
+from typing import List, Set, Union
 from urllib.parse import quote
 
 import aiohttp
 
 from .errors import AuthenticationError, NodeError
 from .events import Event
-from .models import DefaultPlayer, LoadResult, Source
+from .models import DefaultPlayer, LoadResult, Plugin, Source
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
@@ -329,6 +329,24 @@ class Client:
         """
         return await self._post_request('{}/routeplanner/free/all'.format(node.http_uri),
                                         headers={'Authorization': node.password})
+
+    async def get_node_plugins(self, node: Node) -> List[Plugin]:
+        """|coro|
+        Retrieves a list of plugins active on the target node.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to use for the query.
+
+        Returns
+        -------
+        List[:class:`Plugin`]
+            A list of Plugins active on the target node.
+        """
+        data = await self._get_request('{}/plugins'.format(node.http_uri),
+                                       headers={'Authorization': node.password})
+        return [Plugin(plugin) for plugin in data]
 
     async def voice_update_handler(self, data):
         """|coro|

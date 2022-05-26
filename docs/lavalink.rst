@@ -124,6 +124,9 @@ Models
 .. autoclass:: DefaultPlayer
     :members:
 
+.. autoclass:: Plugin
+    :members:
+
 Node
 ----
 .. autoclass:: Node
