@@ -162,7 +162,7 @@ class PlayerManager:
 
         id_int = int(guild_id)
         self.players[id_int] = player = self._player_cls(id_int, best_node)
-        _log.debug('[PlayerManager] Created player with GuildId %d on node \'%s\'', id_int, best_node.name)
+        _log.debug('Created player with GuildId %d on node \'%s\'', id_int, best_node.name)
         return player
 
     async def destroy(self, guild_id: int):
@@ -190,4 +190,4 @@ class PlayerManager:
         if player.node:
             await player.node._send(op='destroy', guildId=player._internal_id)
 
-        _log.debug('[PlayerManager] Destroyed player with GuildId %d on node \'%s\'', guild_id, player.node.name if player.node else 'UNASSIGNED')
+        _log.debug('Destroyed player with GuildId %d on node \'%s\'', guild_id, player.node.name if player.node else 'UNASSIGNED')
