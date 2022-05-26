@@ -344,7 +344,7 @@ class Client:
             A list of Plugins active on the target node.
         """
         data = await self._get_request('{}/plugins'.format(node.http_uri),
-                                        headers={'Authorization': node.password})
+                                       headers={'Authorization': node.password})
         return [Plugin(plugin) for plugin in data]
 
     async def voice_update_handler(self, data):
