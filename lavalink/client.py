@@ -326,7 +326,7 @@ class Client:
         :class:`bool`
             True if all failing addresses were freed, False otherwise.
         """
-        return await self._post_request('{}/routeplanner/free/all'.format(node.http_uri),
+        return await self._get_request('{}/routeplanner/free/all'.format(node.http_uri),
                                         headers={'Authorization': node.password})
 
     async def get_node_plugins(self, node: Node) -> List[Plugin]:
