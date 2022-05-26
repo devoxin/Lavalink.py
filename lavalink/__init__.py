@@ -37,7 +37,7 @@ def enable_debug_logging():
     log = logging.getLogger('lavalink')
 
     fmt = logging.Formatter(
-        '[%(asctime)s] [lavalink.py] [%(levelname)s] %(message)s',
+        '[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s',  # lavalink.py
         datefmt="%H:%M:%S"
     )
 

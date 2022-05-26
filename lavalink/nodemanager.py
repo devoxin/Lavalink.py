@@ -107,7 +107,7 @@ class NodeManager:
         node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts, filters, ssl)
         self.nodes.append(node)
 
-        _log.info('[NodeManager] Added node \'%s\'', node.name)
+        _log.info('Added node \'%s\'', node.name)
 
     def remove_node(self, node: Node):
         """
@@ -119,7 +119,7 @@ class NodeManager:
             The node to remove from the list.
         """
         self.nodes.remove(node)
-        _log.info('[NodeManager] Removed node \'%s\'', node.name)
+        _log.info('Removed node \'%s\'', node.name)
 
     def get_region(self, endpoint: str):
         """
@@ -188,7 +188,7 @@ class NodeManager:
         for player in self._player_queue:
             await player.change_node(node)
             original_node_name = player._original_node.name if player._original_node else '[no node]'
-            _log.debug('[NodeManager] Moved player %d from node \'%s\' to node \'%s\'', player.guild_id, original_node_name, node.name)
+            _log.debug('Moved player %d from node \'%s\' to node \'%s\'', player.guild_id, original_node_name, node.name)
 
         if self._lavalink._connect_back:
             for player in node._original_players:
@@ -217,7 +217,7 @@ class NodeManager:
 
         if not best_node:
             self._player_queue.extend(node.players)
-            _log.error('[NodeManager] Unable to move players, no available nodes! Waiting for a node to become available.')
+            _log.error('Unable to move players, no available nodes! Waiting for a node to become available.')
             return
 
         for player in node.players:
