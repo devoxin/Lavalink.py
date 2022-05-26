@@ -1008,3 +1008,6 @@ class Plugin:
     def __init__(self, data: dict):
         self.name: str = data['name']
         self.version: str = data['version']
+
+    def __repr__(self):
+        return '{0.name} v{0.version}'.format(self)
