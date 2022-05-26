@@ -27,7 +27,6 @@ from .errors import NodeError
 from .models import BasePlayer
 from .node import Node
 
-print(__name__)
 _log = logging.getLogger(__name__)
 
 
