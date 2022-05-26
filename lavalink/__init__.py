@@ -12,11 +12,11 @@ import logging
 import sys
 
 from .client import Client
-from .errors import AuthenticationError, InvalidTrack, NodeError
+from .errors import AuthenticationError, InvalidTrack, LoadError, NodeError
 from .events import (Event, NodeChangedEvent, NodeConnectedEvent,
                      NodeDisconnectedEvent, PlayerUpdateEvent, QueueEndEvent,
-                     TrackEndEvent, TrackExceptionEvent, TrackStartEvent,
-                     TrackStuckEvent, WebSocketClosedEvent)
+                     TrackEndEvent, TrackExceptionEvent, TrackLoadFailedEvent,
+                     TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent)
 from .filters import (ChannelMix, Equalizer, Filter, Karaoke, LowPass,
                       Rotation, Timescale, Tremolo, Vibrato, Volume)
 from .models import (AudioTrack, BasePlayer, DefaultPlayer, DeferredAudioTrack,

@@ -27,9 +27,10 @@ from random import randrange
 from time import time
 from typing import Dict, List, Optional, Union
 
-from .errors import InvalidTrack
+from .errors import InvalidTrack, LoadError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
-                     TrackExceptionEvent, TrackStartEvent, TrackStuckEvent)
+                     TrackExceptionEvent, TrackLoadFailedEvent,
+                     TrackStartEvent, TrackStuckEvent)
 from .filters import Equalizer, Filter
 
 
@@ -199,6 +200,9 @@ class PlaylistInfo:
     def none(cls):
         return cls('', -1)
 
+    def __repr__(self):
+        return '<PlaylistInfo name={0.name} selected_track={0.selected_track}>'.format(self)
+
 
 class LoadResult:
     """
@@ -234,6 +238,9 @@ class LoadResult:
         tracks = [AudioTrack(track, 0) for track in mapping.get('tracks')]
         return cls(load_type, tracks, playlist_info)
 
+    def __repr__(self):
+        return '<LoadResult load_type={0.load_type} playlist_info={0.playlist_info} tracks=[{1} item(s)]>'.format(self, len(self.tracks))
+
 
 class Source(ABC):
     def __init__(self, name: str):
@@ -267,6 +274,9 @@ class Source(ABC):
             A LoadResult, or None if there were no matches for the provided query.
         """
         raise NotImplementedError
+
+    def __repr__(self):
+        return '<Source name={0.name}>'.format(self)
 
 
 class BasePlayer(ABC):
@@ -318,10 +328,6 @@ class BasePlayer(ABC):
         await self._dispatch_voice_update()
 
     async def _voice_state_update(self, data):
-        self._voice_state.update({
-            'sessionId': data['session_id']
-        })
-
         raw_channel_id = data['channel_id']
         self.channel_id = int(raw_channel_id) if raw_channel_id else None
 
@@ -329,7 +335,12 @@ class BasePlayer(ABC):
             self._voice_state.clear()
             return
 
-        await self._dispatch_voice_update()
+        if data['session_id'] != self._voice_state.get('sessionId'):
+            self._voice_state.update({
+                'sessionId': data['session_id']
+            })
+
+            await self._dispatch_voice_update()
 
     async def _dispatch_voice_update(self):
         if {'sessionId', 'event'} == self._voice_state.keys():
@@ -375,23 +386,38 @@ class DefaultPlayer(BasePlayer):
     current: Optional[:class:`AudioTrack`]
         The track that is playing currently, if any.
     """
+    LOOP_NONE = 0
+    LOOP_SINGLE = 1
+    LOOP_QUEUE = 2
+
     def __init__(self, guild_id, node):
         super().__init__(guild_id, node)
 
         self._user_data = {}
 
-        self.paused = False
+        self.paused: bool = False
         self._last_update = 0
         self._last_position = 0
-        self.position_timestamp = 0
-        self.volume = 100
-        self.shuffle = False
-        self.repeat = False
+        self.position_timestamp: int = 0
+        self.volume: int = 100
+        self.shuffle: bool = False
+        self.loop: int = 0  # 0 = off, 1 = single track, 2 = queue
         # self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
         self.filters: Dict[str, Filter] = {}
 
-        self.queue = []
-        self.current = None
+        self.queue: List[AudioTrack] = []
+        self.current: Optional[AudioTrack] = None
+
+    @property
+    def repeat(self) -> bool:
+        """
+        Returns the player's loop status. This exists for backwards compatibility, and also as an alias.
+
+        If ``self.loop`` is 0, the player is NOT looping.
+        If ``self.loop`` is 1, the player is looping the single (current) track.
+        If ``self.loop`` is 2, the player is looping the entire queue.
+        """
+        return self.loop == 1 or self.loop == 2
 
     @property
     def is_playing(self) -> bool:
@@ -492,7 +518,7 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
-    async def play(self, track: Union[AudioTrack, DeferredAudioTrack, Dict] = None, start_time: int = 0, end_time: int = 0,
+    async def play(self, track: Union[AudioTrack, DeferredAudioTrack, Dict] = None, start_time: int = 0, end_time: int = 0,  # pylint: disable=too-many-statements
                    no_replace: bool = False, volume: Optional[int] = None, pause: bool = False):
         """
         Plays the given track.
@@ -531,8 +557,14 @@ class DefaultPlayer(BasePlayer):
         if track is not None and isinstance(track, dict):
             track = AudioTrack(track, 0)
 
-        if self.repeat and self.current:
-            self.queue.append(self.current)
+        if self.loop > 0 and self.current:
+            if self.loop == 1:
+                if track is not None:
+                    self.queue.insert(0, self.current)
+                else:
+                    track = self.current
+            if self.loop == 2:
+                self.queue.append(self.current)
 
         self._last_update = 0
         self._last_position = 0
@@ -582,7 +614,16 @@ class DefaultPlayer(BasePlayer):
         playable_track = track.track
 
         if isinstance(track, DeferredAudioTrack) and playable_track is None:
-            playable_track = await track.load(self.node._manager._lavalink)
+            try:
+                playable_track = await track.load(self.node._manager._lavalink)
+            except LoadError as load_error:
+                await self.node._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
+            else:
+                if playable_track is None:
+                    await self.node._dispatch_event(TrackLoadFailedEvent(self, track, None))
+
+        if playable_track is None:
+            return
 
         await self.node._send(op='play', guildId=self._internal_id, track=playable_track, **options)
         await self.node._dispatch_event(TrackStartEvent(self, track))
@@ -600,6 +641,9 @@ class DefaultPlayer(BasePlayer):
         """
         Sets whether tracks should be repeated.
 
+        .. deprecated:: 4.0.0
+            Use :func:`set_loop` to instead.
+
         This only works as a "queue loop". For single-track looping, you should
         utilise the :class:`TrackEndEvent` event to feed the track back into
         :func:`play`.
@@ -611,7 +655,23 @@ class DefaultPlayer(BasePlayer):
         repeat: :class:`bool`
             Whether to repeat the player or not.
         """
-        self.repeat = repeat
+        self.loop = 2 if repeat else 0
+
+    def set_loop(self, loop: int):
+        """
+        Sets whether the player loops between a single track, queue or none.
+
+        0 = off, 1 = single track, 2 = queue.
+
+        Parameters
+        ----------
+        loop: :class:`int`
+            The loop setting. 0 = off, 1 = single track, 2 = queue.
+        """
+        if not 0 <= loop <= 2:
+            raise ValueError('Loop must be 0, 1 or 2.')
+
+        self.loop = loop
 
     def set_shuffle(self, shuffle: bool):
         """
@@ -922,6 +982,9 @@ class DefaultPlayer(BasePlayer):
             await self._apply_filters()
 
         await self.node._dispatch_event(NodeChangedEvent(self, old_node, node))
+
+    def __repr__(self):
+        return '<DefaultPlayer volume={0.volume} current={0.current}>'.format(self)
 
 
 class Plugin:

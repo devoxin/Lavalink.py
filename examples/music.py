@@ -59,16 +59,16 @@ class LavalinkVoiceClient(discord.VoiceClient):
         }
         await self.lavalink.voice_update_handler(lavalink_data)
 
-    async def connect(self, *, timeout: float, reconnect: bool) -> None:
+    async def connect(self, *, timeout: float, reconnect: bool, self_deaf: bool = False, self_mute: bool = False) -> None:
         """
         Connect the bot to the voice channel and create a player_manager
         if it doesn't exist yet.
         """
         # ensure there is a player_manager when creating a new voice_client
         self.lavalink.player_manager.create(guild_id=self.channel.guild.id)
-        await self.channel.guild.change_voice_state(channel=self.channel)
+        await self.channel.guild.change_voice_state(channel=self.channel, self_mute=self_mute, self_deaf=self_deaf)
 
-    async def disconnect(self, *, force: bool) -> None:
+    async def disconnect(self, *, force: bool = False) -> None:
         """
         Handles the disconnect.
         Cleans up running player and leaves the voice client.
@@ -142,7 +142,8 @@ class Music(commands.Cog):
             # execution state of the command goes no further.
             raise commands.CommandInvokeError('Join a voicechannel first.')
 
-        if not ctx.voice_client:
+        v_client = ctx.voice_client
+        if not v_client:
             if not should_connect:
                 raise commands.CommandInvokeError('Not connected.')
 
@@ -154,7 +155,7 @@ class Music(commands.Cog):
             player.store('channel', ctx.channel.id)
             await ctx.author.voice.channel.connect(cls=LavalinkVoiceClient)
         else:
-            if int(player.channel_id) != ctx.author.voice.channel.id:
+            if v_client.channel.id != ctx.author.voice.channel.id:
                 raise commands.CommandInvokeError('You need to be in my voicechannel.')
 
     async def track_hook(self, event):

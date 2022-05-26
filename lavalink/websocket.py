@@ -120,6 +120,9 @@ class WebSocket:
                                                    'indicates that the remote server is a webserver '
                                                    'and not Lavalink. Check your ports, and try again.'
                                                    .format(self._node.name, ce.status))
+                else:
+                    self._lavalink._logger.exception('[Node:{}] An unknown error occurred whilst trying to establish '
+                                                     'a connection to Lavalink'.format(self._node.name))
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
             else:
@@ -217,13 +220,13 @@ class WebSocket:
             The data given from Lavalink.
         """
         player = self._lavalink.player_manager.get(int(data['guildId']))
+        event_type = data['type']
 
         if not player:
-            self._lavalink._logger.warning('[Node:{}] Received event for non-existent player! GuildId: {}'
-                                           .format(self._node.name, data['guildId']))
+            self._lavalink._logger.warning('[Node:{}] Received event type {} for non-existent player! GuildId: {}'
+                                           .format(self._node.name, event_type, data['guildId']))
             return
 
-        event_type = data['type']
         event = None
 
         if event_type == 'TrackEndEvent':
