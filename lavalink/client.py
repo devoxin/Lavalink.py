@@ -27,14 +27,14 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import List, Set, Union
+from typing import Set, Union
 from urllib.parse import quote
 
 import aiohttp
 
 from .errors import AuthenticationError, NodeError
 from .events import Event
-from .models import DefaultPlayer, LoadResult, Plugin, Source
+from .models import DefaultPlayer, LoadResult, Source
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
@@ -277,77 +277,6 @@ class Client:
         return await self._post_request('{}/decodetracks'.format(node.http_uri),
                                         headers={'Authorization': node.password}, json=tracks)
 
-    async def routeplanner_status(self, node: Node):
-        """|coro|
-        Retrieves the status of the target node's routeplanner.
-
-        Parameters
-        ----------
-        node: :class:`Node`
-            The node to use for the query.
-
-        Returns
-        -------
-        :class:`dict`
-            A dict representing the routeplanner information.
-        """
-        return await self._get_request('{}/routeplanner/status'.format(node.http_uri),
-                                       headers={'Authorization': node.password})
-
-    async def routeplanner_free_address(self, node: Node, address: str) -> bool:
-        """|coro|
-        Frees up the provided IP address in the target node's routeplanner.
-
-        Parameters
-        ----------
-        node: :class:`Node`
-            The node to use for the query.
-        address: :class:`str`
-            The address to free.
-
-        Returns
-        -------
-        :class:`bool`
-            True if the address was freed, False otherwise.
-        """
-        return await self._post_request('{}/routeplanner/free/address'.format(node.http_uri),
-                                        headers={'Authorization': node.password}, json={'address': address})
-
-    async def routeplanner_free_all_failing(self, node: Node) -> bool:
-        """|coro|
-        Frees up all IP addresses in the target node that have been marked as failing.
-
-        Parameters
-        ----------
-        node: :class:`Node`
-            The node to use for the query.
-
-        Returns
-        -------
-        :class:`bool`
-            True if all failing addresses were freed, False otherwise.
-        """
-        return await self._post_request('{}/routeplanner/free/all'.format(node.http_uri),
-                                        headers={'Authorization': node.password})
-
-    async def get_node_plugins(self, node: Node) -> List[Plugin]:
-        """|coro|
-        Retrieves a list of plugins active on the target node.
-
-        Parameters
-        ----------
-        node: :class:`Node`
-            The node to use for the query.
-
-        Returns
-        -------
-        List[:class:`Plugin`]
-            A list of Plugins active on the target node.
-        """
-        data = await self._get_request('{}/plugins'.format(node.http_uri),
-                                       headers={'Authorization': node.password})
-        return [Plugin(plugin) for plugin in data]
-
     async def voice_update_handler(self, data):
         """|coro|
         This function intercepts websocket data from your Discord library and
@@ -386,11 +315,11 @@ class Client:
 
     async def _get_request(self, url, **kwargs):
         async with self._session.get(url, **kwargs) as res:
-            if res.status == 200:
-                return await res.json()
-
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
+
+            if res.status == 200:
+                return await res.json()
 
             raise NodeError('An invalid response was received from the node: code={}, body={}'
                             .format(res.status, await res.text()))

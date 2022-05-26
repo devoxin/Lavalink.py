@@ -21,6 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from typing import List
+
+from lavalink.models import Plugin
+
 from .events import Event
 from .stats import Stats
 from .websocket import WebSocket
@@ -58,6 +62,7 @@ class Node:
     def __init__(self, manager, host: str, port: int, password: str,
                  region: str, resume_key: str, resume_timeout: int, name: str = None,
                  reconnect_attempts: int = 3, filters: bool = False, ssl: bool = False):
+        self._lavalink = manager._lavalink
         self._manager = manager
         self._ws = WebSocket(self, host, port, password, ssl, resume_key, resume_timeout, reconnect_attempts)
 
@@ -84,7 +89,7 @@ class Node:
         -------
         List[:class:`BasePlayer`]
         """
-        return [p for p in self._manager._lavalink.player_manager.values() if p._original_node == self]
+        return [p for p in self._lavalink.player_manager.values() if p._original_node == self]
 
     @property
     def players(self):
@@ -95,7 +100,7 @@ class Node:
         -------
         List[:class:`BasePlayer`]
         """
-        return [p for p in self._manager._lavalink.player_manager.values() if p.node == self]
+        return [p for p in self._lavalink.player_manager.values() if p.node == self]
 
     @property
     def penalty(self) -> int:
@@ -124,7 +129,7 @@ class Node:
         :class:`dict`
             A dict representing an AudioTrack.
         """
-        return await self._manager._lavalink.get_tracks(query, self, check_local=False)
+        return await self._lavalink.get_tracks(query, self, check_local=False)
 
     async def routeplanner_status(self):
         """|coro|
@@ -135,9 +140,10 @@ class Node:
         :class:`dict`
             A dict representing the routeplanner information.
         """
-        return await self._manager._lavalink.routeplanner_status(self)
+        return await self._lavalink._get_request('{}/routeplanner/status'.format(self.http_uri),
+                                                 headers={'Authorization': self.password})
 
-    async def routeplanner_free_address(self, address: str):
+    async def routeplanner_free_address(self, address: str) -> bool:
         """|coro|
         Frees up the provided IP address in the target node's routeplanner.
 
@@ -148,23 +154,25 @@ class Node:
 
         Returns
         -------
-        bool
+        :class:`bool`
             True if the address was freed, False otherwise.
         """
-        return await self._manager._lavalink.routeplanner_free_address(self, address)
+        return await self._lavalink._post_request('{}/routeplanner/free/address'.format(self.http_uri),
+                                                  headers={'Authorization': self.password}, json={'address': address})
 
-    async def routeplanner_free_all_failing(self):
+    async def routeplanner_free_all_failing(self) -> bool:
         """|coro|
         Frees up all IP addresses in the target node that have been marked as failing.
 
         Returns
         -------
-        bool
+        :class:`bool`
             True if all failing addresses were freed, False otherwise.
         """
-        return await self._manager._lavalink.routeplanner_free_all_failing(self)
+        return await self._lavalink._post_request('{}/routeplanner/free/all'.format(self.http_uri),
+                                                  headers={'Authorization': self.password})
 
-    async def get_plugins(self):
+    async def get_plugins(self) -> List[Plugin]:
         """|coro|
         Retrieves a list of plugins active on this node.
 
@@ -173,7 +181,9 @@ class Node:
         List[:class:`Plugin`]
             A list of active plugins.
         """
-        return await self._manager._lavalink.get_node_plugins(self)
+        data = await self._lavalink._get_request('{}/plugins'.format(self.http_uri),
+                                                 headers={'Authorization': self.password})
+        return [Plugin(plugin) for plugin in data]
 
     async def _dispatch_event(self, event: Event):
         """|coro|
@@ -184,7 +194,7 @@ class Node:
         event: :class:`Event`
             The event to dispatch to the hooks.
         """
-        await self._manager._lavalink._dispatch_event(event)
+        await self._lavalink._dispatch_event(event)
 
     async def _send(self, **data):
         """|coro|
