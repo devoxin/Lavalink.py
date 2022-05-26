@@ -39,7 +39,6 @@ from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 
-print(__name__)
 _log = logging.getLogger(__name__)
 
 
