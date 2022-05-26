@@ -39,6 +39,9 @@ from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
 
+print(__name__)
+_log = logging.getLogger(__name__)
+
 
 class Client:
     """
@@ -87,7 +90,6 @@ class Client:
                             'the Lavalink client. Alternatively, you can hardcode your user ID.'
                             .format(user_id))
 
-        self._logger = logging.getLogger('lavalink')
         self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
         self._user_id: str = str(user_id)
         self._connect_back: bool = connect_back
@@ -409,7 +411,7 @@ class Client:
             try:
                 await hook(event)
             except:  # noqa: E722 pylint: disable=bare-except
-                self._logger.exception('[EventDispatcher] Event hook \'{}\' encountered an exception!'.format(hook.__name__))
+                _log.exception('[EventDispatcher] Event hook \'%s\' encountered an exception!', hook.__name__)
                 #  According to https://stackoverflow.com/questions/5191830/how-do-i-log-a-python-error-with-debug-information
                 #  the exception information should automatically be attached here. We're just including a message for
                 #  clarity.
@@ -417,7 +419,7 @@ class Client:
         tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
         await asyncio.wait(tasks)
 
-        self._logger.debug('[EventDispatcher] Dispatched \'{}\' to all registered hooks'.format(type(event).__name__))
+        _log.debug('[EventDispatcher] Dispatched \'%s\' to all registered hooks', type(event).__name__)
 
     def __repr__(self):
         return '<Client user_id={} nodes={} players={}>'.format(self._user_id, len(self.node_manager), len(self.player_manager))

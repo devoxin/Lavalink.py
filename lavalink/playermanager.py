@@ -21,9 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import logging
+
 from .errors import NodeError
 from .models import BasePlayer
 from .node import Node
+
+print(__name__)
+_log = logging.getLogger(__name__)
 
 
 class PlayerManager:
@@ -158,8 +163,7 @@ class PlayerManager:
 
         id_int = int(guild_id)
         self.players[id_int] = player = self._player_cls(id_int, best_node)
-        self._lavalink._logger.debug('[PlayerManager] Created player with GuildId {} on node \'{}\''
-                                     .format(guild_id, best_node.name))
+        _log.debug('[PlayerManager] Created player with GuildId %d on node \'%s\'', id_int, best_node.name)
         return player
 
     async def destroy(self, guild_id: int):
@@ -187,5 +191,4 @@ class PlayerManager:
         if player.node:
             await player.node._send(op='destroy', guildId=player._internal_id)
 
-        self._lavalink._logger.debug('[PlayerManager] Destroyed player with GuildId {} on node \'{}\''
-                                     .format(guild_id, player.node.name if player.node else 'UNASSIGNED'))
+        _log.debug('[PlayerManager] Destroyed player with GuildId %d on node \'%s\'', guild_id, player.node.name if player.node else 'UNASSIGNED')
