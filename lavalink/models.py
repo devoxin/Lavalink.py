@@ -989,3 +989,32 @@ class DefaultPlayer(BasePlayer):
 
     def __repr__(self):
         return '<DefaultPlayer volume={0.volume} current={0.current}>'.format(self)
+
+
+class Plugin:
+    """
+    Represents a Lavalink server plugin.
+
+    Parameters
+    ----------
+    data: :class:`dict`
+        The data to initialise a Plugin from.
+
+    Attributes
+    ----------
+    name: :class:`str`
+        The name of the plugin.
+    version: :class:`str`
+        The version of the plugin.
+    """
+    __slots__ = ('name', 'version')
+
+    def __init__(self, data: dict):
+        self.name: str = data['name']
+        self.version: str = data['version']
+
+    def __str__(self):
+        return '{0.name} v{0.version}'.format(self)
+
+    def __repr__(self):
+        return '<Plugin name={0.name} version={0.version}>'.format(self)

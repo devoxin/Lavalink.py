@@ -164,6 +164,17 @@ class Node:
         """
         return await self._manager._lavalink.routeplanner_free_all_failing(self)
 
+    async def get_plugins(self):
+        """|coro|
+        Retrieves a list of plugins active on this node.
+
+        Returns
+        -------
+        List[:class:`Plugin`]
+            A list of active plugins.
+        """
+        return await self._manager._lavalink.get_node_plugins(self)
+
     async def _dispatch_event(self, event: Event):
         """|coro|
         Dispatches the given event to all registered hooks.
