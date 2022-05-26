@@ -1009,5 +1009,8 @@ class Plugin:
         self.name: str = data['name']
         self.version: str = data['version']
 
-    def __repr__(self):
+    def __str__(self):
         return '{0.name} v{0.version}'.format(self)
+
+    def __repr__(self):
+        return '<Plugin name={0.name} version={0.version}>'.format(self)
