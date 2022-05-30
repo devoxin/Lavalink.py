@@ -99,7 +99,7 @@ class WebSocket:
 
         while not self.connected and (not is_finite_retry or attempt < self._max_reconnect_attempts):
             attempt += 1
-            _log.info('[Node:%s] Attempting to establish WebSocket connection (%d/%d)...', self._node.name, attempt, max_attempts_str)
+            _log.info('[Node:%s] Attempting to establish WebSocket connection (%d/%s)...', self._node.name, attempt, max_attempts_str)
 
             protocol = 'wss' if self._ssl else 'ws'
             try:
