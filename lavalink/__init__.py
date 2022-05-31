@@ -20,7 +20,7 @@ from .events import (Event, NodeChangedEvent, NodeConnectedEvent,
 from .filters import (ChannelMix, Equalizer, Filter, Karaoke, LowPass,
                       Rotation, Timescale, Tremolo, Vibrato, Volume)
 from .models import (AudioTrack, BasePlayer, DefaultPlayer, DeferredAudioTrack,
-                     LoadResult, LoadType, PlaylistInfo, Source)
+                     LoadResult, LoadType, PlaylistInfo, Plugin, Source)
 from .node import Node
 from .nodemanager import NodeManager
 from .playermanager import PlayerManager
