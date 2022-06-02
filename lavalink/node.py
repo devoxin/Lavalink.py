@@ -123,11 +123,12 @@ class Node:
         ----------
         query: :class:`str`
             The query to perform a search for.
+        check_local: :class:`bool`
+            Whether to also search the query on sources registered with this Lavalink client.
 
         Returns
         -------
-        :class:`dict`
-            A dict representing an AudioTrack.
+        :class:`LoadResult`
         """
         return await self._lavalink.get_tracks(query, self, check_local)
 
