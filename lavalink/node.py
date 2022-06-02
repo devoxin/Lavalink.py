@@ -115,7 +115,7 @@ class Node:
         """ Returns a 'base' URI pointing to the node's address and port, also factoring in SSL. """
         return '{}://{}:{}'.format('https' if self.ssl else 'http', self.host, self.port)
 
-    async def get_tracks(self, query: str):
+    async def get_tracks(self, query: str, check_local: bool = False):
         """|coro|
         Retrieves a list of results pertaining to the provided query.
 
@@ -129,7 +129,7 @@ class Node:
         :class:`dict`
             A dict representing an AudioTrack.
         """
-        return await self._lavalink.get_tracks(query, self, check_local=False)
+        return await self._lavalink.get_tracks(query, self, check_local)
 
     async def routeplanner_status(self):
         """|coro|
