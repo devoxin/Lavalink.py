@@ -366,6 +366,12 @@ class DefaultPlayer(BasePlayer):
 
     Attributes
     ----------
+    LOOP_NONE: :class:`int`
+        Class attribute. Disables looping entirely.
+    LOOP_SINGLE: :class:`int`
+        Class attribute. Enables looping for a single (usually currently playing) track only.
+    LOOP_QUEUE: :class:`int`
+        Class attribute. Enables looping for the entire queue. When a track finishes playing, it'll be added to the end of the queue.
     guild_id: :class:`int`
         The guild id of the player.
     node: :class:`Node`
@@ -378,8 +384,6 @@ class DefaultPlayer(BasePlayer):
         The volume at which the player is playing at.
     shuffle: :class:`bool`
         Whether or not to mix the queue up in a random playing order.
-    repeat: :class:`bool`
-        Whether or not to continuously to play a track.
     filters: Dict[:class:`str`, :class:`Filter`]
         A mapping of str to :class:`Filter`, representing currently active filters.
     queue: List[:class:`AudioTrack`]
@@ -387,9 +391,9 @@ class DefaultPlayer(BasePlayer):
     current: Optional[:class:`AudioTrack`]
         The track that is playing currently, if any.
     """
-    LOOP_NONE = 0
-    LOOP_SINGLE = 1
-    LOOP_QUEUE = 2
+    LOOP_NONE: int = 0
+    LOOP_SINGLE: int = 1
+    LOOP_QUEUE: int = 2
 
     def __init__(self, guild_id, node):
         super().__init__(guild_id, node)
@@ -414,8 +418,13 @@ class DefaultPlayer(BasePlayer):
         """
         Returns the player's loop status. This exists for backwards compatibility, and also as an alias.
 
+        .. deprecated:: 4.0.0
+            Use :attr:`loop` instead.
+
         If ``self.loop`` is 0, the player is NOT looping.
+
         If ``self.loop`` is 1, the player is looping the single (current) track.
+
         If ``self.loop`` is 2, the player is looping the entire queue.
         """
         return self.loop == 1 or self.loop == 2
@@ -647,7 +656,7 @@ class DefaultPlayer(BasePlayer):
         Sets whether tracks should be repeated.
 
         .. deprecated:: 4.0.0
-            Use :func:`set_loop` to instead.
+            Use :func:`set_loop` to repeat instead.
 
         This only works as a "queue loop". For single-track looping, you should
         utilise the :class:`TrackEndEvent` event to feed the track back into
