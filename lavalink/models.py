@@ -362,7 +362,9 @@ class BasePlayer(ABC):
 
 class DefaultPlayer(BasePlayer):
     """
-    The player that Lavalink.py defaults to use.
+    The player that Lavalink.py uses by default.
+
+    This should be sufficient for most use-cases.
 
     Attributes
     ----------
@@ -384,6 +386,26 @@ class DefaultPlayer(BasePlayer):
         The volume at which the player is playing at.
     shuffle: :class:`bool`
         Whether or not to mix the queue up in a random playing order.
+    loop: :class:`int`
+        Whether loop is enabled, and the type of looping.
+        This is an integer as loop supports multiple states.
+
+        0 = Loop off.
+
+        1 = Loop track.
+
+        2 = Loop queue.
+
+        Example
+        -------
+        .. code:: python
+
+            if player.loop == player.LOOP_NONE:
+                await ctx.send('Not looping.')
+            elif player.loop == player.LOOP_SINGLE:
+                await ctx.send(f'{player.current.title} is looping.')
+            elif player.loop == player.LOOP_QUEUE:
+                await ctx.send('This queue never ends!')
     filters: Dict[:class:`str`, :class:`Filter`]
         A mapping of str to :class:`Filter`, representing currently active filters.
     queue: List[:class:`AudioTrack`]
