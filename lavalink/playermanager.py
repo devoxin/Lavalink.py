@@ -167,6 +167,7 @@ class PlayerManager:
 
     async def destroy(self, guild_id: int):
         """|coro|
+
         Removes a player from cache, and also Lavalink if applicable.
         Ensure you have disconnected the given guild_id from the voicechannel
         first, if connected.
