@@ -118,7 +118,7 @@ class Node:
     async def destroy(self):
         """|coro|
 
-        Closes the WebSocket connection for this node. No further connection attempts will be made.        
+        Closes the WebSocket connection for this node. No further connection attempts will be made.
         """
         await self._ws.destroy()
 
