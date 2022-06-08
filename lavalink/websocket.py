@@ -94,7 +94,7 @@ class WebSocket:
             headers['Resume-Key'] = self._resume_key
 
         is_finite_retry = self._max_reconnect_attempts != -1
-        max_attempts_str = 'inf' if is_finite_retry else self._max_reconnect_attempts
+        max_attempts_str = self._max_reconnect_attempts if is_finite_retry else 'inf'
         attempt = 0
 
         while not self.connected and (not is_finite_retry or attempt < self._max_reconnect_attempts):
