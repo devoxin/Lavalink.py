@@ -39,7 +39,7 @@ def enable_debug_logging(submodule: str = None):
     module: :class:`str`
         The module to enable logging for. ``None`` to enable debug logging for
         the entirety of Lavalink.py.
-        
+
         Example: ``lavalink.enable_debug_logging('websocket')``
     """
     module_name = 'lavalink.{}'.format(submodule) if submodule else 'lavalink'
