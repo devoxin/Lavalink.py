@@ -60,7 +60,7 @@ class WebSocket:
         self._resume_timeout = resume_timeout
         self._resuming_configured = False
 
-        asyncio.ensure_future(self.connect())
+        self.connect()
 
     @property
     def connected(self):
@@ -79,6 +79,9 @@ class WebSocket:
         """|coro|
         Attempts to establish a connection to Lavalink.
         """
+        return asyncio.ensure_future(self._connect())
+
+    async def _connect(self):
         if self._ws:
             await self.close()
 
@@ -179,7 +182,7 @@ class WebSocket:
         _log.warning('[Node:%s] WebSocket disconnected with the following: code=%d reason=%s', self._node.name, code, reason)
         self._ws = None
         await self._node._manager._node_disconnect(self._node, code, reason)
-        await self.connect()
+        await self._connect()
 
     async def _handle_message(self, data: dict):
         """
