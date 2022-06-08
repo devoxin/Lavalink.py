@@ -142,6 +142,7 @@ class Node:
 
     async def routeplanner_status(self):
         """|coro|
+
         Retrieves the status of the target node's routeplanner.
 
         Returns
@@ -154,6 +155,7 @@ class Node:
 
     async def routeplanner_free_address(self, address: str) -> bool:
         """|coro|
+
         Frees up the provided IP address in the target node's routeplanner.
 
         Parameters
@@ -171,6 +173,7 @@ class Node:
 
     async def routeplanner_free_all_failing(self) -> bool:
         """|coro|
+
         Frees up all IP addresses in the target node that have been marked as failing.
 
         Returns
@@ -183,6 +186,7 @@ class Node:
 
     async def get_plugins(self) -> List[Plugin]:
         """|coro|
+
         Retrieves a list of plugins active on this node.
 
         Returns
@@ -196,6 +200,7 @@ class Node:
 
     async def _dispatch_event(self, event: Event):
         """|coro|
+
         Dispatches the given event to all registered hooks.
 
         Parameters
@@ -207,6 +212,7 @@ class Node:
 
     async def _send(self, **data):
         """|coro|
+
         Sends the passed data to the node via the websocket connection.
 
         Parameters

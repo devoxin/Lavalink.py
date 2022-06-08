@@ -354,6 +354,7 @@ class BasePlayer(ABC):
     @abstractmethod
     async def change_node(self, node):
         """|coro|
+
         Called when a node change is requested for the current player instance.
 
         Parameters
@@ -557,6 +558,7 @@ class DefaultPlayer(BasePlayer):
     async def play(self, track: Union[AudioTrack, DeferredAudioTrack, Dict] = None, start_time: int = 0, end_time: int = 0,  # pylint: disable=too-many-statements
                    no_replace: bool = False, volume: Optional[int] = None, pause: bool = False):
         """|coro|
+
         Plays the given track.
 
         Parameters
@@ -666,6 +668,7 @@ class DefaultPlayer(BasePlayer):
 
     async def stop(self):
         """|coro|
+
         Stops the player.
         """
         await self.node._send(op='stop', guildId=self._internal_id)
@@ -673,6 +676,7 @@ class DefaultPlayer(BasePlayer):
 
     async def skip(self):
         """|coro|
+
         Plays the next track in the queue, if any.
         """
         await self.play()
@@ -726,6 +730,7 @@ class DefaultPlayer(BasePlayer):
 
     async def set_pause(self, pause: bool):
         """|coro|
+
         Sets the player's paused state.
 
         Parameters
@@ -738,6 +743,7 @@ class DefaultPlayer(BasePlayer):
 
     async def set_volume(self, vol: int):
         """|coro|
+
         Sets the player's volume
 
         Note
@@ -754,6 +760,7 @@ class DefaultPlayer(BasePlayer):
 
     async def seek(self, position: int):
         """|coro|
+
         Seeks to a given position in the track.
 
         Parameters
@@ -765,6 +772,7 @@ class DefaultPlayer(BasePlayer):
 
     async def set_filter(self, _filter: Filter):
         """|coro|
+
         Applies the corresponding filter within Lavalink.
         This will overwrite the filter if it's already applied.
 
@@ -795,6 +803,7 @@ class DefaultPlayer(BasePlayer):
 
     async def update_filter(self, _filter: Filter, **kwargs):
         """|coro|
+
         Updates a filter using the upsert method;
         if the filter exists within the player, its values will be updated;
         if the filter does not exist, it will be created with the provided values.
@@ -838,6 +847,7 @@ class DefaultPlayer(BasePlayer):
 
     async def get_filter(self, _filter: Union[Filter, str]):
         """|coro|
+
         Returns the corresponding filter, if it's enabled.
 
         Example
@@ -872,6 +882,7 @@ class DefaultPlayer(BasePlayer):
 
     async def remove_filter(self, _filter: Union[Filter, str]):
         """|coro|
+
         Removes a filter from the player, undoing any effects applied to the audio.
 
         Example
@@ -905,6 +916,7 @@ class DefaultPlayer(BasePlayer):
 
     async def clear_filters(self):
         """|coro|
+
         Clears all currently-enabled filters.
         """
         self.filters.clear()
@@ -912,6 +924,7 @@ class DefaultPlayer(BasePlayer):
 
     async def set_gain(self, band: int, gain: float = 0.0):
         """|coro|
+
         Sets the equalizer band gain to the given amount.
 
         .. deprecated:: 4.0.0
@@ -928,6 +941,7 @@ class DefaultPlayer(BasePlayer):
 
     async def set_gains(self, *bands):
         """|coro|
+
         Modifies the player's equalizer settings.
 
         .. deprecated:: 4.0.0
@@ -944,6 +958,7 @@ class DefaultPlayer(BasePlayer):
 
     async def reset_equalizer(self):
         """|coro|
+
         Resets equalizer to default values.
 
         .. deprecated:: 4.0.0
@@ -987,6 +1002,7 @@ class DefaultPlayer(BasePlayer):
 
     async def change_node(self, node):
         """|coro|
+
         Changes the player's node
 
         Parameters

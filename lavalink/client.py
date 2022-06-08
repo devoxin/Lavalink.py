@@ -194,6 +194,7 @@ class Client:
 
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
+
         Retrieves a list of results pertaining to the provided query.
 
         If ``check_local`` is set to ``True`` and any of the sources return a :class:`LoadResult`
@@ -234,6 +235,7 @@ class Client:
 
     async def decode_track(self, track: str, node: Node = None):
         """|coro|
+
         Decodes a base64-encoded track string into a dict.
 
         Parameters
@@ -256,6 +258,7 @@ class Client:
 
     async def decode_tracks(self, tracks: list, node: Node = None):
         """|coro|
+
         Decodes a list of base64-encoded track strings into a dict.
 
         Parameters
@@ -279,6 +282,7 @@ class Client:
 
     async def voice_update_handler(self, data):
         """|coro|
+
         This function intercepts websocket data from your Discord library and
         forwards the relevant information on to Lavalink, which is used to
         establish a websocket connection and send audio packets to Discord.
@@ -340,6 +344,7 @@ class Client:
 
     async def _dispatch_event(self, event: Event):
         """|coro|
+
         Dispatches the given event to all registered hooks.
 
         Parameters
