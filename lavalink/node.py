@@ -115,8 +115,16 @@ class Node:
         """ Returns a 'base' URI pointing to the node's address and port, also factoring in SSL. """
         return '{}://{}:{}'.format('https' if self.ssl else 'http', self.host, self.port)
 
+    async def destroy(self):
+        """|coro|
+
+        Closes the WebSocket connection for this node. No further connection attempts will be made.        
+        """
+        await self._ws.destroy()
+
     async def get_tracks(self, query: str, check_local: bool = False):
         """|coro|
+
         Retrieves a list of results pertaining to the provided query.
 
         Parameters

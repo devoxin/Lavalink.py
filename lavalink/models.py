@@ -130,6 +130,7 @@ class DeferredAudioTrack(ABC, AudioTrack):
     @abstractmethod
     async def load(self, client):
         """|coro|
+
         Retrieves a base64 string that's playable by Lavalink.
         For example, you can use this method to search Lavalink for an identical track from other sources,
         which you can then use the base64 string of to play the track on Lavalink.
@@ -259,6 +260,7 @@ class Source(ABC):
     @abstractmethod
     async def load_item(self, client, query: str) -> Optional[LoadResult]:
         """|coro|
+
         Loads a track with the given query.
 
         Parameters
@@ -316,7 +318,9 @@ class BasePlayer(ABC):
 
     async def destroy(self):
         """|coro|
+
         Destroys the current player instance.
+
         Shortcut for :func:`PlayerManager.destroy`.
         """
         await self._lavalink.player_manager.destroy(self.guild_id)

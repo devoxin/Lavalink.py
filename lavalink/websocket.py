@@ -59,6 +59,7 @@ class WebSocket:
         self._resume_key = resume_key
         self._resume_timeout = resume_timeout
         self._resuming_configured = False
+        self._destroyed = False
 
         self.connect()
 
@@ -69,6 +70,7 @@ class WebSocket:
 
     async def close(self, code=aiohttp.WSCloseCode.OK):
         """|coro|
+
         Shuts down the websocket connection if there is one.
         """
         if self._ws:
@@ -77,9 +79,19 @@ class WebSocket:
 
     async def connect(self):
         """|coro|
+
         Attempts to establish a connection to Lavalink.
         """
         return asyncio.ensure_future(self._connect())
+
+    async def destroy(self):
+        """|coro|
+
+        Closes the WebSocket gracefully, and stops any further reconnecting.
+        Useful when needing to remove a node.
+        """
+        self._destroyed = True
+        await self.close()
 
     async def _connect(self):
         if self._ws:
@@ -182,7 +194,9 @@ class WebSocket:
         _log.warning('[Node:%s] WebSocket disconnected with the following: code=%d reason=%s', self._node.name, code, reason)
         self._ws = None
         await self._node._manager._node_disconnect(self._node, code, reason)
-        await self._connect()
+
+        if not self._destroyed:
+            await self._connect()
 
     async def _handle_message(self, data: dict):
         """
