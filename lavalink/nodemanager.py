@@ -113,6 +113,8 @@ class NodeManager:
         """
         Removes a node.
 
+        Make sure you have called :func:`Node.destroy` to close any open WebSocket connection.
+
         Parameters
         ----------
         node: :class:`Node`
