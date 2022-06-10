@@ -77,11 +77,8 @@ class WebSocket:
             await self._ws.close(code=code)
             self._ws = None
 
-    async def connect(self):
-        """|coro|
-
-        Attempts to establish a connection to Lavalink.
-        """
+    def connect(self):
+        """ Attempts to establish a connection to Lavalink. """
         return asyncio.ensure_future(self._connect())
 
     async def destroy(self):
