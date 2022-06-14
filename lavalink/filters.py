@@ -340,7 +340,7 @@ class Rotation(Filter):
         ----
         The limits are:
 
-            0 ≤ rotationHz
+            0 ≤ rotation_hz
 
         Parameters
         ----------
