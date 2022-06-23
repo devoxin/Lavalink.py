@@ -369,13 +369,24 @@ class LowPass(Filter):
 
     def update(self, **kwargs):
         """
+        Note
+        ----
+        The limits are:
+
+            0.5 ≤ smoothing
+
         Parameters
         ----------
         smoothing: :class:`float`
             The strength of the effect.
         """
         if 'smoothing' in kwargs:
-            self.values['smoothing'] = float(kwargs.pop('smoothing'))
+            smoothing = float(kwargs.pop('smoothing'))
+
+            if smoothing < 0.5:
+                raise ValueError('smoothing must be bigger than or equal to 0.5')
+
+            self.values['smoothing'] = smoothing
 
     def serialize(self) -> dict:
         return {'lowPass': self.values}
