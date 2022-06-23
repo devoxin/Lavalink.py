@@ -371,9 +371,8 @@ class LowPass(Filter):
         """
         Note
         ----
-        The limits are:
-
-            0.5 ≤ smoothing
+        The filter's minimum usable value is 0.5. Any values lower than this will disable the filter.
+        The library enforces a minimum value of zero if anything lower than 0.5 is passed.
 
         Parameters
         ----------
@@ -381,11 +380,7 @@ class LowPass(Filter):
             The strength of the effect.
         """
         if 'smoothing' in kwargs:
-            smoothing = float(kwargs.pop('smoothing'))
-
-            if smoothing < 0.5:
-                raise ValueError('smoothing must be bigger than or equal to 0.5')
-
+            smoothing = max(float(kwargs.pop('smoothing')), 0)
             self.values['smoothing'] = smoothing
 
     def serialize(self) -> dict:
