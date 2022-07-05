@@ -845,7 +845,7 @@ class DefaultPlayer(BasePlayer):
         self.filters[filter_name] = filter_instance
         await self._apply_filters()
 
-    async def get_filter(self, _filter: Union[Filter, str]):
+    def get_filter(self, _filter: Union[Filter, str]):
         """|coro|
 
         Returns the corresponding filter, if it's enabled.
