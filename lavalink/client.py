@@ -46,8 +46,6 @@ class Client:
     """
     Represents a Lavalink client used to manage nodes and connections.
 
-    .. _event loop: https://docs.python.org/3/library/asyncio-eventloop.html
-
     Parameters
     ----------
     user_id: Union[:class:`int`, :class:`str`]
@@ -100,6 +98,12 @@ class Client:
         """
         Registers a function to recieve and process Lavalink events.
 
+        Note
+        ----
+        Track event dispatch order is not guaranteed!
+        For example, this means you could receive a :class:`TrackStartEvent` before you receive a
+        :class:`TrackEndEvent` when executing operations such as ``skip()``.
+
         Parameters
         ----------
         hook: :class:`function`
@@ -120,6 +124,12 @@ class Client:
                 # Inside a class __init__ method
                 self.client = lavalink.Client(...)
                 self.client.add_event_hooks(self)
+
+        Note
+        ----
+        Track event dispatch order is not guaranteed!
+        For example, this means you could receive a :class:`TrackStartEvent` before you receive a
+        :class:`TrackEndEvent` when executing operations such as ``skip()``.
 
         Parameters
         ----------
