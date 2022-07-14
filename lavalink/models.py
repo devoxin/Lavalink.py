@@ -313,6 +313,71 @@ class BasePlayer(ABC):
     async def _update_state(self, state: dict):
         raise NotImplementedError
 
+    async def play_track(self, track: str, start_time: Optional[int] = None, end_time: Optional[int] = None,
+                         no_replace: Optional[bool] = None, volume: Optional[int] = None, pause: Optional[bool] = None):
+        """|coro|
+
+        Plays the given track.
+
+        Parameters
+        ----------
+        track: :class:`str`
+            The track to play. This must be the base64 string from a track.
+        start_time: Optional[:class:`int`]
+            The number of milliseconds to offset the track by.
+            If left unspecified or ``None`` is provided, the track will start from the beginning.
+        end_time: Optional[:class:`int`]
+            The position at which the track should stop playing.
+            This is an absolute position, so if you want the track to stop at 1 minute, you would pass 60000.
+            The default behaviour is to play until no more data is received from the remote server.
+            If left unspecified or ``None`` is provided, the default behaviour is exhibited.
+        no_replace: Optional[:class:`bool`]
+            If set to true, operation will be ignored if a track is already playing or paused.
+            The default behaviour is to always replace.
+            If left unspecified or None is provided, the default behaviour is exhibited.
+        volume: Optional[:class:`int`]
+            The initial volume to set. This is useful for changing the volume between tracks etc.
+            If left unspecified or ``None`` is provided, the volume will remain at its current setting.
+        pause: Optional[:class:`bool`]
+            Whether to immediately pause the track after loading it.
+            The default behaviour is to never pause.
+            If left unspecified or ``None`` is provided, the default behaviour is exhibited.
+        """
+        if track is None or not isinstance(track, str):
+            raise ValueError('track must be a str')
+
+        options = {}
+
+        if start_time is not None:
+            if not isinstance(start_time, int) or start_time < 0:
+                raise ValueError('start_time must be an int with a value equal to, or greater than 0')
+            options['startTime'] = start_time
+
+        if end_time is not None:
+            if not isinstance(end_time, int) or end_time <= 0:
+                raise ValueError('end_time must be an int with a value greater than 0')
+
+            if end_time > 0:
+                options['endTime'] = end_time
+
+        if no_replace is not None:
+            if not isinstance(no_replace, bool):
+                raise TypeError('no_replace must be a bool')
+            options['noReplace'] = no_replace
+
+        if volume is not None:
+            if not isinstance(volume, int):
+                raise TypeError('volume must be an int')
+            self.volume = max(min(volume, 1000), 0)
+            options['volume'] = self.volume
+
+        if pause is not None:
+            if not isinstance(pause, bool):
+                raise TypeError('pause must be a bool')
+            options['pause'] = pause
+
+        await self.node._send(op='play', guildId=self._internal_id, track=track, **options)
+
     def cleanup(self):
         pass
 
@@ -618,36 +683,6 @@ class DefaultPlayer(BasePlayer):
             pop_at = randrange(len(self.queue)) if self.shuffle else 0
             track = self.queue.pop(pop_at)
 
-        options = {}
-
-        if start_time is not None:
-            if not isinstance(start_time, int) or not 0 <= start_time <= track.duration:
-                raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
-            options['startTime'] = start_time
-
-        if end_time is not None:
-            if not isinstance(end_time, int) or not 0 <= end_time <= track.duration:
-                raise ValueError('end_time must be an int with a value equal to, or greater than 0, and less than the track duration')
-
-            if end_time > 0:
-                options['endTime'] = end_time
-
-        if no_replace is not None:
-            if not isinstance(no_replace, bool):
-                raise TypeError('no_replace must be a bool')
-            options['noReplace'] = no_replace
-
-        if volume is not None:
-            if not isinstance(volume, int):
-                raise TypeError('volume must be an int')
-            self.volume = max(min(volume, 1000), 0)
-            options['volume'] = self.volume
-
-        if pause is not None:
-            if not isinstance(pause, bool):
-                raise TypeError('pause must be a bool')
-            options['pause'] = pause
-
         self.current = track
         playable_track = track.track
 
@@ -663,7 +698,15 @@ class DefaultPlayer(BasePlayer):
         if playable_track is None:
             return
 
-        await self.node._send(op='play', guildId=self._internal_id, track=playable_track, **options)
+        if start_time is not None:
+            if not isinstance(start_time, int) or 0 <= start_time < track.duration:
+                raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
+
+        if end_time is not None:
+            if not isinstance(end_time, int) or 0 < end_time <= track.duration:
+                raise ValueError('end_time must be an int with a value greater than 0, and less than, or equal to the track duration')
+
+        await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause)
         await self.node._dispatch_event(TrackStartEvent(self, track))
         # TODO: Figure out a better solution for the above. Custom player implementations may neglect
         # to dispatch TrackStartEvent leading to confusion and poor user experience.
