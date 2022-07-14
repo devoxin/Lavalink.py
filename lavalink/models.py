@@ -620,8 +620,9 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
-    async def play(self, track: Union[AudioTrack, DeferredAudioTrack, Dict] = None, start_time: int = 0, end_time: int = 0,  # pylint: disable=too-many-statements
-                   no_replace: bool = False, volume: Optional[int] = None, pause: bool = False):
+    async def play(self, track: Optional[Union[AudioTrack, DeferredAudioTrack, Dict]] = None, start_time: Optional[int] = 0,
+                   end_time: Optional[int] = 0, no_replace: Optional[bool] = False, volume: Optional[int] = None,
+                   pause: Optional[bool] = False):
         """|coro|
 
         Plays the given track.
@@ -634,21 +635,24 @@ class DefaultPlayer(BasePlayer):
             song in queue. Accepts either an AudioTrack or a dict representing a track
             returned from Lavalink.
         start_time: Optional[:class:`int`]
-            Setting that determines the number of milliseconds to offset the track by.
-            If left unspecified, it will start the track at its beginning. Defaults to ``0``,
-            which is the normal start time.
+            The number of milliseconds to offset the track by.
+            If left unspecified or ``None`` is provided, the track will start from the beginning.
         end_time: Optional[:class:`int`]
-            Settings that determines the number of milliseconds the track will stop playing.
-            By default track plays until it ends as per encoded data. Defaults to ``0``, which is
-            the normal end time.
+            The position at which the track should stop playing.
+            This is an absolute position, so if you want the track to stop at 1 minute, you would pass 60000.
+            The default behaviour is to play until no more data is received from the remote server.
+            If left unspecified or ``None`` is provided, the default behaviour is exhibited.
         no_replace: Optional[:class:`bool`]
             If set to true, operation will be ignored if a track is already playing or paused.
-            Defaults to ``False``
+            The default behaviour is to always replace.
+            If left unspecified or None is provided, the default behaviour is exhibited.
         volume: Optional[:class:`int`]
             The initial volume to set. This is useful for changing the volume between tracks etc.
-            If ``None`` is provided, the volume will remain unchanged from :attr:`volume`.
+            If left unspecified or ``None`` is provided, the volume will remain at its current setting.
         pause: Optional[:class:`bool`]
             Whether to immediately pause the track after loading it.
+            The default behaviour is to never pause.
+            If left unspecified or ``None`` is provided, the default behaviour is exhibited.
 
         Raises
         ------
