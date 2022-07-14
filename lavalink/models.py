@@ -665,6 +665,8 @@ class DefaultPlayer(BasePlayer):
 
         await self.node._send(op='play', guildId=self._internal_id, track=playable_track, **options)
         await self.node._dispatch_event(TrackStartEvent(self, track))
+        # TODO: Figure out a better solution for the above. Custom player implementations may neglect
+        # to dispatch TrackStartEvent leading to confusion and poor user experience.
 
     async def stop(self):
         """|coro|

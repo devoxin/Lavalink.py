@@ -29,7 +29,7 @@ class Event:
 
 class TrackStartEvent(Event):
     """
-    This event is dispatched when the player starts to play a track.
+    This event is emitted when the player starts to play a track.
 
     Attributes
     ----------
@@ -47,7 +47,7 @@ class TrackStartEvent(Event):
 
 class TrackStuckEvent(Event):
     """
-    This event is dispatched when the currently playing track is stuck.
+    This event is emitted when the currently playing track is stuck.
     This normally has something to do with the stream you are playing
     and not Lavalink itself.
 
@@ -70,7 +70,7 @@ class TrackStuckEvent(Event):
 
 class TrackExceptionEvent(Event):
     """
-    This event is dispatched when an exception occurs while playing a track.
+    This event is emitted when an exception occurs while playing a track.
 
     Attributes
     ----------
@@ -94,7 +94,7 @@ class TrackExceptionEvent(Event):
 
 class TrackEndEvent(Event):
     """
-    This event is dispatched when the player finished playing a track.
+    This event is emitted when the player finished playing a track.
 
     Attributes
     ----------
@@ -116,7 +116,7 @@ class TrackEndEvent(Event):
 
 class TrackLoadFailedEvent(Event):
     """
-    This is a custom event emitted when a deferred audio track fails to
+    This is a custom event, emitted when a deferred audio track fails to
     produce a playable track. The player will not do anything by itself,
     so it is up to you to skip the broken track.
 
@@ -141,7 +141,8 @@ class TrackLoadFailedEvent(Event):
 
 class QueueEndEvent(Event):
     """
-    This event is dispatched when there are no more songs in the queue.
+    This is a custom event, emitted by the :class:`DefaultPlayer` when
+    there are no more tracks in the queue.
 
     Attributes
     ----------
@@ -156,7 +157,7 @@ class QueueEndEvent(Event):
 
 class PlayerUpdateEvent(Event):
     """
-    This event is dispatched when the player's progress changes.
+    This event is emitted when a player's progress changes.
 
     Attributes
     ----------
@@ -180,7 +181,8 @@ class PlayerUpdateEvent(Event):
 
 class NodeConnectedEvent(Event):
     """
-    This event is dispatched when Lavalink.py successfully connects to a node.
+    This is a custom event, emitted when a connection to a Lavalink node is
+    successfully established.
 
     Attributes
     ----------
@@ -195,7 +197,8 @@ class NodeConnectedEvent(Event):
 
 class NodeDisconnectedEvent(Event):
     """
-    This event is dispatched when a node disconnects and becomes unavailable.
+    This is a custom event, emitted when the connection to a Lavalink node drops
+    and becomes unavailable.
 
     Attributes
     ----------
@@ -216,9 +219,9 @@ class NodeDisconnectedEvent(Event):
 
 class NodeChangedEvent(Event):
     """
-    This event is dispatched when a player changes to another node.
-    Keep in mind this event can be dispatched multiple times if a node
-    disconnects and the load balancer moves players to a new node.
+    This is a custom event, emitted when a player changes to another Lavalink node.
+    Keep in mind this event can be emitted multiple times if a node disconnects and
+    the load balancer moves players to a new node.
 
     Attributes
     ----------
@@ -239,9 +242,13 @@ class NodeChangedEvent(Event):
 
 class WebSocketClosedEvent(Event):
     """
-    This event is dispatched when a audio websocket to Discord
-    is closed. This can happen happen for various reasons like an
-    expired voice server update.
+
+    This event is emitted when an audio websocket to Discord is closed. This can happen
+    happen for various reasons, an example being when a channel is deleted.
+
+    Refer to the `Discord Developer docs <https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes>`_
+    for a list of close codes and what they mean. This event primarily exists for debug purposes,
+    and no special handling of voice connections should take place unless it is absolutely necessary.
 
     Attributes
     ----------

@@ -74,6 +74,12 @@ def listener(*events: Event):
             async def on_track_start(self, event: TrackStartEvent):
                 ...
 
+    Note
+    ----
+    Track event dispatch order is not guaranteed!
+    For example, this means you could receive a :class:`TrackStartEvent` before you receive a
+    :class:`TrackEndEvent` when executing operations such as ``skip()``.
+
     Parameters
     ----------
     events: List[:class:`Event`]
@@ -88,6 +94,12 @@ def listener(*events: Event):
 def add_event_hook(*hooks, event: Event = None):
     """
     Adds an event hook to be dispatched on an event.
+
+    Note
+    ----
+    Track event dispatch order is not guaranteed!
+    For example, this means you could receive a :class:`TrackStartEvent` before you receive a
+    :class:`TrackEndEvent` when executing operations such as ``skip()``.
 
     Parameters
     ----------
