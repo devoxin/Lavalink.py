@@ -37,7 +37,7 @@ from .filters import Equalizer, Filter
 
 class AudioTrack:
     """
-    Represents the AudioTrack sent to Lavalink.
+    Represents an AudioTrack.
 
     Parameters
     ----------
@@ -73,11 +73,13 @@ class AudioTrack:
         This is a read-only property; setting it won't have any effect.
     source_name: :class:`str`
         The name of the source that this track was created by.
+    requester: :class:`int`
+        The ID of the user that requested this track.
     extra: :class:`dict`
         Any extra properties given to this AudioTrack will be stored here.
     """
     __slots__ = ('_raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri',
-                 'position', 'source_name', 'requester', 'extra')
+                 'position', 'source_name', 'extra')
 
     def __init__(self, data: dict, requester: int, **extra):
         try:
@@ -98,8 +100,7 @@ class AudioTrack:
             self.uri: str = info['uri']
             self.position: int = info.get('position', 0)
             self.source_name: str = info.get('source', 'unknown')
-            self.requester: int = requester
-            self.extra: dict = extra
+            self.extra: dict = {**extra, 'requester': requester}
         except KeyError as ke:
             missing_key, = ke.args
             raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
@@ -109,6 +110,10 @@ class AudioTrack:
             return self
 
         return super().__getattribute__(name)
+
+    @property
+    def requester(self):
+        return self.extra['requester']
 
     def __repr__(self):
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
