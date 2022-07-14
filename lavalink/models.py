@@ -692,6 +692,14 @@ class DefaultPlayer(BasePlayer):
             pop_at = randrange(len(self.queue)) if self.shuffle else 0
             track = self.queue.pop(pop_at)
 
+        if start_time is not None:
+            if not isinstance(start_time, int) or 0 <= start_time < track.duration:
+                raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
+
+        if end_time is not None:
+            if not isinstance(end_time, int) or 0 < end_time <= track.duration:
+                raise ValueError('end_time must be an int with a value greater than 0, and less than, or equal to the track duration')
+
         self.current = track
         playable_track = track.track
 
@@ -706,14 +714,6 @@ class DefaultPlayer(BasePlayer):
 
         if playable_track is None:
             return
-
-        if start_time is not None:
-            if not isinstance(start_time, int) or 0 <= start_time < track.duration:
-                raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
-
-        if end_time is not None:
-            if not isinstance(end_time, int) or 0 < end_time <= track.duration:
-                raise ValueError('end_time must be an int with a value greater than 0, and less than, or equal to the track duration')
 
         await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause)
         await self.node._dispatch_event(TrackStartEvent(self, track))
