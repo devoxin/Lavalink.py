@@ -37,10 +37,6 @@ CLOSE_TYPES = (
     aiohttp.WSMsgType.CLOSING,
     aiohttp.WSMsgType.CLOSED
 )
-IGNORE_FOR_MISSING_PLAYER = (
-    'TrackEndEvent',
-    'WebSocketClosedEvent'
-)
 
 
 class WebSocket:
