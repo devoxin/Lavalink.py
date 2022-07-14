@@ -32,10 +32,14 @@ from .stats import Stats
 from .utils import decode_track
 
 _log = logging.getLogger(__name__)
-CLOSERS = (
+CLOSE_TYPES = (
     aiohttp.WSMsgType.CLOSE,
     aiohttp.WSMsgType.CLOSING,
     aiohttp.WSMsgType.CLOSED
+)
+IGNORE_FOR_MISSING_PLAYER = (
+    'TrackEndEvent',
+    'WebSocketClosedEvent'
 )
 
 
@@ -171,7 +175,7 @@ class WebSocket:
                 exc = self._ws.exception()
                 _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
                 break
-            elif msg.type in CLOSERS:
+            elif msg.type in CLOSE_TYPES:
                 _log.debug('[Node:%s] Received close frame with code %d.', self._node.name, msg.data)
                 await self._websocket_closed(msg.data, msg.extra)
                 return
@@ -236,7 +240,8 @@ class WebSocket:
         event_type = data['type']
 
         if not player:
-            _log.warning('[Node:%s] Received event type %s for non-existent player! GuildId: %s', self._node.name, event_type, data['guildId'])
+            if event_type not in ('TrackEndEvent', 'WebSocketClosedEvent'):  # Player was most likely destroyed if it's any of these.
+                _log.warning('[Node:%s] Received event type %s for non-existent player! GuildId: %s', self._node.name, event_type, data['guildId'])
             return
 
         event = None
