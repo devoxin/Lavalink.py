@@ -666,6 +666,9 @@ class DefaultPlayer(BasePlayer):
         :class:`TypeError`
             If wrong types were provided for ``no_replace``, ``volume`` or ``pause``.
         """
+        if no_replace and self.is_playing:
+            return
+
         if track is not None and isinstance(track, dict):
             track = AudioTrack(track, 0)
 
