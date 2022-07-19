@@ -112,8 +112,12 @@ class AudioTrack:
         return super().__getattribute__(name)
 
     @property
-    def requester(self):
+    def requester(self) -> int:
         return self.extra['requester']
+
+    @requester.setter
+    def requester(self, requester) -> int:
+        self.extra['requester'] = requester
 
     def __repr__(self):
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
@@ -359,8 +363,8 @@ class BasePlayer(ABC):
             options['startTime'] = start_time
 
         if end_time is not None:
-            if not isinstance(end_time, int) or end_time <= 0:
-                raise ValueError('end_time must be an int with a value greater than 0')
+            if not isinstance(end_time, int) or not end_time <= 0:
+                raise ValueError('end_time must be an int with a value equal to, or greater than 0')
 
             if end_time > 0:
                 options['endTime'] = end_time
@@ -696,12 +700,12 @@ class DefaultPlayer(BasePlayer):
             track = self.queue.pop(pop_at)
 
         if start_time is not None:
-            if not isinstance(start_time, int) or 0 <= start_time < track.duration:
+            if not isinstance(start_time, int) or not 0 <= start_time < track.duration:
                 raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
 
         if end_time is not None:
-            if not isinstance(end_time, int) or 0 < end_time <= track.duration:
-                raise ValueError('end_time must be an int with a value greater than 0, and less than, or equal to the track duration')
+            if not isinstance(end_time, int) or not 0 <= end_time <= track.duration:
+                raise ValueError('end_time must be an int with a value equal to, or greater than 0, and less than, or equal to the track duration')
 
         self.current = track
         playable_track = track.track
