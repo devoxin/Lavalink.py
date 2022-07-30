@@ -422,6 +422,15 @@ class BasePlayer(ABC):
             await self.node._send(op='voiceUpdate', guildId=self._internal_id, **self._voice_state)
 
     @abstractmethod
+    async def node_unavailable(self):
+        """|coro|
+
+        Called when a player's node becomes unavailable.
+        Useful for changing player state before it's moved to another node.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     async def change_node(self, node):
         """|coro|
 
@@ -498,13 +507,13 @@ class DefaultPlayer(BasePlayer):
         self._user_data = {}
 
         self.paused: bool = False
+        self._internal_pause: bool = False  # Toggled when player's node becomes unavailable, primarily used for track position tracking.
         self._last_update = 0
         self._last_position = 0
         self.position_timestamp: int = 0
         self.volume: int = 100
         self.shuffle: bool = False
         self.loop: int = 0  # 0 = off, 1 = single track, 2 = queue
-        # self.equalizer = [0.0 for x in range(15)]  # 0-14, -0.25 - 1.0
         self.filters: Dict[str, Filter] = {}
 
         self.queue: List[AudioTrack] = []
@@ -542,7 +551,7 @@ class DefaultPlayer(BasePlayer):
         if not self.is_playing:
             return 0
 
-        if self.paused:
+        if self.paused or self._internal_pause:
             return min(self._last_position, self.current.duration)
 
         difference = time() * 1000 - self._last_update
@@ -1056,6 +1065,15 @@ class DefaultPlayer(BasePlayer):
         self._last_position = state.get('position', 0)
         self.position_timestamp = state.get('time', 0)
 
+    @abstractmethod
+    async def node_unavailable(self):
+        """|coro|
+
+        Called when a player's node becomes unavailable.
+        Useful for changing player state before it's moved to another node.
+        """
+        self._internal_pause = True
+
     async def change_node(self, node):
         """|coro|
 
@@ -1086,6 +1104,8 @@ class DefaultPlayer(BasePlayer):
 
             if self.paused:
                 await self.node._send(op='pause', guildId=self._internal_id, pause=self.paused)
+
+        self._internal_pause = False
 
         if self.volume != 100:
             await self.node._send(op='volume', guildId=self._internal_id, volume=self.volume)
