@@ -1069,7 +1069,6 @@ class DefaultPlayer(BasePlayer):
         self._last_position = state.get('position', 0)
         self.position_timestamp = state.get('time', 0)
 
-    @abstractmethod
     async def node_unavailable(self):
         """|coro|
 
