@@ -213,6 +213,12 @@ class NodeManager:
         reason: :class:`str`
             The reason why the node was disconnected.
         """
+        for player in node.players:
+            try:
+                await player.node_unavailable()
+            except:  # noqa: E722 pylint: disable=bare-except
+                _log.exception('An error occurred whilst calling player.node_unavailable()')
+
         await self._lavalink._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
