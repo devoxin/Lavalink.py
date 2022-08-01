@@ -151,11 +151,12 @@ def decode_track(track: str) -> AudioTrack:
             'identifier': identifier,
             'isStream': is_stream,
             'uri': uri,
-            'isSeekable': not is_stream
+            'isSeekable': not is_stream,
+            'source': source
         }
     }
 
-    return AudioTrack(track_object, 0, source=source, position=position, encoder_version=version)
+    return AudioTrack(track_object, 0, position=position, encoder_version=version)
 
 
 # def encode_track(track: dict):
