@@ -152,7 +152,7 @@ def decode_track(track: str) -> AudioTrack:
             'isStream': is_stream,
             'uri': uri,
             'isSeekable': not is_stream,
-            'source': source
+            'sourceName': source
         }
     }
 

@@ -99,7 +99,7 @@ class AudioTrack:
             self.title: str = info['title']
             self.uri: str = info['uri']
             self.position: int = info.get('position', 0)
-            self.source_name: str = info.get('source', 'unknown')
+            self.source_name: str = info.get('sourceName', 'unknown')
             self.extra: dict = {**extra, 'requester': requester}
         except KeyError as ke:
             missing_key, = ke.args
