@@ -46,14 +46,7 @@ It is highly recommended that you invest in a dedicated server or a [VPS](https:
 ### Exceptions
 The exception to the "unsupported platforms" rule are ARM-based machines, for example; a Raspberry Pi. While official Lavalink builds do not support the ARM architecture, there are [custom builds by Cog-Creators](https://github.com/Cog-Creators/Lavalink-Jars/releases) that offer ARM support. These are the official builds, with additional native libraries for running on otherwise unsupported platforms.
 
-## Optional Dependencies
-*These are used by aiohttp.*
-
-`aiodns`   - Speed up DNS resolving.
-
-`cchardet` - A faster alternative to `chardet`.
-
 ## Need Further Help?
 [Discord Server](https://discord.gg/SbJXU9s)
 
-[Documentation] or [Latest Docs] (for Lavalink.py 4.0)
+[Documentation] or [Latest Docs]
