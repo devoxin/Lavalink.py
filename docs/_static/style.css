@@ -17,3 +17,21 @@
 code {
     padding: 0px !important;
 }
+
+div.deprecated {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 3px;
+  color: #333;
+  overflow: auto;
+  border-width: 0 0 0 2px;
+  border-color: #ff5858;
+  border-style: solid;
+  padding-right: 0;
+}
+
+span.deprecated {
+display: block;
+font-size: large;
+}
