@@ -24,7 +24,7 @@ Welcome to Lavalink.py's documentation!
     - Regions
     - Multi-Node Support
     - Load Balancing (this includes region-based load balancing)
-    - Equalizer
+    - Audio Filters
 
     **Support:**
 
