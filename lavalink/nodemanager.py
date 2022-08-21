@@ -47,7 +47,7 @@ class NodeManager:
     nodes: :class:`list`
         Cache of all the nodes that Lavalink has created.
     regions: :class:`dict`
-        All the regions that Discord supports.
+        A mapping of continent -> Discord RTC regions.
     """
     def __init__(self, lavalink, regions: dict):
         self._lavalink = lavalink
@@ -122,6 +122,26 @@ class NodeManager:
         """
         self.nodes.remove(node)
         _log.info('Removed node \'%s\'', node.name)
+
+    def get_nodes_by_region(self, region_key: str):
+        """
+        Get a list of nodes by their region.
+        This does not account for node availability, so the nodes returned
+        could be either available or unavailable.
+
+        Parameters
+        ----------
+        region_key: :class:`str`
+            The region key. If you haven't specified your own regions, this will be
+            one of ``asia``, ``eu`` or ``us``, otherwise, it'll be one of the keys
+            within the dict you provided.
+
+        Returns
+        -------
+        List[:class:`Node`]
+            A list of nodes. Could be empty if no nodes were found with the specified region key.
+        """
+        return [n for n in self.nodes if n.region == region_key]
 
     def get_region(self, endpoint: str):
         """
