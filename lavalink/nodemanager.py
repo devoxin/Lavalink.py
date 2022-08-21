@@ -142,9 +142,7 @@ class NodeManager:
         endpoint = endpoint.replace('vip-', '')
 
         for key in self.regions:
-            nodes = [n for n in self.available_nodes if n.region == key]
-
-            if not nodes:
+            if not any(n.region == key for n in self.available_nodes):
                 continue
 
             if endpoint.startswith(self.regions[key]):
