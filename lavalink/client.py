@@ -54,9 +54,14 @@ class Client:
         The class that should be used for the player. Defaults to ``DefaultPlayer``.
         Do not change this unless you know what you are doing!
     regions: Optional[:class:`dict`]
-        A dictionary representing region -> discord endpoint. You should only
-        change this if you know what you're doing and want more control over
-        which regions handle specific locations. Defaults to ``None``.
+        A mapping of continent -> Discord RTC regions.
+        The key should be an identifier used when instantiating an node.
+        The values should be a list of RTC regions that will be handled by the associated identifying key.
+
+        Example: ``{"us": ("us-central", "us-east", "us-south", "us-west", "brazil")}``
+
+        You should only change this if you know what you're doing and want more control over
+        region groups. Defaults to ``None``.
     connect_back: Optional[:class:`bool`]
         A boolean that determines if a player will connect back to the
         node it was originally connected to. This is not recommended to do since
