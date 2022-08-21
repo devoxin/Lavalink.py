@@ -29,8 +29,8 @@ from .node import Node
 _log = logging.getLogger(__name__)
 DEFAULT_REGIONS = {
     'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica', 'india'),
-    'eu': ('eu', 'amsterdam', 'frankfurt', 'russia', 'london'),
-    'us': ('us', 'brazil')
+    'eu': ('rotterdam', 'russia'),
+    'us': ('us-central', 'us-east', 'us-south', 'us-west', 'brazil')
 }
 
 
