@@ -4,5 +4,5 @@ twine upload dist/*
 rmdir /S /Q dist
 rmdir /S /Q lavalink.egg-info
 
-echo "Published to PyPi."
+echo Published to PyPi.
 pause
