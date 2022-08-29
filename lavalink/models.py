@@ -84,7 +84,7 @@ class AudioTrack:
     def __init__(self, data: dict, requester: int, **extra):
         try:
             if isinstance(data, AudioTrack):
-                extra = data.extra
+                extra = {**data.extra, **extra}
                 data = data._raw
 
             self._raw = data
