@@ -694,7 +694,6 @@ class DefaultPlayer(BasePlayer):
             if self.loop == 2:
                 self.queue.append(self.current)
 
-        self._last_update = 0
         self._last_position = 0
         self.position_timestamp = 0
         self.paused = pause
