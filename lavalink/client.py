@@ -383,7 +383,7 @@ class Client:
                 #  clarity.
 
         tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
-        await asyncio.wait(tasks)
+        await asyncio.gather(*tasks)
 
         _log.debug('Dispatched \'%s\' to all registered hooks', type(event).__name__)
 

@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import struct
+from base64 import b64encode
 from typing import Tuple
 
-from .datarw import DataReader
+from .datarw import DataReader, DataWriter
 from .models import AudioTrack
 
 
@@ -159,23 +160,23 @@ def decode_track(track: str) -> AudioTrack:
     return AudioTrack(track_object, 0, position=position, encoder_version=version)
 
 
-# def encode_track(track: dict):
-#     assert {'title', 'author', 'length', 'identifier', 'is_stream', 'uri', 'source', 'position'} == track.keys()
+def encode_track(track: dict):
+    assert {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'} == track.keys()
 
-#     writer = DataWriter()
+    writer = DataWriter()
 
-#     version = struct.pack('B', 2)
-#     writer.write_byte(version)
-#     writer.write_utf(track['title'])
-#     writer.write_utf(track['author'])
-#     writer.write_long(track['length'])
-#     writer.write_utf(track['identifier'])
-#     writer.write_boolean(track['is_stream'])
-#     writer.write_boolean(track['uri'])
-#     writer.write_utf(track['uri'])
-#     writer.write_utf(track['source'])
-#     writer.write_long(track['position'])
+    version = struct.pack('B', 2)
+    writer.write_byte(version)
+    writer.write_utf(track['title'])
+    writer.write_utf(track['author'])
+    writer.write_long(track['length'])
+    writer.write_utf(track['identifier'])
+    writer.write_boolean(track['isStream'])
+    writer.write_boolean(track['uri'])
+    writer.write_utf(track['uri'])
+    writer.write_utf(track['sourceName'])
+    writer.write_long(track['position'])
 
-#     enc = writer.finish()
-#     b64 = b64encode(enc)
-#     return b64
+    enc = writer.finish()
+    b64 = b64encode(enc)
+    return b64

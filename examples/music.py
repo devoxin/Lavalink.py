@@ -184,7 +184,7 @@ class Music(commands.Cog):
         results = await player.node.get_tracks(query)
 
         # Results could be None if Lavalink returns an invalid response (non-JSON/non-200 (OK)).
-        # ALternatively, resullts.tracks could be an empty array if the query yielded no tracks.
+        # Alternatively, results.tracks could be an empty array if the query yielded no tracks.
         if not results or not results.tracks:
             return await ctx.send('Nothing found!')
 
