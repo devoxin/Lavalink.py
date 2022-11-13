@@ -165,7 +165,7 @@ class Client:
             The source to register.
         """
         if not isinstance(source, Source):
-            raise TypeError(f'Class \'{type(source.__name__)}\' must inherit Source!')
+            raise TypeError('Class \'{}\' must inherit Source!'.format(type(source.__name__)))
 
         self.sources.add(source)
 

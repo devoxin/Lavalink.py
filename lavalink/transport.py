@@ -293,7 +293,7 @@ class Transport:
     async def _get_request(self, path, **kwargs):
         to = kwargs.pop('to', None)
 
-        async with self._session.get(f'{self.http_uri}/{LAVALINK_API_VERSION}{path}',
+        async with self._session.get('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
                                      headers={'Authorization': self._password}, **kwargs) as res:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
@@ -308,7 +308,7 @@ class Transport:
     async def _post_request(self, path, **kwargs):
         to = kwargs.pop('to', None)
 
-        async with self._session.post(f'{self.http_uri}/{LAVALINK_API_VERSION}{path}',
+        async with self._session.post('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
                                       headers={'Authorization': self._password}, **kwargs) as res:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
