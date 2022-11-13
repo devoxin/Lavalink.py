@@ -36,9 +36,7 @@ class Node:
 
     Note
     ----
-    To construct a node, you should use :func:`Client.add_node`
-    Nodes are **NOT** mean't to be added manually, but rather with :func:`Client.add_node`. Doing this can cause
-    invalid cache and much more problems.
+    To construct a node, you should use :func:`Client.add_node` instead.
 
     Attributes
     ----------

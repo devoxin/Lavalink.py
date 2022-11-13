@@ -41,8 +41,6 @@ from .playermanager import PlayerManager
 
 _log = logging.getLogger(__name__)
 
-LAVALINK_API_VERSION = 'v4'
-
 
 class Client:
     """
