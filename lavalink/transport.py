@@ -126,9 +126,7 @@ class Transport:
                     _log.warning('[Node:%s] Invalid response received; this may indicate that '
                                  'Lavalink is not running, or is running on a port different '
                                  'to the one you provided to `add_node`.', self._node.name)
-                    return
-
-                if isinstance(ce, aiohttp.WSServerHandshakeError):
+                elif isinstance(ce, aiohttp.WSServerHandshakeError):
                     if ce.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
                         _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.',
                                      self._node.name)
