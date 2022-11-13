@@ -41,6 +41,8 @@ from .playermanager import PlayerManager
 
 _log = logging.getLogger(__name__)
 
+LAVALINK_API_VERSION = 'v4'
+
 
 class Client:
     """
@@ -92,7 +94,7 @@ class Client:
                             'the Lavalink client. Alternatively, you can hardcode your user ID.'
                             .format(user_id))
 
-        self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
+        self._session = aiohttp.ClientSession()
         self._user_id: str = str(user_id)
         self._connect_back: bool = connect_back
         self.node_manager: NodeManager = NodeManager(self, regions)
@@ -169,9 +171,8 @@ class Client:
 
         self.sources.add(source)
 
-    def add_node(self, host: str, port: int, password: str, region: str,
-                 resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3, ssl: bool = False):
+    def add_node(self, host: str, port: int, password: str, region: str, resume_key: str = None,
+                 resume_timeout: int = 60, name: str = None, ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -193,16 +194,12 @@ class Client:
             Defaults to ``60``.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
-        reconnect_attempts: Optional[:class:`int`]
-            The amount of times connection with the node will be reattempted before giving up.
-            Set to `-1` for infinite. Defaults to ``3``.
         ssl: Optional[:class:`bool`]
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
         """
-        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name,
-                                   reconnect_attempts, ssl)
+        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, ssl)
 
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|

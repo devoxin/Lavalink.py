@@ -37,3 +37,7 @@ class InvalidTrack(Exception):
 
 class LoadError(Exception):
     """ Raised when a track fails to load. E.g. if a DeferredAudioTrack fails to find an equivalent. """
+
+
+class RequestError(Exception):
+    """ to do """

@@ -25,7 +25,7 @@ import struct
 from base64 import b64encode
 from typing import Tuple
 
-from .datarw import DataReader, DataWriter
+from .dataio import DataReader, DataWriter
 from .models import AudioTrack
 
 

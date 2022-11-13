@@ -49,8 +49,8 @@ class NodeManager:
     regions: :class:`dict`
         A mapping of continent -> Discord RTC regions.
     """
-    def __init__(self, lavalink, regions: dict):
-        self._lavalink = lavalink
+    def __init__(self, client, regions: dict):
+        self.client = client
         self._player_queue = []
         self.nodes = []
         self.regions = regions or DEFAULT_REGIONS
@@ -67,9 +67,8 @@ class NodeManager:
         """ Returns a list of available nodes. """
         return [n for n in self.nodes if n.available]
 
-    def add_node(self, host: str, port: int, password: str, region: str,
-                 resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3, ssl: bool = False):
+    def add_node(self, host: str, port: int, password: str, region: str, resume_key: str = None,
+                 resume_timeout: int = 60, name: str = None, ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -99,7 +98,7 @@ class NodeManager:
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
         """
-        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts, ssl)
+        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, ssl)
         self.nodes.append(node)
 
         _log.info('Added node \'%s\'', node.name)
@@ -205,13 +204,13 @@ class NodeManager:
             original_node_name = player._original_node.name if player._original_node else '[no node]'
             _log.debug('Moved player %d from node \'%s\' to node \'%s\'', player.guild_id, original_node_name, node.name)
 
-        if self._lavalink._connect_back:
+        if self.client._connect_back:
             for player in node._original_players:
                 await player.change_node(node)
                 player._original_node = None
 
         self._player_queue.clear()
-        await self._lavalink._dispatch_event(NodeConnectedEvent(node))
+        await self.client._dispatch_event(NodeConnectedEvent(node))
 
     async def _node_disconnect(self, node: Node, code: int, reason: str):
         """
@@ -232,7 +231,7 @@ class NodeManager:
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('An error occurred whilst calling player.node_unavailable()')
 
-        await self._lavalink._dispatch_event(NodeDisconnectedEvent(node, code, reason))
+        await self.client._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
 
@@ -244,5 +243,5 @@ class NodeManager:
         for player in node.players:
             await player.change_node(best_node)
 
-            if self._lavalink._connect_back:
+            if self.client._connect_back:
                 player._original_node = node

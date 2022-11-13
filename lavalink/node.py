@@ -25,9 +25,9 @@ from typing import List
 
 from lavalink.models import Plugin
 
-from .events import Event
+from .errors import RequestError
 from .stats import Stats
-from .websocket import WebSocket
+from .transport import Transport
 
 
 class Node:
@@ -36,19 +36,12 @@ class Node:
 
     Note
     ----
+    To construct a node, you should use :func:`Client.add_node`
     Nodes are **NOT** mean't to be added manually, but rather with :func:`Client.add_node`. Doing this can cause
     invalid cache and much more problems.
 
     Attributes
     ----------
-    host: :class:`str`
-        The address of the Lavalink node.
-    port: :class:`int`
-        The port to use for websocket and REST connections.
-    password: :class:`str`
-        The password used for authentication.
-    ssl: :class:`bool`
-        Whether this node uses SSL (wss/https).
     region: :class:`str`
         The region to assign this node to.
     name: :class:`str`
@@ -56,25 +49,26 @@ class Node:
     stats: :class:`Stats`
         The statistics of how the :class:`Node` is performing.
     """
-    def __init__(self, manager, host: str, port: int, password: str,
-                 region: str, resume_key: str, resume_timeout: int, name: str = None,
-                 reconnect_attempts: int = 3, ssl: bool = False):
-        self._lavalink = manager._lavalink
-        self._manager = manager
-        self._ws = WebSocket(self, host, port, password, ssl, resume_key, resume_timeout, reconnect_attempts)
+    def __init__(self, manager, host: str, port: int, password: str, region: str,
+                 resume_key: str, resume_timeout: int, name: str = None, ssl: bool = False):
+        self.client = manager.client
+        self.manager = manager
+        self._transport = Transport(self, host, port, password, ssl, resume_key, resume_timeout)
 
-        self.host = host
-        self.port = port
-        self.password = password
-        self.ssl = ssl
         self.region = region
-        self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
+        self.name = name or '{}-{}:{}'.format(region, host, port)
         self.stats = Stats.empty(self)
 
     @property
     def available(self) -> bool:
-        """ Returns whether the node is available for requests. """
-        return self._ws.connected
+        """
+        Returns whether the node is available for requests.
+
+        .. deprecated:: 4.1.0
+            As of Lavalink server 4.0.0, a WebSocket connection is no longer required to operate a
+            node. As a result, this property is no longer considered useful.
+        """
+        return True
 
     @property
     def _original_players(self):
@@ -85,7 +79,7 @@ class Node:
         -------
         List[:class:`BasePlayer`]
         """
-        return [p for p in self._lavalink.player_manager.values() if p._original_node == self]
+        return [p for p in self.client.player_manager.values() if p._original_node == self]
 
     @property
     def players(self):
@@ -96,7 +90,7 @@ class Node:
         -------
         List[:class:`BasePlayer`]
         """
-        return [p for p in self._lavalink.player_manager.values() if p.node == self]
+        return [p for p in self.client.player_manager.values() if p.node == self]
 
     @property
     def penalty(self) -> int:
@@ -106,17 +100,13 @@ class Node:
 
         return self.stats.penalty.total
 
-    @property
-    def http_uri(self) -> str:
-        """ Returns a 'base' URI pointing to the node's address and port, also factoring in SSL. """
-        return '{}://{}:{}'.format('https' if self.ssl else 'http', self.host, self.port)
-
     async def destroy(self):
         """|coro|
 
-        Closes the WebSocket connection for this node. No further connection attempts will be made.
+        Destroys the transport and any underlying connections for this node.
+        This will also cleanly close the websocket.
         """
-        await self._ws.destroy()
+        await self._transport.close()
 
     async def get_tracks(self, query: str, check_local: bool = False):
         """|coro|
@@ -134,7 +124,7 @@ class Node:
         -------
         :class:`LoadResult`
         """
-        return await self._lavalink.get_tracks(query, self, check_local)
+        return await self.client.get_tracks(query, self, check_local)
 
     async def routeplanner_status(self):
         """|coro|
@@ -146,8 +136,7 @@ class Node:
         :class:`dict`
             A dict representing the routeplanner information.
         """
-        return await self._lavalink._get_request('{}/routeplanner/status'.format(self.http_uri),
-                                                 headers={'Authorization': self.password})
+        return await self._transport._get_request('/routeplanner/status')
 
     async def routeplanner_free_address(self, address: str) -> bool:
         """|coro|
@@ -164,8 +153,10 @@ class Node:
         :class:`bool`
             True if the address was freed, False otherwise.
         """
-        return await self._lavalink._post_request('{}/routeplanner/free/address'.format(self.http_uri),
-                                                  headers={'Authorization': self.password}, json={'address': address})
+        try:
+            return await self._transport._post_request('/routeplanner/free/address', json={'address': address})
+        except RequestError:
+            return False
 
     async def routeplanner_free_all_failing(self) -> bool:
         """|coro|
@@ -177,8 +168,10 @@ class Node:
         :class:`bool`
             True if all failing addresses were freed, False otherwise.
         """
-        return await self._lavalink._post_request('{}/routeplanner/free/all'.format(self.http_uri),
-                                                  headers={'Authorization': self.password})
+        try:
+            return await self._transport._post_request('/routeplanner/free/all')
+        except RequestError:
+            return False
 
     async def get_plugins(self) -> List[Plugin]:
         """|coro|
@@ -190,33 +183,7 @@ class Node:
         List[:class:`Plugin`]
             A list of active plugins.
         """
-        data = await self._lavalink._get_request('{}/plugins'.format(self.http_uri),
-                                                 headers={'Authorization': self.password})
-        return [Plugin(plugin) for plugin in data]
-
-    async def _dispatch_event(self, event: Event):
-        """|coro|
-
-        Dispatches the given event to all registered hooks.
-
-        Parameters
-        ----------
-        event: :class:`Event`
-            The event to dispatch to the hooks.
-        """
-        await self._lavalink._dispatch_event(event)
-
-    async def _send(self, **data):
-        """|coro|
-
-        Sends the passed data to the node via the websocket connection.
-
-        Parameters
-        ----------
-        data: class:`any`
-            The dict to send to Lavalink.
-        """
-        await self._ws._send(**data)
+        return list(map(Plugin, await self._transport._get_request('/plugins')))
 
     def __repr__(self):
         return '<Node name={0.name} region={0.region}>'.format(self)

@@ -32,7 +32,7 @@ from .errors import InvalidTrack, LoadError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackExceptionEvent, TrackLoadFailedEvent,
                      TrackStartEvent, TrackStuckEvent)
-from .filters import Equalizer, Filter
+from .filters import Filter
 
 
 class AudioTrack:
@@ -306,13 +306,14 @@ class BasePlayer(ABC):
         This could be None if the player isn't connected.
     """
     def __init__(self, guild_id, node):
-        self._lavalink = node._manager._lavalink
+        self.client = node._manager.client
         self.guild_id: int = guild_id
-        self._internal_id: str = str(guild_id)
         self.node = node
+        self.channel_id: Optional[int] = None
+
+        self._internal_id: str = str(guild_id)
         self._original_node = None  # This is used internally for failover.
         self._voice_state = {}
-        self.channel_id: Optional[int] = None
 
     @abstractmethod
     async def _handle_event(self, event):
@@ -397,7 +398,7 @@ class BasePlayer(ABC):
 
         Shortcut for :func:`PlayerManager.destroy`.
         """
-        await self._lavalink.player_manager.destroy(self.guild_id)
+        await self.client.player_manager.destroy(self.guild_id)
 
     async def _voice_server_update(self, data):
         self._voice_state.update({
@@ -701,7 +702,7 @@ class DefaultPlayer(BasePlayer):
         if not track:
             if not self.queue:
                 await self.stop()  # Also sets current to None.
-                await self.node._dispatch_event(QueueEndEvent(self))
+                await self.client._dispatch_event(QueueEndEvent(self))
                 return
 
             pop_at = randrange(len(self.queue)) if self.shuffle else 0
@@ -720,18 +721,18 @@ class DefaultPlayer(BasePlayer):
 
         if isinstance(track, DeferredAudioTrack) and playable_track is None:
             try:
-                playable_track = await track.load(self.node._manager._lavalink)
+                playable_track = await track.load(self.client)
             except LoadError as load_error:
-                await self.node._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
+                await self.client._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
             else:
                 if playable_track is None:
-                    await self.node._dispatch_event(TrackLoadFailedEvent(self, track, None))
+                    await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
 
         if playable_track is None:
             return
 
         await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause)
-        await self.node._dispatch_event(TrackStartEvent(self, track))
+        await self.client._dispatch_event(TrackStartEvent(self, track))
         # TODO: Figure out a better solution for the above. Custom player implementations may neglect
         # to dispatch TrackStartEvent leading to confusion and poor user experience.
 
@@ -1055,7 +1056,7 @@ class DefaultPlayer(BasePlayer):
             playable_track = self.current.track
 
             if isinstance(self.current, DeferredAudioTrack) and playable_track is None:
-                playable_track = await self.current.load(self.node._manager._lavalink)
+                playable_track = await self.current.load(self.client)
 
             await self.node._send(op='play', guildId=self._internal_id, track=playable_track, startTime=self.position)
             self._last_update = time() * 1000
@@ -1071,7 +1072,7 @@ class DefaultPlayer(BasePlayer):
         if self.filters:
             await self._apply_filters()
 
-        await self.node._dispatch_event(NodeChangedEvent(self, old_node, node))
+        await self.client._dispatch_event(NodeChangedEvent(self, old_node, node))
 
     def __repr__(self):
         return '<DefaultPlayer volume={0.volume} current={0.current}>'.format(self)
