@@ -990,50 +990,6 @@ class DefaultPlayer(BasePlayer):
         self.filters.clear()
         await self._apply_filters()
 
-    async def set_gain(self, band: int, gain: float = 0.0):
-        """|coro|
-
-        Sets the equalizer band gain to the given amount.
-
-        .. deprecated:: 4.0.0
-            Use :func:`set_filter` to apply the :class:`Equalizer` filter instead.
-
-        Parameters
-        ----------
-        band: :class:`int`
-            Band number (0-14).
-        gain: Optional[:class:`float`]
-            A float representing gain of a band (-0.25 to 1.00). Defaults to 0.0.
-        """
-        await self.set_gains((band, gain))
-
-    async def set_gains(self, *bands):
-        """|coro|
-
-        Modifies the player's equalizer settings.
-
-        .. deprecated:: 4.0.0
-            Use :func:`set_filter` to apply the :class:`Equalizer` filter instead.
-
-        Parameters
-        ----------
-        gain_list: :class:`any`
-            A list of tuples denoting (``band``, ``gain``).
-        """
-        equalizer = Equalizer()
-        equalizer.update(bands=bands)
-        await self.set_filter(equalizer)
-
-    async def reset_equalizer(self):
-        """|coro|
-
-        Resets equalizer to default values.
-
-        .. deprecated:: 4.0.0
-            Use :func:`remove_filter` to remove the :class:`Equalizer` filter instead.
-        """
-        await self.remove_filter(Equalizer)
-
     async def _apply_filters(self):
         payload = {}
 

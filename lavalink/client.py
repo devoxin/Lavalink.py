@@ -165,13 +165,13 @@ class Client:
             The source to register.
         """
         if not isinstance(source, Source):
-            raise TypeError('source must inherit from Source!')
+            raise TypeError(f'Class \'{type(source.__name__)}\' must inherit Source!')
 
         self.sources.add(source)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3, filters: bool = True, ssl: bool = False):
+                 reconnect_attempts: int = 3, ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -196,16 +196,13 @@ class Client:
         reconnect_attempts: Optional[:class:`int`]
             The amount of times connection with the node will be reattempted before giving up.
             Set to `-1` for infinite. Defaults to ``3``.
-        filters: Optional[:class:`bool`]
-            Whether to use the new ``filters`` op instead of the ``equalizer`` op.
-            If you're running a build without filter support, set this to ``False``.
         ssl: Optional[:class:`bool`]
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
         """
-        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
-                                   filters, ssl)
+        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name,
+                                   reconnect_attempts, ssl)
 
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
