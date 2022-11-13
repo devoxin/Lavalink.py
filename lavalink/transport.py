@@ -278,7 +278,7 @@ class Transport:
         """
         if not self.ws_connected:
             _log.debug('[Node:%s] WebSocket not ready; queued outgoing payload.', self._node.name)
-            if len(self._message_queue) > MESSAGE_QUEUE_MAX_SIZE:
+            if len(self._message_queue) >= MESSAGE_QUEUE_MAX_SIZE:
                 _log.warning('[Node:%s] WebSocket message queue is currently at capacity, discarding payload.', self._node.name)
             else:
                 self._message_queue.append(data)
