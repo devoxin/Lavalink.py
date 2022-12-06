@@ -110,15 +110,5 @@ def add_event_hook(*hooks, event: Event = None):
         The event the hook belongs to. This will dispatch when that specific event is
         dispatched. Defaults to ``None`` which means the hook is dispatched on all events.
     """
-    if event is not None and Event not in event.__bases__:
-        raise TypeError('Event parameter is not of type Event or None')
-
-    event_name = event.__name__ if event is not None else 'Generic'
-    event_hooks = Client._event_hooks[event_name]
-
-    for hook in hooks:
-        if not callable(hook) or not inspect.iscoroutinefunction(hook):
-            raise TypeError('Hook is not callable or a coroutine')
-
-        if hook not in event_hooks:
-            event_hooks.append(hook)
+    for instance in Client._instances:
+        instance.add_event_hook(*hooks, event=event)

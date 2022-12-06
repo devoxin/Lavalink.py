@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
+import inspect
 import itertools
 import logging
 import random
@@ -81,7 +82,7 @@ class Client:
     player_manager: :class:`PlayerManager`
         Represents the player manager that contains all the players.
     """
-    _event_hooks = defaultdict(list)
+    _instances = []
 
     def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
                  connect_back: bool = False):
@@ -95,13 +96,15 @@ class Client:
         self._session = aiohttp.ClientSession()
         self._user_id: str = str(user_id)
         self._connect_back: bool = connect_back
+        self._event_hooks = defaultdict(list)
         self.node_manager: NodeManager = NodeManager(self, regions)
         self.player_manager: PlayerManager = PlayerManager(self, player)
         self.sources: Set[Source] = set()
+        self._instances.append(self)
 
-    def add_event_hook(self, hook):
+    def add_event_hook(self, *hooks, event: Event = None):
         """
-        Registers a function to recieve and process Lavalink events.
+        Adds an event hook to be dispatched on an event.
 
         Note
         ----
@@ -111,11 +114,25 @@ class Client:
 
         Parameters
         ----------
-        hook: :class:`function`
-            The function to register.
+        hooks: :class:`function`
+            The hooks to register for the given event type.
+            If ``event`` parameter is left empty, then it will run when any event is dispatched.
+        event: :class:`Event`
+            The event the hook belongs to. This will dispatch when that specific event is
+            dispatched. Defaults to ``None`` which means the hook is dispatched on all events.
         """
-        if hook not in self._event_hooks['Generic']:
-            self._event_hooks['Generic'].append(hook)
+        if event is not None and Event not in event.__bases__:
+            raise TypeError('Event parameter is not of type Event or None')
+
+        event_name = event.__name__ if event is not None else 'Generic'
+        event_hooks = self._event_hooks[event_name]
+
+        for hook in hooks:
+            if not callable(hook) or not inspect.iscoroutinefunction(hook):
+                raise TypeError('Hook is not callable or a coroutine')
+
+            if hook not in event_hooks:
+                event_hooks.append(hook)
 
     def add_event_hooks(self, cls):
         """
@@ -359,8 +376,8 @@ class Client:
         event: :class:`Event`
             The event to dispatch to the hooks.
         """
-        generic_hooks = Client._event_hooks['Generic']
-        targeted_hooks = Client._event_hooks[type(event).__name__]
+        generic_hooks = self._event_hooks['Generic']
+        targeted_hooks = self._event_hooks[type(event).__name__]
 
         if not generic_hooks and not targeted_hooks:
             return
