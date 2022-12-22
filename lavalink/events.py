@@ -169,14 +169,19 @@ class PlayerUpdateEvent(Event):
         The track's elapsed playback time as an epoch timestamp in milliseconds.
     connected: :class:`bool`
         Whether or not the player is connected to the voice gateway.
+    ping: :class:`int`
+        The player's voice connection ping.
+        This is calculated from the delay between heartbeat & heartbeat ack.
+        This will be -1 when the player doesn't have a voice connection. 
     """
-    __slots__ = ('player', 'position', 'timestamp', 'connected')
+    __slots__ = ('player', 'position', 'timestamp', 'connected', 'ping')
 
     def __init__(self, player, raw_state):
         self.player = player
         self.position = raw_state.get('position')
         self.timestamp = raw_state.get('time')
         self.connected = raw_state.get('connected')
+        self.ping = raw_state.get('ping', -1)
 
 
 class NodeConnectedEvent(Event):
