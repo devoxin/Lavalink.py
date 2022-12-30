@@ -116,7 +116,7 @@ class Equalizer(Filter):
             bands = kwargs.pop('bands')
 
             sanity_check = isinstance(bands, list) and all(isinstance(pair, tuple) for pair in bands) and \
-                all(isinstance(band, int) and isinstance(gain, float) for band, gain in bands) and \
+                all(isinstance(band, int) and isinstance(gain, (float, int)) for band, gain in bands) and \
                 all(0 <= band <= 14 and -0.25 <= gain <= 1.0 for band, gain in bands)
 
             if not sanity_check:
