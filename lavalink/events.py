@@ -172,7 +172,7 @@ class PlayerUpdateEvent(Event):
     ping: :class:`int`
         The player's voice connection ping.
         This is calculated from the delay between heartbeat & heartbeat ack.
-        This will be -1 when the player doesn't have a voice connection. 
+        This will be -1 when the player doesn't have a voice connection.
     """
     __slots__ = ('player', 'position', 'timestamp', 'connected', 'ping')
 
