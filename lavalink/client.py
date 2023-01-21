@@ -28,7 +28,6 @@ import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
 from typing import Set, Union
-from urllib.parse import quote
 
 import aiohttp
 
@@ -244,7 +243,8 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        res = await self._get_request('{}/loadtracks?identifier={}'.format(node.http_uri, quote(query)),
+        res = await self._get_request('{}/loadtracks'.format(node.http_uri),
+                                      params={'identifier': query},
                                       headers={'Authorization': node.password})
         return LoadResult.from_dict(res)
 
@@ -268,7 +268,8 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        return await self._get_request('{}/decodetrack?track={}'.format(node.http_uri, track),
+        return await self._get_request('{}/decodetrack'.format(node.http_uri),
+                                       params={'track': track},
                                        headers={'Authorization': node.password})
 
     async def decode_tracks(self, tracks: list, node: Node = None):
@@ -293,7 +294,8 @@ class Client:
         node = node or random.choice(self.node_manager.available_nodes)
 
         return await self._post_request('{}/decodetracks'.format(node.http_uri),
-                                        headers={'Authorization': node.password}, json=tracks)
+                                        json=tracks,
+                                        headers={'Authorization': node.password})
 
     async def voice_update_handler(self, data):
         """|coro|

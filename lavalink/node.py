@@ -169,7 +169,8 @@ class Node:
             True if the address was freed, False otherwise.
         """
         return await self._lavalink._post_request('{}/routeplanner/free/address'.format(self.http_uri),
-                                                  headers={'Authorization': self.password}, json={'address': address})
+                                                  json={'address': address},
+                                                  headers={'Authorization': self.password})
 
     async def routeplanner_free_all_failing(self) -> bool:
         """|coro|
