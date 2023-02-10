@@ -26,13 +26,17 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from random import randrange
 from time import time
-from typing import Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from .errors import InvalidTrack, LoadError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackExceptionEvent, TrackLoadFailedEvent,
                      TrackStartEvent, TrackStuckEvent)
 from .filters import Equalizer, Filter
+
+if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
+    from .node import Node
 
 
 class AudioTrack:
@@ -305,12 +309,12 @@ class BasePlayer(ABC):
         The ID of the voice channel the player is connected to.
         This could be None if the player isn't connected.
     """
-    def __init__(self, guild_id, node):
+    def __init__(self, guild_id: int, node: 'Node'):
         self._lavalink = node._manager._lavalink
         self.guild_id: int = guild_id
         self._internal_id: str = str(guild_id)
-        self.node = node
-        self._original_node = None  # This is used internally for failover.
+        self.node: 'Node' = node
+        self._original_node: Optional['Node'] = None  # This is used internally for failover.
         self._voice_state = {}
         self.channel_id: Optional[int] = None
 
@@ -435,7 +439,7 @@ class BasePlayer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def change_node(self, node):
+    async def change_node(self, node: 'Node'):
         """|coro|
 
         Called when a node change is requested for the current player instance.
@@ -505,7 +509,7 @@ class DefaultPlayer(BasePlayer):
     LOOP_SINGLE: int = 1
     LOOP_QUEUE: int = 2
 
-    def __init__(self, guild_id, node):
+    def __init__(self, guild_id: int, node: 'Node'):
         super().__init__(guild_id, node)
 
         self._user_data = {}
