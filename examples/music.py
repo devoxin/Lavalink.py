@@ -237,7 +237,7 @@ class Music(commands.Cog):
 
         # A strength of 0 effectively means this filter won't function, so we can disable it.
         if strength == 0.0:
-            player.remove_filter('lowpass')
+            await player.remove_filter('lowpass')
             embed.description = 'Disabled **Low Pass Filter**'
             return await ctx.send(embed=embed)
 
