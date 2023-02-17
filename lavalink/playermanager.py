@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
+from typing import Callable, Dict, Iterator
 
 from .errors import NodeError
 from .models import BasePlayer
@@ -52,7 +53,7 @@ class PlayerManager:
 
         self._lavalink = lavalink
         self._player_cls = player
-        self.players = {}
+        self.players: Dict[int, BasePlayer] = {}
 
     def __len__(self):
         return len(self.players)
@@ -62,18 +63,18 @@ class PlayerManager:
         for guild_id, player in self.players.items():
             yield guild_id, player
 
-    def values(self):
+    def values(self) -> Iterator[BasePlayer]:
         """ Returns an iterator that yields only values. """
         for player in self.players.values():
             yield player
 
-    def find_all(self, predicate=None):
+    def find_all(self, predicate: Callable[[BasePlayer], bool] = None):
         """
         Returns a list of players that match the given predicate.
 
         Parameters
         ----------
-        predicate: Optional[:class:`function`]
+        predicate: Optional[Callable[[:class:BasePlayer], bool]]
             A predicate to return specific players. Defaults to ``None``.
 
         Returns
