@@ -23,9 +23,14 @@ SOFTWARE.
 """
 from typing import List
 
+<<<<<<< HEAD
 from lavalink.models import Plugin
 
 from .errors import RequestError
+=======
+from .events import Event
+from .models import BasePlayer, LoadResult, Plugin  # noqa: F401
+>>>>>>> 93cb3d0 (More typings)
 from .stats import Stats
 from .transport import Transport
 
@@ -53,9 +58,20 @@ class Node:
         self.manager = manager
         self._transport = Transport(self, host, port, password, ssl, resume_key, resume_timeout)
 
+<<<<<<< HEAD
         self.region = region
         self.name = name or '{}-{}:{}'.format(region, host, port)
         self.stats = Stats.empty(self)
+=======
+        self.host: str = host
+        self.port: int = port
+        self.password: str = password
+        self.ssl: bool = ssl
+        self.region: str = region
+        self.name: str = name or '{}-{}:{}'.format(self.region, self.host, self.port)
+        self.filters: bool = filters
+        self.stats: Stats = Stats.empty(self)
+>>>>>>> 93cb3d0 (More typings)
 
     @property
     def available(self) -> bool:
@@ -69,7 +85,7 @@ class Node:
         return True
 
     @property
-    def _original_players(self):
+    def _original_players(self) -> List[BasePlayer]:
         """
         Returns a list of players that were assigned to this node, but were moved due to failover etc.
 
@@ -80,7 +96,7 @@ class Node:
         return [p for p in self.client.player_manager.values() if p._original_node == self]
 
     @property
-    def players(self):
+    def players(self) -> List[BasePlayer]:
         """
         Returns a list of all players on this node.
 
@@ -106,7 +122,7 @@ class Node:
         """
         await self._transport.close()
 
-    async def get_tracks(self, query: str, check_local: bool = False):
+    async def get_tracks(self, query: str, check_local: bool = False) -> LoadResult:
         """|coro|
 
         Retrieves a list of results pertaining to the provided query.
