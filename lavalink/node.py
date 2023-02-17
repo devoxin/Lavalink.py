@@ -23,14 +23,8 @@ SOFTWARE.
 """
 from typing import List
 
-<<<<<<< HEAD
-from lavalink.models import Plugin
-
 from .errors import RequestError
-=======
-from .events import Event
 from .models import BasePlayer, LoadResult, Plugin  # noqa: F401
->>>>>>> 93cb3d0 (More typings)
 from .stats import Stats
 from .transport import Transport
 
@@ -58,20 +52,9 @@ class Node:
         self.manager = manager
         self._transport = Transport(self, host, port, password, ssl, resume_key, resume_timeout)
 
-<<<<<<< HEAD
-        self.region = region
-        self.name = name or '{}-{}:{}'.format(region, host, port)
-        self.stats = Stats.empty(self)
-=======
-        self.host: str = host
-        self.port: int = port
-        self.password: str = password
-        self.ssl: bool = ssl
         self.region: str = region
-        self.name: str = name or '{}-{}:{}'.format(self.region, self.host, self.port)
-        self.filters: bool = filters
+        self.name: str = name or '{}-{}:{}'.format(region, host, port)
         self.stats: Stats = Stats.empty(self)
->>>>>>> 93cb3d0 (More typings)
 
     @property
     def available(self) -> bool:
