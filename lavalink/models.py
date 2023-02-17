@@ -722,16 +722,17 @@ class DefaultPlayer(BasePlayer):
         self.current = track
         playable_track = track.track
 
-        if isinstance(track, DeferredAudioTrack) and playable_track is None:
+        if playable_track is None:
+            if not isinstance(track, DeferredAudioTrack):
+                raise InvalidTrack('Cannot play the AudioTrack as \'track\' is None, and it is not a DeferredAudioTrack!')
+
             try:
                 playable_track = await track.load(self.node._manager._lavalink)
             except LoadError as load_error:
                 await self.node._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
-            else:
-                if playable_track is None:
-                    await self.node._dispatch_event(TrackLoadFailedEvent(self, track, None))
 
-        if playable_track is None:
+        if playable_track is None:  # This should only fire when a DeferredAudioTrack fails to yield a base64 track string.
+            await self.node._dispatch_event(TrackLoadFailedEvent(self, track, None))
             return
 
         await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause)
