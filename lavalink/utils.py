@@ -160,7 +160,7 @@ def decode_track(track: str) -> AudioTrack:
     return AudioTrack(track_object, 0, position=position, encoder_version=version)
 
 
-def encode_track(track: dict):
+def encode_track(track: dict) -> str:
     assert {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'} == track.keys()
 
     writer = DataWriter()
