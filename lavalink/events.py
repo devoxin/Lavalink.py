@@ -21,6 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
+    from .models import AudioTrack, BasePlayer, DeferredAudioTrack
+    from .node import Node
 
 
 class Event:
@@ -41,8 +47,8 @@ class TrackStartEvent(Event):
     __slots__ = ('player', 'track')
 
     def __init__(self, player, track):
-        self.player = player
-        self.track = track
+        self.player: 'BasePlayer' = player
+        self.track: 'AudioTrack' = track
 
 
 class TrackStuckEvent(Event):
@@ -63,9 +69,9 @@ class TrackStuckEvent(Event):
     __slots__ = ('player', 'track', 'threshold')
 
     def __init__(self, player, track, threshold):
-        self.player = player
-        self.track = track
-        self.threshold = threshold
+        self.player: 'BasePlayer' = player
+        self.track: 'AudioTrack' = track
+        self.threshold: int = threshold
 
 
 class TrackExceptionEvent(Event):
@@ -86,10 +92,10 @@ class TrackExceptionEvent(Event):
     __slots__ = ('player', 'track', 'exception', 'severity')
 
     def __init__(self, player, track, exception, severity):
-        self.player = player
-        self.track = track
-        self.exception = exception
-        self.severity = severity
+        self.player: 'BasePlayer' = player
+        self.track: 'AudioTrack' = track
+        self.exception: str = exception
+        self.severity: str = severity
 
 
 class TrackEndEvent(Event):
@@ -109,9 +115,9 @@ class TrackEndEvent(Event):
     __slots__ = ('player', 'track', 'reason')
 
     def __init__(self, player, track, reason):
-        self.player = player
-        self.track = track
-        self.reason = reason
+        self.player: 'BasePlayer' = player
+        self.track: Optional['AudioTrack'] = track
+        self.reason: str = reason
 
 
 class TrackLoadFailedEvent(Event):
@@ -134,9 +140,9 @@ class TrackLoadFailedEvent(Event):
     __slots__ = ('player', 'track', 'original')
 
     def __init__(self, player, track, original):
-        self.player = player
-        self.track = track
-        self.original = original
+        self.player: 'BasePlayer' = player
+        self.track: 'DeferredAudioTrack' = track
+        self.original: Optional[Exception] = original
 
 
 class QueueEndEvent(Event):
@@ -152,7 +158,7 @@ class QueueEndEvent(Event):
     __slots__ = ('player',)
 
     def __init__(self, player):
-        self.player = player
+        self.player: 'BasePlayer' = player
 
 
 class PlayerUpdateEvent(Event):
@@ -177,11 +183,11 @@ class PlayerUpdateEvent(Event):
     __slots__ = ('player', 'position', 'timestamp', 'connected', 'ping')
 
     def __init__(self, player, raw_state):
-        self.player = player
-        self.position = raw_state.get('position')
-        self.timestamp = raw_state.get('time')
-        self.connected = raw_state.get('connected')
-        self.ping = raw_state.get('ping', -1)
+        self.player: 'BasePlayer' = player
+        self.position: int = raw_state.get('position')
+        self.timestamp: int = raw_state.get('time')
+        self.connected: bool = raw_state.get('connected')
+        self.ping: int = raw_state.get('ping', -1)
 
 
 class NodeConnectedEvent(Event):
@@ -197,7 +203,7 @@ class NodeConnectedEvent(Event):
     __slots__ = ('node',)
 
     def __init__(self, node):
-        self.node = node
+        self.node: 'Node' = node
 
 
 class NodeDisconnectedEvent(Event):
@@ -217,9 +223,9 @@ class NodeDisconnectedEvent(Event):
     __slots__ = ('node', 'code', 'reason')
 
     def __init__(self, node, code, reason):
-        self.node = node
-        self.code = code
-        self.reason = reason
+        self.node: 'Node' = node
+        self.code: Optional[int] = code
+        self.reason: Optional[str] = reason
 
 
 class NodeChangedEvent(Event):
@@ -240,9 +246,9 @@ class NodeChangedEvent(Event):
     __slots__ = ('player', 'old_node', 'new_node')
 
     def __init__(self, player, old_node, new_node):
-        self.player = player
-        self.old_node = old_node
-        self.new_node = new_node
+        self.player: 'BasePlayer' = player
+        self.old_node: 'Node' = old_node
+        self.new_node: 'Node' = new_node
 
 
 class WebSocketClosedEvent(Event):
@@ -269,7 +275,7 @@ class WebSocketClosedEvent(Event):
     __slots__ = ('player', 'code', 'reason', 'by_remote')
 
     def __init__(self, player, code, reason, by_remote):
-        self.player = player
-        self.code = code
-        self.reason = reason
-        self.by_remote = by_remote
+        self.player: 'BasePlayer' = player
+        self.code: int = code
+        self.reason: str = reason
+        self.by_remote: bool = by_remote
