@@ -26,13 +26,18 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from random import randrange
 from time import time
-from typing import Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from .errors import InvalidTrack, LoadError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackExceptionEvent, TrackLoadFailedEvent,
                      TrackStartEvent, TrackStuckEvent)
 from .filters import Filter
+
+if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
+    from .client import Client
+    from .node import Node
 
 
 class AudioTrack:
@@ -137,7 +142,7 @@ class DeferredAudioTrack(ABC, AudioTrack):
     for example.
     """
     @abstractmethod
-    async def load(self, client):
+    async def load(self, client: 'Client'):
         """|coro|
 
         Retrieves a base64 string that's playable by Lavalink.
@@ -267,7 +272,7 @@ class Source(ABC):
         return hash(self.name)
 
     @abstractmethod
-    async def load_item(self, client, query: str) -> Optional[LoadResult]:
+    async def load_item(self, client: 'Client', query: str) -> Optional[LoadResult]:
         """|coro|
 
         Loads a track with the given query.
@@ -305,14 +310,14 @@ class BasePlayer(ABC):
         The ID of the voice channel the player is connected to.
         This could be None if the player isn't connected.
     """
-    def __init__(self, guild_id, node):
-        self.client = node._manager.client
+    def __init__(self, guild_id: int, node: 'Node'):
+        self.client: 'Client' = node._manager.client
         self.guild_id: int = guild_id
-        self.node = node
+        self.node: 'Node' = node
         self.channel_id: Optional[int] = None
 
         self._internal_id: str = str(guild_id)
-        self._original_node = None  # This is used internally for failover.
+        self._original_node: Optional['Node'] = None  # This is used internally for failover.
         self._voice_state = {}
 
     @abstractmethod
@@ -436,7 +441,7 @@ class BasePlayer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def change_node(self, node):
+    async def change_node(self, node: 'Node'):
         """|coro|
 
         Called when a node change is requested for the current player instance.
@@ -506,7 +511,7 @@ class DefaultPlayer(BasePlayer):
     LOOP_SINGLE: int = 1
     LOOP_QUEUE: int = 2
 
-    def __init__(self, guild_id, node):
+    def __init__(self, guild_id: int, node: 'Node'):
         super().__init__(guild_id, node)
 
         self._user_data = {}
@@ -719,16 +724,17 @@ class DefaultPlayer(BasePlayer):
         self.current = track
         playable_track = track.track
 
-        if isinstance(track, DeferredAudioTrack) and playable_track is None:
+        if playable_track is None:
+            if not isinstance(track, DeferredAudioTrack):
+                raise InvalidTrack('Cannot play the AudioTrack as \'track\' is None, and it is not a DeferredAudioTrack!')
+
             try:
                 playable_track = await track.load(self.client)
             except LoadError as load_error:
                 await self.client._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
-            else:
-                if playable_track is None:
-                    await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
 
-        if playable_track is None:
+        if playable_track is None:  # This should only fire when a DeferredAudioTrack fails to yield a base64 track string.
+            await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
             return
 
         await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause)
@@ -1033,7 +1039,7 @@ class DefaultPlayer(BasePlayer):
         """
         self._internal_pause = True
 
-    async def change_node(self, node):
+    async def change_node(self, node: 'Node'):
         """|coro|
 
         Changes the player's node
