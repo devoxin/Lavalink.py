@@ -36,6 +36,7 @@ from .filters import Equalizer, Filter
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
+    from .client import Client
     from .node import Node
 
 
@@ -141,7 +142,7 @@ class DeferredAudioTrack(ABC, AudioTrack):
     for example.
     """
     @abstractmethod
-    async def load(self, client):
+    async def load(self, client: 'Client'):
         """|coro|
 
         Retrieves a base64 string that's playable by Lavalink.
@@ -271,7 +272,7 @@ class Source(ABC):
         return hash(self.name)
 
     @abstractmethod
-    async def load_item(self, client, query: str) -> Optional[LoadResult]:
+    async def load_item(self, client: 'Client', query: str) -> Optional[LoadResult]:
         """|coro|
 
         Loads a track with the given query.
