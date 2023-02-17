@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 
-def read_utfm(utf_len: int, utf_bytes: bytes):
+def read_utfm(utf_len: int, utf_bytes: bytes) -> str:
     chars = []
     count = 0
 
