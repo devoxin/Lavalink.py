@@ -23,9 +23,8 @@ SOFTWARE.
 """
 from typing import List
 
-from lavalink.models import Plugin
-
 from .events import Event
+from .models import BasePlayer, LoadResult, Plugin  # noqa: F401
 from .stats import Stats
 from .websocket import WebSocket
 
@@ -66,14 +65,14 @@ class Node:
         self._manager = manager
         self._ws = WebSocket(self, host, port, password, ssl, resume_key, resume_timeout, reconnect_attempts)
 
-        self.host = host
-        self.port = port
-        self.password = password
-        self.ssl = ssl
-        self.region = region
-        self.name = name or '{}-{}:{}'.format(self.region, self.host, self.port)
-        self.filters = filters
-        self.stats = Stats.empty(self)
+        self.host: str = host
+        self.port: int = port
+        self.password: str = password
+        self.ssl: bool = ssl
+        self.region: str = region
+        self.name: str = name or '{}-{}:{}'.format(self.region, self.host, self.port)
+        self.filters: bool = filters
+        self.stats: Stats = Stats.empty(self)
 
     @property
     def available(self) -> bool:
@@ -81,7 +80,7 @@ class Node:
         return self._ws.connected
 
     @property
-    def _original_players(self):
+    def _original_players(self) -> List[BasePlayer]:
         """
         Returns a list of players that were assigned to this node, but were moved due to failover etc.
 
@@ -92,7 +91,7 @@ class Node:
         return [p for p in self._lavalink.player_manager.values() if p._original_node == self]
 
     @property
-    def players(self):
+    def players(self) -> List[BasePlayer]:
         """
         Returns a list of all players on this node.
 
@@ -122,7 +121,7 @@ class Node:
         """
         await self._ws.destroy()
 
-    async def get_tracks(self, query: str, check_local: bool = False):
+    async def get_tracks(self, query: str, check_local: bool = False) -> LoadResult:
         """|coro|
 
         Retrieves a list of results pertaining to the provided query.
