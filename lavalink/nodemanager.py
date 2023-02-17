@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
+from typing import List, Optional
 
 from .events import NodeConnectedEvent, NodeDisconnectedEvent
 from .node import Node
@@ -63,7 +64,7 @@ class NodeManager:
             yield n
 
     @property
-    def available_nodes(self):
+    def available_nodes(self) -> List[Node]:
         """ Returns a list of available nodes. """
         return [n for n in self.nodes if n.available]
 
@@ -123,7 +124,7 @@ class NodeManager:
         self.nodes.remove(node)
         _log.info('Removed node \'%s\'', node.name)
 
-    def get_nodes_by_region(self, region_key: str):
+    def get_nodes_by_region(self, region_key: str) -> List[Node]:
         """
         Get a list of nodes by their region.
         This does not account for node availability, so the nodes returned
@@ -143,7 +144,7 @@ class NodeManager:
         """
         return [n for n in self.nodes if n.region == region_key]
 
-    def get_region(self, endpoint: str):
+    def get_region(self, endpoint: str) -> str:
         """
         Returns a Lavalink.py-friendly region from a Discord voice server address.
 
@@ -170,7 +171,7 @@ class NodeManager:
 
         return None
 
-    def find_ideal_node(self, region: str = None):
+    def find_ideal_node(self, region: str = None) -> Optional[Node]:
         """
         Finds the best (least used) node in the given region, if applicable.
 
