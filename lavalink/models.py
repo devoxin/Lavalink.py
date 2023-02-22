@@ -932,7 +932,7 @@ class DefaultPlayer(BasePlayer):
             raise TypeError('Expected class of type Filter, not an instance of ' + type(_filter).__name__)
 
         if not issubclass(_filter, Filter):
-            raise TypeError('Expected subclass of type Filter, not ' + type(_filter).__name__)
+            raise TypeError('Expected subclass of type Filter, not ' + _filter.__name__)
 
         filter_name = _filter.__name__.lower()
 
