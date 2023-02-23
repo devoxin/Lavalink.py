@@ -204,20 +204,29 @@ class WebSocket:
         data: :class:`dict`
             The data given from Lavalink.
         """
-        op = data['op']
+        op = data.get('op')
 
         if op == 'stats':
             self._node.stats = Stats(self._node, data)
         elif op == 'playerUpdate':
-            player_id = data['guildId']
+            player_id = data.get('guildId')
+            if not player_id:
+                _log.debug('[Node:%s] Received playerUpdate for null GuildID', self._node.name)
+                return
+
             player = self._lavalink.player_manager.get(int(player_id))
 
             if not player:
                 _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %s', self._node.name, player_id)
                 return
 
-            await player._update_state(data['state'])
-            await self._lavalink._dispatch_event(PlayerUpdateEvent(player, data['state']))
+            state: dict = data.get('state')
+
+            if not state:
+                _log.debug('[Node:%s] Received state update with no data', self._node.name)
+
+            await player._update_state(state)
+            await self._lavalink._dispatch_event(PlayerUpdateEvent(player, state))
         elif op == 'event':
             await self._handle_event(data)
         else:
