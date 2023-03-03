@@ -367,7 +367,7 @@ class BasePlayer(ABC):
             options['startTime'] = start_time
 
         if end_time is not None:
-            if not isinstance(end_time, int) or not end_time <= 0:
+            if not isinstance(end_time, int) or not end_time >= 0:
                 raise ValueError('end_time must be an int with a value equal to, or greater than 0')
 
             if end_time > 0:
