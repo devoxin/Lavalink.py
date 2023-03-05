@@ -27,7 +27,7 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import Set, Union
+from typing import Optional, Set, Union
 
 import aiohttp
 
@@ -167,6 +167,23 @@ class Client:
             raise TypeError('source must inherit from Source!')
 
         self.sources.add(source)
+
+    def get_source(self, source_name: str) -> Optional[Source]:
+        """
+        Gets a registered source by the given name.
+
+        Parameters
+        ----------
+        source_name: :class:`str`
+            The name of the source to get.
+
+        Returns
+        -------
+        Optional[:class:`Source`]
+            The source with the matching name. May be ``None`` if
+            the name didn't match any of those in the registered sources.
+        """
+        return next((source for source in self.sources if source.name == source_name), None)
 
     def add_node(self, host: str, port: int, password: str, region: str,
                  resume_key: str = None, resume_timeout: int = 60, name: str = None,
