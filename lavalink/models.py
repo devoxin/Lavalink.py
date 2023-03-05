@@ -389,8 +389,8 @@ class BasePlayer(ABC):
             options['startTime'] = start_time
 
         if end_time is not None:
-            if not isinstance(end_time, int) or not end_time >= 0:
-                raise ValueError('end_time must be an int with a value equal to, or greater than 0')
+            if not isinstance(end_time, int) or not end_time >= 1:
+                raise ValueError('end_time must be an int with a value equal to, or greater than 1')
 
             if end_time > 0:
                 options['endTime'] = end_time
@@ -744,8 +744,8 @@ class DefaultPlayer(BasePlayer):
                 raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
 
         if end_time is not None:
-            if not isinstance(end_time, int) or not 0 <= end_time <= track.duration:
-                raise ValueError('end_time must be an int with a value equal to, or greater than 0, and less than, or equal to the track duration')
+            if not isinstance(end_time, int) or not 1 <= end_time <= track.duration:
+                raise ValueError('end_time must be an int with a value equal to, or greater than 1, and less than, or equal to the track duration')
 
         self.current = track
         playable_track = track.track
