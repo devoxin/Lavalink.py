@@ -51,8 +51,8 @@ def timestamp_to_millis(timestamp: str) -> int:
     """
     try:
         sections = list(map(int, timestamp.split(':')))
-    except ValueError:
-        raise ValueError('Timestamp should consist of integers and colons only')
+    except ValueError as ve:
+        raise ValueError('Timestamp should consist of integers and colons only') from ve
 
     if not sections:
         raise TypeError('An invalid timestamp was provided, a timestamp should look like 1:30')
