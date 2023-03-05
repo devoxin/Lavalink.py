@@ -36,6 +36,7 @@ from .filters import Equalizer, Filter
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
+    from .client import Client
     from .node import Node
 
 
@@ -141,7 +142,7 @@ class DeferredAudioTrack(ABC, AudioTrack):
     for example.
     """
     @abstractmethod
-    async def load(self, client):
+    async def load(self, client: 'Client'):
         """|coro|
 
         Retrieves a base64 string that's playable by Lavalink.
@@ -253,6 +254,27 @@ class LoadResult:
         tracks = [AudioTrack(track, 0) for track in mapping.get('tracks')]
         return cls(load_type, tracks, playlist_info)
 
+    @property
+    def selected_track(self) -> Optional[AudioTrack]:
+        """
+        Convenience method for returning the selected track using
+        :attr:`PlaylistInfo.selected_track`.
+
+        This could be ``None`` if :attr:`playlist_info` is ``None``,
+        or :attr:`PlaylistInfo.selected_track` is an invalid number.
+
+        Returns
+        -------
+        Optional[:class:`AudioTrack`]
+        """
+        if self.playlist_info is not None:
+            index = self.playlist_info.selected_track
+
+            if 0 <= index < len(self.tracks):
+                return self.tracks[index]
+
+        return None
+
     def __repr__(self):
         return '<LoadResult load_type={0.load_type} playlist_info={0.playlist_info} tracks=[{1} item(s)]>'.format(self, len(self.tracks))
 
@@ -271,7 +293,7 @@ class Source(ABC):
         return hash(self.name)
 
     @abstractmethod
-    async def load_item(self, client, query: str) -> Optional[LoadResult]:
+    async def load_item(self, client: 'Client', query: str) -> Optional[LoadResult]:
         """|coro|
 
         Loads a track with the given query.
@@ -367,7 +389,7 @@ class BasePlayer(ABC):
             options['startTime'] = start_time
 
         if end_time is not None:
-            if not isinstance(end_time, int) or not end_time <= 0:
+            if not isinstance(end_time, int) or not end_time >= 0:
                 raise ValueError('end_time must be an int with a value equal to, or greater than 0')
 
             if end_time > 0:
@@ -648,6 +670,12 @@ class DefaultPlayer(BasePlayer):
         """|coro|
 
         Plays the given track.
+
+        This method differs from :meth:`BasePlayer.play_track` in that it contains additional logic
+        to handle certain attributes, such as ``loop``, ``shuffle``, and loading a base64 string from :class:`DeferredAudioTrack`.
+
+        :meth:`BasePlayer.play_track` is a no-frills, raw function which will unconditionally tell the node to play exactly whatever
+        it is passed.
 
         Parameters
         ----------
