@@ -46,11 +46,11 @@ class Node:
     stats: :class:`Stats`
         The statistics of how the :class:`Node` is performing.
     """
-    def __init__(self, manager, host: str, port: int, password: str, region: str,
-                 resume_key: str, resume_timeout: int, name: str = None, ssl: bool = False):
+    def __init__(self, manager, host: str, port: int, password: str, region: str, name: str = None,
+                 ssl: bool = False):
         self.client = manager.client
         self.manager = manager
-        self._transport = Transport(self, host, port, password, ssl, resume_key, resume_timeout)
+        self._transport = Transport(self, host, port, password, ssl)
 
         self.region: str = region
         self.name: str = name or '{}-{}:{}'.format(region, host, port)

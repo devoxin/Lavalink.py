@@ -23,14 +23,19 @@ SOFTWARE.
 """
 import asyncio
 import logging
+from typing import TYPE_CHECKING, Optional
 
 import aiohttp
 
 from .errors import AuthenticationError, RequestError
 from .events import (PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStuckEvent, WebSocketClosedEvent)
+from .models import AudioTrack
 from .stats import Stats
-from .utils import decode_track
+
+if TYPE_CHECKING:
+    from .client import Client
+    from .node import Node
 
 _log = logging.getLogger(__name__)
 CLOSE_TYPES = (
@@ -44,24 +49,21 @@ LAVALINK_API_VERSION = 'v4'
 
 class Transport:
     """ The class responsible for dealing with connections to Lavalink. """
-    def __init__(self, node, host: str, port: int, password: str, ssl: bool,
-                 resume_key: str, resume_timeout: int):
-        self.client = node.manager.client
-        self._node = node
+    def __init__(self, node, host: str, port: int, password: str, ssl: bool):
+        self.client: 'Client' = node.manager.client
+        self._node: Node = node
 
-        self._session = self.client._session
+        self._session: aiohttp.ClientSession = self.client._session
         self._ws = None
         self._message_queue = []
 
-        self._host = host
-        self._port = port
-        self._password = password
-        self._ssl = ssl
+        self._host: str = host
+        self._port: int = port
+        self._password: str = password
+        self._ssl: bool = ssl
 
-        self._resume_key = resume_key
-        self._resume_timeout = resume_timeout
-        self._resuming_configured = False
-        self._destroyed = False
+        self._session_id: Optional[str] = None
+        self._destroyed: bool = False
 
         self.connect()
 
@@ -96,31 +98,36 @@ class Transport:
         """
         self._destroyed = True
         await self.close()
+        await self._session.close()
 
     async def _connect(self):
+        if self._destroyed:
+            raise IOError('Cannot instantiate any connections with a closed session!')
+
         if self._ws:
             await self.close()
 
         headers = {
             'Authorization': self._password,
             'User-Id': str(self.client._user_id),
-            'Client-Name': 'Lavalink.py'
+            'Client-Name': 'Lavalink.py/4.1.0'  # TODO: Do __NOT__ hardcode this!
         }
-        # TODO: 'User-Agent': 'Lavalink.py/{} (https://github.com/devoxin/lavalink.py)'.format(__version__)
 
-        if self._resuming_configured and self._resume_key:
-            headers['Resume-Key'] = self._resume_key
+        if self._session_id is not None:
+            headers['Session-Id'] = self._session_id
 
         _log.info('[Node:%s] Establishing WebSocket connection to Lavalink...', self._node.name)
 
         protocol = 'wss' if self._ssl else 'ws'
         attempt = 0
 
-        while not self.ws_connected and not self._destroyed:
+        # TODO: Bring back max reconnect attempts?
+        while not self.ws_connected:
             attempt += 1
             try:
                 self._ws = await self._session.ws_connect('{}://{}:{}'.format(protocol, self._host, self._port),
-                                                          headers=headers, heartbeat=60)
+                                                          headers=headers,
+                                                          heartbeat=60)
             except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as ce:
                 if isinstance(ce, aiohttp.ClientConnectorError):
                     _log.warning('[Node:%s] Invalid response received; this may indicate that '
@@ -146,11 +153,6 @@ class Transport:
             else:
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 await self._node.manager._node_connect(self._node)
-
-                if not self._resuming_configured and self._resume_key \
-                        and (self._resume_timeout and self._resume_timeout > 0):
-                    await self._send(op='configureResuming', key=self._resume_key, timeout=self._resume_timeout)
-                    self._resuming_configured = True
 
                 if self._message_queue:
                     for message in self._message_queue:
@@ -205,18 +207,22 @@ class Transport:
         op = data['op']
         # handle ready op with sessionId etc.
 
-        if op == 'stats':
-            self._node.stats = Stats(self._node, data)
+        if op == 'ready':
+            self._session_id = data['sessionId']
+            # data['resumed']
         elif op == 'playerUpdate':
-            player_id = data['guildId']
-            player = self.client.player_manager.get(int(player_id))
+            guild_id = int(data['guildId'])
+            player = self.client.player_manager.get(guild_id)
 
             if not player:
-                _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %s', self._node.name, player_id)
+                _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %d', self._node.name, guild_id)
                 return
 
-            await player._update_state(data['state'])
-            await self.client._dispatch_event(PlayerUpdateEvent(player, data['state']))
+            state = data['state']
+            await player._update_state(state)
+            await self.client._dispatch_event(PlayerUpdateEvent(player, state))
+        elif op == 'stats':
+            self._node.stats = Stats(self._node, data)
         elif op == 'event':
             await self._handle_event(data)
         else:
@@ -242,7 +248,7 @@ class Transport:
         event = None
 
         if event_type == 'TrackEndEvent':
-            track = decode_track(data['track']) if data['track'] else None
+            track = AudioTrack(data['track'])
             event = TrackEndEvent(player, track, data['reason'])
         elif event_type == 'TrackExceptionEvent':
             exc_inner = data.get('exception', {})

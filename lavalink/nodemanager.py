@@ -68,8 +68,7 @@ class NodeManager:
         """ Returns a list of available nodes. """
         return [n for n in self.nodes if n.available]
 
-    def add_node(self, host: str, port: int, password: str, region: str, resume_key: str = None,
-                 resume_timeout: int = 60, name: str = None, ssl: bool = False):
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None, ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -83,12 +82,6 @@ class NodeManager:
             The password used for authentication.
         region: :class:`str`
             The region to assign this node to.
-        resume_key: Optional[:class:`str`]
-            A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-            Defaults to ``None``.
-        resume_timeout: Optional[:class:`int`]
-            How long the node should wait for a connection while disconnected before clearing all players.
-            Defaults to ``60``.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
         reconnect_attempts: Optional[:class:`int`]
@@ -99,7 +92,7 @@ class NodeManager:
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
         """
-        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, ssl)
+        node = Node(self, host, port, password, region, name, ssl)
         self.nodes.append(node)
 
         _log.info('Added node \'%s\'', node.name)

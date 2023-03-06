@@ -28,7 +28,6 @@ import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
 from typing import Set, Union
-from urllib.parse import quote
 
 import aiohttp
 
@@ -92,7 +91,7 @@ class Client:
                             'the Lavalink client. Alternatively, you can hardcode your user ID.'
                             .format(user_id))
 
-        self._session = aiohttp.ClientSession()
+        self._session: aiohttp.ClientSession = aiohttp.ClientSession()
         self._user_id: str = str(user_id)
         self._connect_back: bool = connect_back
         self.node_manager: NodeManager = NodeManager(self, regions)
@@ -169,8 +168,8 @@ class Client:
 
         self.sources.add(source)
 
-    def add_node(self, host: str, port: int, password: str, region: str, resume_key: str = None,
-                 resume_timeout: int = 60, name: str = None, ssl: bool = False):
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+                 ssl: bool = False):
         """
         Adds a node to Lavalink's node manager.
 
@@ -184,12 +183,6 @@ class Client:
             The password used for authentication.
         region: :class:`str`
             The region to assign this node to.
-        resume_key: Optional[:class:`str`]
-            A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-            Defaults to ``None``.
-        resume_timeout: Optional[:class:`int`]
-            How long the node should wait for a connection while disconnected before clearing all players.
-            Defaults to ``60``.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
         ssl: Optional[:class:`bool`]
@@ -197,7 +190,7 @@ class Client:
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
         """
-        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, ssl)
+        self.node_manager.add_node(host, port, password, region, name, ssl)
 
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
@@ -236,7 +229,8 @@ class Client:
         if not self.node_manager.available_nodes:
             raise NodeError('No available nodes!')
         node = node or random.choice(self.node_manager.available_nodes)
-        res = await self._get_request('{}/loadtracks?identifier={}'.format(node.http_uri, quote(query)),
+        res = await self._get_request('{}/loadtracks'.format(node.http_uri),
+                                      params={'identifier': query},
                                       headers={'Authorization': node.password})
         return LoadResult.from_dict(res)
 
@@ -324,7 +318,10 @@ class Client:
             if player:
                 await player._voice_state_update(data['d'])
 
-    async def _get_request(self, url, **kwargs):
+    async def _get_request(self, url, debug: bool = False, **kwargs):
+        if debug:
+            kwargs['params'] = {**kwargs.get('params', {}), 'trace': True}
+
         async with self._session.get(url, **kwargs) as res:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError

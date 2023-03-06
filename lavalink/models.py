@@ -42,6 +42,8 @@ if TYPE_CHECKING:
 
 class AudioTrack:
     """
+    .. _ISRC: https://en.wikipedia.org/wiki/International_Standard_Recording_Code
+
     Represents an AudioTrack.
 
     Parameters
@@ -60,7 +62,7 @@ class AudioTrack:
         This is marked optional as it could be None when it's not set by a custom :class:`Source`,
         which is expected behaviour when the subclass is a :class:`DeferredAudioTrack`.
     identifier: :class:`str`
-        The track's id. For example, a youtube track's identifier will look like dQw4w9WgXcQ.
+        The track's id. For example, a youtube track's identifier will look like ``dQw4w9WgXcQ``.
     is_seekable: :class:`bool`
         Whether the track supports seeking.
     author: :class:`str`
@@ -73,6 +75,10 @@ class AudioTrack:
         The title of the track.
     uri: :class:`str`
         The full URL of track.
+    artwork_url: Optional[:class:`str`]
+        A URL pointing to the track's artwork, if applicable.
+    isrc: Optional[:class:`str`]
+        The `ISRC`_ for the track, if applicable.
     position: :class:`int`
         The playback position of the track, in milliseconds.
         This is a read-only property; setting it won't have any effect.
@@ -84,9 +90,9 @@ class AudioTrack:
         Any extra properties given to this AudioTrack will be stored here.
     """
     __slots__ = ('_raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri',
-                 'position', 'source_name', 'extra')
+                 'artwork_url', 'isrc', 'position', 'source_name', 'extra')
 
-    def __init__(self, data: dict, requester: int, **extra):
+    def __init__(self, data: dict, requester: int = 0, **extra):
         try:
             if isinstance(data, AudioTrack):
                 extra = {**data.extra, **extra}
@@ -103,6 +109,8 @@ class AudioTrack:
             self.stream: bool = info['isStream']
             self.title: str = info['title']
             self.uri: str = info['uri']
+            self.artwork_url: Optional[str] = info.get('artworkUrl')
+            self.isrc: Optional[str] = info.get('isrc')
             self.position: int = info.get('position', 0)
             self.source_name: str = info.get('sourceName', 'unknown')
             self.extra: dict = {**extra, 'requester': requester}
