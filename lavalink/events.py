@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
-    from .models import AudioTrack, BasePlayer, DeferredAudioTrack
+    from .player import AudioTrack, BasePlayer, DeferredAudioTrack
     from .node import Node
 
 

@@ -23,8 +23,9 @@ SOFTWARE.
 """
 from typing import List
 
+from .abc import BasePlayer
 from .errors import RequestError
-from .models import AudioTrack, BasePlayer, LoadResult, Plugin  # noqa: F401
+from .server import AudioTrack, LoadResult, Plugin
 from .stats import Stats
 from .transport import Transport
 

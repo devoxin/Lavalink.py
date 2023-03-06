@@ -30,7 +30,7 @@ import aiohttp
 from .errors import AuthenticationError, RequestError
 from .events import (PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStuckEvent, WebSocketClosedEvent)
-from .models import AudioTrack
+from .player import AudioTrack
 from .stats import Stats
 
 if TYPE_CHECKING:

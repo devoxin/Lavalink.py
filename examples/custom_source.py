@@ -1,4 +1,4 @@
-from lavalink.models import (DeferredAudioTrack, LoadResult, LoadType,
+from lavalink.player import (DeferredAudioTrack, LoadResult, LoadType,
                              PlaylistInfo, Source)
 
 

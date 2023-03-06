@@ -26,7 +26,7 @@ from base64 import b64encode
 from typing import Optional, Tuple
 
 from .dataio import DataReader, DataWriter
-from .models import AudioTrack
+from .player import AudioTrack
 
 
 def timestamp_to_millis(timestamp: str) -> int:

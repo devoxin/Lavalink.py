@@ -25,7 +25,7 @@ import logging
 from typing import Callable, Dict, Iterator
 
 from .errors import ClientError
-from .models import BasePlayer
+from .player import BasePlayer
 from .node import Node
 
 _log = logging.getLogger(__name__)
