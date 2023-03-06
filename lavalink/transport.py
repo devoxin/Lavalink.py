@@ -307,7 +307,7 @@ class Transport:
 
             if res.status == 200:
                 json = await res.json()
-                return json if to is None else to._from_dict(json)
+                return json if to is None else to.from_dict(json)
 
             raise RequestError('An invalid response was received from the node.', status=res.status, response=await res.json())
 
