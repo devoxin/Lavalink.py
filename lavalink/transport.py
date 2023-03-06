@@ -110,7 +110,7 @@ class Transport:
         headers = {
             'Authorization': self._password,
             'User-Id': str(self.client._user_id),
-            'Client-Name': 'Lavalink.py/4.1.0'  # TODO: Do __NOT__ hardcode this!
+            'Client-Name': 'Lavalink.py/5.0.0'  # TODO: Do __NOT__ hardcode this!
         }
 
         if self._session_id is not None:

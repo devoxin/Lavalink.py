@@ -61,7 +61,7 @@ class Node:
         """
         Returns whether the node is available for requests.
 
-        .. deprecated:: 4.1.0
+        .. deprecated:: 5.0.0
             As of Lavalink server 4.0.0, a WebSocket connection is no longer required to operate a
             node. As a result, this property is no longer considered useful.
         """
