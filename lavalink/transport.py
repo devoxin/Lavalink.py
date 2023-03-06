@@ -319,7 +319,7 @@ class Transport:
 
             if res.status == 200:
                 json = await res.json()
-                return json if to is None else to._from_json(json)
+                return json if to is None else to.from_dict(json)
 
             if res.status == 204:
                 return True
