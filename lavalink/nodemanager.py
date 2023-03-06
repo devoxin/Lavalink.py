@@ -65,7 +65,14 @@ class NodeManager:
 
     @property
     def available_nodes(self) -> List[Node]:
-        """ Returns a list of available nodes. """
+        """
+        Returns a list of available nodes.
+
+        .. deprecated:: 4.1.0
+            As of Lavalink server 4.0.0, a WebSocket connection is no longer required to operate a
+            node. As a result, this property is no longer considered useful as all nodes are considered
+            available.
+        """
         return [n for n in self.nodes if n.available]
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None, ssl: bool = False):

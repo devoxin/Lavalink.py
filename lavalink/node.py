@@ -24,7 +24,7 @@ SOFTWARE.
 from typing import List
 
 from .errors import RequestError
-from .models import BasePlayer, LoadResult, Plugin  # noqa: F401
+from .models import AudioTrack, BasePlayer, LoadResult, Plugin  # noqa: F401
 from .stats import Stats
 from .transport import Transport
 
@@ -105,7 +105,7 @@ class Node:
         """
         await self._transport.close()
 
-    async def get_tracks(self, query: str, check_local: bool = False) -> LoadResult:
+    async def get_tracks(self, query: str) -> LoadResult:
         """|coro|
 
         Retrieves a list of results pertaining to the provided query.
@@ -114,14 +114,46 @@ class Node:
         ----------
         query: :class:`str`
             The query to perform a search for.
-        check_local: :class:`bool`
-            Whether to also search the query on sources registered with this Lavalink client.
 
         Returns
         -------
         :class:`LoadResult`
         """
-        return await self.client.get_tracks(query, self, check_local)
+        return await self._transport._get_request('/loadtracks', params={'identifier': query}, to=LoadResult)
+
+    async def decode_track(self, track: str) -> AudioTrack:
+        """|coro|
+
+        Decodes a base64-encoded track string into an :class:`AudioTrack` object.
+
+        Parameters
+        ----------
+        track: :class:`str`
+            The base64-encoded track string to decode.
+
+        Returns
+        -------
+        :class:`AudioTrack`
+        """
+        return await self._transport._get_request('/decodetrack', params={'track': track}, to=AudioTrack)
+
+    async def decode_tracks(self, tracks: List[str]) -> List[AudioTrack]:
+        """|coro|
+
+        Decodes a list of base64-encoded track strings into a list of :class:`AudioTrack`.
+
+        Parameters
+        ----------
+        tracks: List[:class:`str`]
+            A list of base64-encoded ``track`` strings.
+
+        Returns
+        -------
+        List[:class:`AudioTrack`]
+            A list of decoded AudioTracks.
+        """
+        response = await self._transport._post_request('/decodetracks', json=tracks)
+        return list(map(AudioTrack, response))
 
     async def routeplanner_status(self):
         """|coro|

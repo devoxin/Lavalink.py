@@ -124,6 +124,10 @@ class AudioTrack:
 
         return super().__getattribute__(name)
 
+    @classmethod
+    def from_dict(cls, mapping: dict):
+        return cls(mapping)
+
     @property
     def requester(self) -> int:
         return self.extra['requester']
