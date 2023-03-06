@@ -284,6 +284,7 @@ class Transport:
         """
         if not self.ws_connected:
             _log.debug('[Node:%s] WebSocket not ready; queued outgoing payload.', self._node.name)
+
             if len(self._message_queue) >= MESSAGE_QUEUE_MAX_SIZE:
                 _log.warning('[Node:%s] WebSocket message queue is currently at capacity, discarding payload.', self._node.name)
             else:
@@ -297,6 +298,9 @@ class Transport:
             _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
 
     async def _get_request(self, path, to=None, trace: bool = False, **kwargs):
+        if self._destroyed:
+            raise IOError('Cannot instantiate any connections with a closed session!')
+
         if trace is True:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': True}
 
@@ -312,6 +316,9 @@ class Transport:
             raise RequestError('An invalid response was received from the node.', status=res.status, response=await res.json())
 
     async def _post_request(self, path, to=None, **kwargs):
+        if self._destroyed:
+            raise IOError('Cannot instantiate any connections with a closed session!')
+
         async with self._session.post('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
                                       headers={'Authorization': self._password}, **kwargs) as res:
             if res.status == 401 or res.status == 403:
