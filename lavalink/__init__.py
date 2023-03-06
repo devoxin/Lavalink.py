@@ -21,9 +21,9 @@ from .events import (Event, NodeChangedEvent, NodeConnectedEvent,
                      TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent)
 from .filters import (ChannelMix, Equalizer, Filter, Karaoke, LowPass,
                       Rotation, Timescale, Tremolo, Vibrato, Volume)
-from .player import DefaultPlayer
 from .node import Node
 from .nodemanager import NodeManager
+from .player import DefaultPlayer
 from .playermanager import PlayerManager
 from .server import AudioTrack, LoadResult, LoadType, PlaylistInfo, Plugin
 from .stats import Penalty, Stats
