@@ -296,8 +296,8 @@ class Transport:
         except ConnectionResetError:
             _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
 
-    async def _get_request(self, path, to=None, debug: bool = False, **kwargs):
-        if debug is True:
+    async def _get_request(self, path, to=None, trace: bool = False, **kwargs):
+        if trace is True:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': True}
 
         async with self._session.get('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
