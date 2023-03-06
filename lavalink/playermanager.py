@@ -24,7 +24,7 @@ SOFTWARE.
 import logging
 from typing import Callable, Dict, Iterator
 
-from .errors import NodeError
+from .errors import ClientError
 from .models import BasePlayer
 from .node import Node
 
@@ -159,7 +159,7 @@ class PlayerManager:
         best_node = node or self._lavalink.node_manager.find_ideal_node(region)
 
         if not best_node:
-            raise NodeError('No available nodes!')
+            raise ClientError('No available nodes!')
 
         id_int = int(guild_id)
         self.players[id_int] = player = self._player_cls(id_int, best_node)

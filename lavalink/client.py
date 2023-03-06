@@ -31,7 +31,7 @@ from typing import Set, Union
 
 import aiohttp
 
-from .errors import AuthenticationError, NodeError
+from .errors import AuthenticationError, ClientError, RequestError
 from .events import Event
 from .models import DefaultPlayer, LoadResult, Source
 from .node import Node
@@ -80,6 +80,7 @@ class Client:
     player_manager: :class:`PlayerManager`
         Represents the player manager that contains all the players.
     """
+    __slots__ = ('_session', '_user_id', '_connect_back', 'node_manager', 'player_manager', 'sources')
     _event_hooks = defaultdict(list)
 
     def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
@@ -227,7 +228,8 @@ class Client:
                     return load_result
 
         if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
+            raise ClientError('No available nodes!')
+
         node = node or random.choice(self.node_manager.available_nodes)
         res = await self._get_request('{}/loadtracks'.format(node.http_uri),
                                       params={'identifier': query},
@@ -252,7 +254,8 @@ class Client:
             A dict representing the track's information.
         """
         if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
+            raise ClientError('No available nodes!')
+
         node = node or random.choice(self.node_manager.available_nodes)
         return await self._get_request('{}/decodetrack?track={}'.format(node.http_uri, track),
                                        headers={'Authorization': node.password})
@@ -275,7 +278,8 @@ class Client:
             A list of dicts representing track information.
         """
         if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
+            raise ClientError('No available nodes!')
+
         node = node or random.choice(self.node_manager.available_nodes)
 
         return await self._post_request('{}/decodetracks'.format(node.http_uri),
@@ -318,7 +322,7 @@ class Client:
             if player:
                 await player._voice_state_update(data['d'])
 
-    async def _get_request(self, url, debug: bool = False, **kwargs):
+    async def _get_request(self, url, json: bool = True, debug: bool = False, **kwargs):
         if debug:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': True}
 
@@ -327,10 +331,13 @@ class Client:
                 raise AuthenticationError
 
             if res.status == 200:
-                return await res.json()
+                if json:
+                    return await res.json()
 
-            raise NodeError('An invalid response was received from the node: code={}, body={}'
-                            .format(res.status, await res.text()))
+                return await res.text()
+
+            raise RequestError('An invalid response was received from the node!',
+                               status=res.status, response=await res.json())
 
     async def _post_request(self, url, **kwargs):
         async with self._session.post(url, **kwargs) as res:
@@ -341,8 +348,8 @@ class Client:
                 if res.status == 200:
                     return await res.json()
 
-                raise NodeError('An invalid response was received from the node: code={}, body={}'
-                                .format(res.status, await res.text()))
+                raise RequestError('An invalid response was received from the node!',
+                                   status=res.status, response=await res.json())
 
             return res.status == 204
 

@@ -296,11 +296,15 @@ class Transport:
         except ConnectionResetError:
             _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
 
-    async def _get_request(self, path, **kwargs):
+    async def _get_request(self, path, require_auth: bool = True, **kwargs):
         to = kwargs.pop('to', None)
+        headers = kwargs.get('headers', {})
+
+        if require_auth:
+            headers['Authorization'] = self._password
 
         async with self._session.get('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
-                                     headers={'Authorization': self._password}, **kwargs) as res:
+                                     headers=headers, **kwargs) as res:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
 
@@ -309,7 +313,7 @@ class Transport:
                 return json if to is None else to._from_json(json)
 
             _log.warning('Request to %s was unsuccessful: code=%d, body=%s', path, res.status, await res.text())
-            raise RequestError('An invalid response was received from the node.')
+            raise RequestError('An invalid response was received from the node.', status=res.status, response=await res.json())
 
     async def _post_request(self, path, **kwargs):
         to = kwargs.pop('to', None)
@@ -327,4 +331,4 @@ class Transport:
                 return True
 
             _log.warning('Request to %s was unsuccessful: code=%d, body=%s', path, res.status, await res.text())
-            raise RequestError('An invalid response was received from the node.')
+            raise RequestError('An invalid response was received from the node.', status=res.status, response=await res.json())
