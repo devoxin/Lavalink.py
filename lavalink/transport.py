@@ -297,30 +297,15 @@ class Transport:
         except ConnectionResetError:
             _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
 
-    async def _get_request(self, path, to=None, trace: bool = False, **kwargs):
+    async def _request(self, method: str, path: str, to=None, trace: bool = False, **kwargs):
         if self._destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
         if trace is True:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': True}
 
-        async with self._session.get('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
-                                     headers={'Authorization': self._password}, **kwargs) as res:
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            if res.status == 200:
-                json = await res.json()
-                return json if to is None else to.from_dict(json)
-
-            raise RequestError('An invalid response was received from the node.', status=res.status, response=await res.json())
-
-    async def _post_request(self, path, to=None, **kwargs):
-        if self._destroyed:
-            raise IOError('Cannot instantiate any connections with a closed session!')
-
-        async with self._session.post('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
-                                      headers={'Authorization': self._password}, **kwargs) as res:
+        async with self._session.request(method=method, url='{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
+                                         headers={'Authorization': self._password}, **kwargs) as res:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
 

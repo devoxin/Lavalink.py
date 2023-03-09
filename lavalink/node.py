@@ -120,7 +120,7 @@ class Node:
         -------
         :class:`LoadResult`
         """
-        return await self._transport._get_request('/loadtracks', params={'identifier': query}, to=LoadResult)
+        return await self._transport._request('GET', '/loadtracks', params={'identifier': query}, to=LoadResult)
 
     async def decode_track(self, track: str) -> AudioTrack:
         """|coro|
@@ -136,7 +136,7 @@ class Node:
         -------
         :class:`AudioTrack`
         """
-        return await self._transport._get_request('/decodetrack', params={'track': track}, to=AudioTrack)
+        return await self._transport._request('GET', '/decodetrack', params={'track': track}, to=AudioTrack)
 
     async def decode_tracks(self, tracks: List[str]) -> List[AudioTrack]:
         """|coro|
@@ -153,7 +153,7 @@ class Node:
         List[:class:`AudioTrack`]
             A list of decoded AudioTracks.
         """
-        response = await self._transport._post_request('/decodetracks', json=tracks)
+        response = await self._transport._request('POST', '/decodetracks', json=tracks)
         return list(map(AudioTrack, response))
 
     async def routeplanner_status(self):
@@ -166,7 +166,7 @@ class Node:
         :class:`dict`
             A dict representing the routeplanner information.
         """
-        return await self._transport._get_request('/routeplanner/status')
+        return await self._transport._request('GET', '/routeplanner/status')
 
     async def routeplanner_free_address(self, address: str) -> bool:
         """|coro|
@@ -184,7 +184,7 @@ class Node:
             True if the address was freed, False otherwise.
         """
         try:
-            return await self._transport._post_request('/routeplanner/free/address', json={'address': address})
+            return await self._transport._request('POST', '/routeplanner/free/address', json={'address': address})
         except RequestError:
             return False
 
@@ -199,7 +199,7 @@ class Node:
             True if all failing addresses were freed, False otherwise.
         """
         try:
-            return await self._transport._post_request('/routeplanner/free/all')
+            return await self._transport._request('POST', '/routeplanner/free/all')
         except RequestError:
             return False
 
@@ -213,7 +213,7 @@ class Node:
         List[:class:`Plugin`]
             A list of active plugins.
         """
-        return list(map(Plugin, await self._transport._get_request('/plugins')))
+        return list(map(Plugin, await self._transport._request('GET', '/plugins')))
 
     def __repr__(self):
         return '<Node name={0.name} region={0.region}>'.format(self)
