@@ -266,7 +266,7 @@ class Node:
         session_id = self._transport.session_id
 
         if not session_id:
-            raise ClientError('Cannot retrieve a list of players without a valid session ID!')
+            raise ClientError('Cannot retrieve a player without a valid session ID!')
 
         return await self._transport._request('GET', '/sessions/{}/players/{}'.format(session_id, guild_id))
 
@@ -337,7 +337,7 @@ class Node:
         session_id = self._transport.session_id
 
         if not session_id:
-            raise ValueError('Cannot retrieve a list of players without a valid session ID!')
+            raise ValueError('Cannot update the state of a player without a valid session ID!')
 
         if encoded_track is not None and identifier is not None:
             raise ValueError('encoded_track and identifier are mutually exclusive options, you may not specify both together.')
@@ -413,7 +413,7 @@ class Node:
         session_id = self._transport.session_id
 
         if not session_id:
-            raise ClientError('Cannot retrieve a list of players without a valid session ID!')
+            raise ClientError('Cannot destroy a player without a valid session ID!')
 
         return await self._transport._request('DELETE', '/sessions/{}/players/{}'.format(session_id, guild_id))
 
@@ -437,7 +437,7 @@ class Node:
         session_id = self._transport.session_id
 
         if not session_id:
-            raise ClientError('Cannot retrieve a list of players without a valid session ID!')
+            raise ClientError('Cannot update a session without a valid session ID!')
 
         json = {}
 
