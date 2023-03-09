@@ -337,7 +337,7 @@ class Node:
         session_id = self._transport.session_id
 
         if not session_id:
-            raise ValueError('Cannot update the state of a player without a valid session ID!')
+            raise ClientError('Cannot update the state of a player without a valid session ID!')
 
         if encoded_track is not None and identifier is not None:
             raise ValueError('encoded_track and identifier are mutually exclusive options, you may not specify both together.')
