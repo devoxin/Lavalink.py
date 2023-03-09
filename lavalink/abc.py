@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from .server import AudioTrack
 
@@ -237,3 +237,16 @@ class Source(ABC):
 
     def __repr__(self):
         return '<Source name={0.name}>'.format(self)
+
+
+class Filter:
+    def __init__(self, values: Union[dict, list, float]):
+        self.values = values
+
+    def update(self, **kwargs):
+        """ Updates the internal values to match those provided. """
+        raise NotImplementedError
+
+    def serialize(self) -> dict:
+        """ Transforms the internal values into a dict matching the structure Lavalink expects. """
+        raise NotImplementedError

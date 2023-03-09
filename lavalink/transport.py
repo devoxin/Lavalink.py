@@ -62,7 +62,7 @@ class Transport:
         self._password: str = password
         self._ssl: bool = ssl
 
-        self._session_id: Optional[str] = None
+        self.session_id: Optional[str] = None
         self._destroyed: bool = False
 
         self.connect()
@@ -209,6 +209,7 @@ class Transport:
 
         if op == 'ready':
             self._session_id = data['sessionId']
+            # TODO: Dispatch Node ready event.
             # data['resumed']
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])

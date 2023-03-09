@@ -21,20 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Union
-
-
-class Filter:
-    def __init__(self, values: Union[dict, list, float]):
-        self.values = values
-
-    def update(self, **kwargs):
-        """ Updates the internal values to match those provided. """
-        raise NotImplementedError
-
-    def serialize(self) -> dict:
-        """ Transforms the internal values into a dict matching the structure Lavalink expects. """
-        raise NotImplementedError
+from .abc import Filter
 
 
 class Volume(Filter):

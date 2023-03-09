@@ -21,10 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import List
+from typing import Any, Dict, List, Optional, Union
 
-from .abc import BasePlayer
-from .errors import RequestError
+from .abc import BasePlayer, Filter
+from .errors import ClientError, RequestError
 from .server import AudioTrack, LoadResult, Plugin
 from .stats import Stats
 from .transport import Transport
@@ -156,14 +156,14 @@ class Node:
         response = await self._transport._request('POST', '/decodetracks', json=tracks)
         return list(map(AudioTrack, response))
 
-    async def routeplanner_status(self):
+    async def get_routeplanner_status(self) -> Dict[str, Any]:
         """|coro|
 
         Retrieves the status of the target node's routeplanner.
 
         Returns
         -------
-        :class:`dict`
+        Dict[str, Any]
             A dict representing the routeplanner information.
         """
         return await self._transport._request('GET', '/routeplanner/status')
@@ -203,6 +203,43 @@ class Node:
         except RequestError:
             return False
 
+    async def get_info(self) -> Dict[str, Any]:
+        """|coro|
+
+        Retrieves information about this node.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A raw response containing information about the node.
+        """
+        return await self._transport._request('GET', '/info')
+
+    async def get_stats(self) -> Dict[str, Any]:
+        """|coro|
+
+        Retrieves statistics about this node.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A raw response containing information about the node.
+        """
+        return await self._transport._request('GET', '/stats')
+
+# TODO: Special handling for this, as it's not JSON.
+    # async def get_version(self) -> str:
+    #     """|coro|
+
+    #     Retrieves the version of this node.
+
+    #     Returns
+    #     -------
+    #     str
+    #         The version of this Lavalink server.
+    #     """
+    #     return await self._transport._request('GET', '/stats')
+
     async def get_plugins(self) -> List[Plugin]:
         """|coro|
 
@@ -215,5 +252,210 @@ class Node:
         """
         return list(map(Plugin, await self._transport._request('GET', '/plugins')))
 
+    async def get_player(self, guild_id: Union[str, int]) -> Dict[str, Any]:
+        """|coro|
+
+        Retrieves a player from the node.
+        This returns raw data, to retrieve a player you can interact with, use :meth:`PlayerManager.get`.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A raw player object.
+        """
+        session_id = self._transport.session_id
+
+        if not session_id:
+            raise ClientError('Cannot retrieve a list of players without a valid session ID!')
+
+        return await self._transport._request('GET', '/sessions/{}/players/{}'.format(session_id, guild_id))
+
+    async def get_players(self) -> List[Dict[str, Any]]:
+        """|coro|
+
+        Retrieves a list of players from the node.
+        This returns raw data, to retrieve players you can interact with, use :attr:`players`.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A list of raw player objects.
+        """
+        session_id = self._transport.session_id
+
+        if not session_id:
+            raise ClientError('Cannot retrieve a list of players without a valid session ID!')
+
+        return await self._transport._request('GET', '/sessions/{}/players'.format(session_id))
+
+    async def update_player(self, guild_id: Union[str, int], no_replace: Optional[bool] = None,
+                            encoded_track: Optional[str] = None, identifier: Optional[str] = None,
+                            position: Optional[int] = None, end_time: Optional[int] = None,
+                            volume: Optional[int] = None, paused: Optional[bool] = None,
+                            filters: Optional[List[Filter]] = None) -> Dict[str, Any]:
+        """|coro|
+
+        Update the state of a player.
+
+        Parameters
+        ----------
+        guild_id: Union[str, int]
+            The guild ID of the player to update.
+        no_replace: Optional[bool]
+            Whether to replace the currently playing track with the new track.
+        encoded_track: Optional[str]
+            The base64-encoded track string to play.
+
+            Warning
+            -------
+            This option is mutually exclusive with ``identifier``. You cannot provide both options.
+        identifier: Optional[str]
+            The identifier of the track to play. This can be a track ID or URL. It may not be a
+            search query or playlist link. If it yields a search, playlist, or no track, a :class:`RequestError`
+            will be raised.
+
+            Warning
+            -------
+            This option is mutually exclusive with ``encoded_track``. You cannot provide both options.
+        position: Optional[int]
+            The track position in milliseconds. This can be used to seek.
+        end_time: Optional[int]
+            The position, in milliseconds, to end the track at.
+        volume: Optional[int]
+            The new volume of the player. This must be within the range of 0 to 1000.
+        paused: Optional[bool]
+            Whether to pause the player.
+        filters: Optional[List[:class:`Filter`]]
+            The filters to apply to the player.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A raw player object.
+        """
+        # TODO: Update the cached player if identifier, encoded_track or filters are specified.
+        session_id = self._transport.session_id
+
+        if not session_id:
+            raise ValueError('Cannot retrieve a list of players without a valid session ID!')
+
+        if encoded_track is not None and identifier is not None:
+            raise ValueError('encoded_track and identifier are mutually exclusive options, you may not specify both together.')
+
+        params = {}
+        json = {}
+
+        if no_replace is not None and isinstance(no_replace, bool):
+            params['noReplace'] = no_replace
+
+        if encoded_track is not None:
+            if not isinstance(encoded_track, str):
+                raise ValueError('encoded_track must be a str!')
+
+            json['encodedTrack'] = encoded_track
+        elif identifier is not None:
+            if not isinstance(identifier, str):
+                raise ValueError('identifier must be a str!')
+
+            json['identifier'] = identifier
+
+        if position is not None:
+            if not isinstance(position, int):
+                raise ValueError('position must be an int!')
+
+            json['position'] = position
+
+        if end_time is not None:
+            if not isinstance(end_time, int) or end_time <= 0:
+                raise ValueError('end_time must be an int, and greater than 0!')
+
+            json['endTime'] = end_time
+
+        if volume is not None:
+            if not isinstance(volume, int) or not 0 <= volume <= 1000:
+                raise ValueError('volume must be an int, and within the range of 0 to 1000!')
+
+            json['volume'] = volume
+
+        if paused is not None:
+            if not isinstance(paused, bool):
+                raise ValueError('position must be a bool!')
+
+            json['paused'] = paused
+
+        if filters is not None:
+            if not isinstance(filters, list) or not all(isinstance(f, Filter) for f in filters):
+                raise ValueError('filters must be a list of Filter!')
+
+            serialized = {}
+            for f in filters:
+                serialized.update(f.serialize())
+
+            json['filters'] = serialized
+
+        if not json:
+            return
+
+        return await self._transport._request('PATCH', '/sessions/{}/players/{}'.format(session_id, guild_id),
+                                              params=params, json=json)
+
+    async def destroy_player(self, guild_id: Union[str, int]) -> bool:
+        """|coro|
+
+        Destroys a player on the node.
+        It's recommended that you use :meth:`PlayerManager.destroy` to destroy a player.
+
+        Returns
+        -------
+        bool
+            Whether the player was destroyed.
+        """
+        session_id = self._transport.session_id
+
+        if not session_id:
+            raise ClientError('Cannot retrieve a list of players without a valid session ID!')
+
+        return await self._transport._request('DELETE', '/sessions/{}/players/{}'.format(session_id, guild_id))
+
+    async def update_session(self, resuming: Optional[bool] = None, timeout: Optional[int] = None) -> Dict[str, Any]:
+        """|coro|
+
+        Update the session for this node.
+
+        Parameters
+        ----------
+        resuming: Optional[bool]
+            Whether to enable resuming for this session or not.
+        timeout: Optional[int]
+            How long the node will wait for the session to resume before destroying it, in seconds.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A raw response from the node containing the current session configuration.
+        """
+        session_id = self._transport.session_id
+
+        if not session_id:
+            raise ClientError('Cannot retrieve a list of players without a valid session ID!')
+
+        json = {}
+
+        if resuming is not None:
+            if not isinstance(resuming, bool):
+                raise ValueError('resuming must be a bool!')
+
+            json['resuming'] = resuming
+
+        if timeout is not None:
+            if not isinstance(timeout, int) or timeout <= 0:
+                raise ValueError('timeout must be an int greater than 0!')
+
+            json['timeout'] = timeout
+
+        return await self._transport._request('PATCH', '/sessions/{}'.format(session_id))
+
     def __repr__(self):
         return '<Node name={0.name} region={0.region}>'.format(self)
+
+# TODO: update_session() perhaps belongs in client.
