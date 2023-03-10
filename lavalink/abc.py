@@ -122,9 +122,7 @@ class BasePlayer(ABC):
         await self.client.player_manager.destroy(self.guild_id)
 
     async def _voice_server_update(self, data):
-        event = data['event']
-
-        self._voice_state.update(endpoint=event['endpoint'], token=event['token'])
+        self._voice_state.update(endpoint=data['endpoint'], token=data['token'])
         await self._dispatch_voice_update()
 
     async def _voice_state_update(self, data):
