@@ -311,7 +311,7 @@ class Transport:
         request_url = '{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path)
 
         _log.debug('[Node:%s] Sending request to Lavalink with the following parameters: method=%s, url=%s, params=%s, json=%s',
-                   self._node.name, request_url, kwargs.get('params', {}), kwargs.get('json', {}))
+                   self._node.name, method, request_url, kwargs.get('params', {}), kwargs.get('json', {}))
 
         async with self._session.request(method=method, url=request_url,
                                          headers={'Authorization': self._password}, **kwargs) as res:
