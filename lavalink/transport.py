@@ -305,7 +305,7 @@ class Transport:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
         if trace is True:
-            kwargs['params'] = {**kwargs.get('params', {}), 'trace': True}
+            kwargs['params'] = {**kwargs.get('params', {}), 'trace': 'true'}
 
         async with self._session.request(method=method, url='{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
                                          headers={'Authorization': self._password}, **kwargs) as res:
