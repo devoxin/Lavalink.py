@@ -42,7 +42,8 @@ class BasePlayer(ABC):
         raise NotImplementedError
 
     async def play_track(self, track: str, start_time: Optional[int] = None, end_time: Optional[int] = None,
-                         no_replace: Optional[bool] = None, volume: Optional[int] = None, pause: Optional[bool] = None):
+                         no_replace: Optional[bool] = None, volume: Optional[int] = None, pause: Optional[bool] = None,
+                         **kwargs):
         """|coro|
 
         Plays the given track.
@@ -70,11 +71,14 @@ class BasePlayer(ABC):
             Whether to immediately pause the track after loading it.
             The default behaviour is to never pause.
             If left unspecified or ``None`` is provided, the default behaviour is exhibited.
+        **kwargs: :class:`any`
+            The kwargs to use when playing. You can specify any extra parameters that may be
+            used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
         """
         if track is None or not isinstance(track, str):
             raise ValueError('track must be a str')
 
-        options = {}
+        options = kwargs
 
         if start_time is not None:
             if not isinstance(start_time, int) or start_time < 0:

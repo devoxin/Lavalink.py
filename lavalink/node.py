@@ -284,7 +284,8 @@ class Node:
                             encoded_track: Optional[str] = '', identifier: Optional[str] = None,
                             position: Optional[int] = None, end_time: Optional[int] = None,
                             volume: Optional[int] = None, paused: Optional[bool] = None,
-                            filters: Optional[List[Filter]] = None, voice_state: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                            filters: Optional[List[Filter]] = None, voice_state: Optional[Dict[str, Any]] = None,
+                            **kwargs) -> Dict[str, Any]:
         """|coro|
 
         Update the state of a player.
@@ -322,6 +323,9 @@ class Node:
             The filters to apply to the player.
         voice_state: Optional[Dict[str, Any]]
             The new voice state of the player.
+        **kwargs: :class:`any`
+            The kwargs to use when updating the player. You can specify any extra parameters that may be
+            used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
 
         Returns
         -------
@@ -338,7 +342,7 @@ class Node:
             raise ValueError('encoded_track and identifier are mutually exclusive options, you may not specify both together.')
 
         params = {}
-        json = {}
+        json = kwargs
 
         if no_replace is not None and isinstance(no_replace, bool):
             params['noReplace'] = str(no_replace).lower()

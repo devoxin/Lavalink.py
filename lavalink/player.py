@@ -229,7 +229,7 @@ class DefaultPlayer(BasePlayer):
 
     async def play(self, track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict]] = None, start_time: Optional[int] = 0,
                    end_time: Optional[int] = None, no_replace: Optional[bool] = False, volume: Optional[int] = None,
-                   pause: Optional[bool] = False):
+                   pause: Optional[bool] = False, **kwargs):
         """|coro|
 
         Plays the given track.
@@ -266,6 +266,9 @@ class DefaultPlayer(BasePlayer):
             Whether to immediately pause the track after loading it.
             The default behaviour is to never pause.
             If left unspecified or ``None`` is provided, the default behaviour is exhibited.
+        **kwargs: :class:`any`
+            The kwargs to use when playing. You can specify any extra parameters that may be
+            used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
 
         Raises
         ------
@@ -326,7 +329,7 @@ class DefaultPlayer(BasePlayer):
             await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
             return
 
-        await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause)
+        await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause, **kwargs)
         await self.client._dispatch_event(TrackStartEvent(self, track))
         # TODO: Figure out a better solution for the above. Custom player implementations may neglect
         # to dispatch TrackStartEvent leading to confusion and poor user experience.
