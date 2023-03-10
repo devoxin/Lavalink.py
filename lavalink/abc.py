@@ -24,7 +24,7 @@ class BasePlayer(ABC):
         This could be None if the player isn't connected.
     """
     def __init__(self, guild_id: int, node: 'Node'):
-        self.client: 'Client' = node._manager.client
+        self.client: 'Client' = node.manager.client
         self.guild_id: int = guild_id
         self.node: 'Node' = node
         self.channel_id: Optional[int] = None
