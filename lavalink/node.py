@@ -356,10 +356,12 @@ class Node:
                 raise ValueError('identifier must be a str!')
 
             json['identifier'] = identifier
-        elif encoded_track is not None and not isinstance(encoded_track, str):
-            raise ValueError('encoded_track must be either be a str or None!')
         else:
-            json['encodedTrack'] = encoded_track
+            if encoded_track is not None and not isinstance(encoded_track, str):
+                raise ValueError('encoded_track must be either be a str or None!')
+
+            if encoded_track is None or len(encoded_track) > 0:
+                json['encodedTrack'] = encoded_track
 
         if position is not None:
             if not isinstance(position, int):
