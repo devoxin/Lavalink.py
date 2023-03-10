@@ -45,6 +45,7 @@ CLOSE_TYPES = (
     aiohttp.WSMsgType.CLOSED
 )
 MESSAGE_QUEUE_MAX_SIZE = 25
+TRACE_REQUESTS = False
 LAVALINK_API_VERSION = 'v4'
 
 
@@ -304,10 +305,15 @@ class Transport:
         if self._destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
-        if trace is True:
+        if trace is True or TRACE_REQUESTS is True:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': 'true'}
 
-        async with self._session.request(method=method, url='{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
+        request_url = '{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path)
+
+        _log.debug('[Node:%s] Sending request to Lavalink with the following parameters: method=%s, url=%s, params=%s, json=%s',
+                   self._node.name, request_url, kwargs.get('params', {}, kwargs.get('json', {})))
+
+        async with self._session.request(method=method, url=request_url,
                                          headers={'Authorization': self._password}, **kwargs) as res:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError

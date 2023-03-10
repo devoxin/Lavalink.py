@@ -330,7 +330,7 @@ class Node:
         if not session_id:
             raise ClientError('Cannot update the state of a player without a valid session ID!')
 
-        if encoded_track is not None and identifier is not None:
+        if encoded_track and identifier:
             raise ValueError('encoded_track and identifier are mutually exclusive options, you may not specify both together.')
 
         params = {}
