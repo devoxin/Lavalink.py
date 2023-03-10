@@ -221,7 +221,7 @@ class LoadResult:
     @classmethod
     def from_dict(cls, mapping: dict):
         load_type = LoadType.from_str(mapping.get('loadType'))
-        playlist_info = PlaylistInfo.from_dict(mapping.get('playlistInfo'))
+        playlist_info = PlaylistInfo.from_dict(mapping.get('playlistInfo', {}))
         tracks = [AudioTrack(track, 0) for track in mapping.get('tracks')]
         return cls(load_type, tracks, playlist_info)
 
