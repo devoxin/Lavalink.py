@@ -28,9 +28,9 @@ from typing import TYPE_CHECKING, Optional
 import aiohttp
 
 from .errors import AuthenticationError, RequestError
-from .events import (NodeReadyEvent, PlayerUpdateEvent, TrackEndEvent,
-                     TrackExceptionEvent, TrackStuckEvent,
-                     WebSocketClosedEvent)
+from .events import (NodeConnectedEvent, NodeDisconnectedEvent, NodeReadyEvent,
+                     PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
+                     TrackStuckEvent, WebSocketClosedEvent)
 from .player import AudioTrack
 from .stats import Stats
 
@@ -157,7 +157,7 @@ class Transport:
                 await asyncio.sleep(backoff)
             else:
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
-                await self._node.manager._node_connect(self._node)
+                await self.client._dispatch_event(NodeConnectedEvent(self._node))
 
                 if self._message_queue:
                     for message in self._message_queue:
@@ -198,7 +198,8 @@ class Transport:
         """
         _log.warning('[Node:%s] WebSocket disconnected with the following: code=%d reason=%s', self._node.name, code, reason)
         self._ws = None
-        await self._node.manager._node_disconnect(self._node, code, reason)
+        await self._node.manager._handle_node_disconnect(self._node, code, reason)
+        await self.client._dispatch_event(NodeDisconnectedEvent(self._node, code, reason))
 
     async def _handle_message(self, data: dict):
         """
@@ -213,6 +214,7 @@ class Transport:
 
         if op == 'ready':
             self.session_id = data['sessionId']
+            await self._node.manager._handle_node_ready(self._node)
             await self.client._dispatch_event(NodeReadyEvent(self, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])

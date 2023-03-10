@@ -24,7 +24,6 @@ SOFTWARE.
 import logging
 from typing import List, Optional
 
-from .events import NodeConnectedEvent, NodeDisconnectedEvent
 from .node import Node
 
 _log = logging.getLogger(__name__)
@@ -191,15 +190,7 @@ class NodeManager:
         best_node = min(nodes, key=lambda node: node.penalty)
         return best_node
 
-    async def _node_connect(self, node: Node):
-        """
-        Called when a node is connected from Lavalink.
-
-        Parameters
-        ----------
-        node: :class:`Node`
-            The node that has just connected.
-        """
+    async def _handle_node_ready(self, node: Node):
         for player in self._player_queue:
             await player.change_node(node)
             original_node_name = player._original_node.name if player._original_node else '[no node]'
@@ -211,9 +202,8 @@ class NodeManager:
                 player._original_node = None
 
         self._player_queue.clear()
-        await self.client._dispatch_event(NodeConnectedEvent(node))
 
-    async def _node_disconnect(self, node: Node, code: int, reason: str):
+    async def _handle_node_disconnect(self, node: Node):
         """
         Called when a node is disconnected from Lavalink.
 
@@ -231,8 +221,6 @@ class NodeManager:
                 await player.node_unavailable()
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('An error occurred whilst calling player.node_unavailable()')
-
-        await self.client._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
 

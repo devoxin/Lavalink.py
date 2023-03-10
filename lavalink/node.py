@@ -21,13 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from .abc import BasePlayer, Filter
 from .errors import ClientError, RequestError
-from .server import AudioTrack, LoadResult, Plugin
+from .server import AudioTrack, LoadResult
 from .stats import Stats
 from .transport import Transport
+
+if TYPE_CHECKING:
+    from .client import Client
+    from .nodemanager import NodeManager
 
 
 class Node:
@@ -49,8 +53,8 @@ class Node:
     """
     def __init__(self, manager, host: str, port: int, password: str, region: str, name: str = None,
                  ssl: bool = False):
-        self.client = manager.client
-        self.manager = manager
+        self.client: 'Client' = manager.client
+        self.manager: 'NodeManager' = manager
         self._transport = Transport(self, host, port, password, ssl)
 
         self.region: str = region
