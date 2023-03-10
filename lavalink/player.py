@@ -588,7 +588,7 @@ class DefaultPlayer(BasePlayer):
         await self._apply_filters()
 
     async def _apply_filters(self):
-        await self.node.update_player(self._internal_id, filters=self.filters)
+        await self.node.update_player(self._internal_id, filters=list(self.filters.values()))
 
     async def _handle_event(self, event):
         """
