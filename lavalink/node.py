@@ -305,12 +305,11 @@ class Node:
             Whether to replace the currently playing track with the new track.
         encoded_track: Optional[str]
             The base64-encoded track string to play.
+            You may provide ``None`` to stop the player.
 
             Warning
             -------
             This option is mutually exclusive with ``identifier``. You cannot provide both options.
-
-            You may provide ``None`` to stop the player.
         identifier: Optional[str]
             The identifier of the track to play. This can be a track ID or URL. It may not be a
             search query or playlist link. If it yields a search, playlist, or no track, a :class:`RequestError`

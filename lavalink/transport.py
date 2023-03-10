@@ -50,6 +50,9 @@ LAVALINK_API_VERSION = 'v4'
 
 class Transport:
     """ The class responsible for dealing with connections to Lavalink. """
+    __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', '_host', '_port',
+                 '_password', '_ssl', 'session_id', '_destroyed')
+
     def __init__(self, node, host: str, port: int, password: str, ssl: bool):
         self.client: 'Client' = node.manager.client
         self._node: Node = node
@@ -114,8 +117,8 @@ class Transport:
             'Client-Name': 'Lavalink.py/5.0.0'  # TODO: Do __NOT__ hardcode this!
         }
 
-        if self._session_id is not None:
-            headers['Session-Id'] = self._session_id
+        if self.session_id is not None:
+            headers['Session-Id'] = self.session_id
 
         _log.info('[Node:%s] Establishing WebSocket connection to Lavalink...', self._node.name)
 
@@ -208,7 +211,7 @@ class Transport:
         op = data['op']
 
         if op == 'ready':
-            self._session_id = data['sessionId']
+            self.session_id = data['sessionId']
             self.client._dispatch_event(NodeReadyEvent(self, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
