@@ -94,7 +94,7 @@ class AudioTrack:
             self._raw = data
 
             info = data.get('info', data)
-            self.track: Optional[str] = data.get('track')
+            self.track: Optional[str] = data.get('track', data.get('encoded'))
             self.identifier: str = info['identifier']
             self.is_seekable: bool = info['isSeekable']
             self.author: str = info['author']
