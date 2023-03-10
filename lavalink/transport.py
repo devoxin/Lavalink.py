@@ -212,7 +212,7 @@ class Transport:
 
         if op == 'ready':
             self.session_id = data['sessionId']
-            self.client._dispatch_event(NodeReadyEvent(self, data['sessionId'], data['resumed']))
+            await self.client._dispatch_event(NodeReadyEvent(self, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
             player = self.client.player_manager.get(guild_id)
