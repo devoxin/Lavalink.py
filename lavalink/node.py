@@ -240,18 +240,6 @@ class Node:
     #     """
     #     return await self._transport._request('GET', '/stats')
 
-    async def get_plugins(self) -> List[Plugin]:
-        """|coro|
-
-        Retrieves a list of plugins active on this node.
-
-        Returns
-        -------
-        List[:class:`Plugin`]
-            A list of active plugins.
-        """
-        return list(map(Plugin, await self._transport._request('GET', '/plugins')))
-
     async def get_player(self, guild_id: Union[str, int]) -> Dict[str, Any]:
         """|coro|
 
