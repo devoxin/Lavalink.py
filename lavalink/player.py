@@ -228,7 +228,7 @@ class DefaultPlayer(BasePlayer):
             self.queue.insert(index, at)
 
     async def play(self, track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict]] = None, start_time: Optional[int] = 0,
-                   end_time: Optional[int] = 0, no_replace: Optional[bool] = False, volume: Optional[int] = None,
+                   end_time: Optional[int] = None, no_replace: Optional[bool] = False, volume: Optional[int] = None,
                    pause: Optional[bool] = False):
         """|coro|
 
