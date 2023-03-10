@@ -352,7 +352,7 @@ class Node:
                 json['encodedTrack'] = encoded_track
 
         if position is not None:
-            if not isinstance(position, int):
+            if not isinstance(position, (int, float)):
                 raise ValueError('position must be an int!')
 
             json['position'] = position
@@ -371,7 +371,7 @@ class Node:
 
         if paused is not None:
             if not isinstance(paused, bool):
-                raise ValueError('position must be a bool!')
+                raise ValueError('paused must be a bool!')
 
             json['paused'] = paused
 
