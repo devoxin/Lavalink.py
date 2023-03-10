@@ -349,7 +349,7 @@ class Node:
         json = {}
 
         if no_replace is not None and isinstance(no_replace, bool):
-            params['noReplace'] = no_replace
+            params['noReplace'] = str(no_replace).lower()
 
         if identifier is not None:
             if not isinstance(identifier, str):
