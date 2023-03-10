@@ -199,7 +199,7 @@ class LoadResult:
         The load type of this result.
     tracks: List[Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`]]
         The tracks in this result.
-    playlist_info: :class:`PlaylistInfo`
+    playlist_info: Optional[:class:`PlaylistInfo`]
         The playlist metadata for this result.
         The :class:`PlaylistInfo` could contain empty/false data if the :class:`LoadType`
         is not :enum:`LoadType.PLAYLIST`.
@@ -221,7 +221,7 @@ class LoadResult:
     @classmethod
     def from_dict(cls, mapping: dict):
         load_type = LoadType.from_str(mapping.get('loadType'))
-        playlist_info = PlaylistInfo.from_dict(mapping.get('playlistInfo', {}))
+        playlist_info = PlaylistInfo.from_dict(mapping.get('playlistInfo')) if mapping.get('playlistInfo') is not None else None
         tracks = [AudioTrack(track, 0) for track in mapping.get('tracks')]
         return cls(load_type, tracks, playlist_info)
 
