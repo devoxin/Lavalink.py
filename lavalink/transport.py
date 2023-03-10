@@ -129,7 +129,7 @@ class Transport:
         while not self.ws_connected:
             attempt += 1
             try:
-                self._ws = await self._session.ws_connect('{}://{}:{}'.format(protocol, self._host, self._port),
+                self._ws = await self._session.ws_connect('{}://{}:{}/{}/websocket'.format(protocol, self._host, self._port, LAVALINK_API_VERSION),
                                                           headers=headers,
                                                           heartbeat=60)
             except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as ce:

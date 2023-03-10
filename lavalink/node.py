@@ -227,7 +227,7 @@ class Node:
         """
         return await self._transport._request('GET', '/stats')
 
-# TODO: Special handling for this, as it's not JSON.
+# TODO: Special handling for this, as it's not JSON. Also, this doesn't require a versioned route.
     # async def get_version(self) -> str:
     #     """|coro|
 
