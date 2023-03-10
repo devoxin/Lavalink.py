@@ -451,7 +451,10 @@ class Node:
 
             json['timeout'] = timeout
 
-        return await self._transport._request('PATCH', '/sessions/{}'.format(session_id))
+        if not json:
+            return
+
+        return await self._transport._request('PATCH', '/sessions/{}'.format(session_id), json=json)
 
     def __repr__(self):
         return '<Node name={0.name} region={0.region}>'.format(self)
