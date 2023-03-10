@@ -336,7 +336,7 @@ class DefaultPlayer(BasePlayer):
 
         Stops the player.
         """
-        await self.node._send(op='stop', guildId=self._internal_id)
+        await self.node.update_player(self._internal_id, encoded_track=None)
         self.current = None
 
     async def skip(self):
@@ -403,8 +403,8 @@ class DefaultPlayer(BasePlayer):
         pause: :class:`bool`
             Whether to pause the player or not.
         """
+        await self.node.update_player(self._internal_id, paused=pause)
         self.paused = pause
-        await self.node._send(op='pause', guildId=self._internal_id, pause=pause)
 
     async def set_volume(self, vol: int):
         """|coro|
@@ -420,8 +420,9 @@ class DefaultPlayer(BasePlayer):
         vol: :class:`int`
             The new volume level.
         """
-        self.volume = max(min(vol, 1000), 0)
-        await self.node._send(op='volume', guildId=self._internal_id, volume=self.volume)
+        vol = max(min(vol, 1000), 0)
+        await self.node.update_player(self._internal_id, volume=vol)
+        self.volume = vol
 
     async def seek(self, position: int):
         """|coro|
@@ -433,7 +434,7 @@ class DefaultPlayer(BasePlayer):
         position: :class:`int`
             The new position to seek to in milliseconds.
         """
-        await self.node._send(op='seek', guildId=self._internal_id, position=position)
+        await self.node.update_player(self._internal_id, position=position)
 
     async def set_filter(self, _filter: Filter):
         """|coro|
@@ -587,12 +588,7 @@ class DefaultPlayer(BasePlayer):
         await self._apply_filters()
 
     async def _apply_filters(self):
-        payload = {}
-
-        for _filter in self.filters.values():
-            payload.update(_filter.serialize())
-
-        await self.node._send(op='filters', guildId=self._internal_id, **payload)
+        await self.node.update_player(self._internal_id, filters=self.filters)
 
     async def _handle_event(self, event):
         """
@@ -639,7 +635,7 @@ class DefaultPlayer(BasePlayer):
             The node the player is changed to.
         """
         if self.node.available:
-            await self.node._send(op='destroy', guildId=self._internal_id)
+            await self.node.destroy_player(self._internal_id)
 
         old_node = self.node
         self.node = node
@@ -653,16 +649,11 @@ class DefaultPlayer(BasePlayer):
             if isinstance(self.current, DeferredAudioTrack) and playable_track is None:
                 playable_track = await self.current.load(self.client)
 
-            await self.node._send(op='play', guildId=self._internal_id, track=playable_track, startTime=self.position)
+            await self.node.update_player(self._internal_id, encoded_track=playable_track, position=self.position,
+                                          paused=self.paused, volume=self.volume)
             self._last_update = time() * 1000
 
-            if self.paused:
-                await self.node._send(op='pause', guildId=self._internal_id, pause=self.paused)
-
         self._internal_pause = False
-
-        if self.volume != 100:
-            await self.node._send(op='volume', guildId=self._internal_id, volume=self.volume)
 
         if self.filters:
             await self._apply_filters()

@@ -77,6 +77,9 @@ All Events are derived from :class:`Event`
 .. autoclass:: NodeChangedEvent
     :members:
 
+.. autoclass:: NodeReadyEvent
+    :members:
+
 .. autoclass:: WebSocketClosedEvent
     :members:
 

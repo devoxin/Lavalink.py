@@ -28,8 +28,9 @@ from typing import TYPE_CHECKING, Optional
 import aiohttp
 
 from .errors import AuthenticationError, RequestError
-from .events import (PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
-                     TrackStuckEvent, WebSocketClosedEvent)
+from .events import (NodeReadyEvent, PlayerUpdateEvent, TrackEndEvent,
+                     TrackExceptionEvent, TrackStuckEvent,
+                     WebSocketClosedEvent)
 from .player import AudioTrack
 from .stats import Stats
 
@@ -43,7 +44,7 @@ CLOSE_TYPES = (
     aiohttp.WSMsgType.CLOSING,
     aiohttp.WSMsgType.CLOSED
 )
-MESSAGE_QUEUE_MAX_SIZE = 100
+MESSAGE_QUEUE_MAX_SIZE = 25
 LAVALINK_API_VERSION = 'v4'
 
 
@@ -205,12 +206,10 @@ class Transport:
             The data given from Lavalink.
         """
         op = data['op']
-        # handle ready op with sessionId etc.
 
         if op == 'ready':
             self._session_id = data['sessionId']
-            # TODO: Dispatch Node ready event.
-            # data['resumed']
+            self.client._dispatch_event(NodeReadyEvent(self, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
             player = self.client.player_manager.get(guild_id)

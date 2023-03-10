@@ -288,11 +288,11 @@ class Node:
 
         return await self._transport._request('GET', '/sessions/{}/players'.format(session_id))
 
-    async def update_player(self, guild_id: Union[str, int], no_replace: Optional[bool] = None,
-                            encoded_track: Optional[str] = None, identifier: Optional[str] = None,
+    async def update_player(self, guild_id: Union[str, int], no_replace: Optional[bool] = None,  # pylint: disable=too-many-locals
+                            encoded_track: Optional[str] = '', identifier: Optional[str] = None,
                             position: Optional[int] = None, end_time: Optional[int] = None,
                             volume: Optional[int] = None, paused: Optional[bool] = None,
-                            filters: Optional[List[Filter]] = None) -> Dict[str, Any]:
+                            filters: Optional[List[Filter]] = None, voice_state: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """|coro|
 
         Update the state of a player.
@@ -309,6 +309,8 @@ class Node:
             Warning
             -------
             This option is mutually exclusive with ``identifier``. You cannot provide both options.
+
+            You may provide ``None`` to stop the player.
         identifier: Optional[str]
             The identifier of the track to play. This can be a track ID or URL. It may not be a
             search query or playlist link. If it yields a search, playlist, or no track, a :class:`RequestError`
@@ -327,6 +329,8 @@ class Node:
             Whether to pause the player.
         filters: Optional[List[:class:`Filter`]]
             The filters to apply to the player.
+        voice_state: Optional[Dict[str, Any]]
+            The new voice state of the player.
 
         Returns
         -------
@@ -348,16 +352,15 @@ class Node:
         if no_replace is not None and isinstance(no_replace, bool):
             params['noReplace'] = no_replace
 
-        if encoded_track is not None:
-            if not isinstance(encoded_track, str):
-                raise ValueError('encoded_track must be a str!')
-
-            json['encodedTrack'] = encoded_track
-        elif identifier is not None:
+        if identifier is not None:
             if not isinstance(identifier, str):
                 raise ValueError('identifier must be a str!')
 
             json['identifier'] = identifier
+        elif encoded_track is not None and not isinstance(encoded_track, str):
+            raise ValueError('encoded_track must be either be a str or None!')
+        else:
+            json['encodedTrack'] = encoded_track
 
         if position is not None:
             if not isinstance(position, int):
@@ -392,6 +395,12 @@ class Node:
                 serialized.update(f.serialize())
 
             json['filters'] = serialized
+
+        if voice_state is not None:
+            if not isinstance(voice_state, dict):
+                raise ValueError('voice_state must be a dict!')
+
+            json['voice'] = voice_state
 
         if not json:
             return

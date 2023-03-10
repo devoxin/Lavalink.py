@@ -79,32 +79,35 @@ class BasePlayer(ABC):
         if start_time is not None:
             if not isinstance(start_time, int) or start_time < 0:
                 raise ValueError('start_time must be an int with a value equal to, or greater than 0')
-            options['startTime'] = start_time
+
+            options['position'] = start_time
 
         if end_time is not None:
             if not isinstance(end_time, int) or not end_time >= 1:
                 raise ValueError('end_time must be an int with a value equal to, or greater than 1')
 
-            if end_time > 0:
-                options['endTime'] = end_time
+            options['end_time'] = end_time
 
         if no_replace is not None:
             if not isinstance(no_replace, bool):
                 raise TypeError('no_replace must be a bool')
-            options['noReplace'] = no_replace
+
+            options['no_replace'] = no_replace
 
         if volume is not None:
             if not isinstance(volume, int):
                 raise TypeError('volume must be an int')
+
             self.volume = max(min(volume, 1000), 0)
             options['volume'] = self.volume
 
         if pause is not None:
             if not isinstance(pause, bool):
                 raise TypeError('pause must be a bool')
-            options['pause'] = pause
 
-        await self.node._send(op='play', guildId=self._internal_id, track=track, **options)
+            options['paused'] = pause
+
+        await self.node.update_player(self._internal_id, encoded_track=track, **options)
 
     def cleanup(self):
         pass
@@ -119,10 +122,9 @@ class BasePlayer(ABC):
         await self.client.player_manager.destroy(self.guild_id)
 
     async def _voice_server_update(self, data):
-        self._voice_state.update({
-            'event': data
-        })
+        event = data['event']
 
+        self._voice_state.update(endpoint=event['endpoint'], token=event['token'])
         await self._dispatch_voice_update()
 
     async def _voice_state_update(self, data):
@@ -134,15 +136,13 @@ class BasePlayer(ABC):
             return
 
         if data['session_id'] != self._voice_state.get('sessionId'):
-            self._voice_state.update({
-                'sessionId': data['session_id']
-            })
+            self._voice_state.update(sessionId=data['session_id'])
 
             await self._dispatch_voice_update()
 
     async def _dispatch_voice_update(self):
-        if {'sessionId', 'event'} == self._voice_state.keys():
-            await self.node._send(op='voiceUpdate', guildId=self._internal_id, **self._voice_state)
+        if {'sessionId', 'endpoint', 'token'} == self._voice_state.keys():
+            await self.node.update_player(self._internal_id, voice_state=self._voice_state)
 
     @abstractmethod
     async def node_unavailable(self):
