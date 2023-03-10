@@ -52,10 +52,10 @@ class Node:
         The statistics of how the :class:`Node` is performing.
     """
     def __init__(self, manager, host: str, port: int, password: str, region: str, name: str = None,
-                 ssl: bool = False):
+                 ssl: bool = False, session_id: Optional[str] = None):
         self.client: 'Client' = manager.client
         self.manager: 'NodeManager' = manager
-        self._transport = Transport(self, host, port, password, ssl)
+        self._transport = Transport(self, host, port, password, ssl, session_id)
 
         self.region: str = region
         self.name: str = name or '{}-{}:{}'.format(region, host, port)

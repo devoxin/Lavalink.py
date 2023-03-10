@@ -27,7 +27,7 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import List, Set, Union
+from typing import List, Optional, Set, Union
 
 import aiohttp
 
@@ -171,8 +171,10 @@ class Client:
         self.sources.add(source)
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
-                 ssl: bool = False):
+                 ssl: bool = False, session_id: Optional[str] = None):
         """
+        Shortcut for :meth:`NodeManager.add_node`.
+
         Adds a node to Lavalink's node manager.
 
         Parameters
@@ -191,8 +193,11 @@ class Client:
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
+        session_id: Optional[:class:`str`]
+            The ID of the session to resume. Defaults to ``None``.
+            Only specify this if you have the ID of the session you want to resume.
         """
-        self.node_manager.add_node(host, port, password, region, name, ssl)
+        self.node_manager.add_node(host, port, password, region, name, ssl, session_id)
 
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|

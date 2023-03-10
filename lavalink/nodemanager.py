@@ -74,7 +74,8 @@ class NodeManager:
         """
         return [n for n in self.nodes if n.available]
 
-    def add_node(self, host: str, port: int, password: str, region: str, name: str = None, ssl: bool = False):
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+                 ssl: bool = False, session_id: Optional[str] = None):
         """
         Adds a node to Lavalink's node manager.
 
@@ -97,8 +98,11 @@ class NodeManager:
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
+        session_id: Optional[:class:`str`]
+            The ID of the session to resume. Defaults to ``None``.
+            Only specify this if you have the ID of the session you want to resume.
         """
-        node = Node(self, host, port, password, region, name, ssl)
+        node = Node(self, host, port, password, region, name, ssl, session_id)
         self.nodes.append(node)
 
         _log.info('Added node \'%s\'', node.name)

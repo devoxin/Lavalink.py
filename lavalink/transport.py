@@ -54,7 +54,7 @@ class Transport:
     __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', '_host', '_port',
                  '_password', '_ssl', 'session_id', '_destroyed')
 
-    def __init__(self, node, host: str, port: int, password: str, ssl: bool):
+    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str]):
         self.client: 'Client' = node.manager.client
         self._node: Node = node
 
@@ -67,7 +67,7 @@ class Transport:
         self._password: str = password
         self._ssl: bool = ssl
 
-        self.session_id: Optional[str] = None
+        self.session_id: Optional[str] = session_id
         self._destroyed: bool = False
 
         self.connect()
