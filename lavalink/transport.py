@@ -115,7 +115,7 @@ class Transport:
         headers = {
             'Authorization': self._password,
             'User-Id': str(self.client._user_id),
-            'Client-Name': 'Lavalink.py/5.0.0'  # TODO: Do __NOT__ hardcode this!
+            'Client-Name': 'Lavalink.py/{}'.format(__import__('lavalink').__version__)
         }
 
         if self.session_id is not None:
@@ -165,6 +165,7 @@ class Transport:
 
                     self._message_queue.clear()
 
+                attempt = 0
                 await self._listen()
 
     async def _listen(self):
@@ -177,7 +178,9 @@ class Transport:
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 exc = self._ws.exception()
                 _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
-                break
+                await self.close(code=aiohttp.WSCloseCode.INTERNAL_ERROR)
+                await self._websocket_closed(aiohttp.WSCloseCode.INTERNAL_ERROR, 'WebSocket error')
+                return
             elif msg.type in CLOSE_TYPES:
                 _log.debug('[Node:%s] Received close frame with code %d.', self._node.name, msg.data)
                 await self._websocket_closed(msg.data, msg.extra)
@@ -185,7 +188,7 @@ class Transport:
 
         await self._websocket_closed(self._ws.close_code, 'AsyncIterator loop exited')
 
-    async def _websocket_closed(self, code: int = None, reason: str = None):
+    async def _websocket_closed(self, code: Optional[int] = None, reason: Optional[str] = None):
         """
         Handles when the websocket is closed.
 
