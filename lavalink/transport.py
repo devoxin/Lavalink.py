@@ -170,6 +170,9 @@ class Transport:
 
     async def _listen(self):
         """ Listens for websocket messages. """
+        close_code = None
+        close_reason = 'listen() loop exited'
+
         async for msg in self._ws:
             _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
 
@@ -178,15 +181,18 @@ class Transport:
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 exc = self._ws.exception()
                 _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
-                await self.close(code=aiohttp.WSCloseCode.INTERNAL_ERROR)
-                await self._websocket_closed(aiohttp.WSCloseCode.INTERNAL_ERROR, 'WebSocket error')
-                return
+                close_code = aiohttp.WSCloseCode.INTERNAL_ERROR
+                close_reason = 'WebSocket error'
+                break
             elif msg.type in CLOSE_TYPES:
                 _log.debug('[Node:%s] Received close frame with code %d.', self._node.name, msg.data)
-                await self._websocket_closed(msg.data, msg.extra)
-                return
+                close_code = msg.data
+                close_reason = msg.extra
+                break
 
-        await self._websocket_closed(self._ws.close_code, 'AsyncIterator loop exited')
+        close_code = close_code or self._ws.close_code
+        await self.close(close_code)
+        await self._websocket_closed(close_code, close_reason)
 
     async def _websocket_closed(self, code: Optional[int] = None, reason: Optional[str] = None):
         """
