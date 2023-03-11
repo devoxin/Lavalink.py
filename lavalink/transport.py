@@ -191,7 +191,7 @@ class Transport:
                 break
 
         close_code = close_code or self._ws.close_code
-        await self.close(close_code)
+        await self.close(close_code or aiohttp.WSCloseCode.OK)
         await self._websocket_closed(close_code, close_reason)
 
     async def _websocket_closed(self, code: Optional[int] = None, reason: Optional[str] = None):
