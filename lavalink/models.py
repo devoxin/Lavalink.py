@@ -664,6 +664,38 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
+    def remove(self, index: int = 0) -> Optional[AudioTrack]:
+        """
+        Removes a track from the queue by index.
+
+        Parameters
+        ----------
+        index: Optional[:class:`int`]
+            The index at which to remove the track.
+            If index is left unspecified, the default behaviour is to remove the first track on the queue.
+            Defaults to ``0``.
+
+        Raises
+        ------
+        :class:`ValueError`
+            If index is not an integer.
+        :class:`IndexError`
+            If index is negative or larger than len queue
+
+        Returns
+        -------
+        Optional[:class:`AudioTrack`]
+        """
+
+        if not self.queue:
+            return None
+        if not isinstance(index, int):
+            raise ValueError('Index must be an interger!')
+        if not 0 <= index < len(self.queue):
+            raise IndexError('Invalid index!')
+
+        return self.queue.pop(index)
+
     async def play(self, track: Optional[Union[AudioTrack, DeferredAudioTrack, Dict]] = None, start_time: Optional[int] = 0,
                    end_time: Optional[int] = None, no_replace: Optional[bool] = False, volume: Optional[int] = None,
                    pause: Optional[bool] = False):
