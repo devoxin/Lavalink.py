@@ -82,7 +82,6 @@ class Client:
     player_manager: :class:`PlayerManager`
         Represents the player manager that contains all the players.
     """
-    _instances = []
 
     def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
                  connect_back: bool = False):
@@ -100,7 +99,6 @@ class Client:
         self.node_manager: NodeManager = NodeManager(self, regions)
         self.player_manager: PlayerManager = PlayerManager(self, player)
         self.sources: Set[Source] = set()
-        self._instances.append(self)
 
     def add_event_hook(self, *hooks, event: Event = None):
         """

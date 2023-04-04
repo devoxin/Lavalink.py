@@ -89,26 +89,3 @@ def listener(*events: Event):
         setattr(func, '_lavalink_events', events)
         return func
     return wrapper
-
-
-def add_event_hook(*hooks, event: Event = None):
-    """
-    Adds an event hook to be dispatched on an event.
-
-    Note
-    ----
-    Track event dispatch order is not guaranteed!
-    For example, this means you could receive a :class:`TrackStartEvent` before you receive a
-    :class:`TrackEndEvent` when executing operations such as ``skip()``.
-
-    Parameters
-    ----------
-    hooks: :class:`function`
-        The hooks to register for the given event type.
-        If ``event`` parameter is left empty, then it will run when any event is dispatched.
-    event: :class:`Event`
-        The event the hook belongs to. This will dispatch when that specific event is
-        dispatched. Defaults to ``None`` which means the hook is dispatched on all events.
-    """
-    for instance in Client._instances:
-        instance.add_event_hook(*hooks, event=event)
