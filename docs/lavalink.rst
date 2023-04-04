@@ -7,8 +7,6 @@ Documentation
 
 .. autofunction:: listener
 
-.. autofunction:: add_event_hook
-
 ABC
 ---
 .. autoclass:: BasePlayer
