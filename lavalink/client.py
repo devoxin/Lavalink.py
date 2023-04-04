@@ -117,7 +117,7 @@ class Client:
             The hooks to register for the given event type.
             If ``event`` parameter is left empty, then it will run when any event is dispatched.
         event: :class:`Event`
-            The event the hook belongs to. This will dispatch when that specific event is
+            The event the hooks belong to. They will be called when that specific event type is
             dispatched. Defaults to ``None`` which means the hook is dispatched on all events.
         """
         if event is not None and Event not in event.__bases__:
