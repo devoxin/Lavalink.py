@@ -1,0 +1,6 @@
+[MESSAGES CONTROL]
+disable=
+    consider-using-f-string,
+    unbalanced-tuple-unpacking,
+    consider-using-in,
+    consider-using-with,

@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
+from typing import List, Optional
 
-from .events import NodeConnectedEvent, NodeDisconnectedEvent
 from .node import Node
 
 _log = logging.getLogger(__name__)
@@ -63,12 +63,19 @@ class NodeManager:
             yield n
 
     @property
-    def available_nodes(self):
-        """ Returns a list of available nodes. """
+    def available_nodes(self) -> List[Node]:
+        """
+        Returns a list of available nodes.
+
+        .. deprecated:: 5.0.0
+            As of Lavalink server 4.0.0, a WebSocket connection is no longer required to operate a
+            node. As a result, this property is no longer considered useful as all nodes are considered
+            available.
+        """
         return [n for n in self.nodes if n.available]
 
-    def add_node(self, host: str, port: int, password: str, region: str, resume_key: str = None,
-                 resume_timeout: int = 60, name: str = None, ssl: bool = False):
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+                 ssl: bool = False, session_id: Optional[str] = None):
         """
         Adds a node to Lavalink's node manager.
 
@@ -82,12 +89,6 @@ class NodeManager:
             The password used for authentication.
         region: :class:`str`
             The region to assign this node to.
-        resume_key: Optional[:class:`str`]
-            A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-            Defaults to ``None``.
-        resume_timeout: Optional[:class:`int`]
-            How long the node should wait for a connection while disconnected before clearing all players.
-            Defaults to ``60``.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
         reconnect_attempts: Optional[:class:`int`]
@@ -97,8 +98,11 @@ class NodeManager:
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
+        session_id: Optional[:class:`str`]
+            The ID of the session to resume. Defaults to ``None``.
+            Only specify this if you have the ID of the session you want to resume.
         """
-        node = Node(self, host, port, password, region, resume_key, resume_timeout, name, ssl)
+        node = Node(self, host, port, password, region, name, ssl, session_id)
         self.nodes.append(node)
 
         _log.info('Added node \'%s\'', node.name)
@@ -117,7 +121,7 @@ class NodeManager:
         self.nodes.remove(node)
         _log.info('Removed node \'%s\'', node.name)
 
-    def get_nodes_by_region(self, region_key: str):
+    def get_nodes_by_region(self, region_key: str) -> List[Node]:
         """
         Get a list of nodes by their region.
         This does not account for node availability, so the nodes returned
@@ -137,7 +141,7 @@ class NodeManager:
         """
         return [n for n in self.nodes if n.region == region_key]
 
-    def get_region(self, endpoint: str):
+    def get_region(self, endpoint: str) -> str:
         """
         Returns a Lavalink.py-friendly region from a Discord voice server address.
 
@@ -164,7 +168,7 @@ class NodeManager:
 
         return None
 
-    def find_ideal_node(self, region: str = None):
+    def find_ideal_node(self, region: str = None) -> Optional[Node]:
         """
         Finds the best (least used) node in the given region, if applicable.
 
@@ -190,15 +194,7 @@ class NodeManager:
         best_node = min(nodes, key=lambda node: node.penalty)
         return best_node
 
-    async def _node_connect(self, node: Node):
-        """
-        Called when a node is connected from Lavalink.
-
-        Parameters
-        ----------
-        node: :class:`Node`
-            The node that has just connected.
-        """
+    async def _handle_node_ready(self, node: Node):
         for player in self._player_queue:
             await player.change_node(node)
             original_node_name = player._original_node.name if player._original_node else '[no node]'
@@ -210,9 +206,8 @@ class NodeManager:
                 player._original_node = None
 
         self._player_queue.clear()
-        await self.client._dispatch_event(NodeConnectedEvent(node))
 
-    async def _node_disconnect(self, node: Node, code: int, reason: str):
+    async def _handle_node_disconnect(self, node: Node):
         """
         Called when a node is disconnected from Lavalink.
 
@@ -230,8 +225,6 @@ class NodeManager:
                 await player.node_unavailable()
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('An error occurred whilst calling player.node_unavailable()')
-
-        await self.client._dispatch_event(NodeDisconnectedEvent(node, code, reason))
 
         best_node = self.find_ideal_node(node.region)
 

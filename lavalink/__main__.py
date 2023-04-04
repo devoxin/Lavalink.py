@@ -22,7 +22,7 @@ info     - Extracts version and build information from an existing Lavalink.jar.
 
 
 def download(dl_url, path):
-    res = requests.get(dl_url, stream=True)
+    res = requests.get(dl_url, stream=True, timeout=30)
 
     def report_progress(cur, tot):
         bar_len = 32

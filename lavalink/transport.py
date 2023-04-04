@@ -23,14 +23,20 @@ SOFTWARE.
 """
 import asyncio
 import logging
+from typing import TYPE_CHECKING, Optional
 
 import aiohttp
 
 from .errors import AuthenticationError, RequestError
-from .events import (PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
+from .events import (NodeConnectedEvent, NodeDisconnectedEvent, NodeReadyEvent,
+                     PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStuckEvent, WebSocketClosedEvent)
+from .player import AudioTrack
 from .stats import Stats
-from .utils import decode_track
+
+if TYPE_CHECKING:
+    from .client import Client
+    from .node import Node
 
 _log = logging.getLogger(__name__)
 CLOSE_TYPES = (
@@ -38,30 +44,31 @@ CLOSE_TYPES = (
     aiohttp.WSMsgType.CLOSING,
     aiohttp.WSMsgType.CLOSED
 )
-MESSAGE_QUEUE_MAX_SIZE = 100
+MESSAGE_QUEUE_MAX_SIZE = 25
+TRACE_REQUESTS = False
 LAVALINK_API_VERSION = 'v4'
 
 
 class Transport:
     """ The class responsible for dealing with connections to Lavalink. """
-    def __init__(self, node, host: str, port: int, password: str, ssl: bool,
-                 resume_key: str, resume_timeout: int):
-        self.client = node.manager.client
-        self._node = node
+    __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', '_host', '_port',
+                 '_password', '_ssl', 'session_id', '_destroyed')
 
-        self._session = self.client._session
+    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str]):
+        self.client: 'Client' = node.manager.client
+        self._node: Node = node
+
+        self._session: aiohttp.ClientSession = self.client._session
         self._ws = None
         self._message_queue = []
 
-        self._host = host
-        self._port = port
-        self._password = password
-        self._ssl = ssl
+        self._host: str = host
+        self._port: int = port
+        self._password: str = password
+        self._ssl: bool = ssl
 
-        self._resume_key = resume_key
-        self._resume_timeout = resume_timeout
-        self._resuming_configured = False
-        self._destroyed = False
+        self.session_id: Optional[str] = session_id
+        self._destroyed: bool = False
 
         self.connect()
 
@@ -96,31 +103,36 @@ class Transport:
         """
         self._destroyed = True
         await self.close()
+        await self._session.close()
 
     async def _connect(self):
+        if self._destroyed:
+            raise IOError('Cannot instantiate any connections with a closed session!')
+
         if self._ws:
             await self.close()
 
         headers = {
             'Authorization': self._password,
             'User-Id': str(self.client._user_id),
-            'Client-Name': 'Lavalink.py'
+            'Client-Name': 'Lavalink.py/{}'.format(__import__('lavalink').__version__)
         }
-        # TODO: 'User-Agent': 'Lavalink.py/{} (https://github.com/devoxin/lavalink.py)'.format(__version__)
 
-        if self._resuming_configured and self._resume_key:
-            headers['Resume-Key'] = self._resume_key
+        if self.session_id is not None:
+            headers['Session-Id'] = self.session_id
 
         _log.info('[Node:%s] Establishing WebSocket connection to Lavalink...', self._node.name)
 
         protocol = 'wss' if self._ssl else 'ws'
         attempt = 0
 
-        while not self.ws_connected and not self._destroyed:
+        # TODO: Bring back max reconnect attempts?
+        while not self.ws_connected:
             attempt += 1
             try:
-                self._ws = await self._session.ws_connect('{}://{}:{}'.format(protocol, self._host, self._port),
-                                                          headers=headers, heartbeat=60)
+                self._ws = await self._session.ws_connect('{}://{}:{}/{}/websocket'.format(protocol, self._host, self._port, LAVALINK_API_VERSION),
+                                                          headers=headers,
+                                                          heartbeat=60)
             except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as ce:
                 if isinstance(ce, aiohttp.ClientConnectorError):
                     _log.warning('[Node:%s] Invalid response received; this may indicate that '
@@ -145,12 +157,7 @@ class Transport:
                 await asyncio.sleep(backoff)
             else:
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
-                await self._node.manager._node_connect(self._node)
-
-                if not self._resuming_configured and self._resume_key \
-                        and (self._resume_timeout and self._resume_timeout > 0):
-                    await self._send(op='configureResuming', key=self._resume_key, timeout=self._resume_timeout)
-                    self._resuming_configured = True
+                await self.client._dispatch_event(NodeConnectedEvent(self._node))
 
                 if self._message_queue:
                     for message in self._message_queue:
@@ -158,10 +165,14 @@ class Transport:
 
                     self._message_queue.clear()
 
+                attempt = 0
                 await self._listen()
 
     async def _listen(self):
         """ Listens for websocket messages. """
+        close_code = None
+        close_reason = 'listen() loop exited'
+
         async for msg in self._ws:
             _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
 
@@ -170,15 +181,20 @@ class Transport:
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 exc = self._ws.exception()
                 _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
+                close_code = aiohttp.WSCloseCode.INTERNAL_ERROR
+                close_reason = 'WebSocket error'
                 break
             elif msg.type in CLOSE_TYPES:
                 _log.debug('[Node:%s] Received close frame with code %d.', self._node.name, msg.data)
-                await self._websocket_closed(msg.data, msg.extra)
-                return
+                close_code = msg.data
+                close_reason = msg.extra
+                break
 
-        await self._websocket_closed(self._ws.close_code, 'AsyncIterator loop exited')
+        close_code = close_code or self._ws.close_code
+        await self.close(close_code or aiohttp.WSCloseCode.OK)
+        await self._websocket_closed(close_code, close_reason)
 
-    async def _websocket_closed(self, code: int = None, reason: str = None):
+    async def _websocket_closed(self, code: Optional[int] = None, reason: Optional[str] = None):
         """
         Handles when the websocket is closed.
 
@@ -191,7 +207,8 @@ class Transport:
         """
         _log.warning('[Node:%s] WebSocket disconnected with the following: code=%d reason=%s', self._node.name, code, reason)
         self._ws = None
-        await self._node.manager._node_disconnect(self._node, code, reason)
+        await self._node.manager._handle_node_disconnect(self._node, code, reason)
+        await self.client._dispatch_event(NodeDisconnectedEvent(self._node, code, reason))
 
     async def _handle_message(self, data: dict):
         """
@@ -203,20 +220,24 @@ class Transport:
             The data given from Lavalink.
         """
         op = data['op']
-        # handle ready op with sessionId etc.
 
-        if op == 'stats':
-            self._node.stats = Stats(self._node, data)
+        if op == 'ready':
+            self.session_id = data['sessionId']
+            await self._node.manager._handle_node_ready(self._node)
+            await self.client._dispatch_event(NodeReadyEvent(self, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
-            player_id = data['guildId']
-            player = self.client.player_manager.get(int(player_id))
+            guild_id = int(data['guildId'])
+            player = self.client.player_manager.get(guild_id)
 
             if not player:
-                _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %s', self._node.name, player_id)
+                _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %d', self._node.name, guild_id)
                 return
 
-            await player._update_state(data['state'])
-            await self.client._dispatch_event(PlayerUpdateEvent(player, data['state']))
+            state = data['state']
+            await player._update_state(state)
+            await self.client._dispatch_event(PlayerUpdateEvent(player, state))
+        elif op == 'stats':
+            self._node.stats = Stats(self._node, data)
         elif op == 'event':
             await self._handle_event(data)
         else:
@@ -242,7 +263,7 @@ class Transport:
         event = None
 
         if event_type == 'TrackEndEvent':
-            track = decode_track(data['track']) if data['track'] else None
+            track = AudioTrack(data['track'])
             event = TrackEndEvent(player, track, data['reason'])
         elif event_type == 'TrackExceptionEvent':
             exc_inner = data.get('exception', {})
@@ -278,6 +299,7 @@ class Transport:
         """
         if not self.ws_connected:
             _log.debug('[Node:%s] WebSocket not ready; queued outgoing payload.', self._node.name)
+
             if len(self._message_queue) >= MESSAGE_QUEUE_MAX_SIZE:
                 _log.warning('[Node:%s] WebSocket message queue is currently at capacity, discarding payload.', self._node.name)
             else:
@@ -290,35 +312,28 @@ class Transport:
         except ConnectionResetError:
             _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
 
-    async def _get_request(self, path, **kwargs):
-        to = kwargs.pop('to', None)
+    async def _request(self, method: str, path: str, to=None, trace: bool = False, **kwargs):
+        if self._destroyed:
+            raise IOError('Cannot instantiate any connections with a closed session!')
 
-        async with self._session.get('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
-                                     headers={'Authorization': self._password}, **kwargs) as res:
+        if trace is True or TRACE_REQUESTS is True:
+            kwargs['params'] = {**kwargs.get('params', {}), 'trace': 'true'}
+
+        request_url = '{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path)
+
+        _log.debug('[Node:%s] Sending request to Lavalink with the following parameters: method=%s, url=%s, params=%s, json=%s',
+                   self._node.name, method, request_url, kwargs.get('params', {}), kwargs.get('json', {}))
+
+        async with self._session.request(method=method, url=request_url,
+                                         headers={'Authorization': self._password}, **kwargs) as res:
             if res.status == 401 or res.status == 403:
                 raise AuthenticationError
 
             if res.status == 200:
                 json = await res.json()
-                return json if to is None else to._from_json(json)
-
-            _log.warning('Request to %s was unsuccessful: code=%d, body=%s', path, res.status, await res.text())
-            raise RequestError('An invalid response was received from the node.')
-
-    async def _post_request(self, path, **kwargs):
-        to = kwargs.pop('to', None)
-
-        async with self._session.post('{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path),
-                                      headers={'Authorization': self._password}, **kwargs) as res:
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            if res.status == 200:
-                json = await res.json()
-                return json if to is None else to._from_json(json)
+                return json if to is None else to.from_dict(json)
 
             if res.status == 204:
                 return True
 
-            _log.warning('Request to %s was unsuccessful: code=%d, body=%s', path, res.status, await res.text())
-            raise RequestError('An invalid response was received from the node.')
+            raise RequestError('An invalid response was received from the node.', status=res.status, response=await res.json())

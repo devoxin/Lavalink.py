@@ -7,7 +7,19 @@ Documentation
 
 .. autofunction:: listener
 
-.. autofunction:: add_event_hook
+ABC
+---
+.. autoclass:: BasePlayer
+    :members:
+
+.. autoclass:: DeferredAudioTrack
+    :members:
+
+.. autoclass:: Source
+    :members:
+
+.. autoclass:: Filter
+    :members:
 
 Client
 ------
@@ -16,11 +28,15 @@ Client
 
 Errors
 ------
-.. autoclass:: NodeError
+.. autoclass:: ClientError
 
 .. autoclass:: AuthenticationError
 
 .. autoclass:: InvalidTrack
+
+.. autoclass:: LoadError
+
+.. autoclass:: RequestError
 
 Events
 ------
@@ -59,15 +75,15 @@ All Events are derived from :class:`Event`
 .. autoclass:: NodeChangedEvent
     :members:
 
+.. autoclass:: NodeReadyEvent
+    :members:
+
 .. autoclass:: WebSocketClosedEvent
     :members:
 
 Filters
 -------
 **All** custom filters must derive from :class:`Filter`
-
-.. autoclass:: Filter
-    :members:
 
 .. autoclass:: Equalizer
     :members:
@@ -96,14 +112,17 @@ Filters
 .. autoclass:: Volume
     :members:
 
-Models
+Player
 ------
 **All** custom players must derive from :class:`BasePlayer`
 
-.. autoclass:: AudioTrack
+.. autoclass:: DefaultPlayer
     :members:
 
-.. autoclass:: DeferredAudioTrack
+
+Server
+------
+.. autoclass:: AudioTrack
     :members:
 
 .. autoenum:: LoadType
@@ -113,15 +132,6 @@ Models
     :members:
 
 .. autoclass:: LoadResult
-    :members:
-
-.. autoclass:: Source
-    :members:
-
-.. autoclass:: BasePlayer
-    :members:
-
-.. autoclass:: DefaultPlayer
     :members:
 
 .. autoclass:: Plugin

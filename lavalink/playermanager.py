@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
+from typing import Callable, Dict, Iterator
 
-from .errors import NodeError
-from .models import BasePlayer
+from .errors import ClientError
+from .player import BasePlayer
 from .node import Node
 
 _log = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ class PlayerManager:
 
         self._lavalink = lavalink
         self._player_cls = player
-        self.players = {}
+        self.players: Dict[int, BasePlayer] = {}
 
     def __len__(self):
         return len(self.players)
@@ -62,18 +63,18 @@ class PlayerManager:
         for guild_id, player in self.players.items():
             yield guild_id, player
 
-    def values(self):
+    def values(self) -> Iterator[BasePlayer]:
         """ Returns an iterator that yields only values. """
         for player in self.players.values():
             yield player
 
-    def find_all(self, predicate=None):
+    def find_all(self, predicate: Callable[[BasePlayer], bool] = None):
         """
         Returns a list of players that match the given predicate.
 
         Parameters
         ----------
-        predicate: Optional[:class:`function`]
+        predicate: Optional[Callable[[:class:BasePlayer], bool]]
             A predicate to return specific players. Defaults to ``None``.
 
         Returns
@@ -158,7 +159,7 @@ class PlayerManager:
         best_node = node or self._lavalink.node_manager.find_ideal_node(region)
 
         if not best_node:
-            raise NodeError('No available nodes!')
+            raise ClientError('No available nodes!')
 
         id_int = int(guild_id)
         self.players[id_int] = player = self._player_cls(id_int, best_node)
@@ -189,6 +190,6 @@ class PlayerManager:
         player.cleanup()
 
         if player.node:
-            await player.node._send(op='destroy', guildId=player._internal_id)
+            await player.node.destroy_player(player._internal_id)
 
         _log.debug('Destroyed player with GuildId %d on node \'%s\'', guild_id, player.node.name if player.node else 'UNASSIGNED')
