@@ -21,12 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import logging
 from random import randrange
 from time import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from .abc import BasePlayer, DeferredAudioTrack
-from .errors import InvalidTrack, LoadError
+from .errors import InvalidTrack, LoadError, RequestError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackExceptionEvent, TrackLoadFailedEvent,
                      TrackStartEvent, TrackStuckEvent)
@@ -35,6 +36,8 @@ from .server import AudioTrack
 
 if TYPE_CHECKING:
     from .node import Node
+
+_log = logging.getLogger(__name__)
 
 
 class DefaultPlayer(BasePlayer):
@@ -331,6 +334,7 @@ class DefaultPlayer(BasePlayer):
 
         await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause, **kwargs)
         await self.client._dispatch_event(TrackStartEvent(self, track))
+
         # TODO: Figure out a better solution for the above. Custom player implementations may neglect
         # to dispatch TrackStartEvent leading to confusion and poor user experience.
 
@@ -604,7 +608,11 @@ class DefaultPlayer(BasePlayer):
         """
         if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
                 isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':
-            await self.play()
+            try:
+                await self.play()
+            except RequestError:
+                # TODO: Dispatch as PlayerErrorEvent perhaps?
+                _log.exception('[DefaultPlayer:%d] Encountered a request error whilst starting a new track.', self.guild_id)
 
     async def _update_state(self, state: dict):
         """
