@@ -117,7 +117,7 @@ class WebSocket:
             try:
                 self._ws = await self._session.ws_connect('{}://{}:{}'.format(protocol, self._host, self._port),
                                                           headers=headers, heartbeat=60)
-            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as ce:
+            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError, asyncio.exceptions.TimeoutError) as ce:
                 if isinstance(ce, aiohttp.ClientConnectorError):
                     _log.warning('[Node:%s] Invalid response received; this may indicate that '
                                  'Lavalink is not running, or is running on a port different '
@@ -134,6 +134,8 @@ class WebSocket:
                     _log.warning('[Node:%s] The remote server returned code %d, the expected code was 101. This usually '
                                  'indicates that the remote server is a webserver and not Lavalink. Check your ports, '
                                  'and try again.', self._node.name, ce.status)
+                elif isinstance(ce, asyncio.exceptions.TimeoutError):
+                    _log.warning('[Node:%s] The remote server is not responding.', self._node.name)
                 else:
                     _log.exception('[Node:%s] An unknown error occurred whilst trying to establish '
                                    'a connection to Lavalink', self._node.name)
