@@ -286,7 +286,10 @@ class Transport:
         await self.client._dispatch_event(event)
 
         if player:
-            await player._handle_event(event)
+            try:
+                await player._handle_event(event)
+            except:  # noqa: E722 pylint: disable=bare-except
+                _log.exception('Player %d encountered an error whilst handling event %s', player.guild_id, type(event).__name__)
 
     async def _send(self, **data):
         """
