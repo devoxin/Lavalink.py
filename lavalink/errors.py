@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 class ClientError(Exception):
@@ -59,10 +59,12 @@ class RequestError(Exception):
     trace: Optional[:class:`str`]
         The stack trace of the error. This will only be present if ``trace=true`` was provided
         in the query parameters of the request.
+    params: Dict[str, Any]
+        The parameters passed to the request that errored.
     """
-    __slots__ = ('status', 'timestamp', 'error', 'message', 'path', 'trace')
+    __slots__ = ('status', 'timestamp', 'error', 'message', 'path', 'trace', 'params')
 
-    def __init__(self, message, status: int, response: dict):
+    def __init__(self, message, status: int, response: dict, params: Dict[str, Any]):
         super().__init__(message)
         self.status: int = status
         self.timestamp: int = response['timestamp']
@@ -70,3 +72,4 @@ class RequestError(Exception):
         self.message: str = response['message']
         self.path: str = response['path']
         self.trace: Optional[str] = response.get('trace', None)
+        self.params = params

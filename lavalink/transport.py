@@ -45,14 +45,13 @@ CLOSE_TYPES = (
     aiohttp.WSMsgType.CLOSED
 )
 MESSAGE_QUEUE_MAX_SIZE = 25
-TRACE_REQUESTS = False
 LAVALINK_API_VERSION = 'v4'
 
 
 class Transport:
     """ The class responsible for dealing with connections to Lavalink. """
-    __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', '_host', '_port',
-                 '_password', '_ssl', 'session_id', '_destroyed')
+    __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', 'trace_requests',
+                 '_host', '_port', '_password', '_ssl', 'session_id', '_destroyed')
 
     def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str]):
         self.client: 'Client' = node.manager.client
@@ -61,6 +60,7 @@ class Transport:
         self._session: aiohttp.ClientSession = self.client._session
         self._ws = None
         self._message_queue = []
+        self.trace_requests = False
 
         self._host: str = host
         self._port: int = port
@@ -316,7 +316,7 @@ class Transport:
         if self._destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
-        if trace is True or TRACE_REQUESTS is True:
+        if trace is True or self.trace_requests is True:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': 'true'}
 
         request_url = '{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path)
@@ -336,4 +336,5 @@ class Transport:
             if res.status == 204:
                 return True
 
-            raise RequestError('An invalid response was received from the node.', status=res.status, response=await res.json())
+            raise RequestError('An invalid response was received from the node.',
+                               status=res.status, response=await res.json(), params=kwargs.get('params', {}))
