@@ -607,7 +607,7 @@ class DefaultPlayer(BasePlayer):
             The event that will be handled.
         """
         if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
-                isinstance(event, TrackEndEvent) and event.reason == 'FINISHED':
+                isinstance(event, TrackEndEvent) and event.reason == 'finished':
             try:
                 await self.play()
             except RequestError:
