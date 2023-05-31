@@ -79,11 +79,13 @@ class AudioTrack:
         The name of the source that this track was created by.
     requester: :class:`int`
         The ID of the user that requested this track.
+    plugin_info: Optional[:class:`dict`]
+        Addition track info provided by plugins
     extra: :class:`dict`
         Any extra properties given to this AudioTrack will be stored here.
     """
     __slots__ = ('_raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri',
-                 'artwork_url', 'isrc', 'position', 'source_name', 'extra')
+                 'artwork_url', 'isrc', 'position', 'source_name', 'plugin_info', 'extra')
 
     def __init__(self, data: dict, requester: int = 0, **extra):
         try:
@@ -106,6 +108,7 @@ class AudioTrack:
             self.isrc: Optional[str] = info.get('isrc')
             self.position: int = info.get('position', 0)
             self.source_name: str = info.get('sourceName', 'unknown')
+            self.plugin_info: Optional[dict] = data.get('plugin_info')
             self.extra: dict = {**extra, 'requester': requester}
         except KeyError as ke:
             missing_key, = ke.args
@@ -137,8 +140,8 @@ class LoadType(Enum):
     TRACK = 'TRACK_LOADED'
     PLAYLIST = 'PLAYLIST_LOADED'
     SEARCH = 'SEARCH_RESULT'
-    NO_MATCHES = 'NO_MATCHES'
-    LOAD_FAILED = 'LOAD_FAILED'
+    EMPTY = 'NO_MATCHES'
+    ERROR = 'LOAD_FAILED'
 
     def __eq__(self, other):
         if self.__class__ is other.__class__:
@@ -203,12 +206,15 @@ class LoadResult:
         The playlist metadata for this result.
         The :class:`PlaylistInfo` could contain empty/false data if the :class:`LoadType`
         is not :enum:`LoadType.PLAYLIST`.
+    plugin_info: Optional[:class:`dict`]
+        Addition playlist info provided by plugins
     """
     def __init__(self, load_type: LoadType, tracks: List[Union[AudioTrack, 'DeferredAudioTrack']],
-                 playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()):
+                 playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none(), plugin_info: Optional[dict] = None):
         self.load_type: LoadType = load_type
         self.playlist_info: PlaylistInfo = playlist_info
         self.tracks: List[Union[AudioTrack, 'DeferredAudioTrack']] = tracks
+        self.plugin_info: Optional[dict] = plugin_info
 
     def __getitem__(self, k):  # Exists only for compatibility, don't blame me
         if k == 'loadType':
@@ -220,10 +226,24 @@ class LoadResult:
 
     @classmethod
     def from_dict(cls, mapping: dict):
+
+        plugin_info: Optional[dict] = None
+        playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()
+        tracks: Optional[Union[AudioTrack, 'DeferredAudioTrack']] = []
+
+        data = mapping.get('data')
         load_type = LoadType.from_str(mapping.get('loadType'))
-        playlist_info = PlaylistInfo.from_dict(mapping.get('playlistInfo')) if mapping.get('playlistInfo') is not None else None
-        tracks = [AudioTrack(track, 0) for track in mapping.get('tracks')]
-        return cls(load_type, tracks, playlist_info)
+
+        if load_type == LoadType.PLAYLIST:
+            plugin_info = data.get('pluginInfo')
+            playlist_info = PlaylistInfo.from_dict(data.get('info'))
+            tracks = [AudioTrack(track, 0) for track in data.get('tracks')]
+        if load_type == LoadType.TRACK:
+            tracks = [AudioTrack(data, 0)]
+        if load_type == LoadType.SEARCH:
+            tracks = [AudioTrack(track, 0) for track in data]
+
+        return cls(load_type, tracks, playlist_info, plugin_info)
 
     @property
     def selected_track(self) -> Optional[AudioTrack]:
