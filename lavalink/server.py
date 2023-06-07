@@ -137,11 +137,11 @@ class AudioTrack:
 
 
 class LoadType(Enum):
-    TRACK = 'TRACK_LOADED'
-    PLAYLIST = 'PLAYLIST_LOADED'
-    SEARCH = 'SEARCH_RESULT'
-    EMPTY = 'NO_MATCHES'
-    ERROR = 'LOAD_FAILED'
+    TRACK = 'TRACK'
+    PLAYLIST = 'PLAYLIST'
+    SEARCH = 'SEARCH'
+    NO_MATCHES = 'EMPTY'
+    LOAD_FAILED = 'ERROR'
 
     def __eq__(self, other):
         if self.__class__ is other.__class__:
