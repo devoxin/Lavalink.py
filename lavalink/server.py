@@ -80,7 +80,7 @@ class AudioTrack:
     requester: :class:`int`
         The ID of the user that requested this track.
     plugin_info: Optional[:class:`dict`]
-        Addition track info provided by plugins
+        Addition track info provided by plugins.
     extra: :class:`dict`
         Any extra properties given to this AudioTrack will be stored here.
     """
@@ -207,7 +207,7 @@ class LoadResult:
         The :class:`PlaylistInfo` could contain empty/false data if the :class:`LoadType`
         is not :enum:`LoadType.PLAYLIST`.
     plugin_info: Optional[:class:`dict`]
-        Addition playlist info provided by plugins
+        Addition playlist info provided by plugins.
     """
     def __init__(self, load_type: LoadType, tracks: List[Union[AudioTrack, 'DeferredAudioTrack']],
                  playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none(), plugin_info: Optional[dict] = None):
