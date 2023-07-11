@@ -40,11 +40,8 @@ This means you can build sources that allow retrieving track metadata from third
 
 ## Supported Platforms
 While Lavalink.py supports any platform Python will run on, the same can not be said for the Lavalink server.
-The Lavalink server requires an x86-64 (64-bit) machine running either Windows, or any Linux-based distro.
+The Lavalink server requires an x86 or ARM machine running either Windows, or any Linux-based distro.
 It is highly recommended that you invest in a dedicated server or a [VPS](https://en.wikipedia.org/wiki/Virtual_private_server). "Hosts" like Glitch, Heroku, etc... are not guaranteed to work with Lavalink, therefore you should try to avoid them. Support will not be offered should you choose to try and host Lavalink on these platforms.
-
-### Exceptions
-The exception to the "unsupported platforms" rule are ARM-based machines, for example; a Raspberry Pi. While official Lavalink builds do not support the ARM architecture, there are [custom builds by Cog-Creators](https://github.com/Cog-Creators/Lavalink-Jars/releases) that offer ARM support. These are the official builds, with additional native libraries for running on otherwise unsupported platforms.
 
 ## Need Further Help?
 [Discord Server](https://discord.gg/SbJXU9s)
