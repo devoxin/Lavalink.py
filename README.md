@@ -1,9 +1,11 @@
-[Lavalink]: https://github.com/freyacodes/Lavalink
-[Lavaplayer]: https://github.com/sedmelluq/lavaplayer
+[Lavalink]: https://github.com/lavalink-devs/Lavalink
+[Lavalink Releases]: https://github.com/lavalink-devs/Lavalink/releases/
+[Lavalink Example Config]: https://github.com/lavalink-devs/Lavalink/blob/master/LavalinkServer/application.yml.example/
+[Lavaplayer]: https://github.com/lavalink-devs/lavaplayer
 [Documentation]: https://lavalink.readthedocs.io/en/master/
 [Latest Docs]: https://lavalink.readthedocs.io/en/latest/
 
-<img align="right" src="https://serux.pro/9e83af1581.png" height="150" width="150">
+<img align="right" src="/blob/master/.github/assets/library_icon.png" height="150" width="150">
 
 # Lavalink.py
 [![Python](https://img.shields.io/badge/Python-3.5%20%7C%203.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org) [![Build Status](https://travis-ci.com/devoxin/Lavalink.py.svg?branch=master)](https://travis-ci.com/Devoxin/Lavalink.py) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/428eebed5a2e467fb038eacfa1d92e62)](https://www.codacy.com/gh/Devoxin/Lavalink.py/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Devoxin/Lavalink.py&amp;utm_campaign=Badge_Grade) [![License](https://img.shields.io/github/license/Devoxin/Lavalink.py.svg)](LICENSE) [![Documentation Status](https://readthedocs.org/projects/lavalink/badge/?version=latest)](https://lavalink.readthedocs.io/en/latest/?badge=latest)
@@ -28,8 +30,8 @@ First you need to run a command to install the library,
 pip install lavalink
 ```
 
-Then you need to setup the Lavalink server, you will need to install Java, and then download the latest [Lavalink.jar](https://github.com/freyacodes/Lavalink/releases/).
-Then place an ``application.yml`` file in the same directory. The file should look like [this](https://github.com/freyacodes/Lavalink/blob/master/LavalinkServer/application.yml.example/). Finally run `java -jar Lavalink.jar` in the directory of the jar.
+Then you need to setup the Lavalink server, you will need to install Java, and then download the latest [Lavalink.jar][Lavalink Releases].
+Then, create a file named ``application.yml`` in the same directory. The contents should look like [this example][Lavalink Example Config]. Finally, run `java -jar Lavalink.jar` in the directory of the jar.
 
 Additionally, there is an [example cog](examples). It should be noted that the example cog is oriented towards usage with Discord.py rewrite and Lavalink v3.1+, although backwards
 compatibility may be possible, it's not encouraged nor is support guaranteed.
@@ -41,7 +43,11 @@ This means you can build sources that allow retrieving track metadata from third
 ## Supported Platforms
 While Lavalink.py supports any platform Python will run on, the same can not be said for the Lavalink server.
 The Lavalink server requires an x86 or ARM machine running either Windows, or any Linux-based distro.
+<<<<<<< HEAD
 It is highly recommended that you invest in a dedicated server or a [VPS](https://en.wikipedia.org/wiki/Virtual_private_server). "Hosts" like Glitch, Heroku, etc... are not guaranteed to work with Lavalink, therefore you should try to avoid them. Support will not be offered should you choose to try and host Lavalink on these platforms.
+=======
+It is highly recommended that you invest in a dedicated server or a [VPS](https://en.wikipedia.org/wiki/Virtual_private_server). "Hosts" like Glitch, Heroku, etc., are not guaranteed to work with Lavalink, therefore you should try to avoid them. Support will not be offered should you choose to try and host Lavalink on these platforms.
+>>>>>>> edc49a3 (Update reference links)
 
 ## Need Further Help?
 [Discord Server](https://discord.gg/SbJXU9s)
