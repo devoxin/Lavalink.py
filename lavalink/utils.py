@@ -23,10 +23,10 @@ SOFTWARE.
 """
 import struct
 from base64 import b64encode
-from typing import Tuple
+from typing import Optional, Tuple
 
-from .datarw import DataReader, DataWriter
-from .models import AudioTrack
+from .dataio import DataReader, DataWriter
+from .player import AudioTrack
 
 
 def timestamp_to_millis(timestamp: str) -> int:
@@ -116,6 +116,24 @@ def parse_time(time: int) -> Tuple[int, int, int, int]:
     return days, hours, minutes, seconds
 
 
+def _read_track_common(reader: DataReader) -> Tuple[str, str, int, str, bool, Optional[str]]:
+    """
+    Reads common fields between v1-3 AudioTracks.
+
+    Returns
+    -------
+    Tuple[str, str, int, str, bool, Optional[str]]
+        A tuple containing (title, author, length, identifier, isStream, uri) fields.
+    """
+    title = reader.read_utfm()
+    author = reader.read_utfm()
+    length = reader.read_long()
+    identifier = reader.read_utf().decode()
+    is_stream = reader.read_boolean()
+    uri = reader.read_nullable_utf()
+    return (title, author, length, identifier, is_stream, uri)
+
+
 def decode_track(track: str) -> AudioTrack:
     """
     Decodes a base64 track string into an AudioTrack object.
@@ -134,12 +152,13 @@ def decode_track(track: str) -> AudioTrack:
     flags = (reader.read_int() & 0xC0000000) >> 30
     version = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1
 
-    title = reader.read_utfm()
-    author = reader.read_utfm()
-    length = reader.read_long()
-    identifier = reader.read_utf().decode()
-    is_stream = reader.read_boolean()
-    uri = reader.read_utf().decode() if reader.read_boolean() else None
+    title, author, length, identifier, is_stream, uri = _read_track_common(reader)
+    extra_fields = {}
+
+    if version == 3:
+        extra_fields['artworkUrl'] = reader.read_nullable_utf()
+        extra_fields['isrc'] = reader.read_nullable_utf()
+
     source = reader.read_utf().decode()
     position = reader.read_long()
 
@@ -153,7 +172,8 @@ def decode_track(track: str) -> AudioTrack:
             'isStream': is_stream,
             'uri': uri,
             'isSeekable': not is_stream,
-            'sourceName': source
+            'sourceName': source,
+            **extra_fields
         }
     }
 

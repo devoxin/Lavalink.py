@@ -22,21 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
+import inspect
 import itertools
 import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import Optional, Set, Union
+from typing import List, Optional, Set, Union
 
 import aiohttp
 
-from .errors import AuthenticationError, NodeError
+from .abc import Source
 from .events import Event
-from .models import DefaultPlayer, LoadResult, Source
 from .node import Node
 from .nodemanager import NodeManager
+from .player import DefaultPlayer
 from .playermanager import PlayerManager
+from .server import AudioTrack, LoadResult
 
 _log = logging.getLogger(__name__)
 
@@ -80,7 +82,7 @@ class Client:
     player_manager: :class:`PlayerManager`
         Represents the player manager that contains all the players.
     """
-    _event_hooks = defaultdict(list)
+    __slots__ = ('_session', '_user_id', '_connect_back', '_event_hooks', 'node_manager', 'player_manager', 'sources')
 
     def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
                  connect_back: bool = False):
@@ -91,16 +93,17 @@ class Client:
                             'the Lavalink client. Alternatively, you can hardcode your user ID.'
                             .format(user_id))
 
-        self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
+        self._session: aiohttp.ClientSession = aiohttp.ClientSession()
         self._user_id: str = str(user_id)
         self._connect_back: bool = connect_back
+        self._event_hooks = defaultdict(list)
         self.node_manager: NodeManager = NodeManager(self, regions)
         self.player_manager: PlayerManager = PlayerManager(self, player)
         self.sources: Set[Source] = set()
 
-    def add_event_hook(self, hook):
+    def add_event_hook(self, *hooks, event: Event = None):
         """
-        Registers a function to recieve and process Lavalink events.
+        Adds one or more event hooks to be dispatched on an event.
 
         Note
         ----
@@ -110,11 +113,25 @@ class Client:
 
         Parameters
         ----------
-        hook: :class:`function`
-            The function to register.
+        hooks: :class:`function`
+            The hooks to register for the given event type.
+            If ``event`` parameter is left empty, then it will run when any event is dispatched.
+        event: :class:`Event`
+            The event the hooks belong to. They will be called when that specific event type is
+            dispatched. Defaults to ``None`` which means the hook is dispatched on all events.
         """
-        if hook not in self._event_hooks['Generic']:
-            self._event_hooks['Generic'].append(hook)
+        if event is not None and Event not in event.__bases__:
+            raise TypeError('Event parameter is not of type Event or None')
+
+        event_name = event.__name__ if event is not None else 'Generic'
+        event_hooks = self._event_hooks[event_name]
+
+        for hook in hooks:
+            if not callable(hook) or not inspect.iscoroutinefunction(hook):
+                raise TypeError('Hook is not callable or a coroutine')
+
+            if hook not in event_hooks:
+                event_hooks.append(hook)
 
     def add_event_hooks(self, cls):
         """
@@ -164,31 +181,15 @@ class Client:
             The source to register.
         """
         if not isinstance(source, Source):
-            raise TypeError('source must inherit from Source!')
+            raise TypeError('Class \'{}\' must inherit Source!'.format(type(source.__name__)))
 
         self.sources.add(source)
 
-    def get_source(self, source_name: str) -> Optional[Source]:
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+                 ssl: bool = False, session_id: Optional[str] = None):
         """
-        Gets a registered source by the given name.
+        Shortcut for :meth:`NodeManager.add_node`.
 
-        Parameters
-        ----------
-        source_name: :class:`str`
-            The name of the source to get.
-
-        Returns
-        -------
-        Optional[:class:`Source`]
-            The source with the matching name. May be ``None`` if
-            the name didn't match any of those in the registered sources.
-        """
-        return next((source for source in self.sources if source.name == source_name), None)
-
-    def add_node(self, host: str, port: int, password: str, region: str,
-                 resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3, filters: bool = True, ssl: bool = False):
-        """
         Adds a node to Lavalink's node manager.
 
         Parameters
@@ -201,27 +202,17 @@ class Client:
             The password used for authentication.
         region: :class:`str`
             The region to assign this node to.
-        resume_key: Optional[:class:`str`]
-            A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-            Defaults to ``None``.
-        resume_timeout: Optional[:class:`int`]
-            How long the node should wait for a connection while disconnected before clearing all players.
-            Defaults to ``60``.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
-        reconnect_attempts: Optional[:class:`int`]
-            The amount of times connection with the node will be reattempted before giving up.
-            Set to `-1` for infinite. Defaults to ``3``.
-        filters: Optional[:class:`bool`]
-            Whether to use the new ``filters`` op instead of the ``equalizer`` op.
-            If you're running a build without filter support, set this to ``False``.
         ssl: Optional[:class:`bool`]
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
+        session_id: Optional[:class:`str`]
+            The ID of the session to resume. Defaults to ``None``.
+            Only specify this if you have the ID of the session you want to resume.
         """
-        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
-                                   filters, ssl)
+        self.node_manager.add_node(host, port, password, region, name, ssl, session_id)
 
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
@@ -257,15 +248,10 @@ class Client:
                 if load_result:
                     return load_result
 
-        if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
-        node = node or random.choice(self.node_manager.available_nodes)
-        res = await self._get_request('{}/loadtracks'.format(node.http_uri),
-                                      params={'identifier': query},
-                                      headers={'Authorization': node.password})
-        return LoadResult.from_dict(res)
+        node = node or random.choice(self.node_manager.nodes)
+        return await node.get_tracks(query)
 
-    async def decode_track(self, track: str, node: Node = None):
+    async def decode_track(self, track: str, node: Node = None) -> AudioTrack:
         """|coro|
 
         Decodes a base64-encoded track string into a dict.
@@ -279,17 +265,12 @@ class Client:
 
         Returns
         -------
-        :class:`dict`
-            A dict representing the track's information.
+        :class:`AudioTrack`
         """
-        if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
-        node = node or random.choice(self.node_manager.available_nodes)
-        return await self._get_request('{}/decodetrack'.format(node.http_uri),
-                                       params={'track': track},
-                                       headers={'Authorization': node.password})
+        node = node or random.choice(self.node_manager.nodes)
+        return await node.decode_track(track)
 
-    async def decode_tracks(self, tracks: list, node: Node = None):
+    async def decode_tracks(self, tracks: List[str], node: Node = None) -> List[AudioTrack]:
         """|coro|
 
         Decodes a list of base64-encoded track strings into a dict.
@@ -303,16 +284,11 @@ class Client:
 
         Returns
         -------
-        List[:class:`dict`]
+        List[:class:`AudioTrack`]
             A list of dicts representing track information.
         """
-        if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
-        node = node or random.choice(self.node_manager.available_nodes)
-
-        return await self._post_request('{}/decodetracks'.format(node.http_uri),
-                                        json=tracks,
-                                        headers={'Authorization': node.password})
+        node = node or random.choice(self.node_manager.nodes)
+        return await node.decode_tracks(tracks)
 
     async def voice_update_handler(self, data):
         """|coro|
@@ -351,31 +327,6 @@ class Client:
             if player:
                 await player._voice_state_update(data['d'])
 
-    async def _get_request(self, url, **kwargs):
-        async with self._session.get(url, **kwargs) as res:
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            if res.status == 200:
-                return await res.json()
-
-            raise NodeError('An invalid response was received from the node: code={}, body={}'
-                            .format(res.status, await res.text()))
-
-    async def _post_request(self, url, **kwargs):
-        async with self._session.post(url, **kwargs) as res:
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            if 'json' in kwargs:
-                if res.status == 200:
-                    return await res.json()
-
-                raise NodeError('An invalid response was received from the node: code={}, body={}'
-                                .format(res.status, await res.text()))
-
-            return res.status == 204
-
     async def _dispatch_event(self, event: Event):
         """|coro|
 
@@ -386,8 +337,8 @@ class Client:
         event: :class:`Event`
             The event to dispatch to the hooks.
         """
-        generic_hooks = Client._event_hooks['Generic']
-        targeted_hooks = Client._event_hooks[type(event).__name__]
+        generic_hooks = self._event_hooks['Generic']
+        targeted_hooks = self._event_hooks[type(event).__name__]
 
         if not generic_hooks and not targeted_hooks:
             return
