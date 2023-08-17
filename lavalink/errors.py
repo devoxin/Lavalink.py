@@ -21,10 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from typing import Any, Dict, Optional
 
 
-class NodeError(Exception):
-    """ Raised when something went wrong with a node. """
+class ClientError(Exception):
+    """ Raised when something goes wrong within the client. """
 
 
 class AuthenticationError(Exception):
@@ -37,3 +38,38 @@ class InvalidTrack(Exception):
 
 class LoadError(Exception):
     """ Raised when a track fails to load. E.g. if a DeferredAudioTrack fails to find an equivalent. """
+
+
+class RequestError(Exception):
+    """
+    Raised when a request to the Lavalink server fails.
+
+    Attributes
+    ----------
+    status: :class:`int`
+        The HTTP status code returned by the server.
+    timestamp: :class:`int`
+        The epoch timestamp in milliseconds, at which the error occurred.
+    error: :class:`str`
+        The HTTP status code message.
+    message: :class:`str`
+        The error message.
+    path: :class:`str`
+        The request path.
+    trace: Optional[:class:`str`]
+        The stack trace of the error. This will only be present if ``trace=true`` was provided
+        in the query parameters of the request.
+    params: Dict[str, Any]
+        The parameters passed to the request that errored.
+    """
+    __slots__ = ('status', 'timestamp', 'error', 'message', 'path', 'trace', 'params')
+
+    def __init__(self, message, status: int, response: dict, params: Dict[str, Any]):
+        super().__init__(message)
+        self.status: int = status
+        self.timestamp: int = response['timestamp']
+        self.error: str = response['error']
+        self.message: str = response['message']
+        self.path: str = response['path']
+        self.trace: Optional[str] = response.get('trace', None)
+        self.params = params

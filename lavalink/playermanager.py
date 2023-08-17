@@ -24,8 +24,8 @@ SOFTWARE.
 import logging
 from typing import Callable, Dict, Iterator
 
-from .errors import NodeError
-from .models import BasePlayer
+from .errors import ClientError
+from .player import BasePlayer
 from .node import Node
 
 _log = logging.getLogger(__name__)
@@ -159,7 +159,7 @@ class PlayerManager:
         best_node = node or self._lavalink.node_manager.find_ideal_node(region)
 
         if not best_node:
-            raise NodeError('No available nodes!')
+            raise ClientError('No available nodes!')
 
         id_int = int(guild_id)
         self.players[id_int] = player = self._player_cls(id_int, best_node)
@@ -190,6 +190,6 @@ class PlayerManager:
         player.cleanup()
 
         if player.node:
-            await player.node._send(op='destroy', guildId=player._internal_id)
+            await player.node.destroy_player(player._internal_id)
 
         _log.debug('Destroyed player with GuildId %d on node \'%s\'', guild_id, player.node.name if player.node else 'UNASSIGNED')

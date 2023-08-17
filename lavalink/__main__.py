@@ -22,7 +22,7 @@ info     - Extracts version and build information from an existing Lavalink.jar.
 
 
 def download(dl_url, path):
-    res = requests.get(dl_url, stream=True)
+    res = requests.get(dl_url, stream=True, timeout=30)
 
     def report_progress(cur, tot):
         bar_len = 32
@@ -103,7 +103,7 @@ def main():  # pylint: disable=too-many-locals,too-many-statements
                 java_version = j_ver.group(1) if j_ver else 'UNKNOWN'
 
                 if java_version.startswith('1.8'):
-                    java_version = f'8/{java_version}'
+                    java_version = '8/{}'.format(java_version)
 
                 print('Unable to display Lavalink server info.\nYour Java version is out of date. (Java {})\n\n'
                       'Java 11+ is required to run Lavalink.'.format(java_version))

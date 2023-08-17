@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
-    from .models import AudioTrack, BasePlayer, DeferredAudioTrack
+    from .player import AudioTrack, BasePlayer, DeferredAudioTrack
     from .node import Node
 
 
@@ -249,6 +249,28 @@ class NodeChangedEvent(Event):
         self.player: 'BasePlayer' = player
         self.old_node: 'Node' = old_node
         self.new_node: 'Node' = new_node
+
+
+class NodeReadyEvent(Event):
+    """
+    This is a custom event, emitted when a node becomes ready.
+    A node is considered ready once it receives the "ready" event from the Lavalink server.
+
+    Attributes
+    ----------
+    node: :class:`Node`
+        The node that became ready.
+    session_id: :class:`str`
+        The ID of the session.
+    resumed: :class:`bool`
+        Whether the session was resumed. This will be false if a brand new session was created.
+    """
+    __slots__ = ('node', 'session_id', 'resumed')
+
+    def __init__(self, node, session_id, resumed):
+        self.node: 'Node' = node
+        self.session_id: str = session_id
+        self.resumed: bool = resumed
 
 
 class WebSocketClosedEvent(Event):
