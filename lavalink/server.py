@@ -25,7 +25,7 @@ This module serves to contain all entities which are deserialized using response
 the Lavalink server.
 """
 from enum import Enum
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from .errors import InvalidTrack
 
@@ -226,22 +226,29 @@ class LoadResult:
 
     @classmethod
     def from_dict(cls, mapping: dict):
-
         plugin_info: Optional[dict] = None
         playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()
         tracks: Optional[Union[AudioTrack, 'DeferredAudioTrack']] = []
 
-        data = mapping.get('data')
-        load_type = LoadType.from_str(mapping.get('loadType'))
+        data: Union[List[Dict[str, Any]], Dict[str, Any]] = mapping['data']
+        load_type = LoadType.from_str(mapping['loadType'])
 
-        if load_type == LoadType.PLAYLIST:
+        if isinstance(data, dict):
             plugin_info = data.get('pluginInfo')
-            playlist_info = PlaylistInfo.from_dict(data.get('info'))
-            tracks = [AudioTrack(track, 0) for track in data.get('tracks')]
+
+        # TODO: Support per-track pluginInfo (search response type)
+
         if load_type == LoadType.TRACK:
             tracks = [AudioTrack(data, 0)]
-        if load_type == LoadType.SEARCH:
+        elif load_type == LoadType.PLAYLIST:
+            playlist_info = PlaylistInfo.from_dict(data['info'])
+            tracks = [AudioTrack(track, 0) for track in data['tracks']]
+        elif load_type == LoadType.SEARCH:
             tracks = [AudioTrack(track, 0) for track in data]
+        # elif load_type == LoadType.LOAD_FAILED:
+            # Figure out what to do here.
+            # Maybe return a "ErrorLoadResult" class with only load_type, message, severity and cause fields?
+            # ...
 
         return cls(load_type, tracks, playlist_info, plugin_info)
 
