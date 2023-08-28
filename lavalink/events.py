@@ -23,11 +23,12 @@ SOFTWARE.
 """
 from typing import TYPE_CHECKING, Optional
 
+from .server import EndReason
+
 if TYPE_CHECKING:
     from .node import Node
     # pylint: disable=cyclic-import
     from .player import AudioTrack, BasePlayer, DeferredAudioTrack
-    from .server import EndReason
 
 
 class Event:
