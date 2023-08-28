@@ -129,7 +129,7 @@ class DefaultPlayer(BasePlayer):
 
         If ``self.loop`` is 2, the player is looping the entire queue.
         """
-        return self.loop == 1 or self.loop == 2
+        return self.loop in (1, 2)
 
     @property
     def is_playing(self) -> bool:

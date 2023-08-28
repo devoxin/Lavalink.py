@@ -111,7 +111,7 @@ class AudioTrack:
             self.plugin_info: Optional[dict] = data.get('plugin_info')
             self.extra: dict = {**extra, 'requester': requester}
         except KeyError as ke:
-            missing_key, = ke.args
+            missing_key, = ke.args  # pylint: disable=unbalanced-tuple-unpacking
             raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
 
     def __getitem__(self, name):
@@ -134,6 +134,47 @@ class AudioTrack:
 
     def __repr__(self):
         return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
+
+
+class EndReason(Enum):
+    FINISHED = 'finished'
+    LOAD_FAILED = 'loadFailed'
+    STOPPED = 'stopped'
+    REPLACED = 'replaced'
+    CLEANUP = 'cleanup'
+
+    def __eq__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value == other.value  # pylint: disable=comparison-with-callable
+
+        if isinstance(other, str):
+            return self.value == other  # pylint: disable=comparison-with-callable
+
+        raise NotImplementedError
+
+    @classmethod
+    def from_str(cls, other: str):
+        try:
+            return cls[other.upper()]
+        except KeyError:
+            try:
+                return cls(other.upper())
+            except ValueError as ve:
+                raise ValueError('{} is not a valid EndReason enum!'.format(other)) from ve
+
+    def may_start_next(self) -> bool:
+        """
+        Returns whether the next track may be started from this event.
+
+        This is mostly used as a hint to determine whether the ``track_end_event`` should be
+        responsible for playing the next track.
+
+        Returns
+        -------
+        :class:`bool`
+            Whether the next track may be started.
+        """
+        return self is EndReason.FINISHED or self is EndReason.LOAD_FAILED
 
 
 class LoadType(Enum):

@@ -24,9 +24,10 @@ SOFTWARE.
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
+    from .node import Node
     # pylint: disable=cyclic-import
     from .player import AudioTrack, BasePlayer, DeferredAudioTrack
-    from .node import Node
+    from .server import EndReason
 
 
 class Event:
@@ -109,7 +110,7 @@ class TrackEndEvent(Event):
     track: Optional[:class:`AudioTrack`]
         The track that finished playing.
         This could be ``None`` if Lavalink fails to encode the track.
-    reason: :class:`str`
+    reason: :class:`EndReason`
         The reason why the track stopped playing.
     """
     __slots__ = ('player', 'track', 'reason')
@@ -117,7 +118,7 @@ class TrackEndEvent(Event):
     def __init__(self, player, track, reason):
         self.player: 'BasePlayer' = player
         self.track: Optional['AudioTrack'] = track
-        self.reason: str = reason
+        self.reason: EndReason = EndReason.from_str(reason)
 
 
 class TrackLoadFailedEvent(Event):
