@@ -104,8 +104,8 @@ class DefaultPlayer(BasePlayer):
 
         self.paused: bool = False
         self._internal_pause: bool = False  # Toggled when player's node becomes unavailable, primarily used for track position tracking.
-        self._last_update = 0
-        self._last_position = 0
+        self._last_update: int = 0
+        self._last_position: int = 0
         self.position_timestamp: int = 0
         self.volume: int = 100
         self.shuffle: bool = False
@@ -142,7 +142,7 @@ class DefaultPlayer(BasePlayer):
         return self.channel_id is not None
 
     @property
-    def position(self) -> float:
+    def position(self) -> int:
         """ Returns the track's elapsed playback time in milliseconds, adjusted for Lavalink stat interval. """
         if not self.is_playing:
             return 0
@@ -150,7 +150,7 @@ class DefaultPlayer(BasePlayer):
         if self.paused or self._internal_pause:
             return min(self._last_position, self.current.duration)
 
-        difference = time() * 1000 - self._last_update
+        difference = int(time() * 1000) - self._last_update
         return min(self._last_position + difference, self.current.duration)
 
     def store(self, key: object, value: object):
@@ -441,6 +441,9 @@ class DefaultPlayer(BasePlayer):
         position: :class:`int`
             The new position to seek to in milliseconds.
         """
+        if not isinstance(position, int):
+            raise ValueError('position must be an int!')
+
         await self.node.update_player(self._internal_id, position=position)
 
     async def set_filter(self, _filter: Filter):
@@ -623,7 +626,7 @@ class DefaultPlayer(BasePlayer):
         state: :class:`dict`
             The state that is given to update.
         """
-        self._last_update = time() * 1000
+        self._last_update = int(time() * 1000)
         self._last_position = state.get('position', 0)
         self.position_timestamp = state.get('time', 0)
 
@@ -662,7 +665,7 @@ class DefaultPlayer(BasePlayer):
 
             await self.node.update_player(self._internal_id, encoded_track=playable_track, position=self.position,
                                           paused=self.paused, volume=self.volume)
-            self._last_update = time() * 1000
+            self._last_update = int(time() * 1000)
 
         self._internal_pause = False
 
