@@ -329,7 +329,7 @@ class Transport:
 
         async with self._session.request(method=method, url=request_url,
                                          headers={'Authorization': self._password}, **kwargs) as res:
-            if res.status == 401 or res.status == 403:
+            if res.status in (401, 403):
                 raise AuthenticationError
 
             if res.status == 200:
