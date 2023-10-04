@@ -205,7 +205,7 @@ class Transport:
         reason: Optional[:class:`str`]
             Reason why the websocket was closed. Defaults to ``None``.
         """
-        _log.warning('[Node:%s] WebSocket disconnected with the following: code=%d reason=%s', self._node.name, code, reason)
+        _log.warning('[Node:%s] WebSocket disconnected with the following: code=%s reason=%s', self._node.name, code, reason)
         self._ws = None
         await self._node.manager._handle_node_disconnect(self._node)
         await self.client._dispatch_event(NodeDisconnectedEvent(self._node, code, reason))
