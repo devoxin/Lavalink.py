@@ -158,7 +158,7 @@ class EndReason(Enum):
             return cls[other.upper()]
         except KeyError:
             try:
-                return cls(other.upper())
+                return cls(other)
             except ValueError as ve:
                 raise ValueError('{} is not a valid EndReason enum!'.format(other)) from ve
 
