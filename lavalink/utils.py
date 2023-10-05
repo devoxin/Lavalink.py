@@ -26,6 +26,7 @@ from base64 import b64encode
 from typing import Optional, Tuple
 
 from .dataio import DataReader, DataWriter
+from .errors import InvalidTrack
 from .player import AudioTrack
 
 
@@ -134,6 +135,15 @@ def _read_track_common(reader: DataReader) -> Tuple[str, str, int, str, bool, Op
     return (title, author, length, identifier, is_stream, uri)
 
 
+def _write_track_common(track: dict, writer: DataWriter):
+    writer.write_utf(track['title'])
+    writer.write_utf(track['author'])
+    writer.write_long(track['length'])
+    writer.write_utf(track['identifier'])
+    writer.write_boolean(track['isStream'])
+    writer.write_nullable_utf(track['uri'])
+
+
 def decode_track(track: str) -> AudioTrack:
     """
     Decodes a base64 track string into an AudioTrack object.
@@ -150,7 +160,7 @@ def decode_track(track: str) -> AudioTrack:
     reader = DataReader(track)
 
     flags = (reader.read_int() & 0xC0000000) >> 30
-    version = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1
+    version, = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1
 
     title, author, length, identifier, is_stream, uri = _read_track_common(reader)
     extra_fields = {}
@@ -181,19 +191,40 @@ def decode_track(track: str) -> AudioTrack:
 
 
 def encode_track(track: dict) -> str:
+    if {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'} == track.keys():
+        return _encode_track_v3(track)
+
+    if {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'} == track.keys():
+        return _encode_track_v2(track)
+
+    raise InvalidTrack('Unsupported track version, or track is missing required fields')
+
+
+def _encode_track_v2(track: dict) -> str:
     assert {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'} == track.keys()
 
     writer = DataWriter()
 
     version = struct.pack('B', 2)
     writer.write_byte(version)
-    writer.write_utf(track['title'])
-    writer.write_utf(track['author'])
-    writer.write_long(track['length'])
-    writer.write_utf(track['identifier'])
-    writer.write_boolean(track['isStream'])
-    writer.write_boolean(track['uri'])
-    writer.write_utf(track['uri'])
+    _write_track_common(track, writer)
+    writer.write_utf(track['sourceName'])
+    writer.write_long(track['position'])
+
+    enc = writer.finish()
+    b64 = b64encode(enc)
+    return b64
+
+
+def _encode_track_v3(track: dict) -> str:
+    assert {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'} == track.keys()
+
+    writer = DataWriter()
+    version = struct.pack('B', 3)
+    writer.write_byte(version)
+    _write_track_common(track, writer)
+    writer.write_nullable_utf(track['artworkUrl'])
+    writer.write_nullable_utf(track['isrc'])
     writer.write_utf(track['sourceName'])
     writer.write_long(track['position'])
 

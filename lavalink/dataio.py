@@ -94,6 +94,12 @@ class DataWriter:
         enc = struct.pack('>Q', long_value)
         self._write(enc)
 
+    def write_nullable_utf(self, utf_string):
+        self.write_boolean(bool(utf_string))
+
+        if utf_string:
+            self.write_utf(utf_string)
+
     def write_utf(self, utf_string):
         utf = utf_string.encode('utf8')
         byte_len = len(utf)
