@@ -7,7 +7,6 @@ __copyright__ = 'Copyright 2017-present Devoxin'
 __version__ = '5.0.0'
 
 
-import inspect
 import logging
 import sys
 
@@ -19,13 +18,14 @@ from .events import (Event, NodeChangedEvent, NodeConnectedEvent,
                      NodeDisconnectedEvent, PlayerUpdateEvent, QueueEndEvent,
                      TrackEndEvent, TrackExceptionEvent, TrackLoadFailedEvent,
                      TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent)
-from .filters import (ChannelMix, Equalizer, Filter, Karaoke, LowPass,
-                      Rotation, Timescale, Tremolo, Vibrato, Volume)
+from .filters import (ChannelMix, Distortion, Equalizer, Filter, Karaoke,
+                      LowPass, Rotation, Timescale, Tremolo, Vibrato, Volume)
 from .node import Node
 from .nodemanager import NodeManager
 from .player import DefaultPlayer
 from .playermanager import PlayerManager
-from .server import AudioTrack, LoadResult, LoadType, PlaylistInfo, Plugin
+from .server import (AudioTrack, EndReason, LoadResult, LoadType, PlaylistInfo,
+                     Plugin)
 from .stats import Penalty, Stats
 from .utils import (decode_track, encode_track, format_time, parse_time,
                     timestamp_to_millis)
