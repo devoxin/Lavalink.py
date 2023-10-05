@@ -212,8 +212,7 @@ def _encode_track_v2(track: dict) -> str:
     writer.write_long(track['position'])
 
     enc = writer.finish()
-    b64 = b64encode(enc)
-    return b64
+    return b64encode(enc).decode()
 
 
 def _encode_track_v3(track: dict) -> str:
@@ -229,5 +228,4 @@ def _encode_track_v3(track: dict) -> str:
     writer.write_long(track['position'])
 
     enc = writer.finish()
-    b64 = b64encode(enc)
-    return b64
+    return b64encode(enc).decode()
