@@ -191,6 +191,29 @@ def decode_track(track: str) -> AudioTrack:
 
 
 def encode_track(track: dict) -> str:
+    """
+    Encodes a track dict into a base64 string, readable by the Lavalink server.
+
+    A track should have *at least* the following keys:
+    ``title``, ``author``, ``length``, ``identifier``, ``isStream``, ``uri``, ``sourceName`` and ``position``.
+
+    If the track is a v3 track, it should have the following additional fields:
+    ``artworkUrl`` and ``isrc``. isrc can be ``None`` if not applicable.
+
+    Parameters
+    ----------
+    dict: dict[str, Union[Optional[str], int, bool]]
+        The track dict to serialize.
+
+    Raises
+    ------
+    :class:`InvalidTrack`
+        If the track has unexpected, or missing keys, possibly due to an incompatible version or another reason.
+
+    Returns
+    -------
+    str
+    """
     if {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'} == track.keys():
         return _encode_track_v3(track)
 

@@ -122,7 +122,6 @@ Player
 .. autoclass:: DefaultPlayer
     :members:
 
-
 Server
 ------
 .. autoclass:: AudioTrack
