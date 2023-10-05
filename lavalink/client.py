@@ -185,6 +185,23 @@ class Client:
 
         self.sources.add(source)
 
+    def get_source(self, source_name: str) -> Optional[Source]:
+        """
+        Gets a registered source by the given name.
+
+        Parameters
+        ----------
+        source_name: :class:`str`
+            The name of the source to get.
+
+        Returns
+        -------
+        Optional[:class:`Source`]
+            The source with the matching name. May be ``None`` if
+            the name didn't match any of those in the registered sources.
+        """
+        return next((source for source in self.sources if source.name == source_name), None)
+
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
                  ssl: bool = False, session_id: Optional[str] = None):
         """
