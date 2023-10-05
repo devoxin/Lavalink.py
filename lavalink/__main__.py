@@ -122,8 +122,11 @@ def download(dl_url, path):
         percent = round(progress * 100, 2)
 
         elapsed = round(time() * 1000) - download_begin
-        correction = 1000 / elapsed
-        speed = cur * correction
+        if elapsed > 0:
+            correction = 1000 / elapsed
+            speed = cur * correction
+        else:
+            speed = 0  # placeholder until we have enough data to calculate
 
         progress_bar = '█' * filled_len + ' ' * (bar_len - filled_len)
         sys.stdout.write('Downloading |%s| %0.1f%% (%d/%d, %s/s)\r' % (progress_bar, percent, cur, tot, format_bytes(speed)))
