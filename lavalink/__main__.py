@@ -83,7 +83,7 @@ class Release:
             other_build = other_build or 0
             other_version = (int(other_major), int(other_minor), int(other_patch), int(other_build))
         else:
-            raise TypeError("'>' not supported between instances of '{}' and '{}'".format(type(self).__name__, type(other).__name__))
+            raise TypeError("'<' not supported between instances of '{}' and '{}'".format(type(self).__name__, type(other).__name__))
 
         return this_version < other_version
 
