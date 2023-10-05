@@ -213,6 +213,7 @@ def encode_track(track: dict) -> str:
     Returns
     -------
     str
+        The base64-encoded track string.
     """
     if {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'} == track.keys():
         return _encode_track_v3(track)
