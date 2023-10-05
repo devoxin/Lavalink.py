@@ -202,7 +202,7 @@ def encode_track(track: dict) -> str:
 
     Parameters
     ----------
-    dict: dict[str, Union[Optional[str], int, bool]]
+    track: dict[str, Union[Optional[str], int, bool]]
         The track dict to serialize.
 
     Raises
