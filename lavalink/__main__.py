@@ -165,13 +165,8 @@ def download_jar(arguments: List[str]):  # TODO: Allow passing specific versions
 
         existing = next((sr for sr in suitable_releases if sr.major_version == release.major_version), None)
 
-        if existing:
-            if release.prerelease and existing.prerelease or (not release.prerelease and not existing.prerelease):
-                if existing >= release:
-                    continue
-            else:
-                if existing >= release:
-                    continue
+        if existing and existing >= release:
+            continue
 
         suitable_releases.append(release)
 
