@@ -90,8 +90,7 @@ class Release:
 
 def display_help():
     print("""
-download - Downloads the latest (stable) Lavalink jar.
-    
+download - Find and download specific Lavalink server versions.
     --no-overwrite  Renames an existing lavalink.jar to lavalink.old.jar
 config   - Downloads a fresh application.yml.
     --fetch-dev     Fetches the latest application.yml from the development branch.
@@ -149,7 +148,7 @@ def download(dl_url, path):
         read_chunk(f)
 
 
-def download_jar(arguments: List[str]):
+def download_jar(arguments: List[str]):  # TODO: Allow passing specific versions (4.0.0, >=4.0.0, etc)
     try:
         res = requests.get(RELEASES_URL).json()
     except requests.exceptions.JSONDecodeError:
