@@ -113,8 +113,7 @@ def format_bytes(length: int) -> str:
 def download(dl_url, path):
     res = requests.get(dl_url, stream=True, timeout=30)
 
-    last_report = round(time() * 1000)
-    last_received = 0
+    download_begin = round(time() * 1000)
 
     def report_progress(cur, tot):
         bar_len = 32
@@ -122,11 +121,9 @@ def download(dl_url, path):
         filled_len = int(round(bar_len * progress))
         percent = round(progress * 100, 2)
 
-        t = round(time() * 1000)
-        elapsed = t - last_report
-        received = cur - last_received
+        elapsed = round(time() * 1000) - download_begin
         correction = 1000 / elapsed
-        speed = received * correction
+        speed = cur * correction
 
         progress_bar = '█' * filled_len + ' ' * (bar_len - filled_len)
         sys.stdout.write('Downloading |%s| %0.1f%% (%d/%d, %s/s)\r' % (progress_bar, percent, cur, tot, format_bytes(speed)))
