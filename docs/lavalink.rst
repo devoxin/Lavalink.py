@@ -112,6 +112,9 @@ Filters
 .. autoclass:: Volume
     :members:
 
+.. autoclass:: Distortion
+    :members:
+
 Player
 ------
 **All** custom players must derive from :class:`BasePlayer`
@@ -123,6 +126,9 @@ Player
 Server
 ------
 .. autoclass:: AudioTrack
+    :members:
+
+.. autoenum:: EndReason
     :members:
 
 .. autoenum:: LoadType
@@ -169,3 +175,5 @@ Utilities
 .. autofunction:: parse_time
 
 .. autofunction:: decode_track
+
+.. autofunction:: encode_track
