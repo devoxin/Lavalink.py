@@ -24,7 +24,7 @@ class Release:
         self.download_url: Optional[str] = jars[0] if jars else None
 
     def __str__(self) -> str:
-        pr_str = ' [prerelease]' if self.prerelease else ''
+        pr_str = '[prerelease]' if self.prerelease else ''
         return '{} {}'.format(self.tag, pr_str)
     
     def __eq__(self, other):
@@ -163,10 +163,17 @@ def download_jar(arguments: List[str]):  # TODO: Allow passing specific versions
         if not release.download_url:
             continue
 
-        existing = next((sr for sr in suitable_releases if sr.major_version == release.major_version), None)
+        newest: Optional[Release] = next((sr for sr in suitable_releases if sr.major_version == release.major_version), None)
 
-        if existing and existing >= release:
-            continue
+        if newest:
+            if newest > release:  # GitHub gives newest->oldest releases, so it could be that we iterate over a pre-release before a release.
+                if newest.prerelease and not release.prerelease:  # If that is the case, we check the version against the current non-prerelease
+                    current_non_prerelease: Optional[Release] = next((sr for sr in suitable_releases if sr.major_version == release.major_version and not sr.prerelease), None)
+
+                    if current_non_prerelease and current_non_prerelease > release:
+                        continue
+                else:
+                    continue
 
         suitable_releases.append(release)
 
