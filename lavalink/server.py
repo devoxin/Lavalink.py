@@ -108,7 +108,7 @@ class AudioTrack:
             self.isrc: Optional[str] = info.get('isrc')
             self.position: int = info.get('position', 0)
             self.source_name: str = info.get('sourceName', 'unknown')
-            self.plugin_info: Optional[dict] = data.get('plugin_info')
+            self.plugin_info: Optional[dict] = data.get('pluginInfo')
             self.extra: dict = {**extra, 'requester': requester}
         except KeyError as ke:
             missing_key, = ke.args  # pylint: disable=unbalanced-tuple-unpacking
