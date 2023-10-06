@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Optional
 
 import aiohttp
 
-from .errors import AuthenticationError, RequestError
+from .errors import AuthenticationError, ClientError, RequestError
 from .events import (NodeConnectedEvent, NodeDisconnectedEvent, NodeReadyEvent,
                      PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStuckEvent, WebSocketClosedEvent)
@@ -91,9 +91,10 @@ class Transport:
             await self._ws.close(code=code)
             self._ws = None
 
-    def connect(self):
+    def connect(self) -> asyncio.Task:
         """ Attempts to establish a connection to Lavalink. """
-        return asyncio.ensure_future(self._connect())
+        loop = asyncio.get_event_loop()
+        return loop.create_task(self._connect())
 
     async def destroy(self):
         """|coro|
@@ -327,17 +328,21 @@ class Transport:
         _log.debug('[Node:%s] Sending request to Lavalink with the following parameters: method=%s, url=%s, params=%s, json=%s',
                    self._node.name, method, request_url, kwargs.get('params', {}), kwargs.get('json', {}))
 
-        async with self._session.request(method=method, url=request_url,
-                                         headers={'Authorization': self._password}, **kwargs) as res:
-            if res.status in (401, 403):
-                raise AuthenticationError
+        try:
+            async with self._session.request(method=method, url=request_url,
+                                             headers={'Authorization': self._password}, **kwargs) as res:
+                if res.status in (401, 403):
+                    raise AuthenticationError
 
-            if res.status == 200:
-                json = await res.json()
-                return json if to is None else to.from_dict(json)
+                if res.status == 200:
+                    json = await res.json()
+                    return json if to is None else to.from_dict(json)
 
-            if res.status == 204:
-                return True
+                if res.status == 204:
+                    return True
 
-            raise RequestError('An invalid response was received from the node.',
-                               status=res.status, response=await res.json(), params=kwargs.get('params', {}))
+                raise RequestError('An invalid response was received from the node.',
+                                   status=res.status, response=await res.json(), params=kwargs.get('params', {}))
+        except aiohttp.ClientConnectorError as cce:
+            _log.error('Request "%s %s" failed', method, path)
+            raise ClientError from cce

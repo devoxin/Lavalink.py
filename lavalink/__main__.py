@@ -27,7 +27,7 @@ class Release:
     def __str__(self) -> str:
         pr_str = '[prerelease]' if self.prerelease else ''
         return '{} {}'.format(self.tag, pr_str)
-    
+
     def __eq__(self, other):
         if not isinstance(other, Release):
             return False
@@ -38,15 +38,11 @@ class Release:
         if not this_match or not other_match:
             raise ValueError('Cannot compare version strings as they do not match the regex pattern')
 
-        this_major, this_minor, this_patch, this_tag, this_build = this_match.groups()
-        this_patch = this_patch or 0
-        this_build = this_build or 0
-        this_version = (int(this_major), int(this_minor), int(this_patch), int(this_build))
+        this_major, this_minor, this_patch, _, this_build = this_match.groups()
+        this_version = (int(this_major), int(this_minor), int(this_patch or 0), int(this_build or 0))
 
-        other_major, other_minor, other_patch, other_tag, other_build = other_match.groups()
-        other_patch = other_patch = 0
-        other_build = other_build or 0
-        other_version = (int(other_major), int(other_minor), int(other_patch), int(other_build))
+        other_major, other_minor, other_patch, _, other_build = other_match.groups()
+        other_version = (int(other_major), int(other_minor), int(other_patch or 0), int(other_build or 0))
 
         return this_version == other_version
 
@@ -56,10 +52,8 @@ class Release:
         if not this_match:
             raise ValueError('Cannot compare version strings as they do not match the regex pattern')
 
-        this_major, this_minor, this_patch, this_tag, this_build = this_match.groups()
-        this_patch = this_patch or 0
-        this_build = this_build or 0
-        this_version = (int(this_major), int(this_minor), int(this_patch), int(this_build))
+        this_major, this_minor, this_patch, _, this_build = this_match.groups()
+        this_version = (int(this_major), int(this_minor), int(this_patch or 0), int(this_build or 0))
 
         if isinstance(other, str):
             parts = list(map(int, other.split('.')))
@@ -78,10 +72,8 @@ class Release:
             if not this_match or not other_match:
                 raise ValueError('Cannot compare version strings as they do not match the regex pattern')
 
-            other_major, other_minor, other_patch, other_tag, other_build = other_match.groups()
-            other_patch = other_patch = 0
-            other_build = other_build or 0
-            other_version = (int(other_major), int(other_minor), int(other_patch), int(other_build))
+            other_major, other_minor, other_patch, _, other_build = other_match.groups()
+            other_version = (int(other_major), int(other_minor), int(other_patch or 0), int(other_build or 0))
         else:
             raise TypeError("'<' not supported between instances of '{}' and '{}'".format(type(self).__name__, type(other).__name__))
 
@@ -93,10 +85,8 @@ class Release:
         if not this_match:
             raise ValueError('Cannot compare version strings as they do not match the regex pattern')
 
-        this_major, this_minor, this_patch, this_tag, this_build = this_match.groups()
-        this_patch = this_patch or 0
-        this_build = this_build or 0
-        this_version = (int(this_major), int(this_minor), int(this_patch), int(this_build))
+        this_major, this_minor, this_patch, _, this_build = this_match.groups()
+        this_version = (int(this_major), int(this_minor), int(this_patch or 0), int(this_build or 0))
 
         if isinstance(other, str):
             parts = list(map(int, other.split('.')))
@@ -115,10 +105,8 @@ class Release:
             if not this_match or not other_match:
                 raise ValueError('Cannot compare version strings as they do not match the regex pattern')
 
-            other_major, other_minor, other_patch, other_tag, other_build = other_match.groups()
-            other_patch = other_patch = 0
-            other_build = other_build or 0
-            other_version = (int(other_major), int(other_minor), int(other_patch), int(other_build))
+            other_major, other_minor, other_patch, _, other_build = other_match.groups()
+            other_version = (int(other_major), int(other_minor), int(other_patch or 0), int(other_build or 0))
         else:
             raise TypeError("'>' not supported between instances of '{}' and '{}'".format(type(self).__name__, type(other).__name__))
 
@@ -154,7 +142,7 @@ def format_bytes(length: int) -> str:
 
 
 def download(dl_url, path):
-    res = requests.get(dl_url, stream=True, timeout=30)
+    res = requests.get(dl_url, stream=True, timeout=15)
 
     download_begin = round(time() * 1000)
 
@@ -195,20 +183,39 @@ def select_release_unattended(non_draft: List[Release], version_selector: str) -
     matcher = SEMVER_REGEX.match(version_selector)
 
     if matcher:
-        predicate = lambda release: release.tag == version_selector
+        def exact_version(release: Release):
+            return release.tag == version_selector
+
+        predicate = exact_version
     elif version_selector.startswith('>='):
-        predicate = lambda release: release >= version_selector[2:]
+        def gte(release: Release):
+            return release >= version_selector[2:]
+
+        predicate = gte
     elif version_selector.startswith('<='):
-        predicate = lambda release: release <= version_selector[2:]
+        def lte(release: Release):
+            return release.tag <= version_selector[2:]
+
+        predicate = lte
     elif version_selector.startswith('>'):
-        predicate = lambda release: release > version_selector[1:]
+        def gt(release: Release):
+            return release > version_selector[1:]
+
+        predicate = gt
     elif version_selector.startswith('<'):
-        predicate = lambda release: release < version_selector[1:]
+        def lte(release: Release):
+            return release.tag < version_selector[1:]
+
+        predicate = lte
     elif version_selector.startswith('~='):
         minimum = version_selector[2:]
         major, minor, _ = minimum.split('.')
         maximum = '{}.{}.{}'.format(major, int(minor) + 1, 0)
-        predicate = lambda release: release >= minimum and release < maximum
+
+        def compatible(release: Release):
+            return minimum <= release < maximum
+
+        predicate = compatible
     else:
         # TODO: Support multiple version specifiers (e.g. >=3.7.0,<4.0.0)
         raise ValueError('Unsupported version selector')
@@ -236,7 +243,8 @@ def select_release(non_draft: List[Release]) -> Release:
         if newest:
             if newest > release:  # GitHub gives newest->oldest releases, so it could be that we iterate over a pre-release before a release.
                 if newest.prerelease and not release.prerelease:  # If that is the case, we check the version against the current non-prerelease
-                    current_non_prerelease: Optional[Release] = next((sr for sr in suitable_releases if sr.major_version == release.major_version and not sr.prerelease), None)
+                    current_non_prerelease: Optional[Release] = next((sr for sr in suitable_releases if sr.major_version == release.major_version
+                                                                      and not sr.prerelease), None)
 
                     if current_non_prerelease and current_non_prerelease > release:
                         continue
@@ -273,14 +281,14 @@ def select_release(non_draft: List[Release]) -> Release:
 
 def download_jar(arguments: List[str]):
     try:
-        res = requests.get(RELEASES_URL).json()
+        res = requests.get(RELEASES_URL, timeout=15).json()
     except requests.exceptions.JSONDecodeError:
         print('Failed to retrieve Lavalink releases', file=sys.stderr)
         sys.exit(1)
 
     releases = list(map(Release, res))
     non_draft = [r for r in releases if not r.draft]
-    
+
     if arguments:
         try:
             release = select_release_unattended(non_draft, arguments[0])
@@ -341,7 +349,7 @@ def print_info(arguments: List[str]):
                 java_version = '8/{}'.format(java_version)
 
             print('Unable to display Lavalink server info.\nYour Java version is out of date. (Java {})\n\n'
-                    'Java 11+ is required to run Lavalink.'.format(java_version), file=sys.stderr)
+                  'Java 11+ is required to run Lavalink.'.format(java_version), file=sys.stderr)
             sys.exit(1)
 
         print(stderr, file=sys.stderr)
