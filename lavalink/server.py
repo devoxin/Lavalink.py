@@ -266,6 +266,10 @@ class LoadResult:
         return self.__getattribute__(k)
 
     @classmethod
+    def empty(cls):
+        return LoadResult(LoadType.NO_MATCHES, [])
+
+    @classmethod
     def from_dict(cls, mapping: dict):
         plugin_info: Optional[dict] = None
         playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()

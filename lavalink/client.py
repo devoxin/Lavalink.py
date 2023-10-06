@@ -231,6 +231,29 @@ class Client:
         """
         self.node_manager.add_node(host, port, password, region, name, ssl, session_id)
 
+    async def get_local_tracks(self, query: str) -> LoadResult:
+        """|coro|
+
+        Searches :attr:`sources` registered to this client for the given query.
+
+        Parameters
+        ----------
+        query: :class:`str`
+            The query to perform a search for.
+
+        Returns
+        -------
+        :class:`LoadResult`
+        """
+        for source in self.sources:
+            load_result = await source.load_item(self, query)
+
+            if load_result:
+                return load_result
+
+        return LoadResult.empty()
+
+
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
 
