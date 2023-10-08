@@ -225,6 +225,18 @@ class PlaylistInfo:
 
 
 class LoadResultError:
+    """
+    Attributes
+    ----------
+    message: :class:`str`
+        The error message.
+    severity: :enum:`Severity`
+        The severity of the error.
+    cause: :class:`str`
+        The cause of the error.
+    """
+    __slots__ = ('message', 'severity', 'cause')
+
     def __init__(self, error: Dict[str, Any]):
         self.message: str = error['message']
         self.severity: Severity = Severity.from_str(error['severity'])
