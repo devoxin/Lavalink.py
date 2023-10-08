@@ -11,6 +11,7 @@ import re
 import discord
 import lavalink
 from discord.ext import commands
+from lavalink.events import TrackStartEvent, QueueEndEvent
 from lavalink.filters import LowPass
 from lavalink.server import LoadType
 
@@ -97,8 +98,8 @@ class Music(commands.Cog):
             bot.lavalink.add_node(host='localhost', port=2333, password='youshallnotpass',
                                   region='us', name='default-node')
 
-        self.lavalink = bot.lavalink
-        self.lavalink.add_event_hook(self.track_hook)
+        self.lavalink: lavalink.Client = bot.lavalink
+        self.lavalink.add_event_hooks(self)
 
     def cog_unload(self):
         """
@@ -172,13 +173,26 @@ class Music(commands.Cog):
 
         return True
 
-    async def track_hook(self, event):
-        if isinstance(event, lavalink.events.QueueEndEvent):
-            # When this track_hook receives a "QueueEndEvent" from lavalink.py
-            # it indicates that there are no tracks left in the player's queue.
-            # To save on resources, we can tell the bot to disconnect from the voicechannel.
-            guild_id = event.player.guild_id
-            guild = self.bot.get_guild(guild_id)
+    @lavalink.listener(TrackStartEvent)
+    async def on_track_start(self, event: TrackStartEvent):
+        guild_id = event.player.guild_id
+        channel_id = event.player.fetch('channel')
+        guild = self.bot.get_guild(guild_id)
+
+        if not guild:
+            return await self.lavalink.player_manager.destroy(guild_id)
+
+        channel = guild.get_channel(channel_id)
+
+        if channel:
+            await channel.send('Now playing: {} by {}'.format(event.track.title, event.track.author))
+
+    @lavalink.listener(QueueEndEvent)
+    async def on_queue_end(self, event: QueueEndEvent):
+        guild_id = event.player.guild_id
+        guild = self.bot.get_guild(guild_id)
+
+        if guild is not None:
             await guild.voice_client.disconnect(force=True)
 
     @commands.command(aliases=['p'])
