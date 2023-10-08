@@ -139,6 +139,9 @@ Server
 .. autoclass:: PlaylistInfo
     :members:
 
+.. autoclass:: LoadResultError
+    :members:
+
 .. autoclass:: LoadResult
     :members:
 
