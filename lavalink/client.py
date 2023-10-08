@@ -203,7 +203,7 @@ class Client:
         return next((source for source in self.sources if source.name == source_name), None)
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
-                 ssl: bool = False, session_id: Optional[str] = None):
+                 ssl: bool = False, session_id: Optional[str] = None) -> Node:
         """
         Shortcut for :meth:`NodeManager.add_node`.
 
@@ -228,8 +228,13 @@ class Client:
         session_id: Optional[:class:`str`]
             The ID of the session to resume. Defaults to ``None``.
             Only specify this if you have the ID of the session you want to resume.
+
+        Returns
+        -------
+        :class:`Node`
+            The created Node instance.
         """
-        self.node_manager.add_node(host, port, password, region, name, ssl, session_id)
+        return self.node_manager.add_node(host, port, password, region, name, ssl, session_id)
 
     async def get_local_tracks(self, query: str) -> LoadResult:
         """|coro|
@@ -252,7 +257,6 @@ class Client:
                 return load_result
 
         return LoadResult.empty()
-
 
     async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
         """|coro|
