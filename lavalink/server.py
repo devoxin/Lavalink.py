@@ -39,7 +39,7 @@ class Enum(_Enum):
             return self.value == other.value  # pylint: disable=comparison-with-callable
 
         if isinstance(other, str):
-            return self.value == other.lower()  # pylint: disable=comparison-with-callable
+            return self.value.lower() == other.lower()  # pylint: disable=comparison-with-callable
 
         return False
 
@@ -49,7 +49,7 @@ class Enum(_Enum):
             return cls[other.upper()]
         except KeyError:
             try:
-                return cls(other.upper())
+                return cls(other)
             except ValueError as ve:
                 raise ValueError('{} is not a valid {} enum!'.format(other, cls.__name__)) from ve
 
