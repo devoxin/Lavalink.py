@@ -23,7 +23,7 @@ SOFTWARE.
 """
 from typing import TYPE_CHECKING, Optional
 
-from .server import EndReason
+from .server import EndReason, Severity
 
 if TYPE_CHECKING:
     from .abc import BasePlayer, DeferredAudioTrack
@@ -88,8 +88,8 @@ class TrackExceptionEvent(Event):
         The track that had the exception while playing.
     exception: :class:`str`
         The type of exception that the track had while playing.
-    severity: :class:`str`
-        The level of severity of the exception.
+    severity: :enum:`Severity`
+        The severity of the exception.
     """
     __slots__ = ('player', 'track', 'exception', 'severity')
 
@@ -97,7 +97,7 @@ class TrackExceptionEvent(Event):
         self.player: 'BasePlayer' = player
         self.track: 'AudioTrack' = track
         self.exception: str = exception
-        self.severity: str = severity
+        self.severity: Severity = Severity.from_str(severity)
 
 
 class TrackEndEvent(Event):

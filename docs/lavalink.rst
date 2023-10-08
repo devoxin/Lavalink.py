@@ -133,6 +133,9 @@ Server
 .. autoenum:: LoadType
     :members:
 
+.. autoenum:: Severity
+    :members:
+
 .. autoclass:: PlaylistInfo
     :members:
 

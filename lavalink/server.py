@@ -24,13 +24,34 @@ SOFTWARE.
 This module serves to contain all entities which are deserialized using responses from
 the Lavalink server.
 """
-from enum import Enum
+from enum import Enum as _Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from .errors import InvalidTrack
 
 if TYPE_CHECKING:
     from .abc import DeferredAudioTrack
+
+
+class Enum(_Enum):
+    def __eq__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value == other.value  # pylint: disable=comparison-with-callable
+
+        if isinstance(other, str):
+            return self.value == other.lower()  # pylint: disable=comparison-with-callable
+
+        return False
+
+    @classmethod
+    def from_str(cls, other: str):
+        try:
+            return cls[other.upper()]
+        except KeyError:
+            try:
+                return cls(other.upper())
+            except ValueError as ve:
+                raise ValueError('{} is not a valid {} enum!'.format(other, cls.__name__)) from ve
 
 
 class AudioTrack:
@@ -79,9 +100,9 @@ class AudioTrack:
         The name of the source that this track was created by.
     requester: :class:`int`
         The ID of the user that requested this track.
-    plugin_info: Optional[:class:`dict`]
+    plugin_info: Optional[Dict[str, Any]]
         Addition track info provided by plugins.
-    extra: :class:`dict`
+    extra: Dict[:class:`str`, Any]
         Any extra properties given to this AudioTrack will be stored here.
     """
     __slots__ = ('_raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri',
@@ -108,8 +129,8 @@ class AudioTrack:
             self.isrc: Optional[str] = info.get('isrc')
             self.position: int = info.get('position', 0)
             self.source_name: str = info.get('sourceName', 'unknown')
-            self.plugin_info: Optional[dict] = data.get('pluginInfo')
-            self.extra: dict = {**extra, 'requester': requester}
+            self.plugin_info: Optional[Dict[str, Any]] = data.get('pluginInfo')
+            self.extra: Dict[str, Any] = {**extra, 'requester': requester}
         except KeyError as ke:
             missing_key, = ke.args  # pylint: disable=unbalanced-tuple-unpacking
             raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
@@ -143,25 +164,6 @@ class EndReason(Enum):
     REPLACED = 'replaced'
     CLEANUP = 'cleanup'
 
-    def __eq__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value == other.value  # pylint: disable=comparison-with-callable
-
-        if isinstance(other, str):
-            return self.value == other  # pylint: disable=comparison-with-callable
-
-        raise NotImplementedError
-
-    @classmethod
-    def from_str(cls, other: str):
-        try:
-            return cls[other.upper()]
-        except KeyError:
-            try:
-                return cls(other)
-            except ValueError as ve:
-                raise ValueError('{} is not a valid EndReason enum!'.format(other)) from ve
-
     def may_start_next(self) -> bool:
         """
         Returns whether the next track may be started from this event.
@@ -181,27 +183,14 @@ class LoadType(Enum):
     TRACK = 'TRACK'
     PLAYLIST = 'PLAYLIST'
     SEARCH = 'SEARCH'
-    NO_MATCHES = 'EMPTY'
-    LOAD_FAILED = 'ERROR'
+    EMPTY = 'EMPTY'
+    ERROR = 'ERROR'
 
-    def __eq__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value == other.value  # pylint: disable=comparison-with-callable
 
-        if isinstance(other, str):
-            return self.value == other  # pylint: disable=comparison-with-callable
-
-        raise NotImplementedError
-
-    @classmethod
-    def from_str(cls, other: str):
-        try:
-            return cls[other.upper()]
-        except KeyError:
-            try:
-                return cls(other.upper())
-            except ValueError as ve:
-                raise ValueError('{} is not a valid LoadType enum!'.format(other)) from ve
+class Severity(Enum):
+    COMMON = 'common'
+    SUSPICIOUS = 'suspicious'
+    FAULT = 'fault'
 
 
 class PlaylistInfo:
@@ -235,6 +224,13 @@ class PlaylistInfo:
         return '<PlaylistInfo name={0.name} selected_track={0.selected_track}>'.format(self)
 
 
+class LoadResultError:
+    def __init__(self, error: Dict[str, Any]):
+        self.message: str = error['message']
+        self.severity: Severity = Severity.from_str(error['severity'])
+        self.cause: str = error['cause']
+
+
 class LoadResult:
     """
     Attributes
@@ -247,15 +243,22 @@ class LoadResult:
         The playlist metadata for this result.
         The :class:`PlaylistInfo` could contain empty/false data if the :class:`LoadType`
         is not :enum:`LoadType.PLAYLIST`.
-    plugin_info: Optional[:class:`dict`]
-        Addition playlist info provided by plugins.
+    plugin_info: Optional[Dict[:class:`str`, Any]]
+        Additional playlist info provided by plugins.
+    error: Optional[:class:`LoadResultError`]
+        The error associated with this ``LoadResult``.
+        This will be ``None`` if :attr:`load_type` is not :attr:`LoadType.ERROR`.
     """
+    __slots__ = ('load_type', 'playlist_info', 'tracks', 'plugin_info', 'error')
+
     def __init__(self, load_type: LoadType, tracks: List[Union[AudioTrack, 'DeferredAudioTrack']],
-                 playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none(), plugin_info: Optional[dict] = None):
+                 playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none(), plugin_info: Optional[Dict[str, Any]] = None,
+                 error: Optional[LoadResultError] = None):
         self.load_type: LoadType = load_type
         self.playlist_info: PlaylistInfo = playlist_info
         self.tracks: List[Union[AudioTrack, 'DeferredAudioTrack']] = tracks
-        self.plugin_info: Optional[dict] = plugin_info
+        self.plugin_info: Optional[Dict[str, Any]] = plugin_info
+        self.error: Optional[LoadResultError] = error
 
     def __getitem__(self, k):  # Exists only for compatibility, don't blame me
         if k == 'loadType':
@@ -267,7 +270,7 @@ class LoadResult:
 
     @classmethod
     def empty(cls):
-        return LoadResult(LoadType.NO_MATCHES, [])
+        return LoadResult(LoadType.EMPTY, [])
 
     @classmethod
     def from_dict(cls, mapping: dict):
@@ -281,8 +284,6 @@ class LoadResult:
         if isinstance(data, dict):
             plugin_info = data.get('pluginInfo')
 
-        # TODO: Support per-track pluginInfo (search response type)
-
         if load_type == LoadType.TRACK:
             tracks = [AudioTrack(data, 0)]
         elif load_type == LoadType.PLAYLIST:
@@ -290,10 +291,9 @@ class LoadResult:
             tracks = [AudioTrack(track, 0) for track in data['tracks']]
         elif load_type == LoadType.SEARCH:
             tracks = [AudioTrack(track, 0) for track in data]
-        # elif load_type == LoadType.LOAD_FAILED:
-            # Figure out what to do here.
-            # Maybe return a "ErrorLoadResult" class with only load_type, message, severity and cause fields?
-            # ...
+        elif load_type == LoadType.ERROR:
+            error = LoadResultError(data)
+            return cls(load_type, [], playlist_info, plugin_info, error)
 
         return cls(load_type, tracks, playlist_info, plugin_info)
 
@@ -328,7 +328,7 @@ class Plugin:
 
     Parameters
     ----------
-    data: :class:`dict`
+    data: Dict[str, Any]
         The data to initialise a Plugin from.
 
     Attributes
@@ -340,7 +340,7 @@ class Plugin:
     """
     __slots__ = ('name', 'version')
 
-    def __init__(self, data: dict):
+    def __init__(self, data: Dict[str, Any]):
         self.name: str = data['name']
         self.version: str = data['version']
 

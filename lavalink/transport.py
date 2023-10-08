@@ -268,7 +268,7 @@ class Transport:
         elif event_type == 'TrackExceptionEvent':
             exc_inner = data.get('exception', {})
             exception = data.get('error') or exc_inner.get('cause', 'Unknown exception')
-            severity = exc_inner.get('severity', 'UNKNOWN')
+            severity = exc_inner.get('severity')
             event = TrackExceptionEvent(player, player.current, exception, severity)
         # elif event_type == 'TrackStartEvent':
         #    event = TrackStartEvent(player, player.current)
