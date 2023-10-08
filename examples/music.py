@@ -215,12 +215,12 @@ class Music(commands.Cog):
         embed = discord.Embed(color=discord.Color.blurple())
 
         # Valid load_types are:
-        #   TRACK_LOADED    - direct URL to a track
-        #   PLAYLIST_LOADED - direct URL to playlist
-        #   SEARCH_RESULT   - query prefixed with either "ytsearch:" or "scsearch:". This could possibly be expanded with plugins.
-        #   NO_MATCHES      - no results for the query (result.tracks will be empty)
-        #   LOAD_FAILED     - the track encountered an exception during loading
-        if results.load_type == LoadType.NO_MATCHES:
+        #   TRACK    - direct URL to a track
+        #   PLAYLIST - direct URL to playlist
+        #   SEARCH   - query prefixed with either "ytsearch:" or "scsearch:". This could possibly be expanded with plugins.
+        #   EMPTY    - no results for the query (result.tracks will be empty)
+        #   ERROR    - the track encountered an exception during loading
+        if results.load_type == LoadType.EMPTY:
             return await ctx.send("I couldn'\t find any tracks for that query.")
         elif results.load_type == LoadType.PLAYLIST:
             tracks = results.tracks
