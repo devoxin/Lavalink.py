@@ -75,7 +75,7 @@ class NodeManager:
         return [n for n in self.nodes if n.available]
 
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
-                 ssl: bool = False, session_id: Optional[str] = None):
+                 ssl: bool = False, session_id: Optional[str] = None) -> Node:
         """
         Adds a node to Lavalink's node manager.
 
@@ -101,17 +101,21 @@ class NodeManager:
         session_id: Optional[:class:`str`]
             The ID of the session to resume. Defaults to ``None``.
             Only specify this if you have the ID of the session you want to resume.
+
+        Returns
+        -------
+        :class:`Node`
+            The created Node instance.
         """
         node = Node(self, host, port, password, region, name, ssl, session_id)
         self.nodes.append(node)
-
-        _log.info('Added node \'%s\'', node.name)
+        return node
 
     def remove_node(self, node: Node):
         """
         Removes a node.
 
-        Make sure you have called :func:`Node.destroy` to close any open WebSocket connection.
+        Make sure you have called :func:`Node.destroy` to close any resources used by this Node.
 
         Parameters
         ----------
@@ -119,7 +123,6 @@ class NodeManager:
             The node to remove from the list.
         """
         self.nodes.remove(node)
-        _log.info('Removed node \'%s\'', node.name)
 
     def get_nodes_by_region(self, region_key: str) -> List[Node]:
         """

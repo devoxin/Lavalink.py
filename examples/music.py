@@ -161,7 +161,7 @@ class Music(commands.Cog):
 
             if voice_channel.user_limit > 0:
                 # A limit of 0 means no limit. Anything higher means that there is a member limit which we need to check.
-                # If it's full, and we don't have "move members" permissions, then we cannot join it. 
+                # If it's full, and we don't have "move members" permissions, then we cannot join it.
                 if len(voice_channel.members) >= voice_channel.user_limit and not ctx.me.guild_permissions.move_members:
                     raise commands.CommandInvokeError('Your voice channel is full!')
 

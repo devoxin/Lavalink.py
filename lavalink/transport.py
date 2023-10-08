@@ -127,7 +127,6 @@ class Transport:
         protocol = 'wss' if self._ssl else 'ws'
         attempt = 0
 
-        # TODO: Bring back max reconnect attempts?
         while not self.ws_connected:
             attempt += 1
             try:

@@ -466,5 +466,3 @@ class Node:
 
     def __repr__(self):
         return '<Node name={0.name} region={0.region}>'.format(self)
-
-# TODO: update_session() perhaps belongs in client.
