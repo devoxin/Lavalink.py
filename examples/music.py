@@ -98,10 +98,11 @@ class LavalinkVoiceClient(discord.VoiceProtocol):
         # this must be done because the on_voice_state_update that would set channel_id
         # to None doesn't get dispatched after the disconnect
         player.channel_id = None
-        self.cleanup()
         await self._destroy()
 
     async def _destroy(self):
+        self.cleanup()
+
         if self._destroyed:
             # Idempotency handling, if `disconnect()` is called, the changed voice state
             # could cause this to run a second time.
