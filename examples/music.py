@@ -12,13 +12,14 @@ import discord
 import lavalink
 from discord.ext import commands
 from lavalink.events import TrackStartEvent, QueueEndEvent
+from lavalink.errors import ClientError
 from lavalink.filters import LowPass
 from lavalink.server import LoadType
 
 url_rx = re.compile(r'https?://(?:www\.)?.+')
 
 
-class LavalinkVoiceClient(discord.VoiceClient):
+class LavalinkVoiceClient(discord.VoiceProtocol):
     """
     This is the preferred way to handle external voice sending
     This client will be created via a cls in the connect method of the channel
@@ -29,6 +30,8 @@ class LavalinkVoiceClient(discord.VoiceClient):
     def __init__(self, client: discord.Client, channel: discord.abc.Connectable):
         self.client = client
         self.channel = channel
+        self.guild_id = channel.guild_id
+        self._destroyed = False
 
         if not hasattr(self.client, 'lavalink'):
             # Instantiate a client if one doesn't exist.
@@ -51,12 +54,21 @@ class LavalinkVoiceClient(discord.VoiceClient):
         await self.lavalink.voice_update_handler(lavalink_data)
 
     async def on_voice_state_update(self, data):
+        channel_id = data['channel_id']
+
+        if not channel_id:
+            await self._destroy()
+            return
+
+        self.channel = self.client.get_channel(int(channel_id))
+
         # the data needs to be transformed before being handed down to
         # voice_update_handler
         lavalink_data = {
             't': 'VOICE_STATE_UPDATE',
             'd': data
         }
+
         await self.lavalink.voice_update_handler(lavalink_data)
 
     async def connect(self, *, timeout: float, reconnect: bool, self_deaf: bool = False, self_mute: bool = False) -> None:
@@ -87,6 +99,20 @@ class LavalinkVoiceClient(discord.VoiceClient):
         # to None doesn't get dispatched after the disconnect
         player.channel_id = None
         self.cleanup()
+        await self._destroy()
+
+    async def _destroy(self):
+        if self._destroyed:
+            # Idempotency handling, if `disconnect()` is called, the changed voice state
+            # could cause this to run a second time.
+            return
+
+        self._destroyed = True
+
+        try:
+            await self.lavalink.player_manager.destroy(self.guild_id)
+        except ClientError:
+            pass
 
 
 class Music(commands.Cog):
