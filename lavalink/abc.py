@@ -242,8 +242,27 @@ class Source(ABC):
 
 
 class Filter:
-    def __init__(self, values: Union[dict, list, float]):
+    """
+    A class representing a Lavalink audio filter.
+
+    Parameters
+    ----------
+    values: Union[Dict[str, Any], List[Union[float, int]], float]
+        The values for this filter.
+    plugin_filter: :class:`bool`
+        Whether this filter is part of a Lavalink plugin. Typically, this will be ``True``
+        when creating your own filters.
+
+    Attributes
+    ----------
+    values: Union[Dict[str, Any], List[Union[float, int]], float]
+        The values for this filter.
+    plugin_filter: :class:`bool`
+        Whether this filter is part of a Lavalink plugin.
+    """
+    def __init__(self, values: Union[dict, list, float], plugin_filter: bool = False):
         self.values = values
+        self.plugin_filter: bool = plugin_filter
 
     def update(self, **kwargs):
         """ Updates the internal values to match those provided. """
