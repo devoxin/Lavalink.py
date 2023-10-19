@@ -151,8 +151,9 @@ class Transport:
                                      'and try again.', self._node.name, ce.status)
 
                     return
+                else:
+                    _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink', self._node.name)
 
-                _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink', self._node.name)
                 backoff = min(10 * attempt, 60)
                 await asyncio.sleep(backoff)
             else:
