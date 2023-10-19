@@ -387,9 +387,12 @@ class Node:
             if not isinstance(filters, list) or not all(isinstance(f, Filter) for f in filters):
                 raise ValueError('filters must be a list of Filter!')
 
-            serialized = {}
+            serialized = {
+                'pluginFilters': {}
+            }
             for f in filters:
-                serialized.update(f.serialize())
+                filter_obj = serialized['pluginFilters'] if f.plugin_filter else serialized
+                filter_obj.update(f.serialize())
 
             json['filters'] = serialized
 
