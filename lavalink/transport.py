@@ -54,8 +54,8 @@ class Transport:
                  '_host', '_port', '_password', '_ssl', 'session_id', '_destroyed')
 
     def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str]):
-        self.client: 'Client' = node.manager.client
-        self._node: Node = node
+        self.client: 'Client' = node.client
+        self._node: 'Node' = node
 
         self._session: aiohttp.ClientSession = self.client._session
         self._ws = None
@@ -104,7 +104,6 @@ class Transport:
         """
         self._destroyed = True
         await self.close()
-        await self._session.close()
 
     async def _connect(self):
         if self._destroyed:
@@ -127,7 +126,7 @@ class Transport:
         protocol = 'wss' if self._ssl else 'ws'
         attempt = 0
 
-        while not self.ws_connected:
+        while not self.ws_connected and not self._destroyed:
             attempt += 1
             try:
                 self._ws = await self._session.ws_connect('{}://{}:{}/{}/websocket'.format(protocol, self._host, self._port, LAVALINK_API_VERSION),

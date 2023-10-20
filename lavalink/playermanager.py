@@ -22,11 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import Callable, Dict, Iterator
+from typing import TYPE_CHECKING, Callable, Dict, Iterator, Tuple
 
 from .errors import ClientError
-from .player import BasePlayer
 from .node import Node
+from .player import BasePlayer
+
+if TYPE_CHECKING:
+    from .client import Client
 
 _log = logging.getLogger(__name__)
 
@@ -42,23 +45,24 @@ class PlayerManager:
 
     Attributes
     ----------
+    client: :class:`Client`
+        The Lavalink client.
     players: :class:`dict`
         Cache of all the players that Lavalink has created.
     """
 
     def __init__(self, lavalink, player):
         if not issubclass(player, BasePlayer):
-            raise ValueError(
-                'Player must implement BasePlayer or DefaultPlayer.')
+            raise ValueError('Player must implement BasePlayer or DefaultPlayer.')
 
-        self._lavalink = lavalink
+        self.client: 'Client' = lavalink
         self._player_cls = player
         self.players: Dict[int, BasePlayer] = {}
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.players)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple[int, BasePlayer]]:
         """ Returns an iterator that yields a tuple of (guild_id, player). """
         for guild_id, player in self.players.items():
             yield guild_id, player
@@ -154,9 +158,9 @@ class PlayerManager:
             return self.players[guild_id]
 
         if endpoint:  # Prioritise endpoint over region parameter
-            region = self._lavalink.node_manager.get_region(endpoint)
+            region = self.client.node_manager.get_region(endpoint)
 
-        best_node = node or self._lavalink.node_manager.find_ideal_node(region)
+        best_node = node or self.client.node_manager.find_ideal_node(region)
 
         if not best_node:
             raise ClientError('No available nodes!')
