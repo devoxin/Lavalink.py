@@ -171,7 +171,7 @@ class NodeManager:
 
         return None
 
-    def find_ideal_node(self, region: str = None, exclude: List[Node] = None) -> Optional[Node]:
+    def find_ideal_node(self, region: str = None, exclude: Optional[List[Node]] = None) -> Optional[Node]:
         """
         Finds the best (least used) node in the given region, if applicable.
 
@@ -179,6 +179,8 @@ class NodeManager:
         ----------
         region: Optional[:class:`str`]
             The region to find a node in. Defaults to ``None``.
+        exclude: Optional[List[:class:`Node`]]
+            A list of nodes to exclude from the choice.
 
         Returns
         -------
