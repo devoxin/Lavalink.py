@@ -97,7 +97,7 @@ class Node:
         return [p for p in self.client.player_manager.values() if p.node == self]
 
     @property
-    def penalty(self) -> int:
+    def penalty(self) -> float:
         """ Returns the load-balancing penalty for this node. """
         if not self.available or not self.stats:
             return 9e30
