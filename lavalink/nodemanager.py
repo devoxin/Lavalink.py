@@ -171,7 +171,7 @@ class NodeManager:
 
         return None
 
-    def find_ideal_node(self, region: str = None, exclude: List[Node] = []) -> Optional[Node]:
+    def find_ideal_node(self, region: str = None, exclude: List[Node] = None) -> Optional[Node]:
         """
         Finds the best (least used) node in the given region, if applicable.
 
@@ -184,12 +184,14 @@ class NodeManager:
         -------
         Optional[:class:`Node`]
         """
+        exclusions = exclude or []
         nodes = None
+
         if region:
-            nodes = [n for n in self.available_nodes if n.region == region and n not in exclude]
+            nodes = [n for n in self.available_nodes if n.region == region and n not in exclusions]
 
         if not nodes:  # If there are no regional nodes available, or a region wasn't specified.
-            nodes = [n for n in self.available_nodes if n not in exclude]
+            nodes = [n for n in self.available_nodes if n not in exclusions]
 
         if not nodes:
             return None
