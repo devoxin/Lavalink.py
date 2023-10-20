@@ -22,8 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import Iterator, List, Optional
+from typing import Dict, Iterator, List, Optional, Tuple
 
+from .client import Client
 from .errors import ClientError
 from .node import Node
 
@@ -47,16 +48,16 @@ class NodeManager:
     ----------
     client: :class:`Client`
         The Lavalink client.
-    nodes: :class:`list`
+    nodes: List[:class:`Node`]
         Cache of all the nodes that Lavalink has created.
-    regions: :class:`dict`
+    regions: Dict[str, Tuple[str]]
         A mapping of continent -> Discord RTC regions.
     """
-    def __init__(self, client, regions: dict):
-        self.client = client
+    def __init__(self, client, regions: Dict[str, Tuple[str]]):
+        self.client: Client = client
         self._player_queue = []
-        self.nodes = []
-        self.regions = regions or DEFAULT_REGIONS
+        self.nodes: List[Node] = []
+        self.regions: Dict[str, Tuple[str]] = regions or DEFAULT_REGIONS
 
     def __len__(self) -> int:
         return len(self.nodes)
@@ -218,7 +219,8 @@ class NodeManager:
         self._player_queue.clear()
 
     async def _handle_node_disconnect(self, node: Node):
-        """
+        """|coro|
+
         Called when a node is disconnected from Lavalink.
 
         Parameters

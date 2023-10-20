@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, Iterator, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, Iterator, Optional, Tuple
 
 from .errors import ClientError
 from .node import Node
@@ -47,15 +47,15 @@ class PlayerManager:
     ----------
     client: :class:`Client`
         The Lavalink client.
-    players: :class:`dict`
+    players: Dict[int, :class:`BasePlayer`]
         Cache of all the players that Lavalink has created.
     """
 
-    def __init__(self, lavalink, player):
+    def __init__(self, client, player):
         if not issubclass(player, BasePlayer):
             raise ValueError('Player must implement BasePlayer or DefaultPlayer.')
 
-        self.client: 'Client' = lavalink
+        self.client: 'Client' = client
         self._player_cls = player
         self.players: Dict[int, BasePlayer] = {}
 
@@ -92,7 +92,7 @@ class PlayerManager:
 
         return [p for p in self.players.values() if bool(predicate(p))]
 
-    def get(self, guild_id: int):
+    def get(self, guild_id: int) -> Optional[BasePlayer]:
         """
         Gets a player from cache.
 
@@ -122,7 +122,7 @@ class PlayerManager:
             player = self.players.pop(guild_id)
             player.cleanup()
 
-    def create(self, guild_id: int, region: str = None, endpoint: str = None, node: Node = None):
+    def create(self, guild_id: int, region: str = None, endpoint: str = None, node: Node = None) -> BasePlayer:
         """
         Creates a player if one doesn't exist with the given information.
 
