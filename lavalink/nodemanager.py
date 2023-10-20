@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import logging
 from typing import List, Optional
-
+from .errors import ClientError
 from .node import Node
 
 _log = logging.getLogger(__name__)
@@ -171,7 +171,7 @@ class NodeManager:
 
         return None
 
-    def find_ideal_node(self, region: str = None) -> Optional[Node]:
+    def find_ideal_node(self, region: str = None, exclude: List[Node] = []) -> Optional[Node]:
         """
         Finds the best (least used) node in the given region, if applicable.
 
@@ -186,10 +186,10 @@ class NodeManager:
         """
         nodes = None
         if region:
-            nodes = [n for n in self.available_nodes if n.region == region]
+            nodes = [n for n in self.available_nodes if n.region == region and n not in exclude]
 
         if not nodes:  # If there are no regional nodes available, or a region wasn't specified.
-            nodes = self.available_nodes
+            nodes = [n for n in self.available_nodes if n not in exclude]
 
         if not nodes:
             return None
@@ -229,15 +229,20 @@ class NodeManager:
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('An error occurred whilst calling player.node_unavailable()')
 
-        best_node = self.find_ideal_node(node.region)
+        best_node = self.find_ideal_node(node.region, exclude=[node])  # Don't use the node these players are moving from.
 
         if not best_node:
             self._player_queue.extend(node.players)
-            _log.error('Unable to move players, no available nodes! Waiting for a node to become available.')
+            _log.warning('Unable to move players, no available nodes! Waiting for a node to become available.')
             return
 
+        # TODO: This may need reinvestigating to make it more robust with the lack of WS requirement.
+        # i.e. we need a way to determine whether nodes are "reachable".
         for player in node.players:
-            await player.change_node(best_node)
+            try:
+                await player.change_node(best_node)
 
-            if self.client._connect_back:
-                player._original_node = node
+                if self.client._connect_back:
+                    player._original_node = node
+            except ClientError:
+                _log.error('Failed to move player %d from node %s to new node %s', player.guild_id, node.name, best_node.name)
