@@ -172,7 +172,7 @@ class Transport:
     async def _listen(self):
         """ Listens for websocket messages. """
         close_code = None
-        close_reason = 'listen() loop exited'
+        close_reason = 'Improper websocket closure'
 
         async for msg in self._ws:
             _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
