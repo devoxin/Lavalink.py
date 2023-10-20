@@ -249,4 +249,4 @@ class NodeManager:
                 if self.client._connect_back:
                     player._original_node = node
             except ClientError:
-                _log.error('Failed to move player %d from node %s to new node %s', player.guild_id, node.name, best_node.name)
+                _log.error('Failed to move player %d from node \'%s\' to new node \'%s\'', player.guild_id, node.name, best_node.name)
