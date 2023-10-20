@@ -101,6 +101,16 @@ class Client:
         self.player_manager: PlayerManager = PlayerManager(self, player)
         self.sources: Set[Source] = set()
 
+    async def close(self):
+        """|coro|
+
+        Closes all active connections and frees any resources in use.
+        """
+        for node in self.node_manager:
+            await node.destroy()
+
+        await self._session.close()
+
     def add_event_hook(self, *hooks, event: Event = None):
         """
         Adds one or more event hooks to be dispatched on an event.

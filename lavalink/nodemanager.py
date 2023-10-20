@@ -22,7 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import List, Optional
+from typing import Iterator, List, Optional
+
 from .errors import ClientError
 from .node import Node
 
@@ -44,6 +45,8 @@ class NodeManager:
 
     Attributes
     ----------
+    client: :class:`Client`
+        The Lavalink client.
     nodes: :class:`list`
         Cache of all the nodes that Lavalink has created.
     regions: :class:`dict`
@@ -55,10 +58,10 @@ class NodeManager:
         self.nodes = []
         self.regions = regions or DEFAULT_REGIONS
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.nodes)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Node]:
         for n in self.nodes:
             yield n
 

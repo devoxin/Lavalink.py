@@ -44,6 +44,8 @@ class Node:
 
     Attributes
     ----------
+    client: :class:`Client`
+        The Lavalink client.
     region: :class:`str`
         The region to assign this node to.
     name: :class:`str`
@@ -108,7 +110,7 @@ class Node:
         Destroys the transport and any underlying connections for this node.
         This will also cleanly close the websocket.
         """
-        await self._transport.close()
+        await self._transport.destroy()
 
     async def get_tracks(self, query: str) -> LoadResult:
         """|coro|
