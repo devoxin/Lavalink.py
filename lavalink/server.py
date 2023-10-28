@@ -150,7 +150,7 @@ class AudioTrack:
         return self.extra['requester']
 
     @requester.setter
-    def requester(self, requester) -> int:
+    def requester(self, requester):
         self.extra['requester'] = requester
 
     def __repr__(self):
