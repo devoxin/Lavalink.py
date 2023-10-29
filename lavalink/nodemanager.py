@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import Dict, Iterator, List, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple
 
 from .errors import ClientError
 from .node import Node
