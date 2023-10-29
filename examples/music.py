@@ -30,7 +30,7 @@ class LavalinkVoiceClient(discord.VoiceProtocol):
     def __init__(self, client: discord.Client, channel: discord.abc.Connectable):
         self.client = client
         self.channel = channel
-        self.guild_id = channel.guild_id
+        self.guild_id = channel.guild.id
         self._destroyed = False
 
         if not hasattr(self.client, 'lavalink'):
