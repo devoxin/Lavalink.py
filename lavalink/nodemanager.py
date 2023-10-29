@@ -22,11 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple, TYPE_CHECKING
 
-from .client import Client
 from .errors import ClientError
 from .node import Node
+
+if TYPE_CHECKING:
+    from .client import Client
 
 _log = logging.getLogger(__name__)
 DEFAULT_REGIONS = {
@@ -54,7 +56,7 @@ class NodeManager:
         A mapping of continent -> Discord RTC regions.
     """
     def __init__(self, client, regions: Dict[str, Tuple[str]]):
-        self.client: Client = client
+        self.client: 'Client' = client
         self._player_queue = []
         self.nodes: List[Node] = []
         self.regions: Dict[str, Tuple[str]] = regions or DEFAULT_REGIONS
