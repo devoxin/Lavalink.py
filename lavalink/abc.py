@@ -1,6 +1,6 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, Union
-import logging
 
 from .server import AudioTrack
 
@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .client import Client
     from .node import Node
     from .player import LoadResult
+
 _log = logging.getLogger(__name__)
 
 
