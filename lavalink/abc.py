@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, Union
+import logging
 
 from .server import AudioTrack
 
@@ -7,6 +8,7 @@ if TYPE_CHECKING:
     from .client import Client
     from .node import Node
     from .player import LoadResult
+_log = logging.getLogger(__name__)
 
 
 class BasePlayer(ABC):
@@ -127,6 +129,10 @@ class BasePlayer(ABC):
 
     async def _voice_server_update(self, data):
         self._voice_state.update(endpoint=data['endpoint'], token=data['token'])
+
+        if 'session_id' not in data:  # We should've received session_id from a VOICE_STATE_UPDATE before receiving a VOICE_SERVER_UPDATE.
+            _log.warning('[Player:%s] Missing session_id, is the client User ID correct?', self.guild_id)
+
         await self._dispatch_voice_update()
 
     async def _voice_state_update(self, data):
