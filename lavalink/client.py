@@ -28,11 +28,11 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import aiohttp
 
-from .abc import Source
+from .abc import BasePlayer, Source
 from .events import Event
 from .node import Node
 from .nodemanager import NodeManager
@@ -41,6 +41,8 @@ from .playermanager import PlayerManager
 from .server import AudioTrack, LoadResult
 
 _log = logging.getLogger(__name__)
+
+Player = TypeVar('Player', bound=BasePlayer)
 
 
 class Client:
@@ -51,8 +53,8 @@ class Client:
     ----------
     user_id: Union[:class:`int`, :class:`str`]
         The user id of the bot.
-    player: Optional[:class:`BasePlayer`]
-        The class that should be used for the player. Defaults to ``DefaultPlayer``.
+    player: Type[:class:`BasePlayer`]
+        The class that should be used for the player. Defaults to :class:`DefaultPlayer`.
         Do not change this unless you know what you are doing!
     regions: Optional[:class:`dict`]
         A mapping of continent -> Discord RTC regions.
@@ -84,8 +86,8 @@ class Client:
     """
     __slots__ = ('_session', '_user_id', '_connect_back', '_event_hooks', 'node_manager', 'player_manager', 'sources')
 
-    def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
-                 connect_back: bool = False):
+    def __init__(self, user_id: Union[int, str], player: Type[Player] = DefaultPlayer,
+                 regions: Optional[Dict[str, Tuple[str]]] = None, connect_back: bool = False):
         if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
             # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
             raise TypeError('user_id must be either an int or str (not {}). If the type is None, '
