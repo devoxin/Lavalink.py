@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union, Dict, Any
 
 from .server import AudioTrack
 
@@ -218,7 +218,7 @@ class Source(ABC):
         if self.__class__ is other.__class__:
             return self.name == other.name
 
-        raise NotImplementedError
+        return False
 
     def __hash__(self):
         return hash(self.name)
@@ -267,14 +267,16 @@ class Filter:
     plugin_filter: :class:`bool`
         Whether this filter is part of a Lavalink plugin.
     """
-    def __init__(self, values: Union[dict, list, float], plugin_filter: bool = False):
+    def __init__(self, values: Union[Dict[str, Any], List[Union[float, int]], float], plugin_filter: bool = False):
         self.values = values
         self.plugin_filter: bool = plugin_filter
 
+    @abstractmethod
     def update(self, **kwargs):
         """ Updates the internal values to match those provided. """
         raise NotImplementedError
 
+    @abstractmethod
     def serialize(self) -> dict:
         """ Transforms the internal values into a dict matching the structure Lavalink expects. """
         raise NotImplementedError
