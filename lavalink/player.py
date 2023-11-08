@@ -292,7 +292,7 @@ class DefaultPlayer(BasePlayer):
                     self.queue.insert(0, self.current)
                 else:
                     track = self.current
-            if self.loop == 2:
+            elif self.loop == 2:
                 self.queue.append(self.current)
 
         self._last_position = 0
