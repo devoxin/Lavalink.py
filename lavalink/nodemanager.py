@@ -55,9 +55,12 @@ class NodeManager:
     regions: Dict[str, Tuple[str]]
         A mapping of continent -> Discord RTC regions.
     """
-    def __init__(self, client, regions: Dict[str, Tuple[str]]):
-        self.client: 'Client' = client
+    __slots__ = ('_player_queue', '_connect_back', 'client', 'nodes', 'regions')
+
+    def __init__(self, client, regions: Dict[str, Tuple[str]], connect_back: bool):
         self._player_queue = []
+        self._connect_back: bool = connect_back
+        self.client: 'Client' = client
         self.nodes: List[Node] = []
         self.regions: Dict[str, Tuple[str]] = regions or DEFAULT_REGIONS
 
@@ -213,7 +216,7 @@ class NodeManager:
             original_node_name = player._original_node.name if player._original_node else '[no node]'
             _log.debug('Moved player %d from node \'%s\' to node \'%s\'', player.guild_id, original_node_name, node.name)
 
-        if self.client._connect_back:
+        if self._connect_back:
             for player in node._original_players:
                 await player.change_node(node)
                 player._original_node = None
@@ -253,7 +256,7 @@ class NodeManager:
             try:
                 await player.change_node(best_node)
 
-                if self.client._connect_back:
+                if self._connect_back:
                     player._original_node = node
             except ClientError:
                 _log.error('Failed to move player %d from node \'%s\' to new node \'%s\'', player.guild_id, node.name, best_node.name)
