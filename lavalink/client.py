@@ -80,11 +80,13 @@ class Client:
     Attributes
     ----------
     node_manager: :class:`NodeManager`
-        Represents the node manager that contains all lavalink nodes.
+        The node manager, used for storing and managing all registered Lavalink nodes.
     player_manager: :class:`PlayerManager`
-        Represents the player manager that contains all the players.
+        The player manager, used for storing and managing all players.
+    sources: Set[:class:`Source`]
+        The custom sources registered to this client.
     """
-    __slots__ = ('_session', '_user_id', '_connect_back', '_event_hooks', 'node_manager', 'player_manager', 'sources')
+    __slots__ = ('_session', '_user_id', '_event_hooks', 'node_manager', 'player_manager', 'sources')
 
     def __init__(self, user_id: Union[int, str], player: Type[Player] = DefaultPlayer,
                  regions: Optional[Dict[str, Tuple[str]]] = None, connect_back: bool = False):
@@ -96,10 +98,9 @@ class Client:
                             .format(user_id))
 
         self._session: aiohttp.ClientSession = aiohttp.ClientSession()
-        self._user_id: str = str(user_id)
-        self._connect_back: bool = connect_back
+        self._user_id: str = int(user_id)
         self._event_hooks = defaultdict(list)
-        self.node_manager: NodeManager = NodeManager(self, regions)
+        self.node_manager: NodeManager = NodeManager(self, regions, connect_back)
         self.player_manager: PlayerManager = PlayerManager(self, player)
         self.sources: Set[Source] = set()
 
@@ -374,7 +375,7 @@ class Client:
             if player:
                 await player._voice_server_update(data['d'])
         elif data['t'] == 'VOICE_STATE_UPDATE':
-            if int(data['d']['user_id']) != int(self._user_id):
+            if int(data['d']['user_id']) != self._user_id:
                 return
 
             guild_id = int(data['d']['guild_id'])
