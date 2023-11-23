@@ -131,8 +131,8 @@ class BasePlayer(ABC):
     async def _voice_server_update(self, data):
         self._voice_state.update(endpoint=data['endpoint'], token=data['token'])
 
-        if 'session_id' not in data:  # We should've received session_id from a VOICE_STATE_UPDATE before receiving a VOICE_SERVER_UPDATE.
-            _log.warning('[Player:%s] Missing session_id, is the client User ID correct?', self.guild_id)
+        if 'sessionId' not in self._voice_state:  # We should've received session_id from a VOICE_STATE_UPDATE before receiving a VOICE_SERVER_UPDATE.
+            _log.warning('[Player:%s] Missing sessionId, is the client User ID correct?', self.guild_id)
 
         await self._dispatch_voice_update()
 
