@@ -37,7 +37,7 @@ class Event:
 
 class TrackStartEvent(Event):
     """
-    This event is emitted when the player starts to play a track.
+    This event is emitted when a track begins playing (e.g. via player.play())
 
     Attributes
     ----------
@@ -55,18 +55,18 @@ class TrackStartEvent(Event):
 
 class TrackStuckEvent(Event):
     """
-    This event is emitted when the currently playing track is stuck.
-    This normally has something to do with the stream you are playing
-    and not Lavalink itself.
+    This event is emitted when the currently playing track is stuck (i.e. has not provided any audio).
+    This is typically a fault of the track's underlying audio stream, and not Lavalink itself.
 
     Attributes
     ----------
     player: :class:`BasePlayer`
-        The player that has the playing track being stuck.
+        The player associated with the stuck track.
     track: :class:`AudioTrack`
-        The track is stuck from playing.
+        The stuck track.
     threshold: :class:`int`
-        The amount of time the track had while being stuck.
+        The configured threshold, in milliseconds, after which a track is considered to be stuck
+        when no audio frames were provided.
     """
     __slots__ = ('player', 'track', 'threshold')
 
@@ -78,7 +78,7 @@ class TrackStuckEvent(Event):
 
 class TrackExceptionEvent(Event):
     """
-    This event is emitted when an exception occurs while playing a track.
+    This event is emitted when a track encounters an exception during playback.
 
     Attributes
     ----------
@@ -86,18 +86,21 @@ class TrackExceptionEvent(Event):
         The player that had the exception occur while playing a track.
     track: :class:`AudioTrack`
         The track that had the exception while playing.
-    exception: :class:`str`
-        The type of exception that the track had while playing.
+    message: Optional[:class:`str`]
+        The exception message.
     severity: :enum:`Severity`
         The severity of the exception.
+    cause: :class:`str`
+        The cause of the exception.
     """
-    __slots__ = ('player', 'track', 'exception', 'severity')
+    __slots__ = ('player', 'track', 'message', 'severity', 'cause')
 
-    def __init__(self, player, track, exception, severity):
+    def __init__(self, player, track, message, severity, cause):
         self.player: 'BasePlayer' = player
         self.track: 'AudioTrack' = track
-        self.exception: str = exception
-        self.severity: Severity = Severity.from_str(severity)
+        self.message: Optional[str] = message
+        self.severity: Severity = severity
+        self.cause: str = cause
 
 
 class TrackEndEvent(Event):
@@ -119,7 +122,7 @@ class TrackEndEvent(Event):
     def __init__(self, player, track, reason):
         self.player: 'BasePlayer' = player
         self.track: Optional['AudioTrack'] = track
-        self.reason: EndReason = EndReason.from_str(reason)
+        self.reason: EndReason = reason
 
 
 class TrackLoadFailedEvent(Event):
