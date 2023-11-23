@@ -384,6 +384,12 @@ class Client:
             if player:
                 await player._voice_state_update(data['d'])
 
+    def has_listeners(self, event: Type[Event]) -> bool:
+        """
+        Check whether the client has any listeners for a specific event type.
+        """
+        return len(self._event_hooks['Generic']) > 0 or len(self._event_hooks[event.__name__]) > 0
+
     async def _dispatch_event(self, event: Event):
         """|coro|
 
