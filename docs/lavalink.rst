@@ -85,7 +85,7 @@ All Events are derived from :class:`Event`
 .. autoclass:: WebSocketClosedEvent
     :members:
 
-.. autoclass:: IncomingWebsocketMessage
+.. autoclass:: IncomingWebSocketMessage
     :members:
 
 Filters

@@ -307,7 +307,7 @@ class WebSocketClosedEvent(Event):
         self.by_remote: bool = by_remote
 
 
-class IncomingWebsocketMessage(Event):
+class IncomingWebSocketMessage(Event):
     """
     This event is emitted whenever the client receives a websocket message from the Lavalink server.
 
