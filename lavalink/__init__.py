@@ -32,33 +32,6 @@ from .utils import (decode_track, encode_track, format_time, parse_time,
                     timestamp_to_millis)
 
 
-def enable_debug_logging(submodule: str = None):
-    """
-    Sets up a logger to stdout. This solely exists to make things easier for
-    end-users who want to debug issues with Lavalink.py.
-
-    Parameters
-    ----------
-    module: :class:`str`
-        The module to enable logging for. ``None`` to enable debug logging for
-        the entirety of Lavalink.py.
-
-        Example: ``lavalink.enable_debug_logging('websocket')``
-    """
-    module_name = 'lavalink.{}'.format(submodule) if submodule else 'lavalink'
-    log = logging.getLogger(module_name)
-
-    fmt = logging.Formatter(
-        '[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s',  # lavalink.py
-        datefmt="%H:%M:%S"
-    )
-
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(fmt)
-    log.addHandler(handler)
-    log.setLevel(logging.DEBUG)
-
-
 def listener(*events: Event):
     """
     Marks this function as an event listener for Lavalink.py.
