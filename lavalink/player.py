@@ -27,10 +27,9 @@ from time import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from .abc import BasePlayer, DeferredAudioTrack
-from .errors import InvalidTrack, LoadError, RequestError
+from .errors import InvalidTrack, LoadError, PlayerErrorEvent, RequestError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
-                     TrackExceptionEvent, TrackLoadFailedEvent,
-                     TrackStartEvent, TrackStuckEvent)
+                     TrackLoadFailedEvent, TrackStartEvent, TrackStuckEvent)
 from .filters import Filter
 from .server import AudioTrack
 
@@ -217,10 +216,7 @@ class DefaultPlayer(BasePlayer):
             The index at which to add the track.
             If index is left unspecified, the default behaviour is to append the track. Defaults to ``None``.
         """
-        at = track
-
-        if isinstance(track, dict):
-            at = AudioTrack(track, requester)
+        at = AudioTrack(track, requester) if isinstance(track, dict) else track
 
         if requester != 0:
             at.requester = requester
@@ -609,12 +605,15 @@ class DefaultPlayer(BasePlayer):
         event: :class:`Event`
             The event that will be handled.
         """
-        if isinstance(event, (TrackStuckEvent, TrackExceptionEvent)) or \
-                isinstance(event, TrackEndEvent) and event.reason == 'finished':
+        # A track throws loadFailed when it fails to provide any audio before throwing an exception.
+        # A TrackStuckEvent is not proceeded by a TrackEndEvent. In theory, you could ignore a TrackStuckEvent
+        # and hope that a track will eventually play, however, it's unlikely.
+
+        if isinstance(event, TrackStuckEvent) or isinstance(event, TrackEndEvent) and event.reason.may_start_next():
             try:
                 await self.play()
-            except RequestError:
-                # TODO: Dispatch as PlayerErrorEvent perhaps?
+            except RequestError as re:
+                await self.client._dispatch_event(PlayerErrorEvent(self, re))
                 _log.exception('[DefaultPlayer:%d] Encountered a request error whilst starting a new track.', self.guild_id)
 
     async def _update_state(self, state: dict):

@@ -32,6 +32,7 @@ from .events import (NodeConnectedEvent, NodeDisconnectedEvent, NodeReadyEvent,
                      PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
                      TrackStuckEvent, WebSocketClosedEvent)
 from .player import AudioTrack
+from .server import EndReason, Severity
 from .stats import Stats
 
 if TYPE_CHECKING:
@@ -263,13 +264,16 @@ class Transport:
         event = None
 
         if event_type == 'TrackEndEvent':
+            # we can't use player.current here as this *could* be fired after a TrackStartEvent - i.e. when skipping.
             track = AudioTrack(data['track'])
-            event = TrackEndEvent(player, track, data['reason'])
+            end_reason = EndReason.from_str(data['reason'])
+            event = TrackEndEvent(player, track, end_reason)
         elif event_type == 'TrackExceptionEvent':
-            exc_inner = data.get('exception', {})
-            exception = data.get('error') or exc_inner.get('cause', 'Unknown exception')
-            severity = exc_inner.get('severity')
-            event = TrackExceptionEvent(player, player.current, exception, severity)
+            exception = data['exception']
+            message = exception['message']
+            severity = Severity.from_str(exception['severity'])
+            cause = exception['cause']
+            event = TrackExceptionEvent(player, player.current, message, severity, cause)
         # elif event_type == 'TrackStartEvent':
         #    event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackStuckEvent':

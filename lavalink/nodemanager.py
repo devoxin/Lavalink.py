@@ -232,10 +232,6 @@ class NodeManager:
         ----------
         node: :class:`Node`
             The node that has just connected.
-        code: :class:`int`
-            The code for why the node was disconnected.
-        reason: :class:`str`
-            The reason why the node was disconnected.
         """
         for player in node.players:
             try:
