@@ -24,19 +24,21 @@ SOFTWARE.
 import logging
 from random import randrange
 from time import time
-from typing import TYPE_CHECKING, Dict, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Type, TypeVar, Union
 
 from .abc import BasePlayer, DeferredAudioTrack
 from .errors import InvalidTrack, LoadError, PlayerErrorEvent, RequestError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackLoadFailedEvent, TrackStartEvent, TrackStuckEvent)
-from .filters import Filter
+from .filters import Filter as _Filter
 from .server import AudioTrack
 
 if TYPE_CHECKING:
     from .node import Node
 
 _log = logging.getLogger(__name__)
+
+Filter = TypeVar('Filter', bound=_Filter)
 
 
 class DefaultPlayer(BasePlayer):
