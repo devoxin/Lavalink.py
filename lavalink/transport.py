@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import aiohttp
 
 from .errors import AuthenticationError, ClientError, RequestError
-from .events import (IncomingWebsocketMessage, NodeConnectedEvent,
+from .events import (IncomingWebSocketMessage, NodeConnectedEvent,
                      NodeDisconnectedEvent, NodeReadyEvent, PlayerUpdateEvent,
                      TrackEndEvent, TrackExceptionEvent, TrackStuckEvent,
                      WebSocketClosedEvent)
@@ -221,8 +221,8 @@ class Transport:
         data: Union[Dict[Any, Any], List[Any]]
             The payload received from the Lavalink server.
         """
-        if self.client.has_listeners(IncomingWebsocketMessage):
-            await self.client._dispatch_event(IncomingWebsocketMessage(data.copy(), self._node))
+        if self.client.has_listeners(IncomingWebSocketMessage):
+            await self.client._dispatch_event(IncomingWebSocketMessage(data.copy(), self._node))
 
         if not isinstance(data, dict) or 'op' not in data:
             return

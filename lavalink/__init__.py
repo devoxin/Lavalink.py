@@ -14,7 +14,7 @@ from .abc import BasePlayer, DeferredAudioTrack, Source
 from .client import Client
 from .errors import (AuthenticationError, ClientError, InvalidTrack, LoadError,
                      PlayerErrorEvent, RequestError)
-from .events import (Event, IncomingWebsocketMessage, NodeChangedEvent,
+from .events import (Event, IncomingWebSocketMessage, NodeChangedEvent,
                      NodeConnectedEvent, NodeDisconnectedEvent, NodeReadyEvent,
                      PlayerUpdateEvent, QueueEndEvent, TrackEndEvent,
                      TrackExceptionEvent, TrackLoadFailedEvent,
