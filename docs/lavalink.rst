@@ -37,6 +37,10 @@ Errors
 .. autoclass:: LoadError
 
 .. autoclass:: RequestError
+    :members:
+
+.. autoclass:: PlayerErrorEvent
+    :members:
 
 Events
 ------
@@ -79,6 +83,9 @@ All Events are derived from :class:`Event`
     :members:
 
 .. autoclass:: WebSocketClosedEvent
+    :members:
+
+.. autoclass:: IncomingWebsocketMessage
     :members:
 
 Filters

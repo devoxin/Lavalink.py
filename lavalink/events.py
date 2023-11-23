@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from .server import EndReason, Severity
 
@@ -280,7 +280,6 @@ class NodeReadyEvent(Event):
 
 class WebSocketClosedEvent(Event):
     """
-
     This event is emitted when an audio websocket to Discord is closed. This can happen
     happen for various reasons, an example being when a channel is deleted.
 
@@ -306,3 +305,24 @@ class WebSocketClosedEvent(Event):
         self.code: int = code
         self.reason: str = reason
         self.by_remote: bool = by_remote
+
+
+class IncomingWebsocketMessage(Event):
+    """
+    This event is emitted whenever the client receives a websocket message from the Lavalink server.
+
+    You can use this to extend the functionality of the client, particularly useful when used with
+    Lavalink server plugins that can add new HTTP routes or websocket messages.
+
+    Attributes
+    ----------
+    data: Union[Dict[Any, Any], List[Any]]
+        The received JSON-formatted data from the websocket.
+    node: :class:`Node`
+        The node responsible for this websocket message.
+    """
+    __slots__ = ('data', 'node')
+
+    def __init__(self, data, node):
+        self.data: Union[Dict[Any, Any], List[Any]] = data
+        self.node: 'Node' = node

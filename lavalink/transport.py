@@ -23,14 +23,15 @@ SOFTWARE.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import aiohttp
 
 from .errors import AuthenticationError, ClientError, RequestError
-from .events import (NodeConnectedEvent, NodeDisconnectedEvent, NodeReadyEvent,
-                     PlayerUpdateEvent, TrackEndEvent, TrackExceptionEvent,
-                     TrackStuckEvent, WebSocketClosedEvent)
+from .events import (IncomingWebsocketMessage, NodeConnectedEvent,
+                     NodeDisconnectedEvent, NodeReadyEvent, PlayerUpdateEvent,
+                     TrackEndEvent, TrackExceptionEvent, TrackStuckEvent,
+                     WebSocketClosedEvent)
 from .player import AudioTrack
 from .server import EndReason, Severity
 from .stats import Stats
@@ -211,15 +212,21 @@ class Transport:
         await self._node.manager._handle_node_disconnect(self._node)
         await self.client._dispatch_event(NodeDisconnectedEvent(self._node, code, reason))
 
-    async def _handle_message(self, data: dict):
+    async def _handle_message(self, data: Union[Dict[Any, Any], List[Any]]):
         """
         Handles the response from the websocket.
 
         Parameters
         ----------
-        data: :class:`dict`
-            The data given from Lavalink.
+        data: Union[Dict[Any, Any], List[Any]]
+            The payload received from the Lavalink server.
         """
+        if self.client.has_listeners(IncomingWebsocketMessage):
+            await self.client._dispatch_event(IncomingWebsocketMessage(data.copy(), self._node))
+
+        if not isinstance(data, dict) or 'op' not in data:
+            return
+
         op = data['op']
 
         if op == 'ready':
