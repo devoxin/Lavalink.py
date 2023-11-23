@@ -24,7 +24,7 @@ SOFTWARE.
 import logging
 from random import randrange
 from time import time
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Type, Union
 
 from .abc import BasePlayer, DeferredAudioTrack
 from .errors import InvalidTrack, LoadError, PlayerErrorEvent, RequestError
@@ -473,7 +473,7 @@ class DefaultPlayer(BasePlayer):
         self.filters[filter_name] = _filter
         await self._apply_filters()
 
-    async def update_filter(self, _filter: Filter, **kwargs):
+    async def update_filter(self, _filter: Type[Filter], **kwargs):
         """|coro|
 
         Updates a filter using the upsert method;
@@ -494,7 +494,7 @@ class DefaultPlayer(BasePlayer):
 
         Parameters
         ----------
-        _filter: :class:`Filter`
+        _filter: Type[:class:`Filter`]
             The filter class (**not** an instance of, see above example) to upsert.
         **kwargs: :class:`any`
             The kwargs to pass to the filter.
@@ -517,7 +517,7 @@ class DefaultPlayer(BasePlayer):
         self.filters[filter_name] = filter_instance
         await self._apply_filters()
 
-    def get_filter(self, _filter: Union[Filter, str]):
+    def get_filter(self, _filter: Union[Type[Filter], str]):
         """
         Returns the corresponding filter, if it's enabled.
 
@@ -532,7 +532,7 @@ class DefaultPlayer(BasePlayer):
 
         Parameters
         ----------
-        _filter: Union[:class:`Filter`, :class:`str`]
+        _filter: Union[Type[:class:`Filter`], :class:`str`]
             The filter name, or filter class (**not** an instance of, see above example), to get.
 
         Returns
@@ -551,7 +551,7 @@ class DefaultPlayer(BasePlayer):
 
         return self.filters.get(filter_name.lower(), None)
 
-    async def remove_filter(self, _filter: Union[Filter, str]):
+    async def remove_filter(self, _filter: Union[Type[Filter], str]):
         """|coro|
 
         Removes a filter from the player, undoing any effects applied to the audio.
@@ -566,7 +566,7 @@ class DefaultPlayer(BasePlayer):
 
         Parameters
         ----------
-        _filter: Union[:class:`Filter`, :class:`str`]
+        _filter: Union[Type[:class:`Filter`], :class:`str`]
             The filter name, or filter class (**not** an instance of, see above example), to remove.
         """
         if isinstance(_filter, str):
