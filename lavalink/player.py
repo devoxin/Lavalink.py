@@ -204,15 +204,15 @@ class DefaultPlayer(BasePlayer):
             The index at which to add the track.
             If index is left unspecified, the default behaviour is to append the track. Defaults to ``None``.
         """
-        at = AudioTrack(track, requester) if isinstance(track, dict) else track
+        track = AudioTrack(track, requester) if isinstance(track, dict) else track
 
         if requester != 0:
-            at.requester = requester
+            track.requester = requester
 
         if index is None:
-            self.queue.append(at)
+            self.queue.append(track)
         else:
-            self.queue.insert(index, at)
+            self.queue.insert(index, track)
 
     async def play(self, track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]]] = None,
                    start_time: Optional[int] = 0, end_time: Optional[int] = None, no_replace: Optional[bool] = False,
@@ -580,8 +580,8 @@ class DefaultPlayer(BasePlayer):
         if isinstance(event, TrackStuckEvent) or isinstance(event, TrackEndEvent) and event.reason.may_start_next():
             try:
                 await self.play()
-            except RequestError as re:
-                await self.client._dispatch_event(PlayerErrorEvent(self, re))
+            except RequestError as error:
+                await self.client._dispatch_event(PlayerErrorEvent(self, error))
                 _log.exception('[DefaultPlayer:%d] Encountered a request error whilst starting a new track.', self.guild_id)
 
     async def _update_state(self, state: dict):

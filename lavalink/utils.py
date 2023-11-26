@@ -55,8 +55,8 @@ def timestamp_to_millis(timestamp: str) -> int:
     """
     try:
         sections = list(map(int, timestamp.split(':')))
-    except ValueError as ve:
-        raise ValueError('Timestamp should consist of integers and colons only') from ve
+    except ValueError as error:
+        raise ValueError('Timestamp should consist of integers and colons only') from error
 
     if not sections:
         raise TypeError('An invalid timestamp was provided, a timestamp should look like 1:30')
@@ -65,19 +65,19 @@ def timestamp_to_millis(timestamp: str) -> int:
         raise TypeError('Too many segments within the provided timestamp! Provide no more than 4 segments.')
 
     if len(sections) == 4:
-        d, h, m, s = map(int, sections)
-        return (d * 86400000) + (h * 3600000) + (m * 60000) + (s * 1000)
+        days, hours, minutes, seconds = map(int, sections)
+        return (days * 86400000) + (hours * 3600000) + (minutes * 60000) + (seconds * 1000)
 
     if len(sections) == 3:
-        h, m, s = map(int, sections)
-        return (h * 3600000) + (m * 60000) + (s * 1000)
+        hours, minutes, seconds = map(int, sections)
+        return (hours * 3600000) + (minutes * 60000) + (seconds * 1000)
 
     if len(sections) == 2:
-        m, s = map(int, sections)
-        return (m * 60000) + (s * 1000)
+        minutes, seconds = map(int, sections)
+        return (minutes * 60000) + (seconds * 1000)
 
-    s, = map(int, sections)
-    return s * 1000
+    seconds, = map(int, sections)
+    return seconds * 1000
 
 
 def format_time(time: int) -> str:

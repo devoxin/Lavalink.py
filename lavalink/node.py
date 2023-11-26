@@ -391,9 +391,9 @@ class Node:
             serialized = {
                 'pluginFilters': {}
             }
-            for f in filters:
-                filter_obj = serialized['pluginFilters'] if f.plugin_filter else serialized
-                filter_obj.update(f.serialize())
+            for filter_ in filters:
+                filter_obj = serialized['pluginFilters'] if filter_.plugin_filter else serialized
+                filter_obj.update(filter_.serialize())
 
             json['filters'] = serialized
 

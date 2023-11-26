@@ -30,8 +30,8 @@ from .utfm_codec import read_utfm
 
 
 class DataReader:
-    def __init__(self, ts):
-        self._buf = BytesIO(b64decode(ts))
+    def __init__(self, base64_str: str):
+        self._buf: BytesIO = BytesIO(b64decode(base64_str))
 
     def _read(self, count):
         return self._buf.read(count)

@@ -165,17 +165,17 @@ def download(dl_url, path):
         if cur >= tot:
             sys.stdout.write('\n')
 
-    def read_chunk(f, chunk_size=8192):
+    def read_chunk(out, chunk_size=8192):
         total_bytes = int(res.headers['Content-Length'].strip())
         current_bytes = 0
 
         for chunk in res.iter_content(chunk_size):
-            f.write(chunk)
+            out.write(chunk)
             current_bytes += len(chunk)
             report_progress(min(current_bytes, total_bytes), total_bytes)
 
-    with open(path, 'wb') as f:
-        read_chunk(f)
+    with open(path, 'wb') as out:
+        read_chunk(out)
 
 
 def select_release_unattended(non_draft: List[Release], version_selector: str) -> Release:
@@ -197,7 +197,7 @@ def select_release_unattended(non_draft: List[Release], version_selector: str) -
 
         predicate = lte
     elif version_selector.startswith('>'):
-        def gt(release: Release):
+        def gt(release: Release):  # pylint: disable=C0103
             return release > version_selector[1:]
 
         predicate = gt
