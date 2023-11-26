@@ -83,7 +83,7 @@ async def _join(ctx: lightbulb.Context):
     # user not in voice channel
     if not voice_state:
         return
-    
+
     channel_id = voice_state[0].channel_id  # channel user is connected to
     plugin.bot.d.lavalink.player_manager.create(guild_id=ctx.guild_id)
     await plugin.bot.update_voice_state(ctx.guild_id, channel_id, self_deaf=True)
