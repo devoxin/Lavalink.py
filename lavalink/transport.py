@@ -134,13 +134,13 @@ class Transport:
                 self._ws = await self._session.ws_connect(f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket',
                                                           headers=headers,
                                                           heartbeat=60)
-            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as ce:
-                if isinstance(ce, aiohttp.ClientConnectorError):
+            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as error:
+                if isinstance(error, aiohttp.ClientConnectorError):
                     _log.warning('[Node:%s] Invalid response received; this may indicate that '
                                  'Lavalink is not running, or is running on a port different '
                                  'to the one you provided to `add_node`.', self._node.name)
-                elif isinstance(ce, aiohttp.WSServerHandshakeError):
-                    if ce.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
+                elif isinstance(error, aiohttp.WSServerHandshakeError):
+                    if error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
                         _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.',
                                      self._node.name)
                         # We shouldn't try to establish any more connections as correcting this particular error
@@ -149,7 +149,7 @@ class Transport:
                     else:
                         _log.warning('[Node:%s] The remote server returned code %d, the expected code was 101. This usually '
                                      'indicates that the remote server is a webserver and not Lavalink. Check your ports, '
-                                     'and try again.', self._node.name, ce.status)
+                                     'and try again.', self._node.name, error.status)
 
                     return
                 else:
@@ -227,7 +227,7 @@ class Transport:
         if not isinstance(data, dict) or 'op' not in data:
             return
 
-        op = data['op']
+        op = data['op']  # pylint: disable=C0103
 
         if op == 'ready':
             self.session_id = data['sessionId']
@@ -326,7 +326,7 @@ class Transport:
         except ConnectionResetError:
             _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
 
-    async def _request(self, method: str, path: str, to=None, trace: bool = False, versioned: bool = True, **kwargs):
+    async def _request(self, method: str, path: str, to=None, trace: bool = False, versioned: bool = True, **kwargs):  # pylint: disable=C0103
         if self._destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 

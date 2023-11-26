@@ -50,8 +50,8 @@ class Enum(_Enum):
         except KeyError:
             try:
                 return cls(other)
-            except ValueError as ve:
-                raise ValueError(f'{other} is not a valid {cls.__name__} enum!') from ve
+            except ValueError as error:
+                raise ValueError(f'{other} is not a valid {cls.__name__} enum!') from error
 
 
 class AudioTrack:
@@ -131,8 +131,8 @@ class AudioTrack:
             self.source_name: str = info.get('sourceName', 'unknown')
             self.plugin_info: Optional[Dict[str, Any]] = data.get('pluginInfo')
             self.extra: Dict[str, Any] = {**extra, 'requester': requester}
-        except KeyError as ke:
-            missing_key, = ke.args  # pylint: disable=unbalanced-tuple-unpacking
+        except KeyError as error:
+            missing_key, = error.args  # pylint: disable=unbalanced-tuple-unpacking
             raise InvalidTrack(f'Cannot build a track from partial data! (Missing key: {missing_key})') from None
 
     def __getitem__(self, name):
