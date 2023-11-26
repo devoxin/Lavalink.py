@@ -326,14 +326,17 @@ class Transport:
         except ConnectionResetError:
             _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
 
-    async def _request(self, method: str, path: str, to=None, trace: bool = False, **kwargs):
+    async def _request(self, method: str, path: str, to=None, trace: bool = False, versioned: bool = True, **kwargs):
         if self._destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
         if trace is True or self.trace_requests is True:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': 'true'}
 
-        request_url = '{}/{}{}'.format(self.http_uri, LAVALINK_API_VERSION, path)
+        if versioned:
+            request_url = '{}/{}/{}'.format(self.http_uri, LAVALINK_API_VERSION, path)
+        else:
+            request_url = '{}/{}'.format(self.http_uri, path)
 
         _log.debug('[Node:%s] Sending request to Lavalink with the following parameters: method=%s, url=%s, params=%s, json=%s',
                    self._node.name, method, request_url, kwargs.get('params', {}), kwargs.get('json', {}))
@@ -345,6 +348,9 @@ class Transport:
                     raise AuthenticationError
 
                 if res.status == 200:
+                    if to is str:
+                        return await res.text()
+
                     json = await res.json()
                     return json if to is None else to.from_dict(json)
 
