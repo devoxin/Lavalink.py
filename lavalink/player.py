@@ -203,13 +203,14 @@ class DefaultPlayer(BasePlayer):
         except KeyError:
             pass
 
-    def add(self, track: Union[AudioTrack, 'DeferredAudioTrack', Dict], requester: int = 0, index: int = None):
+    def add(self, track: Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]],
+            requester: int = 0, index: int = None):
         """
         Adds a track to the queue.
 
         Parameters
         ----------
-        track: Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`, :class:`dict`]
+        track: Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`, Dict[str, Union[Optional[str], bool, int]]]
             The track to add. Accepts either an AudioTrack or
             a dict representing a track returned from Lavalink.
         requester: :class:`int`
@@ -228,9 +229,9 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, at)
 
-    async def play(self, track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict]] = None, start_time: Optional[int] = 0,
-                   end_time: Optional[int] = None, no_replace: Optional[bool] = False, volume: Optional[int] = None,
-                   pause: Optional[bool] = False, **kwargs):
+    async def play(self, track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]]] = None,
+                   start_time: Optional[int] = 0, end_time: Optional[int] = None, no_replace: Optional[bool] = False,
+                   volume: Optional[int] = None, pause: Optional[bool] = False, **kwargs):
         """|coro|
 
         Plays the given track.
@@ -243,7 +244,7 @@ class DefaultPlayer(BasePlayer):
 
         Parameters
         ----------
-        track: Optional[Union[:class:`DeferredAudioTrack`, :class:`AudioTrack`, :class:`dict`]]
+        track: Optional[Union[:class:`DeferredAudioTrack`, :class:`AudioTrack`, Dict[str, Union[Optional[str], bool, int]]]]
             The track to play. If left unspecified, this will default
             to the first track in the queue. Defaults to ``None`` so plays the next
             song in queue. Accepts either an AudioTrack or a dict representing a track
