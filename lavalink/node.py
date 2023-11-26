@@ -60,7 +60,7 @@ class Node:
         self._transport = Transport(self, host, port, password, ssl, session_id)
 
         self.region: str = region
-        self.name: str = name or '{}-{}:{}'.format(region, host, port)
+        self.name: str = name or f'{region}-{host}:{port}'
         self.stats: Stats = Stats.empty(self)
 
     @property
@@ -261,7 +261,7 @@ class Node:
         if not session_id:
             raise ClientError('Cannot retrieve a player without a valid session ID!')
 
-        return await self._transport._request('GET', 'sessions/{}/players/{}'.format(session_id, guild_id))
+        return await self._transport._request('GET', f'sessions/{session_id}/players/{guild_id}')
 
     async def get_players(self) -> List[Dict[str, Any]]:
         """|coro|
@@ -279,7 +279,7 @@ class Node:
         if not session_id:
             raise ClientError('Cannot retrieve a list of players without a valid session ID!')
 
-        return await self._transport._request('GET', 'sessions/{}/players'.format(session_id))
+        return await self._transport._request('GET', f'sessions/{session_id}/players')
 
     async def update_player(self, guild_id: Union[str, int], no_replace: Optional[bool] = None,  # pylint: disable=too-many-locals
                             encoded_track: Optional[str] = '', identifier: Optional[str] = None,
@@ -406,7 +406,7 @@ class Node:
         if not json:
             return
 
-        return await self._transport._request('PATCH', 'sessions/{}/players/{}'.format(session_id, guild_id),
+        return await self._transport._request('PATCH', f'sessions/{session_id}/players/{guild_id}',
                                               params=params, json=json)
 
     async def destroy_player(self, guild_id: Union[str, int]) -> bool:
@@ -425,7 +425,7 @@ class Node:
         if not session_id:
             raise ClientError('Cannot destroy a player without a valid session ID!')
 
-        return await self._transport._request('DELETE', 'sessions/{}/players/{}'.format(session_id, guild_id))
+        return await self._transport._request('DELETE', f'sessions/{session_id}/players/{guild_id}')
 
     async def update_session(self, resuming: Optional[bool] = None, timeout: Optional[int] = None) -> Dict[str, Any]:
         """|coro|
@@ -466,7 +466,7 @@ class Node:
         if not json:
             return
 
-        return await self._transport._request('PATCH', 'sessions/{}'.format(session_id), json=json)
+        return await self._transport._request('PATCH', f'sessions/{session_id}', json=json)
 
     def __repr__(self):
-        return '<Node name={0.name} region={0.region}>'.format(self)
+        return f'<Node name={self.name} region={self.region}>'

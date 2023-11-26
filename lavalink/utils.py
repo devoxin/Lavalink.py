@@ -96,7 +96,7 @@ def format_time(time: int) -> str:
     hours, remainder = divmod(time / 1000, 3600)
     minutes, seconds = divmod(remainder, 60)
 
-    return '%02d:%02d:%02d' % (hours, minutes, seconds)
+    return f'{hours:02}:{minutes:02}:{seconds:02}'
 
 
 def parse_time(time: int) -> Tuple[int, int, int, int]:
@@ -224,7 +224,7 @@ def encode_track(track: Dict[str, Union[Optional[str], int, bool]]) -> Tuple[int
     if not V2_KEYSET <= track_keys:  # V2_KEYSET contains the minimum number of fields required to successfully encode a track.
         missing_keys = [k for k in V2_KEYSET if k not in track]
 
-        raise InvalidTrack('Track object is missing keys required for serialization: ' + ', '.join(missing_keys))
+        raise InvalidTrack(f'Track object is missing keys required for serialization: {", ".join(missing_keys)}')
 
     if V3_KEYSET <= track_keys:
         return (3, encode_track_v3(track))

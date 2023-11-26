@@ -82,7 +82,7 @@ class Transport:
     @property
     def http_uri(self) -> str:
         """ Returns a 'base' URI pointing to the node's address and port, also factoring in SSL. """
-        return '{}://{}:{}'.format('https' if self._ssl else 'http', self._host, self._port)
+        return f'{"https" if self._ssl else "http"}://{self._host}:{self._port}'
 
     async def close(self, code=aiohttp.WSCloseCode.OK):
         """|coro|
@@ -117,7 +117,7 @@ class Transport:
         headers = {
             'Authorization': self._password,
             'User-Id': str(self.client._user_id),
-            'Client-Name': 'Lavalink.py/{}'.format(__import__('lavalink').__version__)
+            'Client-Name': f'Lavalink.py/{__import__("lavalink").__version__}'
         }
 
         if self.session_id is not None:
@@ -131,7 +131,7 @@ class Transport:
         while not self.ws_connected and not self._destroyed:
             attempt += 1
             try:
-                self._ws = await self._session.ws_connect('{}://{}:{}/{}/websocket'.format(protocol, self._host, self._port, LAVALINK_API_VERSION),
+                self._ws = await self._session.ws_connect(f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket',
                                                           headers=headers,
                                                           heartbeat=60)
             except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as ce:
@@ -334,9 +334,9 @@ class Transport:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': 'true'}
 
         if versioned:
-            request_url = '{}/{}/{}'.format(self.http_uri, LAVALINK_API_VERSION, path)
+            request_url = f'{self.http_uri}/{LAVALINK_API_VERSION}/{path}'
         else:
-            request_url = '{}/{}'.format(self.http_uri, path)
+            request_url = f'{self.http_uri}/{path}'
 
         _log.debug('[Node:%s] Sending request to Lavalink with the following parameters: method=%s, url=%s, params=%s, json=%s',
                    self._node.name, method, request_url, kwargs.get('params', {}), kwargs.get('json', {}))

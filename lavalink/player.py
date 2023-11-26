@@ -435,7 +435,7 @@ class DefaultPlayer(BasePlayer):
             If the provided ``_filter`` is not of type :class:`Filter`.
         """
         if not isinstance(_filter, Filter):
-            raise TypeError('Expected object of type Filter, not ' + type(_filter).__name__)
+            raise TypeError(f'Expected object of type Filter, not {type(_filter).__name__}')
 
         filter_name = type(_filter).__name__.lower()
         self.filters[filter_name] = _filter
@@ -473,10 +473,10 @@ class DefaultPlayer(BasePlayer):
             If the provided ``_filter`` is not of type :class:`Filter`.
         """
         if isinstance(_filter, Filter):
-            raise TypeError('Expected class of type Filter, not an instance of ' + type(_filter).__name__)
+            raise TypeError(f'Expected class of type Filter, not an instance of {type(_filter).__name__}')
 
         if not issubclass(_filter, Filter):
-            raise TypeError('Expected subclass of type Filter, not ' + _filter.__name__)
+            raise TypeError(f'Expected subclass of type Filter, not {_filter.__name__}')
 
         filter_name = _filter.__name__.lower()
 
@@ -513,7 +513,7 @@ class DefaultPlayer(BasePlayer):
             filter_name = type(_filter).__name__
         else:
             if not issubclass(_filter, Filter):
-                raise TypeError('Expected subclass of type Filter, not ' + _filter.__name__)
+                raise TypeError(f'Expected subclass of type Filter, not {_filter.__name__}')
 
             filter_name = _filter.__name__
 
@@ -543,7 +543,7 @@ class DefaultPlayer(BasePlayer):
             filter_name = type(_filter).__name__
         else:
             if not issubclass(_filter, Filter):
-                raise TypeError('Expected subclass of type Filter, not ' + _filter.__name__)
+                raise TypeError(f'Expected subclass of type Filter, not {_filter.__name__}')
 
             filter_name = _filter.__name__
 
@@ -642,4 +642,4 @@ class DefaultPlayer(BasePlayer):
         await self.client._dispatch_event(NodeChangedEvent(self, old_node, node))
 
     def __repr__(self):
-        return '<DefaultPlayer volume={0.volume} current={0.current}>'.format(self)
+        return f'<DefaultPlayer volume={self.volume} current={self.current}>'
