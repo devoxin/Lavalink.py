@@ -24,7 +24,8 @@ SOFTWARE.
 import logging
 from random import randrange
 from time import time
-from typing import TYPE_CHECKING, Dict, List, Optional, Type, TypeVar, Union
+from typing import (TYPE_CHECKING, Dict, List, Literal, Optional, Type,
+                    TypeVar, Union)
 
 from .abc import BasePlayer, DeferredAudioTrack
 from .errors import InvalidTrack, LoadError, PlayerErrorEvent, RequestError
@@ -55,6 +56,7 @@ class DefaultPlayer(BasePlayer):
         Class attribute. Enables looping for a single (usually currently playing) track only.
     LOOP_QUEUE: :class:`int`
         Class attribute. Enables looping for the entire queue. When a track finishes playing, it'll be added to the end of the queue.
+
     guild_id: :class:`int`
         The guild id of the player.
     node: :class:`Node`
@@ -67,7 +69,7 @@ class DefaultPlayer(BasePlayer):
         The volume at which the player is playing at.
     shuffle: :class:`bool`
         Whether or not to mix the queue up in a random playing order.
-    loop: :class:`int`
+    loop: Literal[0, 1, 2]
         Whether loop is enabled, and the type of looping.
         This is an integer as loop supports multiple states.
 
@@ -110,7 +112,7 @@ class DefaultPlayer(BasePlayer):
         self.position_timestamp: int = 0
         self.volume: int = 100
         self.shuffle: bool = False
-        self.loop: int = 0  # 0 = off, 1 = single track, 2 = queue
+        self.loop: Literal[0, 1, 2] = 0  # 0 = off, 1 = single track, 2 = queue
         self.filters: Dict[str, Filter] = {}
 
         self.queue: List[AudioTrack] = []
@@ -336,7 +338,7 @@ class DefaultPlayer(BasePlayer):
         """
         await self.play()
 
-    def set_loop(self, loop: int):
+    def set_loop(self, loop: Literal[0, 1, 2]):
         """
         Sets whether the player loops between a single track, queue or none.
 
@@ -344,7 +346,7 @@ class DefaultPlayer(BasePlayer):
 
         Parameters
         ----------
-        loop: :class:`int`
+        loop: Literal[0, 1, 2]
             The loop setting. 0 = off, 1 = single track, 2 = queue.
         """
         if not 0 <= loop <= 2:
