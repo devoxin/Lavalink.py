@@ -25,8 +25,7 @@ class Release:
         self.download_url: Optional[str] = jars[0] if jars else None
 
     def __str__(self) -> str:
-        pr_str = '[prerelease]' if self.prerelease else ''
-        return '{} {}'.format(self.tag, pr_str)
+        return f'{self.tag} {"[prerelease]" if self.prerelease else ""}'
 
     def __eq__(self, other):
         if not isinstance(other, Release):
@@ -75,7 +74,7 @@ class Release:
             other_major, other_minor, other_patch, _, other_build = other_match.groups()
             other_version = (int(other_major), int(other_minor), int(other_patch or 0), int(other_build or 0))
         else:
-            raise TypeError("'<' not supported between instances of '{}' and '{}'".format(type(self).__name__, type(other).__name__))
+            raise TypeError(f'"<" not supported between instances of "{type(self).__name__}" and "{type(other).__name__}"')
 
         return this_version < other_version
 
@@ -108,7 +107,7 @@ class Release:
             other_major, other_minor, other_patch, _, other_build = other_match.groups()
             other_version = (int(other_major), int(other_minor), int(other_patch or 0), int(other_build or 0))
         else:
-            raise TypeError("'>' not supported between instances of '{}' and '{}'".format(type(self).__name__, type(other).__name__))
+            raise TypeError(f'">" not supported between instances of "{type(self).__name__}" and "{type(other).__name__}"')
 
         return this_version > other_version
 
@@ -138,7 +137,7 @@ def format_bytes(length: int) -> str:
         unit += 1
         length /= 1024
 
-    return '%0.2f %s' % (length, sizes[unit])
+    return f'{length:.2f} {sizes[unit]}'
 
 
 def download(dl_url, path):
@@ -160,7 +159,7 @@ def download(dl_url, path):
             speed = 0  # placeholder until we have enough data to calculate
 
         progress_bar = '█' * filled_len + ' ' * (bar_len - filled_len)
-        sys.stdout.write('Downloading |%s| %0.1f%% (%d/%d, %s/s)\r' % (progress_bar, percent, cur, tot, format_bytes(speed)))
+        sys.stdout.write(f'Downloading |{progress_bar}| {percent:.1f}% ({cur}/{tot}, {format_bytes(speed)}/s)\r')
         sys.stdout.flush()
 
         if cur >= tot:
@@ -210,7 +209,7 @@ def select_release_unattended(non_draft: List[Release], version_selector: str) -
     elif version_selector.startswith('~='):
         minimum = version_selector[2:]
         major, minor, _ = minimum.split('.')
-        maximum = '{}.{}.{}'.format(major, int(minor) + 1, 0)
+        maximum = f'{major}.{int(minor) + 1}.0'
 
         def compatible(release: Release):
             return minimum <= release < maximum
@@ -226,7 +225,7 @@ def select_release_unattended(non_draft: List[Release], version_selector: str) -
         print('Couldn\'t find a suitable release with the provided version selector.', file=sys.stderr)
         sys.exit(1)
 
-    print('Release selected: {}'.format(selected_release.tag), file=sys.stdout)
+    print(f'Release selected: {selected_release.tag}', file=sys.stdout)
 
     return selected_release
 
@@ -263,7 +262,7 @@ def select_release(non_draft: List[Release]) -> Release:
               'Type the number of the release you would like to download.\n', file=sys.stdout)
 
         for index, release in enumerate(suitable_releases, start=1):
-            print('[{}] {}'.format(index, release), file=sys.stdout)
+            print(f'[{index}] {release}', file=sys.stdout)
 
         try:
             selected = int(input('> ')) - 1
@@ -306,7 +305,7 @@ def download_jar(arguments: List[str]):
         os.rename(dl_path, os.path.join(cwd, 'lavalink.old.jar'))
 
     download(dl_url, dl_path)
-    print('Downloaded {} to {}'.format(release.tag, dl_path), file=sys.stdout)
+    print(f'Downloaded {release.tag} to {dl_path}', file=sys.stdout)
     sys.exit(0)
 
 
@@ -319,7 +318,7 @@ def download_config(arguments: List[str], branch: str):
         os.rename(dl_path, os.path.join(cwd, 'application.old.yml'))
 
     download(dl_url, dl_path)
-    print('Downloaded to {}'.format(dl_path), file=sys.stdout)
+    print(f'Downloaded to {dl_path}', file=sys.stdout)
     sys.exit(0)
 
 
@@ -346,10 +345,10 @@ def print_info(arguments: List[str]):
             java_version = j_ver.group(1) if j_ver else 'UNKNOWN'
 
             if java_version.startswith('1.8'):
-                java_version = '8/{}'.format(java_version)
+                java_version = f'8/{java_version}'
 
-            print('Unable to display Lavalink server info.\nYour Java version is out of date. (Java {})\n\n'
-                  'Java 11+ is required to run Lavalink.'.format(java_version), file=sys.stderr)
+            print(f'Unable to display Lavalink server info.\nYour Java version is out of date. (Java {java_version})\n\n'
+                  'Java 11+ is required to run Lavalink.', file=sys.stderr)
             sys.exit(1)
 
         print(stderr, file=sys.stderr)
@@ -375,7 +374,7 @@ def main():
         elif action == 'info':
             print_info(arguments)
         else:
-            print('Invalid argument \'{}\'. Use --help to show usage.'.format(action), file=sys.stderr)
+            print(f'Invalid argument \'{action}\'. Use --help to show usage.', file=sys.stderr)
             sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(2)  # CTRL-C = SIGINT = 2

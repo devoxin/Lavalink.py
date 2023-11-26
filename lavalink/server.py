@@ -51,7 +51,7 @@ class Enum(_Enum):
             try:
                 return cls(other)
             except ValueError as ve:
-                raise ValueError('{} is not a valid {} enum!'.format(other, cls.__name__)) from ve
+                raise ValueError(f'{other} is not a valid {cls.__name__} enum!') from ve
 
 
 class AudioTrack:
@@ -133,7 +133,7 @@ class AudioTrack:
             self.extra: Dict[str, Any] = {**extra, 'requester': requester}
         except KeyError as ke:
             missing_key, = ke.args  # pylint: disable=unbalanced-tuple-unpacking
-            raise InvalidTrack('Cannot build a track from partial data! (Missing key: {})'.format(missing_key)) from None
+            raise InvalidTrack(f'Cannot build a track from partial data! (Missing key: {missing_key})') from None
 
     def __getitem__(self, name):
         if name == 'info':
@@ -154,7 +154,7 @@ class AudioTrack:
         self.extra['requester'] = requester
 
     def __repr__(self):
-        return '<AudioTrack title={0.title} identifier={0.identifier}>'.format(self)
+        return f'<AudioTrack title={self.title} identifier={self.identifier}>'
 
 
 class EndReason(Enum):
@@ -221,7 +221,7 @@ class PlaylistInfo:
         return cls('', -1)
 
     def __repr__(self):
-        return '<PlaylistInfo name={0.name} selected_track={0.selected_track}>'.format(self)
+        return f'<PlaylistInfo name={self.name} selected_track={self.selected_track}>'
 
 
 class LoadResultError:
@@ -331,7 +331,7 @@ class LoadResult:
         return None
 
     def __repr__(self):
-        return '<LoadResult load_type={0.load_type} playlist_info={0.playlist_info} tracks=[{1} item(s)]>'.format(self, len(self.tracks))
+        return f'<LoadResult load_type={self.load_type} playlist_info={self.playlist_info} tracks=[{len(self.tracks)} item(s)]>'
 
 
 class Plugin:
@@ -357,7 +357,7 @@ class Plugin:
         self.version: str = data['version']
 
     def __str__(self):
-        return '{0.name} v{0.version}'.format(self)
+        return f'{self.name} v{self.version}'
 
     def __repr__(self):
-        return '<Plugin name={0.name} version={0.version}>'.format(self)
+        return f'<Plugin name={self.name} version={self.version}>'

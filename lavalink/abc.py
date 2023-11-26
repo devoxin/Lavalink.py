@@ -245,7 +245,7 @@ class Source(ABC):
         raise NotImplementedError
 
     def __repr__(self):
-        return '<Source name={0.name}>'.format(self)
+        return f'<Source name={self.name}>'
 
 
 class Filter:

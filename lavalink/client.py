@@ -92,10 +92,9 @@ class Client:
                  regions: Optional[Dict[str, Tuple[str]]] = None, connect_back: bool = False):
         if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
             # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
-            raise TypeError('user_id must be either an int or str (not {}). If the type is None, '
+            raise TypeError(f'user_id must be either an int or str (not {type(user_id).__name__}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
-                            'the Lavalink client. Alternatively, you can hardcode your user ID.'
-                            .format(user_id))
+                            'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
         self._session: aiohttp.ClientSession = aiohttp.ClientSession()
         self._user_id: str = int(user_id)
@@ -194,7 +193,7 @@ class Client:
             The source to register.
         """
         if not isinstance(source, Source):
-            raise TypeError('Class \'{}\' must inherit Source!'.format(type(source).__name__))
+            raise TypeError(f'Class \'{type(source).__name__}\' must inherit Source!')
 
         self.sources.add(source)
 
@@ -421,4 +420,4 @@ class Client:
         _log.debug('Dispatched \'%s\' to all registered hooks', type(event).__name__)
 
     def __repr__(self):
-        return '<Client user_id={} nodes={} players={}>'.format(self._user_id, len(self.node_manager), len(self.player_manager))
+        return f'<Client user_id={self._user_id} nodes={len(self.node_manager)} players={len(self.player_manager)}>'

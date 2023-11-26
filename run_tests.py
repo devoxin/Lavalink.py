@@ -26,7 +26,7 @@ def test_pylint():
                                                    'import-error,invalid-name,too-many-instance-attributes,'
                                                    'protected-access,too-many-arguments,too-many-public-methods,'
                                                    'logging-format-interpolation,too-many-branches,'
-                                                   'consider-using-f-string,consider-using-with', 'lavalink']
+                                                   'consider-using-with', 'lavalink']
     pylint.Run(opts, reporter=reporter, do_exit=False)
     out = reporter.out.getvalue()
 
