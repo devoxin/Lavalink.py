@@ -117,22 +117,6 @@ class DefaultPlayer(BasePlayer):
         self.current: Optional[AudioTrack] = None
 
     @property
-    def repeat(self) -> bool:
-        """
-        Returns the player's loop status. This exists for backwards compatibility, and also as an alias.
-
-        .. deprecated:: 4.0.0
-            Use :attr:`loop` instead.
-
-        If ``self.loop`` is 0, the player is NOT looping.
-
-        If ``self.loop`` is 1, the player is looping the single (current) track.
-
-        If ``self.loop`` is 2, the player is looping the entire queue.
-        """
-        return self.loop in (1, 2)
-
-    @property
     def is_playing(self) -> bool:
         """ Returns the player's track state. """
         return self.is_connected and self.current is not None
@@ -351,26 +335,6 @@ class DefaultPlayer(BasePlayer):
         Plays the next track in the queue, if any.
         """
         await self.play()
-
-    def set_repeat(self, repeat: bool):
-        """
-        Sets whether tracks should be repeated.
-
-        .. deprecated:: 4.0.0
-            Use :func:`set_loop` to repeat instead.
-
-        This only works as a "queue loop". For single-track looping, you should
-        utilise the :class:`TrackEndEvent` event to feed the track back into
-        :func:`play`.
-
-        Also known as ``loop``.
-
-        Parameters
-        ----------
-        repeat: :class:`bool`
-            Whether to repeat the player or not.
-        """
-        self.loop = 2 if repeat else 0
 
     def set_loop(self, loop: int):
         """
