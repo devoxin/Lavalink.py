@@ -29,6 +29,9 @@ from .dataio import DataReader, DataWriter
 from .errors import InvalidTrack
 from .player import AudioTrack
 
+V2_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'}
+V3_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'}
+
 
 def timestamp_to_millis(timestamp: str) -> int:
     """
@@ -215,17 +218,21 @@ def encode_track(track: dict) -> str:
     str
         The base64-encoded track string.
     """
-    if {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'} == track.keys():
+    track_keys = track.keys()  # set(track) is faster for larger collections, but slower for smaller.
+
+    if not V2_KEYSET <= track_keys:  # V2_KEYSET contains the minimum number of fields required to successfully encode a track.
+        missing_keys = [k for k in V2_KEYSET if k not in track]
+
+        raise InvalidTrack('Track object is missing keys required for serialization: ' + ', '.join(missing_keys))
+
+    if V3_KEYSET <= track_keys:
         return _encode_track_v3(track)
 
-    if {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'} == track.keys():
-        return _encode_track_v2(track)
-
-    raise InvalidTrack('Unsupported track version, or track is missing required fields')
+    return _encode_track_v2(track)
 
 
 def _encode_track_v2(track: dict) -> str:
-    assert {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'} == track.keys()
+    assert V2_KEYSET <= track.keys()
 
     writer = DataWriter()
 
@@ -240,7 +247,7 @@ def _encode_track_v2(track: dict) -> str:
 
 
 def _encode_track_v3(track: dict) -> str:
-    assert {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'} == track.keys()
+    assert V3_KEYSET <= track.keys()
 
     writer = DataWriter()
     version = struct.pack('B', 3)
