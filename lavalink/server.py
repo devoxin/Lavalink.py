@@ -62,11 +62,11 @@ class AudioTrack:
 
     Parameters
     ----------
-    data: Union[:class:`dict`, :class:`AudioTrack`]
+    data: Union[Dict[str, Union[Optional[str], bool, int]], :class:`AudioTrack`]
         The data to initialise an AudioTrack from.
     requester: :class:`any`
         The requester of the track.
-    extra: :class:`dict`
+    extra: Dict[Any, Any]
         Any extra information to store in this AudioTrack.
 
     Attributes

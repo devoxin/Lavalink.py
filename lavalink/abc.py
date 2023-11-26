@@ -277,6 +277,14 @@ class Filter:
         raise NotImplementedError
 
     @abstractmethod
-    def serialize(self) -> dict:
-        """ Transforms the internal values into a dict matching the structure Lavalink expects. """
+    def serialize(self) -> Dict[str, Any]:
+        """
+        Transforms the internal values into a dict matching the structure Lavalink expects.
+
+        Example:
+
+            .. code:: python
+
+                return {"yourCustomFilter": {"gain": 5}}
+        """
         raise NotImplementedError

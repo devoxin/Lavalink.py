@@ -56,7 +56,7 @@ class Client:
     player: Type[:class:`BasePlayer`]
         The class that should be used for the player. Defaults to :class:`DefaultPlayer`.
         Do not change this unless you know what you are doing!
-    regions: Optional[:class:`dict`]
+    regions: Optional[Dict[str, Tuple[str]]]
         A mapping of continent -> Discord RTC regions.
         The key should be an identifier used when instantiating an node.
         The values should be a list of RTC regions that will be handled by the associated identifying key.
@@ -330,7 +330,7 @@ class Client:
     async def decode_tracks(self, tracks: List[str], node: Node = None) -> List[AudioTrack]:
         """|coro|
 
-        Decodes a list of base64-encoded track strings into a dict.
+        Decodes a list of base64-encoded track strings into ``AudioTrack``s.
 
         Parameters
         ----------
@@ -342,7 +342,7 @@ class Client:
         Returns
         -------
         List[:class:`AudioTrack`]
-            A list of dicts representing track information.
+            A list of decoded ``AudioTrack``s.
         """
         node = node or random.choice(self.node_manager.nodes)
         return await node.decode_tracks(tracks)
@@ -362,7 +362,7 @@ class Client:
 
         Parameters
         ----------
-        data: :class:`dict`
+        data: Dict[str, Any]
             The payload received from Discord.
         """
         if not data or 't' not in data:

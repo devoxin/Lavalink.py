@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import struct
 from base64 import b64encode
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 from .dataio import DataReader, DataWriter
 from .errors import InvalidTrack
@@ -138,7 +138,7 @@ def _read_track_common(reader: DataReader) -> Tuple[str, str, int, str, bool, Op
     return (title, author, length, identifier, is_stream, uri)
 
 
-def _write_track_common(track: dict, writer: DataWriter):
+def _write_track_common(track: Dict[str, Union[Optional[str], bool, int]], writer: DataWriter):
     writer.write_utf(track['title'])
     writer.write_utf(track['author'])
     writer.write_long(track['length'])
@@ -193,7 +193,7 @@ def decode_track(track: str) -> AudioTrack:
     return AudioTrack(track_object, 0, position=position, encoder_version=version)
 
 
-def encode_track(track: dict) -> str:
+def encode_track(track: Dict[str, Union[Optional[str], int, bool]]) -> Tuple[int, str]:
     """
     Encodes a track dict into a base64 string, readable by the Lavalink server.
 
@@ -205,7 +205,7 @@ def encode_track(track: dict) -> str:
 
     Parameters
     ----------
-    track: dict[str, Union[Optional[str], int, bool]]
+    track: Dict[str, Union[Optional[str], int, bool]]
         The track dict to serialize.
 
     Raises
@@ -215,8 +215,9 @@ def encode_track(track: dict) -> str:
 
     Returns
     -------
-    str
-        The base64-encoded track string.
+    Tuple[int, str]
+        A tuple containing (track_version, encoded_track).
+        For example, if a track was encoded as version 3, the return value will be ``(3, '...really long track string...')``.
     """
     track_keys = track.keys()  # set(track) is faster for larger collections, but slower for smaller.
 
@@ -226,12 +227,12 @@ def encode_track(track: dict) -> str:
         raise InvalidTrack('Track object is missing keys required for serialization: ' + ', '.join(missing_keys))
 
     if V3_KEYSET <= track_keys:
-        return _encode_track_v3(track)
+        return (3, encode_track_v3(track))
 
-    return _encode_track_v2(track)
+    return (2, encode_track_v2(track))
 
 
-def _encode_track_v2(track: dict) -> str:
+def encode_track_v2(track: Dict[str, Union[Optional[str], bool, int]]) -> str:
     assert V2_KEYSET <= track.keys()
 
     writer = DataWriter()
@@ -246,7 +247,7 @@ def _encode_track_v2(track: dict) -> str:
     return b64encode(enc).decode()
 
 
-def _encode_track_v3(track: dict) -> str:
+def encode_track_v3(track: Dict[str, Union[Optional[str], bool, int]]) -> str:
     assert V3_KEYSET <= track.keys()
 
     writer = DataWriter()
