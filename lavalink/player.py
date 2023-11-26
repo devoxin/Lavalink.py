@@ -31,7 +31,7 @@ from .abc import BasePlayer, DeferredAudioTrack
 from .errors import InvalidTrack, LoadError, PlayerErrorEvent, RequestError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackLoadFailedEvent, TrackStartEvent, TrackStuckEvent)
-from .filters import Filter as _Filter
+from .filters import Filter
 from .server import AudioTrack
 
 if TYPE_CHECKING:
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 _log = logging.getLogger(__name__)
 
-Filter = TypeVar('Filter', bound=_Filter)
+FilterT = TypeVar('FilterT', bound=Filter)
 
 
 class DefaultPlayer(BasePlayer):
@@ -411,7 +411,7 @@ class DefaultPlayer(BasePlayer):
 
         await self.node.update_player(self._internal_id, position=position)
 
-    async def set_filter(self, _filter: Filter):
+    async def set_filter(self, _filter: FilterT):
         """|coro|
 
         Applies the corresponding filter within Lavalink.
@@ -442,7 +442,7 @@ class DefaultPlayer(BasePlayer):
         self.filters[filter_name] = _filter
         await self._apply_filters()
 
-    async def update_filter(self, _filter: Type[Filter], **kwargs):
+    async def update_filter(self, _filter: Type[FilterT], **kwargs):
         """|coro|
 
         Updates a filter using the upsert method;
@@ -486,7 +486,7 @@ class DefaultPlayer(BasePlayer):
         self.filters[filter_name] = filter_instance
         await self._apply_filters()
 
-    def get_filter(self, _filter: Union[Type[Filter], str]):
+    def get_filter(self, _filter: Union[Type[FilterT], str]):
         """
         Returns the corresponding filter, if it's enabled.
 
@@ -520,7 +520,7 @@ class DefaultPlayer(BasePlayer):
 
         return self.filters.get(filter_name.lower(), None)
 
-    async def remove_filter(self, _filter: Union[Type[Filter], str]):
+    async def remove_filter(self, _filter: Union[Type[FilterT], str]):
         """|coro|
 
         Removes a filter from the player, undoing any effects applied to the audio.
