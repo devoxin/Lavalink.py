@@ -24,8 +24,7 @@ SOFTWARE.
 import logging
 from random import randrange
 from time import time
-from typing import (TYPE_CHECKING, Dict, List, Literal, Optional, Type,
-                    TypeVar, Union)
+from typing import TYPE_CHECKING, Dict, List, Optional, Type, TypeVar, Union  # Literal
 
 from .abc import BasePlayer, DeferredAudioTrack
 from .errors import InvalidTrack, LoadError, PlayerErrorEvent, RequestError
@@ -112,7 +111,7 @@ class DefaultPlayer(BasePlayer):
         self.position_timestamp: int = 0
         self.volume: int = 100
         self.shuffle: bool = False
-        self.loop: Literal[0, 1, 2] = 0  # 0 = off, 1 = single track, 2 = queue
+        self.loop: int = 0  # 0 = off, 1 = single track, 2 = queue
         self.filters: Dict[str, Filter] = {}
 
         self.queue: List[AudioTrack] = []
@@ -338,7 +337,7 @@ class DefaultPlayer(BasePlayer):
         """
         await self.play()
 
-    def set_loop(self, loop: Literal[0, 1, 2]):
+    def set_loop(self, loop: int):
         """
         Sets whether the player loops between a single track, queue or none.
 
