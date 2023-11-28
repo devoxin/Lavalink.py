@@ -103,6 +103,20 @@ class Client:
         self.player_manager: PlayerManager = PlayerManager(self, player)
         self.sources: Set[Source] = set()
 
+    @property
+    def nodes(self) -> List[Node]:
+        """
+        Convenience shortcut for :attr:`NodeManager.nodes`.
+        """
+        return self.node_manager.nodes
+
+    @property
+    def players(self) -> Dict[int, BasePlayer]:
+        """
+        Convenience shortcut for :attr:`PlayerManager.players`.
+        """
+        return self.player_manager.players
+
     async def close(self):
         """|coro|
 
