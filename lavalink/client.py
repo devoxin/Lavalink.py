@@ -28,7 +28,7 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import aiohttp
 
@@ -42,7 +42,8 @@ from .server import AudioTrack, LoadResult
 
 _log = logging.getLogger(__name__)
 
-Player = TypeVar('Player', bound=BasePlayer)
+PlayerT = TypeVar('PlayerT', bound=BasePlayer)
+EventT = TypeVar('EventT', bound=Event)
 
 
 class Client:
@@ -88,7 +89,7 @@ class Client:
     """
     __slots__ = ('_session', '_user_id', '_event_hooks', 'node_manager', 'player_manager', 'sources')
 
-    def __init__(self, user_id: Union[int, str], player: Type[Player] = DefaultPlayer,
+    def __init__(self, user_id: Union[int, str], player: Type[PlayerT] = DefaultPlayer,
                  regions: Optional[Dict[str, Tuple[str]]] = None, connect_back: bool = False):
         if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
             # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
@@ -127,7 +128,7 @@ class Client:
 
         await self._session.close()
 
-    def add_event_hook(self, *hooks, event: Event = None):
+    def add_event_hook(self, *hooks, event: Optional[Type[EventT]] = None):
         """
         Adds one or more event hooks to be dispatched on an event.
 
@@ -142,7 +143,7 @@ class Client:
         hooks: :class:`function`
             The hooks to register for the given event type.
             If ``event`` parameter is left empty, then it will run when any event is dispatched.
-        event: :class:`Event`
+        event: Optional[Type[:class:`Event`]]
             The event the hooks belong to. They will be called when that specific event type is
             dispatched. Defaults to ``None`` which means the hook is dispatched on all events.
         """
@@ -159,7 +160,7 @@ class Client:
             if hook not in event_hooks:
                 event_hooks.append(hook)
 
-    def add_event_hooks(self, cls):
+    def add_event_hooks(self, cls: Any):  # TODO: I don't think Any is the correct type here...
         """
         Scans the provided class ``cls`` for functions decorated with :func:`listener`,
         and sets them up to process Lavalink events.
@@ -180,8 +181,8 @@ class Client:
 
         Parameters
         ----------
-        cls: :class:`Class`
-            An instance of a class.
+        cls: Any
+            An instance of a class containing event hook methods.
         """
         methods = getmembers(cls, predicate=lambda meth: hasattr(meth, '__name__')
                              and not meth.__name__.startswith('_') and ismethod(meth)
@@ -284,7 +285,8 @@ class Client:
 
         return LoadResult.empty()
 
-    async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
+    async def get_tracks(self, query: str, node: Optional[Node] = None,
+                         check_local: bool = False) -> LoadResult:
         """|coro|
 
         Retrieves a list of results pertaining to the provided query.
@@ -321,7 +323,7 @@ class Client:
         node = node or random.choice(self.node_manager.nodes)
         return await node.get_tracks(query)
 
-    async def decode_track(self, track: str, node: Node = None) -> AudioTrack:
+    async def decode_track(self, track: str, node: Optional[Node] = None) -> AudioTrack:
         """|coro|
 
         Decodes a base64-encoded track string into a dict.
@@ -340,7 +342,7 @@ class Client:
         node = node or random.choice(self.node_manager.nodes)
         return await node.decode_track(track)
 
-    async def decode_tracks(self, tracks: List[str], node: Node = None) -> List[AudioTrack]:
+    async def decode_tracks(self, tracks: List[str], node: Optional[Node] = None) -> List[AudioTrack]:
         """|coro|
 
         Decodes a list of base64-encoded track strings into ``AudioTrack``s.
@@ -360,7 +362,7 @@ class Client:
         node = node or random.choice(self.node_manager.nodes)
         return await node.decode_tracks(tracks)
 
-    async def voice_update_handler(self, data):
+    async def voice_update_handler(self, data: Dict[str, Any]):
         """|coro|
 
         This function intercepts websocket data from your Discord library and
@@ -424,9 +426,6 @@ class Client:
                 await hook(event)
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('Event hook \'%s\' encountered an exception!', hook.__name__)
-                #  According to https://stackoverflow.com/questions/5191830/how-do-i-log-a-python-error-with-debug-information
-                #  the exception information should automatically be attached here. We're just including a message for
-                #  clarity.
 
         tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
         await asyncio.gather(*tasks)
