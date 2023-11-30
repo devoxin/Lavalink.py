@@ -53,6 +53,8 @@ class Node:
     stats: :class:`Stats`
         The statistics of how the :class:`Node` is performing.
     """
+    __slots__ = ('client', 'manager', '_transport', 'region', 'name', 'stats')
+
     def __init__(self, manager, host: str, port: int, password: str, region: str, name: str = None,
                  ssl: bool = False, session_id: Optional[str] = None):
         self.client: 'Client' = manager.client

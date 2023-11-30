@@ -50,6 +50,7 @@ class PlayerManager:
     players: Dict[int, :class:`BasePlayer`]
         Cache of all the players that Lavalink has created.
     """
+    __slots__ = ('client', '_player_cls', 'players')
 
     def __init__(self, client, player):
         if not issubclass(player, BasePlayer):

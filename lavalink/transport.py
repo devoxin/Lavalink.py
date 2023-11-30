@@ -60,7 +60,7 @@ class Transport:
         self._node: 'Node' = node
 
         self._session: aiohttp.ClientSession = self.client._session
-        self._ws = None
+        self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self._message_queue = []
         self.trace_requests = False
 

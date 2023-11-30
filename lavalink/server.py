@@ -203,6 +203,8 @@ class PlaylistInfo:
         The index of the selected/highlighted track.
         This will be -1 if there is no selected track.
     """
+    __slots__ = ('name', 'selected_track')
+
     def __init__(self, name: str, selected_track: int = -1):
         self.name: str = name
         self.selected_track: int = selected_track
