@@ -410,6 +410,33 @@ class DefaultPlayer(BasePlayer):
 
         await self.node.update_player(self._internal_id, position=position)
 
+    async def set_filters(self, *filters: FilterT):
+        """|coro|
+
+        This sets multiple filters at once.
+
+        Applies the corresponding filters within Lavalink.
+        This will overwrite any identical filters that are already applied.
+
+        Parameters
+        ----------
+        *filters: :class:`Filter`
+            The filters to apply.
+
+        Raises
+        ------
+        :class:`TypeError`
+            If any of the provided filters is not of type :class:`Filter`.
+        """
+        for _filter in filters:
+            if not isinstance(_filter, Filter):
+                raise TypeError(f'Expected object of type Filter, not {type(_filter).__name__}')
+
+            filter_name = type(_filter).__name__.lower()
+            self.filters[filter_name] = _filter
+
+        await self._apply_filters()
+
     async def set_filter(self, _filter: FilterT):
         """|coro|
 
