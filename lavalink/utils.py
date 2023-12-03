@@ -96,7 +96,7 @@ def format_time(time: int) -> str:
     hours, remainder = divmod(time / 1000, 3600)
     minutes, seconds = divmod(remainder, 60)
 
-    return f'{hours:02}:{minutes:02}:{seconds:02}'
+    return f'{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}'
 
 
 def parse_time(time: int) -> Tuple[int, int, int, int]:

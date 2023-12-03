@@ -18,6 +18,8 @@ class BasePlayer(ABC):
 
     Attributes
     ----------
+    client: :class:`Client`
+        The Lavalink client instance.
     guild_id: :class:`int`
         The guild id of the player.
     node: :class:`Node`
