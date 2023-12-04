@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from .common import MISSING
+from .errors import InvalidTrack, LoadError
+from .events import TrackLoadFailedEvent, TrackStartEvent
 from .server import AudioTrack
 
 if TYPE_CHECKING:
@@ -28,13 +30,17 @@ class BasePlayer(ABC):
     channel_id: Optional[:class:`int`]
         The ID of the voice channel the player is connected to.
         This could be None if the player isn't connected.
+    current: Optional[:class:`AudioTrack`]
+        The currently playing track.
     """
     def __init__(self, guild_id: int, node: 'Node'):
         self.client: 'Client' = node.manager.client
         self.guild_id: int = guild_id
         self.node: 'Node' = node
         self.channel_id: Optional[int] = None
+        self.current: Optional[AudioTrack] = None
 
+        self._next: Optional[AudioTrack] = None
         self._internal_id: str = str(guild_id)
         self._original_node: Optional['Node'] = None  # This is used internally for failover.
         self._voice_state = {}
@@ -48,7 +54,7 @@ class BasePlayer(ABC):
         raise NotImplementedError
 
     async def play_track(self,
-                         track: str,
+                         track: Union[AudioTrack, 'DeferredAudioTrack'],
                          start_time: int = MISSING,
                          end_time: int = MISSING,
                          no_replace: bool = MISSING,
@@ -61,8 +67,8 @@ class BasePlayer(ABC):
 
         Parameters
         ----------
-        track: :class:`str`
-            The track to play. This must be the base64 string from a track.
+        track: Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`]
+            The track to play.
         start_time: :class:`int`
             The number of milliseconds to offset the track by.
             If left unspecified or ``None`` is provided, the track will start from the beginning.
@@ -86,8 +92,8 @@ class BasePlayer(ABC):
             The kwargs to use when playing. You can specify any extra parameters that may be
             used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
         """
-        if track is MISSING or not isinstance(track, str):
-            raise ValueError('track must be a str')
+        if track is MISSING or not isinstance(track, AudioTrack):
+            raise ValueError('track must be an instance of an AudioTrack!')
 
         options = kwargs
 
@@ -122,7 +128,28 @@ class BasePlayer(ABC):
 
             options['paused'] = pause
 
-        await self.node.update_player(self._internal_id, encoded_track=track, **options)
+        playable_track = track.track
+
+        if playable_track is None:
+            if not isinstance(track, DeferredAudioTrack):
+                raise InvalidTrack('Cannot play the AudioTrack as \'track\' is None, and it is not a DeferredAudioTrack!')
+
+            try:
+                playable_track = await track.load(self.client)
+            except LoadError as load_error:
+                await self.client._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
+
+        if playable_track is None:  # This should only fire when a DeferredAudioTrack fails to yield a base64 track string.
+            await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
+            return
+
+        self._next = track
+
+        await self.node.update_player(self._internal_id,
+                                      encoded_track=track,
+                                      **options)
+
+        await self.client._dispatch_event(TrackStartEvent(self, track))
 
     def cleanup(self):
         pass

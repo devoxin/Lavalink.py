@@ -30,9 +30,8 @@ import aiohttp
 from .errors import AuthenticationError, ClientError, RequestError
 from .events import (IncomingWebSocketMessage, NodeConnectedEvent,
                      NodeDisconnectedEvent, NodeReadyEvent, PlayerUpdateEvent,
-                     TrackEndEvent, TrackExceptionEvent, TrackStuckEvent,
-                     WebSocketClosedEvent)
-from .player import AudioTrack
+                     TrackEndEvent, TrackExceptionEvent, TrackStartEvent,
+                     TrackStuckEvent, WebSocketClosedEvent)
 from .server import EndReason, Severity
 from .stats import Stats
 
@@ -270,19 +269,18 @@ class Transport:
 
         event = None
 
-        if event_type == 'TrackEndEvent':
-            # we can't use player.current here as this *could* be fired after a TrackStartEvent - i.e. when skipping.
-            track = AudioTrack(data['track'])
+        if event_type == 'TrackStartEvent':  # Always fired after track end event (for previous track), and before any track exception/stuck events.
+            player.current = player._next
+            event = TrackStartEvent(player, player.current)
+        elif event_type == 'TrackEndEvent':
             end_reason = EndReason.from_str(data['reason'])
-            event = TrackEndEvent(player, track, end_reason)
+            event = TrackEndEvent(player, player.current, end_reason)
         elif event_type == 'TrackExceptionEvent':
             exception = data['exception']
             message = exception['message']
             severity = Severity.from_str(exception['severity'])
             cause = exception['cause']
             event = TrackExceptionEvent(player, player.current, message, severity, cause)
-        # elif event_type == 'TrackStartEvent':
-        #    event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackStuckEvent':
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
         elif event_type == 'WebSocketClosedEvent':

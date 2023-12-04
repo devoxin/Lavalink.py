@@ -24,12 +24,13 @@ SOFTWARE.
 import logging
 from random import randrange
 from time import time
-from typing import TYPE_CHECKING, Dict, List, Optional, Type, TypeVar, Union  # Literal
+from typing import (TYPE_CHECKING, Dict, List, Optional, Type,  # Literal
+                    TypeVar, Union)
 
 from .abc import BasePlayer, DeferredAudioTrack
-from .errors import InvalidTrack, LoadError, PlayerErrorEvent, RequestError
+from .errors import PlayerErrorEvent, RequestError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
-                     TrackLoadFailedEvent, TrackStartEvent, TrackStuckEvent)
+                     TrackStuckEvent)
 from .filters import Filter
 from .server import AudioTrack
 
@@ -113,9 +114,7 @@ class DefaultPlayer(BasePlayer):
         self.shuffle: bool = False
         self.loop: int = 0  # 0 = off, 1 = single track, 2 = queue
         self.filters: Dict[str, Filter] = {}
-
         self.queue: List[AudioTrack] = []
-        self.current: Optional[AudioTrack] = None
 
     @property
     def is_playing(self) -> bool:
@@ -300,27 +299,7 @@ class DefaultPlayer(BasePlayer):
             if not isinstance(end_time, int) or not 1 <= end_time <= track.duration:
                 raise ValueError('end_time must be an int with a value equal to, or greater than 1, and less than, or equal to the track duration')
 
-        self.current = track
-        playable_track = track.track
-
-        if playable_track is None:
-            if not isinstance(track, DeferredAudioTrack):
-                raise InvalidTrack('Cannot play the AudioTrack as \'track\' is None, and it is not a DeferredAudioTrack!')
-
-            try:
-                playable_track = await track.load(self.client)
-            except LoadError as load_error:
-                await self.client._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
-
-        if playable_track is None:  # This should only fire when a DeferredAudioTrack fails to yield a base64 track string.
-            await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
-            return
-
-        await self.play_track(playable_track, start_time, end_time, no_replace, volume, pause, **kwargs)
-        await self.client._dispatch_event(TrackStartEvent(self, track))
-
-        # TODO: Figure out a better solution for the above. Custom player implementations may neglect
-        # to dispatch TrackStartEvent leading to confusion and poor user experience.
+        await self.play_track(track, start_time, end_time, no_replace, volume, pause, **kwargs)
 
     async def stop(self):
         """|coro|
