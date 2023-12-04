@@ -235,25 +235,22 @@ class DefaultPlayer(BasePlayer):
         Parameters
         ----------
         track: Optional[Union[:class:`DeferredAudioTrack`, :class:`AudioTrack`, Dict[str, Union[Optional[str], bool, int]]]]
-            The track to play. If left unspecified, this will default
-            to the first track in the queue. Defaults to ``None`` so plays the next
-            song in queue. Accepts either an AudioTrack or a dict representing a track
+            The track to play. If left unspecified, this will default to the first track in the queue. Defaults to ``None``
+            which plays the next song in queue. Accepts either an AudioTrack or a dict representing a track
             returned from Lavalink.
         start_time: :class:`int`
             The number of milliseconds to offset the track by.
-            If left unspecified or ``None`` is provided, the track will start from the beginning.
+            If left unspecified, the track will start from the beginning.
         end_time: :class:`int`
             The position at which the track should stop playing.
             This is an absolute position, so if you want the track to stop at 1 minute, you would pass 60000.
-            The default behaviour is to play until no more data is received from the remote server.
-            If left unspecified or ``None`` is provided, the default behaviour is exhibited.
+            If left unspecified, the track will play through to the end.
         no_replace: :class:`bool`
-            If set to true, operation will be ignored if a track is already playing or paused.
-            The default behaviour is to always replace.
-            If left unspecified or None is provided, the default behaviour is exhibited.
+            If set to true, operation will be ignored if the player already has a current track.
+            If left unspecified, the currently playing track will always be replaced.
         volume: :class:`int`
             The initial volume to set. This is useful for changing the volume between tracks etc.
-            If left unspecified or ``None`` is provided, the volume will remain at its current setting.
+            If left unspecified, the volume will remain at its current setting.
         pause: :class:`bool`
             Whether to immediately pause the track after loading it. Defaults to ``False``.
         **kwargs: Any
