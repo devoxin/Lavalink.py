@@ -273,8 +273,11 @@ class Transport:
             player.current = player._next
             event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackEndEvent':
+            track = player.current
+            player.current = None
+
             end_reason = EndReason.from_str(data['reason'])
-            event = TrackEndEvent(player, player.current, end_reason)
+            event = TrackEndEvent(player, track, end_reason)
         elif event_type == 'TrackExceptionEvent':
             exception = data['exception']
             message = exception['message']
