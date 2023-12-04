@@ -40,7 +40,6 @@ class BasePlayer(ABC):
         self.channel_id: Optional[int] = None
         self.current: Optional[AudioTrack] = None
 
-        self._next: Optional[AudioTrack] = None
         self._internal_id: str = str(guild_id)
         self._original_node: Optional['Node'] = None  # This is used internally for failover.
         self._voice_state = {}
@@ -143,7 +142,7 @@ class BasePlayer(ABC):
             await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
             return
 
-        self._next = track
+        self.current = track
 
         await self.node.update_player(self._internal_id,
                                       encoded_track=track,
