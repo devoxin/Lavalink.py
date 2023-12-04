@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from .common import MISSING
 from .errors import InvalidTrack, LoadError
-from .events import TrackLoadFailedEvent, TrackStartEvent
+from .events import TrackLoadFailedEvent
 from .server import AudioTrack
 
 if TYPE_CHECKING:
