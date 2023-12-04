@@ -114,7 +114,7 @@ class BasePlayer(ABC):
 
             options['no_replace'] = no_replace
 
-        if volume is not None:
+        if volume is not MISSING:
             if not isinstance(volume, int):
                 raise TypeError('volume must be an int')
 
