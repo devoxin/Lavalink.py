@@ -28,6 +28,7 @@ from typing import (TYPE_CHECKING, Dict, List, Optional, Type,  # Literal
                     TypeVar, Union)
 
 from .abc import BasePlayer, DeferredAudioTrack
+from .common import MISSING
 from .errors import PlayerErrorEvent, RequestError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackStuckEvent)
@@ -213,9 +214,14 @@ class DefaultPlayer(BasePlayer):
         else:
             self.queue.insert(index, track)
 
-    async def play(self, track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]]] = None,
-                   start_time: Optional[int] = 0, end_time: Optional[int] = None, no_replace: Optional[bool] = False,
-                   volume: Optional[int] = None, pause: Optional[bool] = False, **kwargs):
+    async def play(self,
+                   track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]]] = None,
+                   start_time: int = 0,
+                   end_time: int = MISSING,
+                   no_replace: bool = MISSING,
+                   volume: int = MISSING,
+                   pause: bool = MISSING,
+                   **kwargs):
         """|coro|
 
         Plays the given track.
@@ -233,22 +239,22 @@ class DefaultPlayer(BasePlayer):
             to the first track in the queue. Defaults to ``None`` so plays the next
             song in queue. Accepts either an AudioTrack or a dict representing a track
             returned from Lavalink.
-        start_time: Optional[:class:`int`]
+        start_time: :class:`int`
             The number of milliseconds to offset the track by.
             If left unspecified or ``None`` is provided, the track will start from the beginning.
-        end_time: Optional[:class:`int`]
+        end_time: :class:`int`
             The position at which the track should stop playing.
             This is an absolute position, so if you want the track to stop at 1 minute, you would pass 60000.
             The default behaviour is to play until no more data is received from the remote server.
             If left unspecified or ``None`` is provided, the default behaviour is exhibited.
-        no_replace: Optional[:class:`bool`]
+        no_replace: :class:`bool`
             If set to true, operation will be ignored if a track is already playing or paused.
             The default behaviour is to always replace.
             If left unspecified or None is provided, the default behaviour is exhibited.
-        volume: Optional[:class:`int`]
+        volume: :class:`int`
             The initial volume to set. This is useful for changing the volume between tracks etc.
             If left unspecified or ``None`` is provided, the volume will remain at its current setting.
-        pause: Optional[:class:`bool`]
+        pause: :class:`bool`
             Whether to immediately pause the track after loading it.
             The default behaviour is to never pause.
             If left unspecified or ``None`` is provided, the default behaviour is exhibited.
@@ -291,11 +297,11 @@ class DefaultPlayer(BasePlayer):
             pop_at = randrange(len(self.queue)) if self.shuffle else 0
             track = self.queue.pop(pop_at)
 
-        if start_time is not None:
+        if start_time is not MISSING:
             if not isinstance(start_time, int) or not 0 <= start_time < track.duration:
                 raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
 
-        if end_time is not None:
+        if end_time is not MISSING:
             if not isinstance(end_time, int) or not 1 <= end_time <= track.duration:
                 raise ValueError('end_time must be an int with a value equal to, or greater than 1, and less than, or equal to the track duration')
 
