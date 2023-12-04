@@ -220,7 +220,7 @@ class DefaultPlayer(BasePlayer):
                    end_time: int = MISSING,
                    no_replace: bool = MISSING,
                    volume: int = MISSING,
-                   pause: bool = MISSING,
+                   pause: bool = False,
                    **kwargs):
         """|coro|
 
@@ -255,9 +255,7 @@ class DefaultPlayer(BasePlayer):
             The initial volume to set. This is useful for changing the volume between tracks etc.
             If left unspecified or ``None`` is provided, the volume will remain at its current setting.
         pause: :class:`bool`
-            Whether to immediately pause the track after loading it.
-            The default behaviour is to never pause.
-            If left unspecified or ``None`` is provided, the default behaviour is exhibited.
+            Whether to immediately pause the track after loading it. Defaults to ``False``.
         **kwargs: Any
             The kwargs to use when playing. You can specify any extra parameters that may be
             used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
