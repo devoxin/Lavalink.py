@@ -144,10 +144,7 @@ class BasePlayer(ABC):
 
         self.current = track
 
-        await self.node.update_player(self._internal_id,
-                                      encoded_track=track,
-                                      **options)
-
+        await self.node.update_player(self._internal_id, encoded_track=track, **options)
         await self.client._dispatch_event(TrackStartEvent(self, track))
 
     def cleanup(self):
