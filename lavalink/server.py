@@ -36,10 +36,10 @@ if TYPE_CHECKING:
 class Enum(_Enum):
     def __eq__(self, other):
         if self.__class__ is other.__class__:
-            return self.value == other.value  # pylint: disable=comparison-with-callable
+            return self.value == other.value
 
         if isinstance(other, str):
-            return self.value.lower() == other.lower()  # pylint: disable=comparison-with-callable
+            return self.value.lower() == other.lower()
 
         return False
 
