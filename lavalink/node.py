@@ -21,9 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from collections import defaultdict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, overload
 
 from .abc import BasePlayer, Filter
+from .common import MISSING
 from .errors import ClientError, RequestError
 from .server import AudioTrack, LoadResult
 from .stats import Stats
@@ -283,22 +285,79 @@ class Node:
 
         return await self._transport._request('GET', f'sessions/{session_id}/players')
 
-    async def update_player(self, guild_id: Union[str, int], no_replace: Optional[bool] = None,  # pylint: disable=too-many-locals
-                            encoded_track: Optional[str] = '', identifier: Optional[str] = None,
-                            position: Optional[int] = None, end_time: Optional[int] = None,
-                            volume: Optional[int] = None, paused: Optional[bool] = None,
-                            filters: Optional[List[Filter]] = None, voice_state: Optional[Dict[str, Any]] = None,
+    @overload
+    async def update_player(self,
+                            guild_id: Union[str, int],
+                            encoded_track: Optional[str] = ...,
+                            no_replace: bool = ...,
+                            position: int = ...,
+                            end_time: int = ...,
+                            volume: int = ...,
+                            paused: bool = ...,
+                            filters: Optional[List[Filter]] = ...,
+                            voice_state: Dict[str, Any] = ...,
+                            user_data: Optional[Dict[str, Any]] = ...,
+                            **kwargs) -> Dict[str, Any]:
+        ...
+
+    @overload
+    async def update_player(self,
+                            guild_id: Union[str, int],
+                            identifier: str = ...,
+                            no_replace: bool = ...,
+                            position: int = ...,
+                            end_time: int = ...,
+                            volume: int = ...,
+                            paused: bool = ...,
+                            filters: Optional[List[Filter]] = ...,
+                            voice_state: Dict[str, Any] = ...,
+                            user_data: Dict[str, Any] = ...,
+                            **kwargs) -> Dict[str, Any]:
+        ...
+
+    @overload
+    async def update_player(self,
+                            guild_id: Union[str, int],
+                            no_replace: bool = ...,
+                            position: int = ...,
+                            end_time: int = ...,
+                            volume: int = ...,
+                            paused: bool = ...,
+                            filters: Optional[List[Filter]] = ...,
+                            voice_state: Dict[str, Any] = ...,
+                            user_data: Dict[str, Any] = ...,
+                            **kwargs) -> Dict[str, Any]:
+        ...
+
+    async def update_player(self,  # pylint: disable=too-many-locals
+                            guild_id: Union[str, int],
+                            encoded_track: Optional[str] = MISSING,
+                            identifier: str = MISSING,
+                            no_replace: bool = MISSING,
+                            position: int = MISSING,
+                            end_time: int = MISSING,
+                            volume: int = MISSING,
+                            paused: bool = MISSING,
+                            filters: Optional[List[Filter]] = MISSING,
+                            voice_state: Dict[str, Any] = MISSING,
+                            user_data: Dict[str, Any] = MISSING,
                             **kwargs) -> Dict[str, Any]:
         """|coro|
 
+        .. _response object: https://lavalink.dev/api/rest#Player
+
         Update the state of a player.
+
+        Warning
+        -------
+        If this function is called directly, rather than through, e.g. a player,
+        the internal state is not guaranteed! This means that any attributes accessible through other classes
+        may not correspond with those stored in, or provided by the server. Use with caution!
 
         Parameters
         ----------
         guild_id: Union[str, int]
             The guild ID of the player to update.
-        no_replace: Optional[bool]
-            Whether to replace the currently playing track with the new track.
         encoded_track: Optional[str]
             The base64-encoded track string to play.
             You may provide ``None`` to stop the player.
@@ -306,7 +365,7 @@ class Node:
             Warning
             -------
             This option is mutually exclusive with ``identifier``. You cannot provide both options.
-        identifier: Optional[str]
+        identifier: str
             The identifier of the track to play. This can be a track ID or URL. It may not be a
             search query or playlist link. If it yields a search, playlist, or no track, a :class:`RequestError`
             will be raised.
@@ -314,28 +373,35 @@ class Node:
             Warning
             -------
             This option is mutually exclusive with ``encoded_track``. You cannot provide both options.
-        position: Optional[int]
+        no_replace: bool
+            Whether to replace the currently playing track (if one exists) with the new track.
+            Only takes effect if ``identifier`` or ``encoded_track`` is provided.
+            This parameter will only take effect when a track is provided.
+        position: int
             The track position in milliseconds. This can be used to seek.
-        end_time: Optional[int]
+        end_time: int
             The position, in milliseconds, to end the track at.
-        volume: Optional[int]
+        volume: int
             The new volume of the player. This must be within the range of 0 to 1000.
-        paused: Optional[bool]
+        paused: bool
             Whether to pause the player.
         filters: Optional[List[:class:`Filter`]]
             The filters to apply to the player.
-        voice_state: Optional[Dict[str, Any]]
+            Specify ``None`` or ``[]`` to clear.
+        voice_state: Dict[str, Any]
             The new voice state of the player.
-        **kwargs: :class:`any`
+        user_data: Dict[str, Any]
+            The user data to attach to the track, if one is provided.
+            This parameter will only take effect when a track is provided.
+        **kwargs: Any
             The kwargs to use when updating the player. You can specify any extra parameters that may be
             used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
 
         Returns
         -------
         Dict[str, Any]
-            A raw player object.
+            The raw player update `response object`_.
         """
-        # TODO: Update the cached player if identifier, encoded_track or filters are specified.
         session_id = self._transport.session_id
 
         if not session_id:
@@ -347,59 +413,62 @@ class Node:
         params = {}
         json = kwargs
 
-        if no_replace is not None and isinstance(no_replace, bool):
-            params['noReplace'] = str(no_replace).lower()
+        if identifier is not MISSING or encoded_track is not MISSING:
+            track = {}
 
-        if identifier is not None:
-            if not isinstance(identifier, str):
-                raise ValueError('identifier must be a str!')
+            if identifier is not MISSING:
+                track['identifier'] = identifier
+            elif encoded_track is not MISSING:
+                track['encoded'] = encoded_track
 
-            json['identifier'] = identifier
-        else:
-            if encoded_track is not None and not isinstance(encoded_track, str):
-                raise ValueError('encoded_track must be either be a str or None!')
+            if user_data is not MISSING:
+                track['userData'] = user_data
 
-            if encoded_track is None or len(encoded_track) > 0:
-                json['encodedTrack'] = encoded_track
+            if no_replace is not MISSING:
+                params['noReplace'] = str(no_replace).lower()
 
-        if position is not None:
+            json['track'] = track
+
+        if position is not MISSING:
             if not isinstance(position, (int, float)):
                 raise ValueError('position must be an int!')
 
             json['position'] = position
 
-        if end_time is not None:
+        if end_time is not MISSING:
             if not isinstance(end_time, int) or end_time <= 0:
                 raise ValueError('end_time must be an int, and greater than 0!')
 
             json['endTime'] = end_time
 
-        if volume is not None:
+        if volume is not MISSING:
             if not isinstance(volume, int) or not 0 <= volume <= 1000:
                 raise ValueError('volume must be an int, and within the range of 0 to 1000!')
 
             json['volume'] = volume
 
-        if paused is not None:
+        if paused is not MISSING:
             if not isinstance(paused, bool):
                 raise ValueError('paused must be a bool!')
 
             json['paused'] = paused
 
-        if filters is not None:
-            if not isinstance(filters, list) or not all(isinstance(f, Filter) for f in filters):
-                raise ValueError('filters must be a list of Filter!')
+        if filters is not MISSING:
+            if filters is not None:
+                if not isinstance(filters, list) or not all(isinstance(f, Filter) for f in filters):
+                    raise ValueError('filters must be a list of Filter!')
 
-            serialized = {
-                'pluginFilters': {}
-            }
-            for filter_ in filters:
-                filter_obj = serialized['pluginFilters'] if filter_.plugin_filter else serialized
-                filter_obj.update(filter_.serialize())
+                serialized = defaultdict(dict)
 
-            json['filters'] = serialized
+                for filter_ in filters:
+                    filter_obj = serialized['pluginFilters'] if filter_.plugin_filter else serialized
+                    filter_obj.update(filter_.serialize())
 
-        if voice_state is not None:
+                json['filters'] = serialized
+            else:
+                json['filters'] = {}
+
+        if voice_state is not MISSING:
             if not isinstance(voice_state, dict):
                 raise ValueError('voice_state must be a dict!')
 
@@ -429,16 +498,16 @@ class Node:
 
         return await self._transport._request('DELETE', f'sessions/{session_id}/players/{guild_id}')
 
-    async def update_session(self, resuming: Optional[bool] = None, timeout: Optional[int] = None) -> Dict[str, Any]:
+    async def update_session(self, resuming: bool = MISSING, timeout: int = MISSING) -> Dict[str, Any]:
         """|coro|
 
         Update the session for this node.
 
         Parameters
         ----------
-        resuming: Optional[bool]
-            Whether to enable resuming for this session or not.
-        timeout: Optional[int]
+        resuming: bool
+            Whether to enable resuming for this session.
+        timeout: int
             How long the node will wait for the session to resume before destroying it, in seconds.
 
         Returns
@@ -453,14 +522,14 @@ class Node:
 
         json = {}
 
-        if resuming is not None:
+        if resuming is not MISSING:
             if not isinstance(resuming, bool):
                 raise ValueError('resuming must be a bool!')
 
             json['resuming'] = resuming
 
-        if timeout is not None:
-            if not isinstance(timeout, int) or timeout <= 0:
+        if timeout is not MISSING:
+            if not isinstance(timeout, int) or 0 >= timeout:
                 raise ValueError('timeout must be an int greater than 0!')
 
             json['timeout'] = timeout

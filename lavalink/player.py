@@ -253,7 +253,7 @@ class DefaultPlayer(BasePlayer):
             Whether to immediately pause the track after loading it.
             The default behaviour is to never pause.
             If left unspecified or ``None`` is provided, the default behaviour is exhibited.
-        **kwargs: :class:`any`
+        **kwargs: Any
             The kwargs to use when playing. You can specify any extra parameters that may be
             used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
 
@@ -328,7 +328,7 @@ class DefaultPlayer(BasePlayer):
         Stops the player.
         """
         await self.node.update_player(self._internal_id, encoded_track=None)
-        self.current = None
+        self.current = None  # TODO: Maybe have TrackEndEvent set this.
 
     async def skip(self):
         """|coro|
@@ -491,7 +491,7 @@ class DefaultPlayer(BasePlayer):
         ----------
         _filter: Type[:class:`Filter`]
             The filter class (**not** an instance of, see above example) to upsert.
-        **kwargs: :class:`any`
+        **kwargs: Any
             The kwargs to pass to the filter.
 
         Raises
