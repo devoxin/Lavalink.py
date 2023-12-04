@@ -270,6 +270,7 @@ class Transport:
         event = None
 
         if event_type == 'TrackStartEvent':  # Always fired after track end event (for previous track), and before any track exception/stuck events.
+            player.current = player._next
             event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackEndEvent':
             end_reason = EndReason.from_str(data['reason'])
@@ -285,9 +286,6 @@ class Transport:
         elif event_type == 'WebSocketClosedEvent':
             event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
         else:
-            if event_type == 'TrackStartEvent':
-                return
-
             _log.warning('[Node:%s] Unknown event received of type \'%s\'', self._node.name, event_type)
             return
 
