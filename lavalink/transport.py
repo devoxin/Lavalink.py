@@ -270,7 +270,6 @@ class Transport:
         event = None
 
         if event_type == 'TrackStartEvent':  # Always fired after track end event (for previous track), and before any track exception/stuck events.
-            player.current = player._next
             event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackEndEvent':
             end_reason = EndReason.from_str(data['reason'])
