@@ -308,6 +308,7 @@ class DefaultPlayer(BasePlayer):
         Stops the player.
         """
         await self.node.update_player(self._internal_id, encoded_track=None)
+        self.current = None
 
     async def skip(self):
         """|coro|
