@@ -120,11 +120,11 @@ class Stats:
         self.system_load: float = cpu['systemLoad']
         self.lavalink_load: float = cpu['lavalinkLoad']
 
-        frame_stats = data.get('frameStats', {})
+        frame_stats = data.get('frameStats') or {}
         self.frames_sent: int = frame_stats.get('sent', 0)
         self.frames_nulled: int = frame_stats.get('nulled', 0)
         self.frames_deficit: int = frame_stats.get('deficit', 0)
-        self.penalty = Penalty(self)
+        self.penalty: Penalty = Penalty(self)
 
     @classmethod
     def empty(cls, node):

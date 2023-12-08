@@ -24,41 +24,45 @@ SOFTWARE.
 import struct
 from base64 import b64decode
 from io import BytesIO
+from typing import Optional
 
 from .utfm_codec import read_utfm
 
 
 class DataReader:
-    def __init__(self, ts):
-        self._buf = BytesIO(b64decode(ts))
+    def __init__(self, base64_str: str):
+        self._buf: BytesIO = BytesIO(b64decode(base64_str))
 
     def _read(self, count):
         return self._buf.read(count)
 
-    def read_byte(self):
+    def read_byte(self) -> int:
         return self._read(1)
 
-    def read_boolean(self):
+    def read_boolean(self) -> bool:
         result, = struct.unpack('B', self.read_byte())
         return result != 0
 
-    def read_unsigned_short(self):
+    def read_unsigned_short(self) -> int:
         result, = struct.unpack('>H', self._read(2))
         return result
 
-    def read_int(self):
+    def read_int(self) -> int:
         result, = struct.unpack('>i', self._read(4))
         return result
 
-    def read_long(self):
+    def read_long(self) -> int:
         result, = struct.unpack('>Q', self._read(8))
         return result
 
-    def read_utf(self):
+    def read_nullable_utf(self) -> Optional[str]:
+        return self.read_utf().decode() if self.read_boolean() else None
+
+    def read_utf(self) -> bytes:
         text_length = self.read_unsigned_short()
         return self._read(text_length)
 
-    def read_utfm(self):
+    def read_utfm(self) -> str:
         text_length = self.read_unsigned_short()
         utf_string = self._read(text_length)
         return read_utfm(text_length, utf_string)
@@ -89,6 +93,12 @@ class DataWriter:
     def write_long(self, long_value):
         enc = struct.pack('>Q', long_value)
         self._write(enc)
+
+    def write_nullable_utf(self, utf_string):
+        self.write_boolean(bool(utf_string))
+
+        if utf_string:
+            self.write_utf(utf_string)
 
     def write_utf(self, utf_string):
         utf = utf_string.encode('utf8')

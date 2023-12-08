@@ -7,7 +7,19 @@ Documentation
 
 .. autofunction:: listener
 
-.. autofunction:: add_event_hook
+ABC
+---
+.. autoclass:: BasePlayer
+    :members:
+
+.. autoclass:: DeferredAudioTrack
+    :members:
+
+.. autoclass:: Source
+    :members:
+
+.. autoclass:: Filter
+    :members:
 
 Client
 ------
@@ -16,11 +28,19 @@ Client
 
 Errors
 ------
-.. autoclass:: NodeError
+.. autoclass:: ClientError
 
 .. autoclass:: AuthenticationError
 
 .. autoclass:: InvalidTrack
+
+.. autoclass:: LoadError
+
+.. autoclass:: RequestError
+    :members:
+
+.. autoclass:: PlayerErrorEvent
+    :members:
 
 Events
 ------
@@ -59,15 +79,18 @@ All Events are derived from :class:`Event`
 .. autoclass:: NodeChangedEvent
     :members:
 
+.. autoclass:: NodeReadyEvent
+    :members:
+
 .. autoclass:: WebSocketClosedEvent
+    :members:
+
+.. autoclass:: IncomingWebSocketMessage
     :members:
 
 Filters
 -------
 **All** custom filters must derive from :class:`Filter`
-
-.. autoclass:: Filter
-    :members:
 
 .. autoclass:: Equalizer
     :members:
@@ -96,32 +119,37 @@ Filters
 .. autoclass:: Volume
     :members:
 
-Models
+.. autoclass:: Distortion
+    :members:
+
+Player
 ------
 **All** custom players must derive from :class:`BasePlayer`
 
+.. autoclass:: DefaultPlayer
+    :members:
+
+Server
+------
 .. autoclass:: AudioTrack
     :members:
 
-.. autoclass:: DeferredAudioTrack
+.. autoenum:: EndReason
     :members:
 
 .. autoenum:: LoadType
     :members:
 
+.. autoenum:: Severity
+    :members:
+
 .. autoclass:: PlaylistInfo
     :members:
 
+.. autoclass:: LoadResultError
+    :members:
+
 .. autoclass:: LoadResult
-    :members:
-
-.. autoclass:: Source
-    :members:
-
-.. autoclass:: BasePlayer
-    :members:
-
-.. autoclass:: DefaultPlayer
     :members:
 
 .. autoclass:: Plugin
@@ -159,3 +187,5 @@ Utilities
 .. autofunction:: parse_time
 
 .. autofunction:: decode_track
+
+.. autofunction:: encode_track

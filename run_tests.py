@@ -23,10 +23,9 @@ def test_pylint():
     reporter = text.TextReporter(stdout)
     opts = ['--max-line-length=150', '--score=no', '--disable=missing-docstring,wildcard-import,'
                                                    'attribute-defined-outside-init,too-few-public-methods,'
-                                                   'old-style-class,import-error,invalid-name,no-init,'
-                                                   'too-many-instance-attributes,protected-access,too-many-arguments,'
-                                                   'too-many-public-methods,logging-format-interpolation,'
-                                                   'too-many-branches', 'lavalink']
+                                                   'too-many-instance-attributes,protected-access,'
+                                                   'too-many-arguments,too-many-public-methods,too-many-branches,'
+                                                   'consider-using-with', 'lavalink']
     pylint.Run(opts, reporter=reporter, do_exit=False)
     out = reporter.out.getvalue()
 

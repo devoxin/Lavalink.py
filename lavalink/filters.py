@@ -21,20 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Union
+# Necessary evil due to documenting filter update kwargs.
+# At least, until I can come up with a better solution to doing this.
+# pylint: disable=arguments-differ
 
+from typing import List, Tuple, overload
 
-class Filter:
-    def __init__(self, values: Union[dict, list, float]):
-        self.values = values
-
-    def update(self, **kwargs):
-        """ Updates the internal values to match those provided. """
-        raise NotImplementedError
-
-    def serialize(self) -> dict:
-        """ Transforms the internal values into a dict matching the structure Lavalink expects. """
-        raise NotImplementedError
+from .abc import Filter
 
 
 class Volume(Filter):
@@ -43,6 +36,10 @@ class Volume(Filter):
     """
     def __init__(self):
         super().__init__(1.0)
+
+    @overload
+    def update(self, volume: float):
+        ...
 
     def update(self, **kwargs):
         """
@@ -81,6 +78,14 @@ class Equalizer(Filter):
     def __init__(self):
         super().__init__([0.0] * 15)
 
+    @overload
+    def update(self, bands: List[Tuple[int, float]]):
+        ...
+
+    @overload
+    def update(self, band: int, gain: int):
+        ...
+
     def update(self, **kwargs):
         """
         Modifies the gain of each specified band.
@@ -111,6 +116,10 @@ class Equalizer(Filter):
             The band to modify.
         gain: :class:`float`
             The new gain of the band.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'bands' in kwargs:
             bands = kwargs.pop('bands')
@@ -128,8 +137,6 @@ class Equalizer(Filter):
         elif 'band' in kwargs and 'gain' in kwargs:
             band = int(kwargs.pop('band'))
             gain = float(kwargs.pop('gain'))
-            # don't bother propagating the potential ValueErrors raised by these 2 statements
-            # The users can handle those.
 
             if not 0 <= band <= 14:
                 raise ValueError('Band must be between 0 and 14 (start and end inclusive)')
@@ -148,10 +155,38 @@ class Equalizer(Filter):
 class Karaoke(Filter):
     """
     Allows for isolating a frequency range (commonly, the vocal range).
-    Useful for 'karaoke'/sing-along.
+    Useful for karaoke/sing-along.
     """
     def __init__(self):
         super().__init__({'level': 1.0, 'monoLevel': 1.0, 'filterBand': 220.0, 'filterWidth': 100.0})
+
+    @overload
+    def update(self, level: float):
+        ...
+
+    @overload
+    def update(self, mono_level: float):
+        ...
+
+    @overload
+    def update(self, filter_width: float):
+        ...
+
+    @overload
+    def update(self, level: float, mono_level: float):
+        ...
+
+    @overload
+    def update(self, level: float, filter_width: float):
+        ...
+
+    @overload
+    def update(self, mono_level: float, filter_width: float):
+        ...
+
+    @overload
+    def update(self, level: float, mono_level: float, filter_width: float):
+        ...
 
     def update(self, **kwargs):
         """
@@ -165,6 +200,10 @@ class Karaoke(Filter):
             The frequency of the band to filter.
         filter_width: :class:`float`
             The width of the filter.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'level' in kwargs:
             self.values['level'] = float(kwargs.pop('level'))
@@ -189,6 +228,34 @@ class Timescale(Filter):
     def __init__(self):
         super().__init__({'speed': 1.0, 'pitch': 1.0, 'rate': 1.0})
 
+    @overload
+    def update(self, speed: float):
+        ...
+
+    @overload
+    def update(self, pitch: float):
+        ...
+
+    @overload
+    def update(self, rate: float):
+        ...
+
+    @overload
+    def update(self, speed: float, pitch: float):
+        ...
+
+    @overload
+    def update(self, speed: float, rate: float):
+        ...
+
+    @overload
+    def update(self, rate: float, pitch: float):
+        ...
+
+    @overload
+    def update(self, speed: float, rate: float, pitch: float):
+        ...
+
     def update(self, **kwargs):
         """
         Note
@@ -209,6 +276,10 @@ class Timescale(Filter):
             The pitch of the audio.
         rate: :class:`float`
             The playback rate.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'speed' in kwargs:
             speed = float(kwargs.pop('speed'))
@@ -245,6 +316,18 @@ class Tremolo(Filter):
     def __init__(self):
         super().__init__({'frequency': 2.0, 'depth': 0.5})
 
+    @overload
+    def update(self, frequency: float):
+        ...
+
+    @overload
+    def update(self, depth: float):
+        ...
+
+    @overload
+    def update(self, frequency: float, depth: float):
+        ...
+
     def update(self, **kwargs):
         """
         Note
@@ -261,6 +344,10 @@ class Tremolo(Filter):
             How frequently the effect should occur.
         depth: :class:`float`
             The "strength" of the effect.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'frequency' in kwargs:
             frequency = float(kwargs.pop('frequency'))
@@ -289,6 +376,18 @@ class Vibrato(Filter):
     def __init__(self):
         super().__init__({'frequency': 2.0, 'depth': 0.5})
 
+    @overload
+    def update(self, frequency: float):
+        ...
+
+    @overload
+    def update(self, depth: float):
+        ...
+
+    @overload
+    def update(self, frequency: float, depth: float):
+        ...
+
     def update(self, **kwargs):
         """
         Note
@@ -305,6 +404,10 @@ class Vibrato(Filter):
             How frequently the effect should occur.
         depth: :class:`float`
             The "strength" of the effect.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'frequency' in kwargs:
             frequency = float(kwargs.pop('frequency'))
@@ -332,7 +435,11 @@ class Rotation(Filter):
     This is commonly used to create the 8D effect.
     """
     def __init__(self):
-        super().__init__({'rotationHz': 0.0})
+        super().__init__(0.0)
+
+    @overload
+    def update(self, rotation_hz: float):
+        ...
 
     def update(self, **kwargs):
         """
@@ -346,17 +453,21 @@ class Rotation(Filter):
         ----------
         rotation_hz: :class:`float`
             How frequently the effect should occur.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'rotation_hz' in kwargs:
             rotation_hz = float(kwargs.pop('rotation_hz'))
 
             if rotation_hz < 0:
-                raise ValueError('rotationHz must be bigger than or equal to 0')
+                raise ValueError('rotation_hz must be bigger than or equal to 0')
 
-            self.values['rotationHz'] = rotation_hz
+            self.values = rotation_hz
 
     def serialize(self) -> dict:
-        return {'rotation': self.values}
+        return {'rotation': {'rotationHz': self.values}}
 
 
 class LowPass(Filter):
@@ -365,7 +476,11 @@ class LowPass(Filter):
     effectively cutting off high frequencies meaning more emphasis is put on lower frequencies.
     """
     def __init__(self):
-        super().__init__({'smoothing': 20.0})
+        super().__init__(20.0)
+
+    @overload
+    def update(self, smoothing: float):
+        ...
 
     def update(self, **kwargs):
         """
@@ -379,6 +494,10 @@ class LowPass(Filter):
         ----------
         smoothing: :class:`float`
             The strength of the effect.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'smoothing' in kwargs:
             smoothing = float(kwargs.pop('smoothing'))
@@ -386,10 +505,10 @@ class LowPass(Filter):
             if smoothing <= 1:
                 raise ValueError('smoothing must be bigger than 1')
 
-            self.values['smoothing'] = smoothing
+            self.values = smoothing
 
     def serialize(self) -> dict:
-        return {'lowPass': self.values}
+        return {'lowPass': {'smoothing': self.values}}
 
 
 class ChannelMix(Filter):
@@ -424,6 +543,10 @@ class ChannelMix(Filter):
             The volume level of the audio going from the "Right" channel to the "Left" channel.
         right_to_right: :class:`float`
             The volume level of the audio going from the "Right" channel to the "Left" channel.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'left_to_left' in kwargs:
             left_to_left = float(kwargs.pop('left_to_left'))
@@ -489,6 +612,10 @@ class Distortion(Filter):
             The sin offset.
         scale: :class:`float`
             The sin scale.
+
+        Raises
+        ------
+        :class:`ValueError`
         """
         if 'sin_offset' in kwargs:
             self.values['sinOffset'] = float(kwargs.pop('sin_offset'))
