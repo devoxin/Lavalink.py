@@ -22,23 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
+import inspect
 import itertools
 import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import aiohttp
 
-from .errors import AuthenticationError, NodeError
+from .abc import BasePlayer, Source
 from .events import Event
-from .models import DefaultPlayer, LoadResult, Source
 from .node import Node
 from .nodemanager import NodeManager
+from .player import DefaultPlayer
 from .playermanager import PlayerManager
+from .server import AudioTrack, LoadResult
 
 _log = logging.getLogger(__name__)
+
+PlayerT = TypeVar('PlayerT', bound=BasePlayer)
+EventT = TypeVar('EventT', bound=Event)
 
 
 class Client:
@@ -49,10 +54,10 @@ class Client:
     ----------
     user_id: Union[:class:`int`, :class:`str`]
         The user id of the bot.
-    player: Optional[:class:`BasePlayer`]
-        The class that should be used for the player. Defaults to ``DefaultPlayer``.
+    player: Type[:class:`BasePlayer`]
+        The class that should be used for the player. Defaults to :class:`DefaultPlayer`.
         Do not change this unless you know what you are doing!
-    regions: Optional[:class:`dict`]
+    regions: Optional[Dict[str, Tuple[str]]]
         A mapping of continent -> Discord RTC regions.
         The key should be an identifier used when instantiating an node.
         The values should be a list of RTC regions that will be handled by the associated identifying key.
@@ -76,31 +81,56 @@ class Client:
     Attributes
     ----------
     node_manager: :class:`NodeManager`
-        Represents the node manager that contains all lavalink nodes.
+        The node manager, used for storing and managing all registered Lavalink nodes.
     player_manager: :class:`PlayerManager`
-        Represents the player manager that contains all the players.
+        The player manager, used for storing and managing all players.
+    sources: Set[:class:`Source`]
+        The custom sources registered to this client.
     """
-    _event_hooks = defaultdict(list)
+    __slots__ = ('_session', '_user_id', '_event_hooks', 'node_manager', 'player_manager', 'sources')
 
-    def __init__(self, user_id: Union[int, str], player=DefaultPlayer, regions: dict = None,
-                 connect_back: bool = False):
+    def __init__(self, user_id: Union[int, str], player: Type[PlayerT] = DefaultPlayer,
+                 regions: Optional[Dict[str, Tuple[str]]] = None, connect_back: bool = False):
         if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
             # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
-            raise TypeError('user_id must be either an int or str (not {}). If the type is None, '
+            raise TypeError(f'user_id must be either an int or str (not {type(user_id).__name__}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
-                            'the Lavalink client. Alternatively, you can hardcode your user ID.'
-                            .format(user_id))
+                            'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
-        self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
-        self._user_id: str = str(user_id)
-        self._connect_back: bool = connect_back
-        self.node_manager: NodeManager = NodeManager(self, regions)
+        self._session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self._user_id: str = int(user_id)
+        self._event_hooks = defaultdict(list)
+        self.node_manager: NodeManager = NodeManager(self, regions, connect_back)
         self.player_manager: PlayerManager = PlayerManager(self, player)
         self.sources: Set[Source] = set()
 
-    def add_event_hook(self, hook):
+    @property
+    def nodes(self) -> List[Node]:
         """
-        Registers a function to recieve and process Lavalink events.
+        Convenience shortcut for :attr:`NodeManager.nodes`.
+        """
+        return self.node_manager.nodes
+
+    @property
+    def players(self) -> Dict[int, BasePlayer]:
+        """
+        Convenience shortcut for :attr:`PlayerManager.players`.
+        """
+        return self.player_manager.players
+
+    async def close(self):
+        """|coro|
+
+        Closes all active connections and frees any resources in use.
+        """
+        for node in self.node_manager:
+            await node.destroy()
+
+        await self._session.close()
+
+    def add_event_hook(self, *hooks, event: Optional[Type[EventT]] = None):
+        """
+        Adds one or more event hooks to be dispatched on an event.
 
         Note
         ----
@@ -110,13 +140,27 @@ class Client:
 
         Parameters
         ----------
-        hook: :class:`function`
-            The function to register.
+        hooks: :class:`function`
+            The hooks to register for the given event type.
+            If ``event`` parameter is left empty, then it will run when any event is dispatched.
+        event: Optional[Type[:class:`Event`]]
+            The event the hooks belong to. They will be called when that specific event type is
+            dispatched. Defaults to ``None`` which means the hook is dispatched on all events.
         """
-        if hook not in self._event_hooks['Generic']:
-            self._event_hooks['Generic'].append(hook)
+        if event is not None and Event not in event.__bases__:
+            raise TypeError('Event parameter is not of type Event or None')
 
-    def add_event_hooks(self, cls):
+        event_name = event.__name__ if event is not None else 'Generic'
+        event_hooks = self._event_hooks[event_name]
+
+        for hook in hooks:
+            if not callable(hook) or not inspect.iscoroutinefunction(hook):
+                raise TypeError('Hook is not callable or a coroutine')
+
+            if hook not in event_hooks:
+                event_hooks.append(hook)
+
+    def add_event_hooks(self, cls: Any):  # TODO: I don't think Any is the correct type here...
         """
         Scans the provided class ``cls`` for functions decorated with :func:`listener`,
         and sets them up to process Lavalink events.
@@ -137,8 +181,8 @@ class Client:
 
         Parameters
         ----------
-        cls: :class:`Class`
-            An instance of a class.
+        cls: Any
+            An instance of a class containing event hook methods.
         """
         methods = getmembers(cls, predicate=lambda meth: hasattr(meth, '__name__')
                              and not meth.__name__.startswith('_') and ismethod(meth)
@@ -164,7 +208,7 @@ class Client:
             The source to register.
         """
         if not isinstance(source, Source):
-            raise TypeError('source must inherit from Source!')
+            raise TypeError(f'Class \'{type(source).__name__}\' must inherit Source!')
 
         self.sources.add(source)
 
@@ -185,10 +229,11 @@ class Client:
         """
         return next((source for source in self.sources if source.name == source_name), None)
 
-    def add_node(self, host: str, port: int, password: str, region: str,
-                 resume_key: str = None, resume_timeout: int = 60, name: str = None,
-                 reconnect_attempts: int = 3, filters: bool = True, ssl: bool = False):
+    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+                 ssl: bool = False, session_id: Optional[str] = None) -> Node:
         """
+        Shortcut for :meth:`NodeManager.add_node`.
+
         Adds a node to Lavalink's node manager.
 
         Parameters
@@ -201,29 +246,47 @@ class Client:
             The password used for authentication.
         region: :class:`str`
             The region to assign this node to.
-        resume_key: Optional[:class:`str`]
-            A resume key used for resuming a session upon re-establishing a WebSocket connection to Lavalink.
-            Defaults to ``None``.
-        resume_timeout: Optional[:class:`int`]
-            How long the node should wait for a connection while disconnected before clearing all players.
-            Defaults to ``60``.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
-        reconnect_attempts: Optional[:class:`int`]
-            The amount of times connection with the node will be reattempted before giving up.
-            Set to `-1` for infinite. Defaults to ``3``.
-        filters: Optional[:class:`bool`]
-            Whether to use the new ``filters`` op instead of the ``equalizer`` op.
-            If you're running a build without filter support, set this to ``False``.
         ssl: Optional[:class:`bool`]
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
-        """
-        self.node_manager.add_node(host, port, password, region, resume_key, resume_timeout, name, reconnect_attempts,
-                                   filters, ssl)
+        session_id: Optional[:class:`str`]
+            The ID of the session to resume. Defaults to ``None``.
+            Only specify this if you have the ID of the session you want to resume.
 
-    async def get_tracks(self, query: str, node: Node = None, check_local: bool = False) -> LoadResult:
+        Returns
+        -------
+        :class:`Node`
+            The created Node instance.
+        """
+        return self.node_manager.add_node(host, port, password, region, name, ssl, session_id)
+
+    async def get_local_tracks(self, query: str) -> LoadResult:
+        """|coro|
+
+        Searches :attr:`sources` registered to this client for the given query.
+
+        Parameters
+        ----------
+        query: :class:`str`
+            The query to perform a search for.
+
+        Returns
+        -------
+        :class:`LoadResult`
+        """
+        for source in self.sources:
+            load_result = await source.load_item(self, query)
+
+            if load_result:
+                return load_result
+
+        return LoadResult.empty()
+
+    async def get_tracks(self, query: str, node: Optional[Node] = None,
+                         check_local: bool = False) -> LoadResult:
         """|coro|
 
         Retrieves a list of results pertaining to the provided query.
@@ -257,15 +320,10 @@ class Client:
                 if load_result:
                     return load_result
 
-        if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
-        node = node or random.choice(self.node_manager.available_nodes)
-        res = await self._get_request('{}/loadtracks'.format(node.http_uri),
-                                      params={'identifier': query},
-                                      headers={'Authorization': node.password})
-        return LoadResult.from_dict(res)
+        node = node or random.choice(self.node_manager.nodes)
+        return await node.get_tracks(query)
 
-    async def decode_track(self, track: str, node: Node = None):
+    async def decode_track(self, track: str, node: Optional[Node] = None) -> AudioTrack:
         """|coro|
 
         Decodes a base64-encoded track string into a dict.
@@ -279,20 +337,15 @@ class Client:
 
         Returns
         -------
-        :class:`dict`
-            A dict representing the track's information.
+        :class:`AudioTrack`
         """
-        if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
-        node = node or random.choice(self.node_manager.available_nodes)
-        return await self._get_request('{}/decodetrack'.format(node.http_uri),
-                                       params={'track': track},
-                                       headers={'Authorization': node.password})
+        node = node or random.choice(self.node_manager.nodes)
+        return await node.decode_track(track)
 
-    async def decode_tracks(self, tracks: list, node: Node = None):
+    async def decode_tracks(self, tracks: List[str], node: Optional[Node] = None) -> List[AudioTrack]:
         """|coro|
 
-        Decodes a list of base64-encoded track strings into a dict.
+        Decodes a list of base64-encoded track strings into ``AudioTrack``s.
 
         Parameters
         ----------
@@ -303,18 +356,13 @@ class Client:
 
         Returns
         -------
-        List[:class:`dict`]
-            A list of dicts representing track information.
+        List[:class:`AudioTrack`]
+            A list of decoded ``AudioTrack``s.
         """
-        if not self.node_manager.available_nodes:
-            raise NodeError('No available nodes!')
-        node = node or random.choice(self.node_manager.available_nodes)
+        node = node or random.choice(self.node_manager.nodes)
+        return await node.decode_tracks(tracks)
 
-        return await self._post_request('{}/decodetracks'.format(node.http_uri),
-                                        json=tracks,
-                                        headers={'Authorization': node.password})
-
-    async def voice_update_handler(self, data):
+    async def voice_update_handler(self, data: Dict[str, Any]):
         """|coro|
 
         This function intercepts websocket data from your Discord library and
@@ -329,7 +377,7 @@ class Client:
 
         Parameters
         ----------
-        data: :class:`dict`
+        data: Dict[str, Any]
             The payload received from Discord.
         """
         if not data or 't' not in data:
@@ -342,7 +390,7 @@ class Client:
             if player:
                 await player._voice_server_update(data['d'])
         elif data['t'] == 'VOICE_STATE_UPDATE':
-            if int(data['d']['user_id']) != int(self._user_id):
+            if int(data['d']['user_id']) != self._user_id:
                 return
 
             guild_id = int(data['d']['guild_id'])
@@ -351,30 +399,11 @@ class Client:
             if player:
                 await player._voice_state_update(data['d'])
 
-    async def _get_request(self, url, **kwargs):
-        async with self._session.get(url, **kwargs) as res:
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            if res.status == 200:
-                return await res.json()
-
-            raise NodeError('An invalid response was received from the node: code={}, body={}'
-                            .format(res.status, await res.text()))
-
-    async def _post_request(self, url, **kwargs):
-        async with self._session.post(url, **kwargs) as res:
-            if res.status == 401 or res.status == 403:
-                raise AuthenticationError
-
-            if 'json' in kwargs:
-                if res.status == 200:
-                    return await res.json()
-
-                raise NodeError('An invalid response was received from the node: code={}, body={}'
-                                .format(res.status, await res.text()))
-
-            return res.status == 204
+    def has_listeners(self, event: Type[Event]) -> bool:
+        """
+        Check whether the client has any listeners for a specific event type.
+        """
+        return len(self._event_hooks['Generic']) > 0 or len(self._event_hooks[event.__name__]) > 0
 
     async def _dispatch_event(self, event: Event):
         """|coro|
@@ -386,8 +415,8 @@ class Client:
         event: :class:`Event`
             The event to dispatch to the hooks.
         """
-        generic_hooks = Client._event_hooks['Generic']
-        targeted_hooks = Client._event_hooks[type(event).__name__]
+        generic_hooks = self._event_hooks['Generic']
+        targeted_hooks = self._event_hooks[type(event).__name__]
 
         if not generic_hooks and not targeted_hooks:
             return
@@ -397,9 +426,6 @@ class Client:
                 await hook(event)
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('Event hook \'%s\' encountered an exception!', hook.__name__)
-                #  According to https://stackoverflow.com/questions/5191830/how-do-i-log-a-python-error-with-debug-information
-                #  the exception information should automatically be attached here. We're just including a message for
-                #  clarity.
 
         tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
         await asyncio.gather(*tasks)
@@ -407,4 +433,4 @@ class Client:
         _log.debug('Dispatched \'%s\' to all registered hooks', type(event).__name__)
 
     def __repr__(self):
-        return '<Client user_id={} nodes={} players={}>'.format(self._user_id, len(self.node_manager), len(self.player_manager))
+        return f'<Client user_id={self._user_id} nodes={len(self.node_manager)} players={len(self.player_manager)}>'

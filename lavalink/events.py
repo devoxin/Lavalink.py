@@ -21,12 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+
+from .server import EndReason, Severity
 
 if TYPE_CHECKING:
-    # pylint: disable=cyclic-import
-    from .models import AudioTrack, BasePlayer, DeferredAudioTrack
+    from .abc import BasePlayer, DeferredAudioTrack
     from .node import Node
+    from .server import AudioTrack
 
 
 class Event:
@@ -35,7 +37,7 @@ class Event:
 
 class TrackStartEvent(Event):
     """
-    This event is emitted when the player starts to play a track.
+    This event is emitted when a track begins playing (e.g. via player.play())
 
     Attributes
     ----------
@@ -53,18 +55,18 @@ class TrackStartEvent(Event):
 
 class TrackStuckEvent(Event):
     """
-    This event is emitted when the currently playing track is stuck.
-    This normally has something to do with the stream you are playing
-    and not Lavalink itself.
+    This event is emitted when the currently playing track is stuck (i.e. has not provided any audio).
+    This is typically a fault of the track's underlying audio stream, and not Lavalink itself.
 
     Attributes
     ----------
     player: :class:`BasePlayer`
-        The player that has the playing track being stuck.
+        The player associated with the stuck track.
     track: :class:`AudioTrack`
-        The track is stuck from playing.
+        The stuck track.
     threshold: :class:`int`
-        The amount of time the track had while being stuck.
+        The configured threshold, in milliseconds, after which a track is considered to be stuck
+        when no audio frames were provided.
     """
     __slots__ = ('player', 'track', 'threshold')
 
@@ -76,7 +78,7 @@ class TrackStuckEvent(Event):
 
 class TrackExceptionEvent(Event):
     """
-    This event is emitted when an exception occurs while playing a track.
+    This event is emitted when a track encounters an exception during playback.
 
     Attributes
     ----------
@@ -84,18 +86,21 @@ class TrackExceptionEvent(Event):
         The player that had the exception occur while playing a track.
     track: :class:`AudioTrack`
         The track that had the exception while playing.
-    exception: :class:`str`
-        The type of exception that the track had while playing.
-    severity: :class:`str`
-        The level of severity of the exception.
+    message: Optional[:class:`str`]
+        The exception message.
+    severity: :enum:`Severity`
+        The severity of the exception.
+    cause: :class:`str`
+        The cause of the exception.
     """
-    __slots__ = ('player', 'track', 'exception', 'severity')
+    __slots__ = ('player', 'track', 'message', 'severity', 'cause')
 
-    def __init__(self, player, track, exception, severity):
+    def __init__(self, player, track, message, severity, cause):
         self.player: 'BasePlayer' = player
         self.track: 'AudioTrack' = track
-        self.exception: str = exception
-        self.severity: str = severity
+        self.message: Optional[str] = message
+        self.severity: Severity = severity
+        self.cause: str = cause
 
 
 class TrackEndEvent(Event):
@@ -109,7 +114,7 @@ class TrackEndEvent(Event):
     track: Optional[:class:`AudioTrack`]
         The track that finished playing.
         This could be ``None`` if Lavalink fails to encode the track.
-    reason: :class:`str`
+    reason: :class:`EndReason`
         The reason why the track stopped playing.
     """
     __slots__ = ('player', 'track', 'reason')
@@ -117,7 +122,7 @@ class TrackEndEvent(Event):
     def __init__(self, player, track, reason):
         self.player: 'BasePlayer' = player
         self.track: Optional['AudioTrack'] = track
-        self.reason: str = reason
+        self.reason: EndReason = reason
 
 
 class TrackLoadFailedEvent(Event):
@@ -251,9 +256,30 @@ class NodeChangedEvent(Event):
         self.new_node: 'Node' = new_node
 
 
+class NodeReadyEvent(Event):
+    """
+    This is a custom event, emitted when a node becomes ready.
+    A node is considered ready once it receives the "ready" event from the Lavalink server.
+
+    Attributes
+    ----------
+    node: :class:`Node`
+        The node that became ready.
+    session_id: :class:`str`
+        The ID of the session.
+    resumed: :class:`bool`
+        Whether the session was resumed. This will be false if a brand new session was created.
+    """
+    __slots__ = ('node', 'session_id', 'resumed')
+
+    def __init__(self, node, session_id, resumed):
+        self.node: 'Node' = node
+        self.session_id: str = session_id
+        self.resumed: bool = resumed
+
+
 class WebSocketClosedEvent(Event):
     """
-
     This event is emitted when an audio websocket to Discord is closed. This can happen
     happen for various reasons, an example being when a channel is deleted.
 
@@ -279,3 +305,24 @@ class WebSocketClosedEvent(Event):
         self.code: int = code
         self.reason: str = reason
         self.by_remote: bool = by_remote
+
+
+class IncomingWebSocketMessage(Event):
+    """
+    This event is emitted whenever the client receives a websocket message from the Lavalink server.
+
+    You can use this to extend the functionality of the client, particularly useful when used with
+    Lavalink server plugins that can add new HTTP routes or websocket messages.
+
+    Attributes
+    ----------
+    data: Union[Dict[Any, Any], List[Any]]
+        The received JSON-formatted data from the websocket.
+    node: :class:`Node`
+        The node responsible for this websocket message.
+    """
+    __slots__ = ('data', 'node')
+
+    def __init__(self, data, node):
+        self.data: Union[Dict[Any, Any], List[Any]] = data
+        self.node: 'Node' = node

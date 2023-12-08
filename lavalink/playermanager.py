@@ -22,13 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import Callable, Dict, Iterator
+from typing import (TYPE_CHECKING, Callable, Dict, Iterator, Optional, Tuple,
+                    Type, TypeVar)
 
-from .errors import NodeError
-from .models import BasePlayer
+from .errors import ClientError
 from .node import Node
+from .player import BasePlayer
+
+if TYPE_CHECKING:
+    from .client import Client
 
 _log = logging.getLogger(__name__)
+
+PlayerT = TypeVar('PlayerT', bound=BasePlayer)
 
 
 class PlayerManager:
@@ -42,23 +48,25 @@ class PlayerManager:
 
     Attributes
     ----------
-    players: :class:`dict`
+    client: :class:`Client`
+        The Lavalink client.
+    players: Dict[int, :class:`BasePlayer`]
         Cache of all the players that Lavalink has created.
     """
+    __slots__ = ('client', '_player_cls', 'players')
 
-    def __init__(self, lavalink, player):
+    def __init__(self, client, player):
         if not issubclass(player, BasePlayer):
-            raise ValueError(
-                'Player must implement BasePlayer or DefaultPlayer.')
+            raise ValueError('Player must implement BasePlayer.')
 
-        self._lavalink = lavalink
+        self.client: 'Client' = client
         self._player_cls = player
         self.players: Dict[int, BasePlayer] = {}
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.players)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple[int, BasePlayer]]:
         """ Returns an iterator that yields a tuple of (guild_id, player). """
         for guild_id, player in self.players.items():
             yield guild_id, player
@@ -88,7 +96,7 @@ class PlayerManager:
 
         return [p for p in self.players.values() if bool(predicate(p))]
 
-    def get(self, guild_id: int):
+    def get(self, guild_id: int) -> Optional[BasePlayer]:
         """
         Gets a player from cache.
 
@@ -118,7 +126,13 @@ class PlayerManager:
             player = self.players.pop(guild_id)
             player.cleanup()
 
-    def create(self, guild_id: int, region: str = None, endpoint: str = None, node: Node = None):
+    def create(self,
+               guild_id: int,
+               *,
+               region: Optional[str] = None,
+               endpoint: Optional[str] = None,
+               node: Optional[Node] = None,
+               cls: Optional[Type[PlayerT]] = None) -> BasePlayer:
         """
         Creates a player if one doesn't exist with the given information.
 
@@ -137,11 +151,28 @@ class PlayerManager:
         guild_id: :class:`int`
             The guild_id to associate with the player.
         region: Optional[:class:`str`]
-            The region to use when selecting a Lavalink node. Defaults to ``None``.
+            The region to use when selecting a Lavalink node.
+            Defaults to ``None``.
         endpoint: Optional[:class:`str`]
-            The address of the Discord voice server. Defaults to ``None``.
+            The address of the Discord voice server.
+            Defaults to ``None``.
         node: Optional[:class:`Node`]
-            The node to put the player on. Defaults to ``None`` and a node with the lowest penalty is chosen.
+            The node to put the player on.
+            Defaults to ``None``, which selects the node with the lowest penalty.
+        cls: Optional[Type[:class:`BasePlayer`]]
+            The player class to use when instantiating a new player.
+            Defaults to ``None`` which uses the player class provided to :class:`Client`.
+            If no class was provided, this will typically be :class:`DefaultPlayer`.
+
+            Warning
+            -------
+            This function could return a player of a different type to that specified in ``cls``,
+            if a player was created before with a different class type.
+
+        Raises
+        ------
+        :class:`ValueError`
+            If the provided ``cls`` is not a valid subclass of :class:`BasePlayer`.
 
         Returns
         -------
@@ -153,16 +184,21 @@ class PlayerManager:
         if guild_id in self.players:
             return self.players[guild_id]
 
-        if endpoint:  # Prioritise endpoint over region parameter
-            region = self._lavalink.node_manager.get_region(endpoint)
+        cls = cls or self._player_cls
 
-        best_node = node or self._lavalink.node_manager.find_ideal_node(region)
+        if not issubclass(cls, BasePlayer):
+            raise ValueError('Player must implement BasePlayer.')
+
+        if endpoint:  # Prioritise endpoint over region parameter
+            region = self.client.node_manager.get_region(endpoint)
+
+        best_node = node or self.client.node_manager.find_ideal_node(region)
 
         if not best_node:
-            raise NodeError('No available nodes!')
+            raise ClientError('No available nodes!')
 
         id_int = int(guild_id)
-        self.players[id_int] = player = self._player_cls(id_int, best_node)
+        self.players[id_int] = player = cls(id_int, best_node)
         _log.debug('Created player with GuildId %d on node \'%s\'', id_int, best_node.name)
         return player
 
@@ -190,6 +226,6 @@ class PlayerManager:
         player.cleanup()
 
         if player.node:
-            await player.node._send(op='destroy', guildId=player._internal_id)
+            await player.node.destroy_player(player._internal_id)
 
         _log.debug('Destroyed player with GuildId %d on node \'%s\'', guild_id, player.node.name if player.node else 'UNASSIGNED')
