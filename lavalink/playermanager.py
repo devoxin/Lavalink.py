@@ -22,7 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, Iterator, Optional, Tuple
+from typing import (TYPE_CHECKING, Callable, Dict, Iterator, Optional, Tuple,
+                    Type, TypeVar)
 
 from .errors import ClientError
 from .node import Node
@@ -32,6 +33,8 @@ if TYPE_CHECKING:
     from .client import Client
 
 _log = logging.getLogger(__name__)
+
+PlayerT = TypeVar('PlayerT', bound=BasePlayer)
 
 
 class PlayerManager:
@@ -54,7 +57,7 @@ class PlayerManager:
 
     def __init__(self, client, player):
         if not issubclass(player, BasePlayer):
-            raise ValueError('Player must implement BasePlayer or DefaultPlayer.')
+            raise ValueError('Player must implement BasePlayer.')
 
         self.client: 'Client' = client
         self._player_cls = player
@@ -123,7 +126,13 @@ class PlayerManager:
             player = self.players.pop(guild_id)
             player.cleanup()
 
-    def create(self, guild_id: int, region: str = None, endpoint: str = None, node: Node = None) -> BasePlayer:
+    def create(self,
+               guild_id: int,
+               *,
+               region: Optional[str] = None,
+               endpoint: Optional[str] = None,
+               node: Optional[Node] = None,
+               cls: Optional[Type[PlayerT]] = None) -> BasePlayer:
         """
         Creates a player if one doesn't exist with the given information.
 
@@ -142,11 +151,28 @@ class PlayerManager:
         guild_id: :class:`int`
             The guild_id to associate with the player.
         region: Optional[:class:`str`]
-            The region to use when selecting a Lavalink node. Defaults to ``None``.
+            The region to use when selecting a Lavalink node.
+            Defaults to ``None``.
         endpoint: Optional[:class:`str`]
-            The address of the Discord voice server. Defaults to ``None``.
+            The address of the Discord voice server.
+            Defaults to ``None``.
         node: Optional[:class:`Node`]
-            The node to put the player on. Defaults to ``None`` and a node with the lowest penalty is chosen.
+            The node to put the player on.
+            Defaults to ``None``, which selects the node with the lowest penalty.
+        cls: Optional[Type[:class:`BasePlayer`]]
+            The player class to use when instantiating a new player.
+            Defaults to ``None`` which uses the player class provided to :class:`Client`.
+            If no class was provided, this will typically be :class:`DefaultPlayer`.
+
+            Warning
+            -------
+            This function could return a player of a different type to that specified in ``cls``,
+            if a player was created before with a different class type.
+
+        Raises
+        ------
+        :class:`ValueError`
+            If the provided ``cls`` is not a valid subclass of :class:`BasePlayer`.
 
         Returns
         -------
@@ -158,6 +184,11 @@ class PlayerManager:
         if guild_id in self.players:
             return self.players[guild_id]
 
+        cls = cls or self._player_cls
+
+        if not issubclass(cls, BasePlayer):
+            raise ValueError('Player must implement BasePlayer.')
+
         if endpoint:  # Prioritise endpoint over region parameter
             region = self.client.node_manager.get_region(endpoint)
 
@@ -167,7 +198,7 @@ class PlayerManager:
             raise ClientError('No available nodes!')
 
         id_int = int(guild_id)
-        self.players[id_int] = player = self._player_cls(id_int, best_node)
+        self.players[id_int] = player = cls(id_int, best_node)
         _log.debug('Created player with GuildId %d on node \'%s\'', id_int, best_node.name)
         return player
 
