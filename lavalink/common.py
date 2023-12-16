@@ -26,5 +26,8 @@ SOFTWARE.
 class _MissingObj:
     __slots__ = ()
 
+    def __repr__(self):
+        return '...'
+
 
 MISSING = _MissingObj()
