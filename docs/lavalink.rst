@@ -3,8 +3,6 @@
 Documentation
 =============
 
-.. autofunction:: enable_debug_logging
-
 .. autofunction:: listener
 
 ABC
