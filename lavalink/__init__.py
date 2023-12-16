@@ -4,7 +4,7 @@ __title__ = 'Lavalink'
 __author__ = 'Devoxin'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-present Devoxin'
-__version__ = '5.0.1'
+__version__ = '5.1.0'
 
 
 from .abc import BasePlayer, DeferredAudioTrack, Source
