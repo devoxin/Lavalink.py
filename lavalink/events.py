@@ -48,7 +48,7 @@ class TrackStartEvent(Event):
     """
     __slots__ = ('player', 'track')
 
-    def __init__(self, player, track):
+    def __init__(self, player: 'BasePlayer', track: 'AudioTrack'):
         self.player: 'BasePlayer' = player
         self.track: 'AudioTrack' = track
 
@@ -70,7 +70,7 @@ class TrackStuckEvent(Event):
     """
     __slots__ = ('player', 'track', 'threshold')
 
-    def __init__(self, player, track, threshold):
+    def __init__(self, player: 'BasePlayer', track: 'AudioTrack', threshold: int):
         self.player: 'BasePlayer' = player
         self.track: 'AudioTrack' = track
         self.threshold: int = threshold
@@ -95,7 +95,8 @@ class TrackExceptionEvent(Event):
     """
     __slots__ = ('player', 'track', 'message', 'severity', 'cause')
 
-    def __init__(self, player, track, message, severity, cause):
+    def __init__(self, player: 'BasePlayer', track: 'AudioTrack', message: Optional[str], severity: Severity,
+                 cause: str):
         self.player: 'BasePlayer' = player
         self.track: 'AudioTrack' = track
         self.message: Optional[str] = message
@@ -119,7 +120,7 @@ class TrackEndEvent(Event):
     """
     __slots__ = ('player', 'track', 'reason')
 
-    def __init__(self, player, track, reason):
+    def __init__(self, player: 'BasePlayer', track: Optional['AudioTrack'], reason: EndReason):
         self.player: 'BasePlayer' = player
         self.track: Optional['AudioTrack'] = track
         self.reason: EndReason = reason
@@ -144,7 +145,7 @@ class TrackLoadFailedEvent(Event):
     """
     __slots__ = ('player', 'track', 'original')
 
-    def __init__(self, player, track, original):
+    def __init__(self, player: 'BasePlayer', track: 'DeferredAudioTrack', original: Optional[Exception]):
         self.player: 'BasePlayer' = player
         self.track: 'DeferredAudioTrack' = track
         self.original: Optional[Exception] = original
@@ -162,7 +163,7 @@ class QueueEndEvent(Event):
     """
     __slots__ = ('player',)
 
-    def __init__(self, player):
+    def __init__(self, player: 'BasePlayer'):
         self.player: 'BasePlayer' = player
 
 
@@ -187,7 +188,7 @@ class PlayerUpdateEvent(Event):
     """
     __slots__ = ('player', 'position', 'timestamp', 'connected', 'ping')
 
-    def __init__(self, player, raw_state):
+    def __init__(self, player: 'BasePlayer', raw_state):
         self.player: 'BasePlayer' = player
         self.position: int = raw_state.get('position')
         self.timestamp: int = raw_state.get('time')
@@ -207,7 +208,7 @@ class NodeConnectedEvent(Event):
     """
     __slots__ = ('node',)
 
-    def __init__(self, node):
+    def __init__(self, node: 'Node'):
         self.node: 'Node' = node
 
 
@@ -227,7 +228,7 @@ class NodeDisconnectedEvent(Event):
     """
     __slots__ = ('node', 'code', 'reason')
 
-    def __init__(self, node, code, reason):
+    def __init__(self, node: 'Node', code: Optional[int], reason: Optional[str]):
         self.node: 'Node' = node
         self.code: Optional[int] = code
         self.reason: Optional[str] = reason
@@ -250,7 +251,7 @@ class NodeChangedEvent(Event):
     """
     __slots__ = ('player', 'old_node', 'new_node')
 
-    def __init__(self, player, old_node, new_node):
+    def __init__(self, player: 'BasePlayer', old_node: 'Node', new_node: 'Node'):
         self.player: 'BasePlayer' = player
         self.old_node: 'Node' = old_node
         self.new_node: 'Node' = new_node
@@ -272,7 +273,7 @@ class NodeReadyEvent(Event):
     """
     __slots__ = ('node', 'session_id', 'resumed')
 
-    def __init__(self, node, session_id, resumed):
+    def __init__(self, node: 'Node', session_id: str, resumed: bool):
         self.node: 'Node' = node
         self.session_id: str = session_id
         self.resumed: bool = resumed
@@ -300,7 +301,7 @@ class WebSocketClosedEvent(Event):
     """
     __slots__ = ('player', 'code', 'reason', 'by_remote')
 
-    def __init__(self, player, code, reason, by_remote):
+    def __init__(self, player: 'BasePlayer', code: int, reason: str, by_remote: bool):
         self.player: 'BasePlayer' = player
         self.code: int = code
         self.reason: str = reason
@@ -323,6 +324,6 @@ class IncomingWebSocketMessage(Event):
     """
     __slots__ = ('data', 'node')
 
-    def __init__(self, data, node):
+    def __init__(self, data, node: 'Node'):
         self.data: Union[Dict[Any, Any], List[Any]] = data
         self.node: 'Node' = node
