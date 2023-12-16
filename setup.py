@@ -22,7 +22,7 @@ setup(
     download_url='https://github.com/Devoxin/Lavalink.py/archive/{}.tar.gz'.format(version),
     keywords=['lavalink'],
     include_package_data=True,
-    install_requires=['aiohttp>=3.9.0,<4'],
+    install_requires=['aiohttp>=3.8.0,<3.9.0'],  # >=3.9.0,<4 is 3.8+
     extras_require={'docs': ['sphinx',
                              'pygments',
                              'guzzle_sphinx_theme',
