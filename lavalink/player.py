@@ -226,11 +226,8 @@ class DefaultPlayer(BasePlayer):
 
         Plays the given track.
 
-        This method differs from :meth:`BasePlayer.play_track` in that it contains additional logic
+        This method differs from :func:`BasePlayer.play_track` in that it contains additional logic
         to handle certain attributes, such as ``loop``, ``shuffle``, and loading a base64 string from :class:`DeferredAudioTrack`.
-
-        :meth:`BasePlayer.play_track` is a no-frills, raw function which will unconditionally tell the node to play exactly whatever
-        it is passed.
 
         Parameters
         ----------

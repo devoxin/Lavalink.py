@@ -4,11 +4,8 @@ __title__ = 'Lavalink'
 __author__ = 'Devoxin'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-present Devoxin'
-__version__ = '5.0.0'
+__version__ = '5.0.1'
 
-
-import logging
-import sys
 
 from .abc import BasePlayer, DeferredAudioTrack, Source
 from .client import Client
