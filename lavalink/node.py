@@ -22,11 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from collections import defaultdict
+from time import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, overload
 
 from .abc import BasePlayer, Filter
 from .common import MISSING
-from .errors import ClientError, RequestError
+from .errors import AuthenticationError, ClientError, RequestError
 from .server import AudioTrack, LoadResult
 from .stats import Stats
 from .transport import Transport
@@ -107,6 +108,28 @@ class Node:
             return 9e30
 
         return self.stats.penalty.total
+
+    async def get_rest_latency(self) -> float:
+        """|coro|
+
+        Measures the REST latency for this node.
+        This simply calls :func:`get_version` but measures the time between when the request was made,
+        and when a response was received.
+
+        Returns
+        -------
+        float
+            The latency, in milliseconds. ``-1`` if an error occurred during the request (e.g. node is unreachable),
+            otherwise, a positive number.
+        """
+        start = time()
+
+        try:
+            await self.get_version()
+        except (AuthenticationError, ClientError, RequestError):
+            return -1
+
+        return (time() - start) * 1000
 
     async def destroy(self):
         """|coro|
@@ -253,7 +276,7 @@ class Node:
         """|coro|
 
         Retrieves a player from the node.
-        This returns raw data, to retrieve a player you can interact with, use :meth:`PlayerManager.get`.
+        This returns raw data, to retrieve a player you can interact with, use :func:`PlayerManager.get`.
 
         Returns
         -------
@@ -484,7 +507,7 @@ class Node:
         """|coro|
 
         Destroys a player on the node.
-        It's recommended that you use :meth:`PlayerManager.destroy` to destroy a player.
+        It's recommended that you use :func:`PlayerManager.destroy` to destroy a player.
 
         Returns
         -------
