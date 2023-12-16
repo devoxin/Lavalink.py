@@ -29,7 +29,7 @@ class BasePlayer(ABC):
         The node that the player is connected to.
     channel_id: Optional[:class:`int`]
         The ID of the voice channel the player is connected to.
-        This could be None if the player isn't connected.
+        This could be ``None`` if the player isn't connected.
     current: Optional[:class:`AudioTrack`]
         The currently playing track.
     """
@@ -80,7 +80,7 @@ class BasePlayer(ABC):
         no_replace: :class:`bool`
             If set to true, operation will be ignored if a track is already playing or paused.
             The default behaviour is to always replace.
-            If left unspecified or None is provided, the default behaviour is exhibited.
+            If left unspecified or ``None`` is provided, the default behaviour is exhibited.
         volume: :class:`int`
             The initial volume to set. This is useful for changing the volume between tracks etc.
             If left unspecified or ``None`` is provided, the volume will remain at its current setting.
@@ -270,7 +270,7 @@ class Source(ABC):
         Returns
         -------
         Optional[:class:`LoadResult`]
-            A LoadResult, or None if there were no matches for the provided query.
+            A LoadResult, or ``None`` if there were no matches for the provided query.
         """
         raise NotImplementedError
 

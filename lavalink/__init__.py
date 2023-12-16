@@ -9,6 +9,7 @@ __version__ = '5.1.0'
 
 from .abc import BasePlayer, DeferredAudioTrack, Source
 from .client import Client
+from .common import MISSING
 from .errors import (AuthenticationError, ClientError, InvalidTrack, LoadError,
                      PlayerErrorEvent, RequestError)
 from .events import (Event, IncomingWebSocketMessage, NodeChangedEvent,

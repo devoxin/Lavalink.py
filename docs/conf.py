@@ -31,6 +31,8 @@ globaltoc_collapse = False
 # If true, the global TOC tree will also contain hidden entries
 globaltoc_includehidden = False
 
+toc_object_entries_show_parents = 'hide'
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -39,10 +41,15 @@ globaltoc_includehidden = False
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'guzzle_sphinx_theme',
     'enum_tools.autoenum'
 ]
+
+intersphinx_mapping = {
+  'py': ('https://docs.python.org/3', None)
+}
 
 rst_prolog = """
 .. |coro| replace:: This function is a |coroutine_link|_.

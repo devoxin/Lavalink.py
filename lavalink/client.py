@@ -345,7 +345,7 @@ class Client:
     async def decode_tracks(self, tracks: List[str], node: Optional[Node] = None) -> List[AudioTrack]:
         """|coro|
 
-        Decodes a list of base64-encoded track strings into ``AudioTrack``s.
+        Decodes a list of base64-encoded track strings into a list of :class:`AudioTrack`.
 
         Parameters
         ----------
@@ -357,7 +357,7 @@ class Client:
         Returns
         -------
         List[:class:`AudioTrack`]
-            A list of decoded ``AudioTrack``s.
+            A list of decoded :class:`AudioTrack`.
         """
         node = node or random.choice(self.node_manager.nodes)
         return await node.decode_tracks(tracks)
