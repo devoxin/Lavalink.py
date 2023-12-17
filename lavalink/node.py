@@ -588,7 +588,8 @@ class Node:
 
     async def request(self,
                       method: str,
-                      path: str, *,
+                      path: str,
+                      *,
                       to: Optional[Type[T]] = None,
                       trace: bool = False,
                       versioned: bool = True,
