@@ -23,7 +23,8 @@ SOFTWARE.
 """
 from collections import defaultdict
 from time import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, overload
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
+                    Union, overload)
 
 from .abc import BasePlayer, Filter
 from .common import MISSING
@@ -35,6 +36,8 @@ from .transport import Transport
 if TYPE_CHECKING:
     from .client import Client
     from .nodemanager import NodeManager
+
+T = TypeVar('T')
 
 
 class Node:
@@ -67,6 +70,14 @@ class Node:
         self.region: str = region
         self.name: str = name or f'{region}-{host}:{port}'
         self.stats: Stats = Stats.empty(self)
+
+    @property
+    def session_id(self) -> Optional[str]:
+        """
+        The session ID for this node.
+        Could be ``None`` if a ready event has not yet been received from the server.
+        """
+        return self._transport.session_id
 
     @property
     def available(self) -> bool:
@@ -561,6 +572,79 @@ class Node:
             return
 
         return await self._transport._request('PATCH', f'sessions/{session_id}', json=json)
+
+    @overload
+    async def request(self, method: str, path: str, *, to: Type[T], trace: bool = ..., versioned: bool = ..., **kwargs) -> T:
+        ...
+
+    @overload
+    async def request(self, method: str, path: str, *, to: str, trace: bool = ..., versioned: bool = ..., **kwargs) -> str:
+        ...
+
+    @overload
+    async def request(self, method: str, path: str, *, trace: bool = ..., versioned: bool = ...,
+                      **kwargs) -> Union[Dict[Any, Any], List[Any], bool]:
+        ...
+
+    async def request(self,
+                      method: str,
+                      path: str, *,
+                      to: Optional[Type[T]] = None,
+                      trace: bool = False,
+                      versioned: bool = True,
+                      **kwargs) -> Union[T, str, bool, Dict[Any, Any], List[Any]]:
+        """|coro|
+
+        .. _HTTP method: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
+
+        Makes a HTTP request to this node. Useful for implementing functionality offered by plugins on the server.
+
+        Parameters
+        ----------
+        method: :class:`str`
+            The `HTTP method`_ for this request.
+        path: :class:`str`
+            The path for this request. E.g. ``sessions/{session_id}/players/{guild_id}``.
+        to: Optional[Type[T]]
+            The class to deserialize the response into.
+
+            Warning
+            -------
+            The provided class MUST implement a classmethod called ``from_dict`` that accepts a dict or list object!
+
+            Example:
+
+                .. code:: python
+
+                    @classmethod
+                    def from_dict(cls, res: Union[Dict[Any, Any], List[Any]]):
+                        return cls(res)
+        trace: :class:`bool`
+            Whether to enable trace logging for this request. This will return a more detailed error if the request fails,
+            but could bloat log files and reduce performance if left enabled.
+        versioned: :class:`bool`
+            Whether this request should target a versioned route. For the majority of requests, this should be set to ``True``.
+            This will prepend the route with the latest API version this client supports, e.g. ``v4/``.
+        **kwargs: Any
+            Any additional arguments that should be passed to `aiohttp`. This could be parameters like ``json``, ``params`` etc.
+
+        Raises
+        ------
+        :class:`AuthenticationError`
+            If the provided authorization was invalid.
+        :class:`RequestError`
+            If the request was unsuccessful.
+        :class:`ClientError`
+            If there were any intermediate issues, such as trying to establish a connection but the server is unreachable.
+
+        Returns
+        -------
+        Union[T, str, bool, Dict[Any, Any], List[Any]]
+            - ``T`` or ``str`` if the ``to`` parameter was specified and either value provided.
+            - The raw JSON response (``Dict[Any, Any]`` or ``List[Any]``) if ``to`` was not provided.
+            - A bool, if the returned status code was ``204``. A value of ``True`` should typically mean the request was successful.
+        """
+        return await self._transport._request(method, path, to, trace, versioned, **kwargs)
 
     def __repr__(self):
         return f'<Node name={self.name} region={self.region}>'
