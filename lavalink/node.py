@@ -626,7 +626,7 @@ class Node:
             Whether this request should target a versioned route. For the majority of requests, this should be set to ``True``.
             This will prepend the route with the latest API version this client supports, e.g. ``v4/``.
         **kwargs: Any
-            Any additional arguments that should be passed to `aiohttp`. This could be parameters like ``json``, ``params`` etc.
+            Any additional arguments that should be passed to ``aiohttp``. This could be parameters like ``json``, ``params`` etc.
 
         Raises
         ------
