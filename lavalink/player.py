@@ -29,7 +29,7 @@ from typing import (TYPE_CHECKING, Dict, List, Optional, Type,  # Literal
 
 from .abc import BasePlayer, DeferredAudioTrack
 from .common import MISSING
-from .errors import PlayerErrorEvent, RequestError, ClientError
+from .errors import ClientError, PlayerErrorEvent, RequestError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackStuckEvent)
 from .filters import Filter
