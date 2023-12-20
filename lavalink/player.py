@@ -29,7 +29,7 @@ from typing import (TYPE_CHECKING, Dict, List, Optional, Type,  # Literal
 
 from .abc import BasePlayer, DeferredAudioTrack
 from .common import MISSING
-from .errors import PlayerErrorEvent, RequestError
+from .errors import PlayerErrorEvent, RequestError, ClientError
 from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
                      TrackStuckEvent)
 from .filters import Filter
@@ -619,8 +619,10 @@ class DefaultPlayer(BasePlayer):
         node: :class:`Node`
             The node the player is changed to.
         """
-        if self.node.available:
+        try:
             await self.node.destroy_player(self._internal_id)
+        except (ClientError, RequestError):
+            pass
 
         old_node = self.node
         self.node = node
