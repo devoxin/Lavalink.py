@@ -357,5 +357,4 @@ class Transport:
                 raise RequestError('An invalid response was received from the node.',
                                    status=res.status, response=await res.json(), params=kwargs.get('params', {}))
         except Exception as original:
-            _log.error('Request "%s %s" failed', method, path)
             raise ClientError from original
