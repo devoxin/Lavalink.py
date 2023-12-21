@@ -138,6 +138,7 @@ class BasePlayer(ABC):
                 playable_track = await track.load(self.client)
             except LoadError as load_error:
                 await self.client._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
+                return
 
         if playable_track is None:  # This should only fire when a DeferredAudioTrack fails to yield a base64 track string.
             await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
