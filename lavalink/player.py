@@ -278,7 +278,9 @@ class DefaultPlayer(BasePlayer):
 
         self._last_position = 0
         self.position_timestamp = 0
-        self.paused = pause
+
+        if pause is not MISSING and isinstance(pause, bool):
+            self.paused = pause
 
         if not track:
             if not self.queue:
