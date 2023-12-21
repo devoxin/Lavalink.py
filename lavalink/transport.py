@@ -356,5 +356,7 @@ class Transport:
 
                 raise RequestError('An invalid response was received from the node.',
                                    status=res.status, response=await res.json(), params=kwargs.get('params', {}))
-        except Exception as original:
+        except RequestError:
+            raise
+        except Exception as original:  # It's not pretty but aiohttp doesn't specify what exceptions can be thrown.
             raise ClientError from original
