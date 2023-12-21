@@ -216,11 +216,11 @@ class DefaultPlayer(BasePlayer):
 
     async def play(self,
                    track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]]] = None,
-                   start_time: int = 0,
+                   start_time: int = MISSING,
                    end_time: int = MISSING,
                    no_replace: bool = MISSING,
                    volume: int = MISSING,
-                   pause: bool = False,
+                   pause: bool = MISSING,
                    **kwargs):
         """|coro|
 
