@@ -232,7 +232,7 @@ class Client:
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
                  ssl: bool = False, session_id: Optional[str] = None) -> Node:
         """
-        Shortcut for :func:`NodeManager.add`.
+        Shortcut for :func:`NodeManager.add_node`.
 
         Adds a node to Lavalink's node manager.
 
