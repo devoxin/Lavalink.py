@@ -86,7 +86,7 @@ class NodeManager:
     def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
                  ssl: bool = False, session_id: Optional[str] = None) -> Node:
         """
-        Adds a node to Lavalink's node manager.
+        Adds a node to this node manager.
 
         Parameters
         ----------
@@ -121,6 +121,23 @@ class NodeManager:
         return node
 
     def remove_node(self, node: Node):
+        """
+        Removes a node.
+
+        Make sure you have called :func:`Node.destroy` to close any resources used by this Node.
+
+        .. deprecated:: 5.2.0
+            To be consistent with function naming, this method has been deprecated in favour of
+            :func:`remove`.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to remove from the list.
+        """
+        self.nodes.remove(node)
+
+    def remove(self, node: Node):
         """
         Removes a node.
 

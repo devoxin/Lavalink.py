@@ -135,9 +135,8 @@ class Transport:
                                                           heartbeat=60)
             except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as error:
                 if isinstance(error, aiohttp.ClientConnectorError):
-                    _log.warning('[Node:%s] Invalid response received; this may indicate that '
-                                 'Lavalink is not running, or is running on a port different '
-                                 'to the one you provided to `add_node`.', self._node.name)
+                    _log.warning('[Node:%s] Invalid response received; is the server running on the correct port?',
+                                 self._node.name)
                 elif isinstance(error, aiohttp.WSServerHandshakeError):
                     if error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
                         _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.',
@@ -146,9 +145,8 @@ class Transport:
                         # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
                         # would be futile, and a waste of resources.
                     else:
-                        _log.warning('[Node:%s] The remote server returned code %d, the expected code was 101. This usually '
-                                     'indicates that the remote server is a webserver and not Lavalink. Check your ports, '
-                                     'and try again.', self._node.name, error.status)
+                        _log.warning('[Node:%s] Received code \'%d\' (expected \'101\'). Check your server\'s ports and try again.',
+                                     self._node.name, error.status)
 
                     return
                 else:
