@@ -205,11 +205,11 @@ class Client:
 
         Parameters
         ----------
-        events: :class:`Event`
+        events: Sequence[:class:`Event`]
             The events to remove the hooks from. This parameter can be omitted,
             and the events registered on the function via :meth:`listener` will be used instead, if applicable.
             Otherwise, a default value of ``Generic`` is used instead.
-        hooks: Callable
+        hooks: Sequence[Callable]
             A list of hook methods to remove.
         """
         if events is not None:
