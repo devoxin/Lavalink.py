@@ -28,7 +28,8 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple,
+                    Type, TypeVar, Union)
 
 import aiohttp
 
@@ -197,6 +198,40 @@ class Client:
                     self._event_hooks[event.__name__].append(listener)
             else:
                 self._event_hooks['Generic'].append(listener)
+
+    def remove_event_hooks(self, *, events: Sequence[EventT] = None, hooks: Sequence[Callable]):
+        """
+        Removes the given hooks from the event hook registry.
+
+        Parameters
+        ----------
+        events: :class:`Event`
+            The events to remove the hooks from. This parameter can be omitted,
+            and the events registered on the function via :meth:`listener` will be used instead, if applicable.
+            Otherwise, a default value of ``Generic`` is used instead.
+        hooks: Callable
+            A list of hook methods to remove.
+        """
+        if events is not None:
+            for event in events:
+                if Event not in event.__bases__:
+                    raise TypeError(f'{event.__name__} is not of type Event')
+
+        for hook in hooks:
+            if not callable(hook):
+                raise ValueError(f'Provided hook {hook} is not a callable')
+
+        for hook in hooks:
+            unregister_events = events or getattr(hook, '_lavalink_events', None)
+
+            try:
+                if not unregister_events:
+                    self._event_hooks['Generic'].remove(hook)
+                else:
+                    for event in unregister_events:
+                        self._event_hooks[event.__name__].remove(hook)
+            except ValueError:
+                pass
 
     def register_source(self, source: Source):
         """
