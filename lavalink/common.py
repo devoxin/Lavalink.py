@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from typing import Any
 
 
 class _MissingObj:
@@ -30,4 +31,4 @@ class _MissingObj:
         return '...'
 
 
-MISSING = _MissingObj()
+MISSING: Any = _MissingObj()

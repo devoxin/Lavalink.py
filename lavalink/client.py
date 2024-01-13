@@ -99,7 +99,7 @@ class Client:
                             'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
         self._session: aiohttp.ClientSession = aiohttp.ClientSession()
-        self._user_id: str = int(user_id)
+        self._user_id: int = int(user_id)
         self._event_hooks = defaultdict(list)
         self.node_manager: NodeManager = NodeManager(self, regions, connect_back)
         self.player_manager: PlayerManager = PlayerManager(self, player)
@@ -199,7 +199,7 @@ class Client:
             else:
                 self._event_hooks['Generic'].append(listener)
 
-    def remove_event_hooks(self, *, events: Sequence[EventT] = None, hooks: Sequence[Callable]):
+    def remove_event_hooks(self, *, events: Optional[Sequence[EventT]] = None, hooks: Sequence[Callable]):
         """
         Removes the given hooks from the event hook registry.
 
@@ -264,7 +264,7 @@ class Client:
         """
         return next((source for source in self.sources if source.name == source_name), None)
 
-    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+    def add_node(self, host: str, port: int, password: str, region: str, name: Optional[str] = None,
                  ssl: bool = False, session_id: Optional[str] = None) -> Node:
         """
         Shortcut for :func:`NodeManager.add_node`.

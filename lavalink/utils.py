@@ -99,7 +99,7 @@ def format_time(time: int) -> str:
     return f'{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}'
 
 
-def parse_time(time: int) -> Tuple[int, int, int, int]:
+def parse_time(time: int) -> Tuple[float, float, float, float]:
     """
     Parses the given time into days, hours, minutes and seconds.
     Useful for formatting time yourself.
@@ -111,7 +111,7 @@ def parse_time(time: int) -> Tuple[int, int, int, int]:
 
     Returns
     -------
-    Tuple[:class:`int`, :class:`int`, :class:`int`, :class:`int`]
+    Tuple[:class:`float`, :class:`float`, :class:`float`, :class:`float`]
     """
     days, remainder = divmod(time / 1000, 86400)
     hours, remainder = divmod(remainder, 3600)
@@ -163,7 +163,7 @@ def decode_track(track: str) -> AudioTrack:
     reader = DataReader(track)
 
     flags = (reader.read_int() & 0xC0000000) >> 30
-    version, = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else 1
+    version, = struct.unpack('B', reader.read_byte()) if flags & 1 != 0 else (1,)
 
     title, author, length, identifier, is_stream, uri = _read_track_common(reader)
     extra_fields = {}

@@ -129,7 +129,7 @@ info     - Extracts version and build information from an existing Lavalink.jar.
     """.strip(), file=sys.stdout)
 
 
-def format_bytes(length: int) -> str:
+def format_bytes(length: float) -> str:
     sizes = ['B', 'KB', 'MB', 'GB', 'TB']
     unit = 0
 
