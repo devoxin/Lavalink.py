@@ -486,7 +486,7 @@ class DefaultPlayer(BasePlayer):
         if not issubclass(_filter, Filter):
             raise TypeError(f'Expected subclass of type Filter, not {_filter.__name__}')
 
-        filter_name: str = _filter.__name__.lower()
+        filter_name = _filter.__name__.lower()
 
         filter_instance = self.filters.get(filter_name, _filter())  # type: ignore
         filter_instance.update(**kwargs)
