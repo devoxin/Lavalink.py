@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, TypeVar, Generic
 
 from .common import MISSING
 from .errors import InvalidTrack, LoadError
@@ -10,9 +10,11 @@ from .server import AudioTrack
 if TYPE_CHECKING:
     from .client import Client
     from .node import Node
-    from .player import LoadResult
+    from .server import LoadResult
 
 _log = logging.getLogger(__name__)
+
+FilterValueT = TypeVar('FilterValueT', Dict[str, Any], List[float], List[int], float)
 
 
 class BasePlayer(ABC):
@@ -141,7 +143,7 @@ class BasePlayer(ABC):
                 return
 
         if playable_track is None:  # This should only fire when a DeferredAudioTrack fails to yield a base64 track string.
-            await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
+            await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))  # type: ignore
             return
 
         self._next = track
@@ -279,7 +281,7 @@ class Source(ABC):
         return f'<Source name={self.name}>'
 
 
-class Filter:
+class Filter(ABC, Generic[FilterValueT]):
     """
     A class representing a Lavalink audio filter.
 
@@ -298,8 +300,8 @@ class Filter:
     plugin_filter: :class:`bool`
         Whether this filter is part of a Lavalink plugin.
     """
-    def __init__(self, values: Union[Dict[str, Any], List[Union[float, int]], float], plugin_filter: bool = False):
-        self.values = values
+    def __init__(self, values: FilterValueT, plugin_filter: bool = False):
+        self.values: FilterValueT = values
         self.plugin_filter: bool = plugin_filter
 
     @abstractmethod
@@ -308,7 +310,7 @@ class Filter:
         raise NotImplementedError
 
     @abstractmethod
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Dict[str, FilterValueT]:
         """
         Transforms the internal values into a dict matching the structure Lavalink expects.
 

@@ -169,14 +169,19 @@ class Transport:
 
     async def _listen(self):
         """ Listens for websocket messages. """
-        close_code = None
-        close_reason = 'Improper websocket closure'
+        close_code: Optional[aiohttp.WSCloseCode] = None
+        close_reason: Optional[str] = 'Improper websocket closure'
+
+        assert self._ws is not None
 
         async for msg in self._ws:
             _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
 
             if msg.type == aiohttp.WSMsgType.TEXT:
-                await self._handle_message(msg.json())
+                try:
+                    await self._handle_message(msg.json())
+                except Exception:  # pylint: disable=W0718
+                    _log.error('[Node:%s] Unexpected error occurred whilst processing websocket message', self._node.name)
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 exc = self._ws.exception()
                 _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
@@ -189,8 +194,12 @@ class Transport:
                 close_reason = msg.extra
                 break
 
-        close_code = close_code or self._ws.close_code
-        await self.close(close_code or aiohttp.WSCloseCode.OK)
+        ws_close_code = self._ws.close_code
+
+        if close_code is None and ws_close_code is not None:
+            close_code = aiohttp.WSCloseCode(ws_close_code)
+
+        await self.close(close_code or aiohttp.WSCloseCode.ABNORMAL_CLOSURE)
         await self._websocket_closed(close_code, close_reason)
 
     async def _websocket_closed(self, code: Optional[int] = None, reason: Optional[str] = None):
@@ -229,7 +238,7 @@ class Transport:
         if op == 'ready':
             self.session_id = data['sessionId']
             await self._node.manager._handle_node_ready(self._node)
-            await self.client._dispatch_event(NodeReadyEvent(self, data['sessionId'], data['resumed']))
+            await self.client._dispatch_event(NodeReadyEvent(self._node, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
             player = self.client.player_manager.get(guild_id)
@@ -263,6 +272,7 @@ class Transport:
         if not player:
             if event_type not in ('TrackEndEvent', 'WebSocketClosedEvent'):  # Player was most likely destroyed if it's any of these.
                 _log.warning('[Node:%s] Received event type %s for non-existent player! GuildId: %s', self._node.name, event_type, data['guildId'])
+
             return
 
         event = None
@@ -271,6 +281,8 @@ class Transport:
             if player._next is not None:
                 player.current = player._next
                 player._next = None
+
+            assert player.current is not None
             event = TrackStartEvent(player, player.current)
         elif event_type == 'TrackEndEvent':
             end_reason = EndReason.from_str(data['reason'])
@@ -280,8 +292,11 @@ class Transport:
             message = exception['message']
             severity = Severity.from_str(exception['severity'])
             cause = exception['cause']
+
+            assert player.current is not None
             event = TrackExceptionEvent(player, player.current, message, severity, cause)
         elif event_type == 'TrackStuckEvent':
+            assert player.current is not None
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
         elif event_type == 'WebSocketClosedEvent':
             event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
@@ -313,9 +328,12 @@ class Transport:
                 _log.warning('[Node:%s] WebSocket message queue is currently at capacity, discarding payload.', self._node.name)
             else:
                 self._message_queue.append(data)
+
             return
 
         _log.debug('[Node:%s] Sending payload %s', self._node.name, str(data))
+        assert self._ws is not None  # This should always pass as self.ws_connected returns False if the ws does not exist.
+
         try:
             await self._ws.send_json(data)
         except ConnectionResetError:

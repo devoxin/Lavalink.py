@@ -189,7 +189,7 @@ class DefaultPlayer(BasePlayer):
             pass
 
     def add(self, track: Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]],
-            requester: int = 0, index: int = None):
+            requester: int = 0, index: Optional[int] = None):
         """
         Adds a track to the queue.
 
