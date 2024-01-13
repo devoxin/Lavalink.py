@@ -21,10 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import TYPE_CHECKING, Any, Dict, Optional
-
-if TYPE_CHECKING:
-    from .player import BasePlayer
+from typing import Any, Dict, Optional
 
 
 class ClientError(Exception):
@@ -76,22 +73,3 @@ class RequestError(Exception):
         self.path: str = response['path']
         self.trace: Optional[str] = response.get('trace', None)
         self.params = params
-
-
-class PlayerErrorEvent(Exception):
-    """
-    Raised when an error occurs within a :class:`BasePlayer`.
-
-    Attributes
-    ----------
-    player: :class:`BasePlayer`
-        The player in which the error occurred.
-    original: :class:`Exception`
-        The original error.
-    """
-    __slots__ = ('player', 'original')
-
-    def __init__(self, player, original):
-        self.player: 'BasePlayer' = player
-        self.original: Exception = original
-        # TODO: Perhaps an enum denoting which area of the player encountered an exception, e.g. ErrorType.PLAY.

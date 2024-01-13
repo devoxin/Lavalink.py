@@ -29,9 +29,9 @@ from typing import (TYPE_CHECKING, Dict, List, Optional, Type,  # Literal
 
 from .abc import BasePlayer, DeferredAudioTrack
 from .common import MISSING
-from .errors import ClientError, PlayerErrorEvent, RequestError
-from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
-                     TrackStuckEvent)
+from .errors import ClientError, RequestError
+from .events import (NodeChangedEvent, PlayerErrorEvent, QueueEndEvent,
+                     TrackEndEvent, TrackStuckEvent)
 from .filters import Filter
 from .server import AudioTrack
 
@@ -132,6 +132,8 @@ class DefaultPlayer(BasePlayer):
         """ Returns the track's elapsed playback time in milliseconds, adjusted for Lavalink stat interval. """
         if not self.is_playing:
             return 0
+
+        assert self.current is not None
 
         if self.paused or self._internal_pause:
             return min(self._last_position, self.current.duration)
@@ -306,7 +308,7 @@ class DefaultPlayer(BasePlayer):
 
         Stops the player.
         """
-        await self.node.update_player(self._internal_id, encoded_track=None)
+        await self.node.update_player(guild_id=self._internal_id, encoded_track=None)
         self.current = None
 
     async def skip(self):
@@ -353,7 +355,7 @@ class DefaultPlayer(BasePlayer):
         pause: :class:`bool`
             Whether to pause the player or not.
         """
-        await self.node.update_player(self._internal_id, paused=pause)
+        await self.node.update_player(guild_id=self._internal_id, paused=pause)
         self.paused = pause
 
     async def set_volume(self, vol: int):
@@ -371,7 +373,7 @@ class DefaultPlayer(BasePlayer):
             The new volume level.
         """
         vol = max(min(vol, 1000), 0)
-        await self.node.update_player(self._internal_id, volume=vol)
+        await self.node.update_player(guild_id=self._internal_id, volume=vol)
         self.volume = vol
 
     async def seek(self, position: int):
@@ -387,9 +389,9 @@ class DefaultPlayer(BasePlayer):
         if not isinstance(position, int):
             raise ValueError('position must be an int!')
 
-        await self.node.update_player(self._internal_id, position=position)
+        await self.node.update_player(guild_id=self._internal_id, position=position)
 
-    async def set_filters(self, *filters: FilterT):
+    async def set_filters(self, *filters: Filter):
         """|coro|
 
         This sets multiple filters at once.
@@ -416,7 +418,7 @@ class DefaultPlayer(BasePlayer):
 
         await self._apply_filters()
 
-    async def set_filter(self, _filter: FilterT):
+    async def set_filter(self, _filter: Filter):
         """|coro|
 
         Applies the corresponding filter within Lavalink.
@@ -484,9 +486,9 @@ class DefaultPlayer(BasePlayer):
         if not issubclass(_filter, Filter):
             raise TypeError(f'Expected subclass of type Filter, not {_filter.__name__}')
 
-        filter_name = _filter.__name__.lower()
+        filter_name: str = _filter.__name__.lower()
 
-        filter_instance = self.filters.get(filter_name, _filter())
+        filter_instance = self.filters.get(filter_name, _filter())  # type: ignore
         filter_instance.update(**kwargs)
         self.filters[filter_name] = filter_instance
         await self._apply_filters()
@@ -568,7 +570,7 @@ class DefaultPlayer(BasePlayer):
         await self._apply_filters()
 
     async def _apply_filters(self):
-        await self.node.update_player(self._internal_id, filters=list(self.filters.values()))
+        await self.node.update_player(guild_id=self._internal_id, filters=list(self.filters.values()))
 
     async def _handle_event(self, event):
         """
@@ -638,7 +640,7 @@ class DefaultPlayer(BasePlayer):
             if isinstance(self.current, DeferredAudioTrack) and playable_track is None:
                 playable_track = await self.current.load(self.client)
 
-            await self.node.update_player(self._internal_id, encoded_track=playable_track, position=self.position,
+            await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, position=self.position,
                                           paused=self.paused, volume=self.volume)
             self._last_update = int(time() * 1000)
 

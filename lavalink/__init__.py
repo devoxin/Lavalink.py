@@ -10,11 +10,11 @@ __version__ = '5.2.0'
 from .abc import BasePlayer, DeferredAudioTrack, Source
 from .client import Client
 from .errors import (AuthenticationError, ClientError, InvalidTrack, LoadError,
-                     PlayerErrorEvent, RequestError)
+                     RequestError)
 from .events import (Event, IncomingWebSocketMessage, NodeChangedEvent,
                      NodeConnectedEvent, NodeDisconnectedEvent, NodeReadyEvent,
-                     PlayerUpdateEvent, QueueEndEvent, TrackEndEvent,
-                     TrackExceptionEvent, TrackLoadFailedEvent,
+                     PlayerErrorEvent, PlayerUpdateEvent, QueueEndEvent,
+                     TrackEndEvent, TrackExceptionEvent, TrackLoadFailedEvent,
                      TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent)
 from .filters import (ChannelMix, Distortion, Equalizer, Filter, Karaoke,
                       LowPass, Rotation, Timescale, Tremolo, Vibrato, Volume)

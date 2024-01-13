@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, TypeVar, Generic
+from typing import (TYPE_CHECKING, Any, Dict, Generic, List, Optional, TypeVar,
+                    Union)
 
 from .common import MISSING
 from .errors import InvalidTrack, LoadError
@@ -45,7 +46,7 @@ class BasePlayer(ABC):
         self._next: Optional[AudioTrack] = None
         self._internal_id: str = str(guild_id)
         self._original_node: Optional['Node'] = None  # This is used internally for failover.
-        self._voice_state = {}
+        self._voice_state: Dict[str, Any] = {}
 
     @abstractmethod
     async def _handle_event(self, event):
@@ -147,7 +148,7 @@ class BasePlayer(ABC):
             return
 
         self._next = track
-        await self.node.update_player(self._internal_id, encoded_track=playable_track, **options)
+        await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, **options)
 
     def cleanup(self):
         pass
@@ -184,7 +185,7 @@ class BasePlayer(ABC):
 
     async def _dispatch_voice_update(self):
         if {'sessionId', 'endpoint', 'token'} == self._voice_state.keys():
-            await self.node.update_player(self._internal_id, voice_state=self._voice_state)
+            await self.node.update_player(guild_id=self._internal_id, voice_state=self._voice_state)
 
     @abstractmethod
     async def node_unavailable(self):
