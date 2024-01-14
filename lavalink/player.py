@@ -297,6 +297,8 @@ class DefaultPlayer(BasePlayer):
             if not isinstance(start_time, int) or not 0 <= start_time < track.duration:
                 raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
 
+            self._last_position = start_time
+
         if end_time is not MISSING:
             if not isinstance(end_time, int) or not 1 <= end_time <= track.duration:
                 raise ValueError('end_time must be an int with a value equal to, or greater than 1, and less than, or equal to the track duration')
