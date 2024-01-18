@@ -248,7 +248,7 @@ class Transport:
                 return
 
             state = data['state']
-            await player._update_state(state)
+            await player.update_state(state)
             await self.client._dispatch_event(PlayerUpdateEvent(player, state))
         elif op == 'stats':
             self._node.stats = Stats(self._node, data)
@@ -308,7 +308,7 @@ class Transport:
 
         if player:
             try:
-                await player._handle_event(event)
+                await player.handle_event(event)
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('Player %d encountered an error whilst handling event %s', player.guild_id, type(event).__name__)
 
