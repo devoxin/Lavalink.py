@@ -329,7 +329,7 @@ class Node:
                             filters: Optional[List[Filter]] = ...,
                             voice_state: Dict[str, Any] = ...,
                             user_data: Dict[str, Any] = ...,
-                            **kwargs) -> Dict[str, Any]:
+                            **kwargs) -> Optional[Dict[str, Any]]:
         ...
 
     @overload
@@ -345,7 +345,7 @@ class Node:
                             filters: Optional[List[Filter]] = ...,
                             voice_state: Dict[str, Any] = ...,
                             user_data: Dict[str, Any] = ...,
-                            **kwargs) -> Dict[str, Any]:
+                            **kwargs) -> Optional[Dict[str, Any]]:
         ...
 
     @overload
@@ -360,7 +360,7 @@ class Node:
                             filters: Optional[List[Filter]] = ...,
                             voice_state: Dict[str, Any] = ...,
                             user_data: Dict[str, Any] = ...,
-                            **kwargs) -> Dict[str, Any]:
+                            **kwargs) -> Optional[Dict[str, Any]]:
         ...
 
     async def update_player(self,  # pylint: disable=too-many-locals
@@ -375,7 +375,7 @@ class Node:
                             filters: Optional[List[Filter]] = MISSING,
                             voice_state: Dict[str, Any] = MISSING,
                             user_data: Dict[str, Any] = MISSING,
-                            **kwargs) -> Dict[str, Any]:
+                            **kwargs) -> Optional[Dict[str, Any]]:
         """|coro|
 
         .. _response object: https://lavalink.dev/api/rest#Player
@@ -433,8 +433,9 @@ class Node:
 
         Returns
         -------
-        Dict[str, Any]
-            The raw player update `response object`_.
+        Optional[Dict[str, Any]]
+            The raw player update `response object`_, or ``None`` , if a request wasn't made due to an
+            empty payload.
         """
         session_id = self.session_id
 
@@ -509,7 +510,7 @@ class Node:
             json['voice'] = voice_state
 
         if not json:
-            return {}
+            return None
 
         return await self.request('PATCH', f'sessions/{session_id}/players/{guild_id}',
                                   params=params, json=json)  # type: ignore
@@ -532,7 +533,7 @@ class Node:
 
         return await self.request('DELETE', f'sessions/{session_id}/players/{guild_id}')  # type: ignore
 
-    async def update_session(self, resuming: bool = MISSING, timeout: int = MISSING) -> Dict[str, Any]:
+    async def update_session(self, resuming: bool = MISSING, timeout: int = MISSING) -> Optional[Dict[str, Any]]:
         """|coro|
 
         Update the session for this node.
@@ -546,8 +547,9 @@ class Node:
 
         Returns
         -------
-        Dict[str, Any]
-            A raw response from the node containing the current session configuration.
+        Optional[Dict[str, Any]]
+            A raw response from the node containing the current session configuration, or ``None``
+            if a request wasn't made due to an empty payload.
         """
         session_id = self._transport.session_id
 
@@ -569,7 +571,7 @@ class Node:
             json['timeout'] = timeout
 
         if not json:
-            return {}
+            return None
 
         return await self.request('PATCH', f'sessions/{session_id}', json=json)  # type: ignore
 

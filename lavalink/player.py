@@ -303,7 +303,11 @@ class DefaultPlayer(BasePlayer):
             if not isinstance(end_time, int) or not 1 <= end_time <= track.duration:
                 raise ValueError('end_time must be an int with a value equal to, or greater than 1, and less than, or equal to the track duration')
 
-        await self.play_track(track, start_time, end_time, no_replace, volume, pause, **kwargs)
+        response = await self.play_track(track, start_time, end_time, no_replace,
+                                         volume, pause, **kwargs)
+
+        if response is not None:
+            self.paused = response['paused']
 
     async def stop(self):
         """|coro|
@@ -574,14 +578,14 @@ class DefaultPlayer(BasePlayer):
     async def _apply_filters(self):
         await self.node.update_player(guild_id=self._internal_id, filters=list(self.filters.values()))
 
-    async def _handle_event(self, event):
+    async def handle_event(self, event):
         """
         Handles the given event as necessary.
 
         Parameters
         ----------
         event: :class:`Event`
-            The event that will be handled.
+            The event to handle.
         """
         # A track throws loadFailed when it fails to provide any audio before throwing an exception.
         # A TrackStuckEvent is not proceeded by a TrackEndEvent. In theory, you could ignore a TrackStuckEvent
@@ -594,7 +598,7 @@ class DefaultPlayer(BasePlayer):
                 await self.client._dispatch_event(PlayerErrorEvent(self, error))
                 _log.exception('[DefaultPlayer:%d] Encountered a request error whilst starting a new track.', self.guild_id)
 
-    async def _update_state(self, state: dict):
+    async def update_state(self, state: dict):
         """
         Updates the position of the player.
 

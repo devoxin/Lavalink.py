@@ -28,7 +28,7 @@ from typing import (TYPE_CHECKING, Any, Dict, Generic, List, Optional, TypeVar,
 
 from .common import MISSING
 from .errors import InvalidTrack, LoadError
-from .events import TrackLoadFailedEvent
+from .events import Event, TrackLoadFailedEvent
 from .server import AudioTrack
 
 if TYPE_CHECKING:
@@ -72,11 +72,31 @@ class BasePlayer(ABC):
         self._voice_state = {}
 
     @abstractmethod
-    async def _handle_event(self, event):
+    async def handle_event(self, event: Event):
+        """|coro|
+
+        Handles an :class:`Event` received directly from the websocket.
+
+        Parameters
+        ----------
+        event: :class:`Event`
+            The event that will be handled.
+        """
         raise NotImplementedError
 
     @abstractmethod
-    async def _update_state(self, state: dict):
+    async def update_state(self, state: Dict[str, Any]):
+        """|coro|
+
+        .. _state object: https://lavalink.dev/api/websocket#player-state
+
+        Updates this player's state with the `state object`_ received from the server.
+
+        Parameters
+        ----------
+        state: Dict[:class:`str`, Any]
+            The player state.
+        """
         raise NotImplementedError
 
     async def play_track(self,
@@ -86,8 +106,10 @@ class BasePlayer(ABC):
                          no_replace: bool = MISSING,
                          volume: int = MISSING,
                          pause: bool = MISSING,
-                         **kwargs):
+                         **kwargs) -> Optional[Dict[str, Any]]:
         """|coro|
+
+        .. _player object: https://lavalink.dev/api/rest.html#Player
 
         Plays the given track.
 
@@ -117,6 +139,11 @@ class BasePlayer(ABC):
         **kwargs: Any
             The kwargs to use when playing. You can specify any extra parameters that may be
             used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
+
+        Returns
+        -------
+        Optional[Dict[:class:`str`, Any]]
+            The updated `player object`_, or ``None`` if a request wasn't made due to an empty payload.
         """
         if track is MISSING or not isinstance(track, AudioTrack):
             raise ValueError('track must be an instance of an AudioTrack!')
@@ -171,7 +198,7 @@ class BasePlayer(ABC):
             return
 
         self._next = track
-        await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, **options)
+        return await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, **options)
 
     def cleanup(self):
         pass
