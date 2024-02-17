@@ -36,7 +36,7 @@ class DataReader:
     def _read(self, count):
         return self._buf.read(count)
 
-    def read_byte(self) -> int:
+    def read_byte(self) -> bytes:
         return self._read(1)
 
     def read_boolean(self) -> bool:

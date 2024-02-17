@@ -25,23 +25,19 @@ SOFTWARE.
 # At least, until I can come up with a better solution to doing this.
 # pylint: disable=arguments-differ
 
-from typing import List, Tuple, overload
+from typing import Any, Dict, List, Tuple, overload
 
 from .abc import Filter
 
 
-class Volume(Filter):
+class Volume(Filter[float]):
     """
     Adjusts the audio output volume.
     """
     def __init__(self):
         super().__init__(1.0)
 
-    @overload
-    def update(self, volume: float):
-        ...
-
-    def update(self, **kwargs):
+    def update(self, *, volume: float):
         """
         Modifies the player volume.
         This uses LavaDSP's volume filter, rather than Lavaplayer's native
@@ -58,19 +54,18 @@ class Volume(Filter):
         volume: :class:`float`
             The new volume of the player. 1.0 means 100%/default.
         """
-        if 'volume' in kwargs:
-            volume = float(kwargs.pop('volume'))
+        volume = float(volume)
 
-            if not 0 <= volume <= 5:
-                raise ValueError('volume must be bigger than or equal to 0, and less than or equal to 5.')
+        if not 0 <= volume <= 5:
+            raise ValueError('volume must be bigger than or equal to 0, and less than or equal to 5.')
 
-            self.values = volume
+        self.values = volume
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, float]:
         return {'volume': self.values}
 
 
-class Equalizer(Filter):
+class Equalizer(Filter[List[float]]):
     """
     Allows modifying the gain of 15 bands, to boost or reduce the volume of specific frequency ranges.
     For example, this could be used to boost the low (bass) frequencies to act as a 'bass boost'.
@@ -79,11 +74,11 @@ class Equalizer(Filter):
         super().__init__([0.0] * 15)
 
     @overload
-    def update(self, bands: List[Tuple[int, float]]):
+    def update(self, *, bands: List[Tuple[int, float]]):
         ...
 
     @overload
-    def update(self, band: int, gain: int):
+    def update(self, *, band: int, gain: int):
         ...
 
     def update(self, **kwargs):
@@ -148,11 +143,11 @@ class Equalizer(Filter):
         else:
             raise KeyError('Expected parameter bands OR band and gain, but neither were provided')
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Any]:
         return {'equalizer': [{'band': band, 'gain': gain} for band, gain in enumerate(self.values)]}
 
 
-class Karaoke(Filter):
+class Karaoke(Filter[Dict[str, float]]):
     """
     Allows for isolating a frequency range (commonly, the vocal range).
     Useful for karaoke/sing-along.
@@ -161,31 +156,31 @@ class Karaoke(Filter):
         super().__init__({'level': 1.0, 'monoLevel': 1.0, 'filterBand': 220.0, 'filterWidth': 100.0})
 
     @overload
-    def update(self, level: float):
+    def update(self, *, level: float):
         ...
 
     @overload
-    def update(self, mono_level: float):
+    def update(self, *, mono_level: float):
         ...
 
     @overload
-    def update(self, filter_width: float):
+    def update(self, *, filter_width: float):
         ...
 
     @overload
-    def update(self, level: float, mono_level: float):
+    def update(self, *, level: float, mono_level: float):
         ...
 
     @overload
-    def update(self, level: float, filter_width: float):
+    def update(self, *, level: float, filter_width: float):
         ...
 
     @overload
-    def update(self, mono_level: float, filter_width: float):
+    def update(self, *, mono_level: float, filter_width: float):
         ...
 
     @overload
-    def update(self, level: float, mono_level: float, filter_width: float):
+    def update(self, *, level: float, mono_level: float, filter_width: float):
         ...
 
     def update(self, **kwargs):
@@ -217,11 +212,11 @@ class Karaoke(Filter):
         if 'filter_width' in kwargs:
             self.values['filterWidth'] = float(kwargs.pop('filter_width'))
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Dict[str, float]]:
         return {'karaoke': self.values}
 
 
-class Timescale(Filter):
+class Timescale(Filter[Dict[str, float]]):
     """
     Allows speeding up/slowing down the audio, adjusting the pitch and playback rate.
     """
@@ -229,31 +224,31 @@ class Timescale(Filter):
         super().__init__({'speed': 1.0, 'pitch': 1.0, 'rate': 1.0})
 
     @overload
-    def update(self, speed: float):
+    def update(self, *, speed: float):
         ...
 
     @overload
-    def update(self, pitch: float):
+    def update(self, *, pitch: float):
         ...
 
     @overload
-    def update(self, rate: float):
+    def update(self, *, rate: float):
         ...
 
     @overload
-    def update(self, speed: float, pitch: float):
+    def update(self, *, speed: float, pitch: float):
         ...
 
     @overload
-    def update(self, speed: float, rate: float):
+    def update(self, *, speed: float, rate: float):
         ...
 
     @overload
-    def update(self, rate: float, pitch: float):
+    def update(self, *, rate: float, pitch: float):
         ...
 
     @overload
-    def update(self, speed: float, rate: float, pitch: float):
+    def update(self, *, speed: float, rate: float, pitch: float):
         ...
 
     def update(self, **kwargs):
@@ -305,11 +300,11 @@ class Timescale(Filter):
 
             self.values['rate'] = rate
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Dict[str, float]]:
         return {'timescale': self.values}
 
 
-class Tremolo(Filter):
+class Tremolo(Filter[Dict[str, float]]):
     """
     Applies a 'tremble' effect to the audio.
     """
@@ -317,15 +312,15 @@ class Tremolo(Filter):
         super().__init__({'frequency': 2.0, 'depth': 0.5})
 
     @overload
-    def update(self, frequency: float):
+    def update(self, *, frequency: float):
         ...
 
     @overload
-    def update(self, depth: float):
+    def update(self, *, depth: float):
         ...
 
     @overload
-    def update(self, frequency: float, depth: float):
+    def update(self, *, frequency: float, depth: float):
         ...
 
     def update(self, **kwargs):
@@ -365,11 +360,11 @@ class Tremolo(Filter):
 
             self.values['depth'] = depth
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Dict[str, float]]:
         return {'tremolo': self.values}
 
 
-class Vibrato(Filter):
+class Vibrato(Filter[Dict[str, float]]):
     """
     Applies a 'wobble' effect to the audio.
     """
@@ -377,15 +372,15 @@ class Vibrato(Filter):
         super().__init__({'frequency': 2.0, 'depth': 0.5})
 
     @overload
-    def update(self, frequency: float):
+    def update(self, *, frequency: float):
         ...
 
     @overload
-    def update(self, depth: float):
+    def update(self, *, depth: float):
         ...
 
     @overload
-    def update(self, frequency: float, depth: float):
+    def update(self, *, frequency: float, depth: float):
         ...
 
     def update(self, **kwargs):
@@ -425,11 +420,11 @@ class Vibrato(Filter):
 
             self.values['depth'] = depth
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Dict[str, float]]:
         return {'vibrato': self.values}
 
 
-class Rotation(Filter):
+class Rotation(Filter[float]):
     """
     Phases the audio in and out of the left and right channels in an alternating manner.
     This is commonly used to create the 8D effect.
@@ -437,11 +432,7 @@ class Rotation(Filter):
     def __init__(self):
         super().__init__(0.0)
 
-    @overload
-    def update(self, rotation_hz: float):
-        ...
-
-    def update(self, **kwargs):
+    def update(self, *, rotation_hz: float):
         """
         Note
         ----
@@ -458,19 +449,18 @@ class Rotation(Filter):
         ------
         :class:`ValueError`
         """
-        if 'rotation_hz' in kwargs:
-            rotation_hz = float(kwargs.pop('rotation_hz'))
+        rotation_hz = float(rotation_hz)
 
-            if rotation_hz < 0:
-                raise ValueError('rotation_hz must be bigger than or equal to 0')
+        if rotation_hz < 0:
+            raise ValueError('rotation_hz must be bigger than or equal to 0')
 
-            self.values = rotation_hz
+        self.values = rotation_hz
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Dict[str, float]]:
         return {'rotation': {'rotationHz': self.values}}
 
 
-class LowPass(Filter):
+class LowPass(Filter[float]):
     """
     Applies a low-pass effect to the audio, whereby only low frequencies can pass,
     effectively cutting off high frequencies meaning more emphasis is put on lower frequencies.
@@ -478,11 +468,7 @@ class LowPass(Filter):
     def __init__(self):
         super().__init__(20.0)
 
-    @overload
-    def update(self, smoothing: float):
-        ...
-
-    def update(self, **kwargs):
+    def update(self, *, smoothing: float):
         """
         Note
         ----
@@ -499,19 +485,18 @@ class LowPass(Filter):
         ------
         :class:`ValueError`
         """
-        if 'smoothing' in kwargs:
-            smoothing = float(kwargs.pop('smoothing'))
+        smoothing = float('smoothing')
 
-            if smoothing <= 1:
-                raise ValueError('smoothing must be bigger than 1')
+        if smoothing <= 1:
+            raise ValueError('smoothing must be bigger than 1')
 
-            self.values = smoothing
+        self.values = smoothing
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Dict[str, float]]:
         return {'lowPass': {'smoothing': self.values}}
 
 
-class ChannelMix(Filter):
+class ChannelMix(Filter[Dict[str, float]]):
     """
     Allows passing the audio from one channel to the other, or isolating individual
     channels.
@@ -580,11 +565,11 @@ class ChannelMix(Filter):
 
             self.values['rightToRight'] = right_to_right
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Dict[str, float]]:
         return {'channelMix': self.values}
 
 
-class Distortion(Filter):
+class Distortion(Filter[Dict[str, float]]):
     """
     As the name suggests, this distorts the audio.
     """
@@ -641,5 +626,5 @@ class Distortion(Filter):
         if 'scale' in kwargs:
             self.values['scale'] = float(kwargs.pop('scale'))
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Dict[str, float]]:
         return {'distortion': self.values}

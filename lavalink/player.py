@@ -29,9 +29,9 @@ from typing import (TYPE_CHECKING, Dict, List, Optional, Type,  # Literal
 
 from .abc import BasePlayer, DeferredAudioTrack
 from .common import MISSING
-from .errors import PlayerErrorEvent, RequestError
-from .events import (NodeChangedEvent, QueueEndEvent, TrackEndEvent,
-                     TrackStuckEvent)
+from .errors import ClientError, RequestError
+from .events import (NodeChangedEvent, PlayerErrorEvent, QueueEndEvent,
+                     TrackEndEvent, TrackStuckEvent)
 from .filters import Filter
 from .server import AudioTrack
 
@@ -133,6 +133,8 @@ class DefaultPlayer(BasePlayer):
         if not self.is_playing:
             return 0
 
+        assert self.current is not None
+
         if self.paused or self._internal_pause:
             return min(self._last_position, self.current.duration)
 
@@ -189,7 +191,7 @@ class DefaultPlayer(BasePlayer):
             pass
 
     def add(self, track: Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]],
-            requester: int = 0, index: int = None):
+            requester: int = 0, index: Optional[int] = None):
         """
         Adds a track to the queue.
 
@@ -216,11 +218,11 @@ class DefaultPlayer(BasePlayer):
 
     async def play(self,
                    track: Optional[Union[AudioTrack, 'DeferredAudioTrack', Dict[str, Union[Optional[str], bool, int]]]] = None,
-                   start_time: int = 0,
+                   start_time: int = MISSING,
                    end_time: int = MISSING,
                    no_replace: bool = MISSING,
                    volume: int = MISSING,
-                   pause: bool = False,
+                   pause: bool = MISSING,
                    **kwargs):
         """|coro|
 
@@ -278,7 +280,9 @@ class DefaultPlayer(BasePlayer):
 
         self._last_position = 0
         self.position_timestamp = 0
-        self.paused = pause
+
+        if pause is not MISSING and isinstance(pause, bool):
+            self.paused = pause
 
         if not track:
             if not self.queue:
@@ -293,18 +297,24 @@ class DefaultPlayer(BasePlayer):
             if not isinstance(start_time, int) or not 0 <= start_time < track.duration:
                 raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
 
+            self._last_position = start_time
+
         if end_time is not MISSING:
             if not isinstance(end_time, int) or not 1 <= end_time <= track.duration:
                 raise ValueError('end_time must be an int with a value equal to, or greater than 1, and less than, or equal to the track duration')
 
-        await self.play_track(track, start_time, end_time, no_replace, volume, pause, **kwargs)
+        response = await self.play_track(track, start_time, end_time, no_replace,
+                                         volume, pause, **kwargs)
+
+        if response is not None:
+            self.paused = response['paused']
 
     async def stop(self):
         """|coro|
 
         Stops the player.
         """
-        await self.node.update_player(self._internal_id, encoded_track=None)
+        await self.node.update_player(guild_id=self._internal_id, encoded_track=None)
         self.current = None
 
     async def skip(self):
@@ -351,7 +361,7 @@ class DefaultPlayer(BasePlayer):
         pause: :class:`bool`
             Whether to pause the player or not.
         """
-        await self.node.update_player(self._internal_id, paused=pause)
+        await self.node.update_player(guild_id=self._internal_id, paused=pause)
         self.paused = pause
 
     async def set_volume(self, vol: int):
@@ -369,7 +379,7 @@ class DefaultPlayer(BasePlayer):
             The new volume level.
         """
         vol = max(min(vol, 1000), 0)
-        await self.node.update_player(self._internal_id, volume=vol)
+        await self.node.update_player(guild_id=self._internal_id, volume=vol)
         self.volume = vol
 
     async def seek(self, position: int):
@@ -385,9 +395,9 @@ class DefaultPlayer(BasePlayer):
         if not isinstance(position, int):
             raise ValueError('position must be an int!')
 
-        await self.node.update_player(self._internal_id, position=position)
+        await self.node.update_player(guild_id=self._internal_id, position=position)
 
-    async def set_filters(self, *filters: FilterT):
+    async def set_filters(self, *filters: Filter):
         """|coro|
 
         This sets multiple filters at once.
@@ -414,7 +424,7 @@ class DefaultPlayer(BasePlayer):
 
         await self._apply_filters()
 
-    async def set_filter(self, _filter: FilterT):
+    async def set_filter(self, _filter: Filter):
         """|coro|
 
         Applies the corresponding filter within Lavalink.
@@ -484,7 +494,7 @@ class DefaultPlayer(BasePlayer):
 
         filter_name = _filter.__name__.lower()
 
-        filter_instance = self.filters.get(filter_name, _filter())
+        filter_instance = self.filters.get(filter_name, _filter())  # type: ignore
         filter_instance.update(**kwargs)
         self.filters[filter_name] = filter_instance
         await self._apply_filters()
@@ -566,16 +576,16 @@ class DefaultPlayer(BasePlayer):
         await self._apply_filters()
 
     async def _apply_filters(self):
-        await self.node.update_player(self._internal_id, filters=list(self.filters.values()))
+        await self.node.update_player(guild_id=self._internal_id, filters=list(self.filters.values()))
 
-    async def _handle_event(self, event):
+    async def handle_event(self, event):
         """
         Handles the given event as necessary.
 
         Parameters
         ----------
         event: :class:`Event`
-            The event that will be handled.
+            The event to handle.
         """
         # A track throws loadFailed when it fails to provide any audio before throwing an exception.
         # A TrackStuckEvent is not proceeded by a TrackEndEvent. In theory, you could ignore a TrackStuckEvent
@@ -588,7 +598,7 @@ class DefaultPlayer(BasePlayer):
                 await self.client._dispatch_event(PlayerErrorEvent(self, error))
                 _log.exception('[DefaultPlayer:%d] Encountered a request error whilst starting a new track.', self.guild_id)
 
-    async def _update_state(self, state: dict):
+    async def update_state(self, state: dict):
         """
         Updates the position of the player.
 
@@ -619,8 +629,10 @@ class DefaultPlayer(BasePlayer):
         node: :class:`Node`
             The node the player is changed to.
         """
-        if self.node.available:
+        try:
             await self.node.destroy_player(self._internal_id)
+        except (ClientError, RequestError):
+            pass
 
         old_node = self.node
         self.node = node
@@ -634,7 +646,7 @@ class DefaultPlayer(BasePlayer):
             if isinstance(self.current, DeferredAudioTrack) and playable_track is None:
                 playable_track = await self.current.load(self.client)
 
-            await self.node.update_player(self._internal_id, encoded_track=playable_track, position=self.position,
+            await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, position=self.position,
                                           paused=self.paused, volume=self.volume)
             self._last_update = int(time() * 1000)
 

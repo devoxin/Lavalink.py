@@ -57,7 +57,7 @@ class NodeManager:
     """
     __slots__ = ('_player_queue', '_connect_back', 'client', 'nodes', 'regions')
 
-    def __init__(self, client, regions: Dict[str, Tuple[str]], connect_back: bool):
+    def __init__(self, client, regions: Optional[Dict[str, Tuple[str]]], connect_back: bool):
         self._player_queue = []
         self._connect_back: bool = connect_back
         self.client: 'Client' = client
@@ -83,10 +83,10 @@ class NodeManager:
         """
         return [n for n in self.nodes if n.available]
 
-    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+    def add_node(self, host: str, port: int, password: str, region: str, name: Optional[str] = None,
                  ssl: bool = False, session_id: Optional[str] = None) -> Node:
         """
-        Adds a node to Lavalink's node manager.
+        Adds a node to this node manager.
 
         Parameters
         ----------
@@ -126,6 +126,23 @@ class NodeManager:
 
         Make sure you have called :func:`Node.destroy` to close any resources used by this Node.
 
+        .. deprecated:: 5.2.0
+            To be consistent with function naming, this method has been deprecated in favour of
+            :func:`remove`.
+
+        Parameters
+        ----------
+        node: :class:`Node`
+            The node to remove from the list.
+        """
+        self.nodes.remove(node)
+
+    def remove(self, node: Node):
+        """
+        Removes a node.
+
+        Make sure you have called :func:`Node.destroy` to close any resources used by this Node.
+
         Parameters
         ----------
         node: :class:`Node`
@@ -153,7 +170,7 @@ class NodeManager:
         """
         return [n for n in self.nodes if n.region == region_key]
 
-    def get_region(self, endpoint: str) -> str:
+    def get_region(self, endpoint: str) -> Optional[str]:
         """
         Returns a Lavalink.py-friendly region from a Discord voice server address.
 
@@ -180,7 +197,7 @@ class NodeManager:
 
         return None
 
-    def find_ideal_node(self, region: str = None, exclude: Optional[List[Node]] = None) -> Optional[Node]:
+    def find_ideal_node(self, region: Optional[str] = None, exclude: Optional[List[Node]] = None) -> Optional[Node]:
         """
         Finds the best (least used) node in the given region, if applicable.
 

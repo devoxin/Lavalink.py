@@ -55,12 +55,12 @@ class PlayerManager:
     """
     __slots__ = ('client', '_player_cls', 'players')
 
-    def __init__(self, client, player):
+    def __init__(self, client, player: Type[PlayerT]):
         if not issubclass(player, BasePlayer):
             raise ValueError('Player must implement BasePlayer.')
 
         self.client: 'Client' = client
-        self._player_cls = player
+        self._player_cls: Type[PlayerT] = player
         self.players: Dict[int, BasePlayer] = {}
 
     def __len__(self) -> int:
@@ -76,7 +76,7 @@ class PlayerManager:
         for player in self.players.values():
             yield player
 
-    def find_all(self, predicate: Callable[[BasePlayer], bool] = None):
+    def find_all(self, predicate: Optional[Callable[[BasePlayer], bool]] = None):
         """
         Returns a list of players that match the given predicate.
 
@@ -184,9 +184,9 @@ class PlayerManager:
         if guild_id in self.players:
             return self.players[guild_id]
 
-        cls = cls or self._player_cls
+        cls = cls or self._player_cls  # type: ignore
 
-        if not issubclass(cls, BasePlayer):
+        if not issubclass(cls, BasePlayer):  # type: ignore
             raise ValueError('Player must implement BasePlayer.')
 
         if endpoint:  # Prioritise endpoint over region parameter

@@ -4,17 +4,17 @@ __title__ = 'Lavalink'
 __author__ = 'Devoxin'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-present Devoxin'
-__version__ = '5.1.0'
+__version__ = '5.2.0'
 
 
 from .abc import BasePlayer, DeferredAudioTrack, Source
 from .client import Client
 from .errors import (AuthenticationError, ClientError, InvalidTrack, LoadError,
-                     PlayerErrorEvent, RequestError)
+                     RequestError)
 from .events import (Event, IncomingWebSocketMessage, NodeChangedEvent,
                      NodeConnectedEvent, NodeDisconnectedEvent, NodeReadyEvent,
-                     PlayerUpdateEvent, QueueEndEvent, TrackEndEvent,
-                     TrackExceptionEvent, TrackLoadFailedEvent,
+                     PlayerErrorEvent, PlayerUpdateEvent, QueueEndEvent,
+                     TrackEndEvent, TrackExceptionEvent, TrackLoadFailedEvent,
                      TrackStartEvent, TrackStuckEvent, WebSocketClosedEvent)
 from .filters import (ChannelMix, Distortion, Equalizer, Filter, Karaoke,
                       LowPass, Rotation, Timescale, Tremolo, Vibrato, Volume)
@@ -55,7 +55,7 @@ def listener(*events: Event):
 
     Parameters
     ----------
-    events: List[:class:`Event`]
+    events: :class:`Event`
         The events to listen for. Leave this empty to listen for all events.
     """
     def wrapper(func):

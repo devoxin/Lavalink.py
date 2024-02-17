@@ -23,7 +23,8 @@ SOFTWARE.
 """
 from collections import defaultdict
 from time import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, overload
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
+                    Union, overload)
 
 from .abc import BasePlayer, Filter
 from .common import MISSING
@@ -35,6 +36,8 @@ from .transport import Transport
 if TYPE_CHECKING:
     from .client import Client
     from .nodemanager import NodeManager
+
+T = TypeVar('T')
 
 
 class Node:
@@ -58,7 +61,7 @@ class Node:
     """
     __slots__ = ('client', 'manager', '_transport', 'region', 'name', 'stats')
 
-    def __init__(self, manager, host: str, port: int, password: str, region: str, name: str = None,
+    def __init__(self, manager, host: str, port: int, password: str, region: str, name: Optional[str] = None,
                  ssl: bool = False, session_id: Optional[str] = None):
         self.client: 'Client' = manager.client
         self.manager: 'NodeManager' = manager
@@ -69,15 +72,20 @@ class Node:
         self.stats: Stats = Stats.empty(self)
 
     @property
+    def session_id(self) -> Optional[str]:
+        """
+        The session ID for this node.
+        Could be ``None`` if a ready event has not yet been received from the server.
+        """
+        return self._transport.session_id
+
+    @property
     def available(self) -> bool:
         """
-        Returns whether the node is available for requests.
-
-        .. deprecated:: 5.0.0
-            As of Lavalink server 4.0.0, a WebSocket connection is no longer required to operate a
-            node. As a result, this property is no longer considered useful.
+        Returns whether the node has a websocket connection.
+        The node could *probably* still be used for HTTP requests even without a WS connection.
         """
-        return True
+        return self._transport.ws_connected
 
     @property
     def _original_players(self) -> List[BasePlayer]:
@@ -153,7 +161,7 @@ class Node:
         -------
         :class:`LoadResult`
         """
-        return await self._transport._request('GET', 'loadtracks', params={'identifier': query}, to=LoadResult)
+        return await self.request('GET', 'loadtracks', params={'identifier': query}, to=LoadResult)
 
     async def decode_track(self, track: str) -> AudioTrack:
         """|coro|
@@ -169,7 +177,7 @@ class Node:
         -------
         :class:`AudioTrack`
         """
-        return await self._transport._request('GET', 'decodetrack', params={'track': track}, to=AudioTrack)
+        return await self.request('GET', 'decodetrack', params={'track': track}, to=AudioTrack)
 
     async def decode_tracks(self, tracks: List[str]) -> List[AudioTrack]:
         """|coro|
@@ -186,8 +194,8 @@ class Node:
         List[:class:`AudioTrack`]
             A list of decoded AudioTracks.
         """
-        response = await self._transport._request('POST', 'decodetracks', json=tracks)
-        return list(map(AudioTrack, response))
+        response = await self.request('POST', 'decodetracks', json=tracks)
+        return list(map(AudioTrack, response))  # type: ignore
 
     async def get_routeplanner_status(self) -> Dict[str, Any]:
         """|coro|
@@ -199,7 +207,7 @@ class Node:
         Dict[str, Any]
             A dict representing the routeplanner information.
         """
-        return await self._transport._request('GET', 'routeplanner/status')
+        return await self.request('GET', 'routeplanner/status')  # type: ignore
 
     async def routeplanner_free_address(self, address: str) -> bool:
         """|coro|
@@ -217,7 +225,7 @@ class Node:
             True if the address was freed, False otherwise.
         """
         try:
-            return await self._transport._request('POST', 'routeplanner/free/address', json={'address': address})
+            return await self.request('POST', 'routeplanner/free/address', json={'address': address})  # type: ignore
         except RequestError:
             return False
 
@@ -232,7 +240,7 @@ class Node:
             True if all failing addresses were freed, False otherwise.
         """
         try:
-            return await self._transport._request('POST', 'routeplanner/free/all')
+            return await self.request('POST', 'routeplanner/free/all')  # type: ignore
         except RequestError:
             return False
 
@@ -246,7 +254,7 @@ class Node:
         Dict[str, Any]
             A raw response containing information about the node.
         """
-        return await self._transport._request('GET', 'info')
+        return await self.request('GET', 'info')  # type: ignore
 
     async def get_stats(self) -> Dict[str, Any]:
         """|coro|
@@ -258,7 +266,7 @@ class Node:
         Dict[str, Any]
             A raw response containing information about the node.
         """
-        return await self._transport._request('GET', 'stats')
+        return await self.request('GET', 'stats')  # type: ignore
 
     async def get_version(self) -> str:
         """|coro|
@@ -270,7 +278,7 @@ class Node:
         str
             The version of this Lavalink server.
         """
-        return await self._transport._request('GET', 'version', to=str, versioned=False)
+        return await self.request('GET', 'version', to=str, versioned=False)
 
     async def get_player(self, guild_id: Union[str, int]) -> Dict[str, Any]:
         """|coro|
@@ -283,12 +291,12 @@ class Node:
         Dict[str, Any]
             A raw player object.
         """
-        session_id = self._transport.session_id
+        session_id = self.session_id
 
         if not session_id:
             raise ClientError('Cannot retrieve a player without a valid session ID!')
 
-        return await self._transport._request('GET', f'sessions/{session_id}/players/{guild_id}')
+        return await self.request('GET', f'sessions/{session_id}/players/{guild_id}')  # type: ignore
 
     async def get_players(self) -> List[Dict[str, Any]]:
         """|coro|
@@ -301,15 +309,16 @@ class Node:
         List[Dict[str, Any]]
             A list of raw player objects.
         """
-        session_id = self._transport.session_id
+        session_id = self.session_id
 
         if not session_id:
             raise ClientError('Cannot retrieve a list of players without a valid session ID!')
 
-        return await self._transport._request('GET', f'sessions/{session_id}/players')
+        return await self.request('GET', f'sessions/{session_id}/players')  # type: ignore
 
     @overload
     async def update_player(self,
+                            *,
                             guild_id: Union[str, int],
                             encoded_track: Optional[str] = ...,
                             no_replace: bool = ...,
@@ -319,12 +328,13 @@ class Node:
                             paused: bool = ...,
                             filters: Optional[List[Filter]] = ...,
                             voice_state: Dict[str, Any] = ...,
-                            user_data: Optional[Dict[str, Any]] = ...,
-                            **kwargs) -> Dict[str, Any]:
+                            user_data: Dict[str, Any] = ...,
+                            **kwargs) -> Optional[Dict[str, Any]]:
         ...
 
     @overload
     async def update_player(self,
+                            *,
                             guild_id: Union[str, int],
                             identifier: str = ...,
                             no_replace: bool = ...,
@@ -335,11 +345,12 @@ class Node:
                             filters: Optional[List[Filter]] = ...,
                             voice_state: Dict[str, Any] = ...,
                             user_data: Dict[str, Any] = ...,
-                            **kwargs) -> Dict[str, Any]:
+                            **kwargs) -> Optional[Dict[str, Any]]:
         ...
 
     @overload
     async def update_player(self,
+                            *,
                             guild_id: Union[str, int],
                             no_replace: bool = ...,
                             position: int = ...,
@@ -349,7 +360,7 @@ class Node:
                             filters: Optional[List[Filter]] = ...,
                             voice_state: Dict[str, Any] = ...,
                             user_data: Dict[str, Any] = ...,
-                            **kwargs) -> Dict[str, Any]:
+                            **kwargs) -> Optional[Dict[str, Any]]:
         ...
 
     async def update_player(self,  # pylint: disable=too-many-locals
@@ -364,7 +375,7 @@ class Node:
                             filters: Optional[List[Filter]] = MISSING,
                             voice_state: Dict[str, Any] = MISSING,
                             user_data: Dict[str, Any] = MISSING,
-                            **kwargs) -> Dict[str, Any]:
+                            **kwargs) -> Optional[Dict[str, Any]]:
         """|coro|
 
         .. _response object: https://lavalink.dev/api/rest#Player
@@ -422,10 +433,11 @@ class Node:
 
         Returns
         -------
-        Dict[str, Any]
-            The raw player update `response object`_.
+        Optional[Dict[str, Any]]
+            The raw player update `response object`_, or ``None`` , if a request wasn't made due to an
+            empty payload.
         """
-        session_id = self._transport.session_id
+        session_id = self.session_id
 
         if not session_id:
             raise ClientError('Cannot update the state of a player without a valid session ID!')
@@ -498,10 +510,10 @@ class Node:
             json['voice'] = voice_state
 
         if not json:
-            return
+            return None
 
-        return await self._transport._request('PATCH', f'sessions/{session_id}/players/{guild_id}',
-                                              params=params, json=json)
+        return await self.request('PATCH', f'sessions/{session_id}/players/{guild_id}',
+                                  params=params, json=json)  # type: ignore
 
     async def destroy_player(self, guild_id: Union[str, int]) -> bool:
         """|coro|
@@ -514,14 +526,14 @@ class Node:
         bool
             Whether the player was destroyed.
         """
-        session_id = self._transport.session_id
+        session_id = self.session_id
 
         if not session_id:
             raise ClientError('Cannot destroy a player without a valid session ID!')
 
-        return await self._transport._request('DELETE', f'sessions/{session_id}/players/{guild_id}')
+        return await self.request('DELETE', f'sessions/{session_id}/players/{guild_id}')  # type: ignore
 
-    async def update_session(self, resuming: bool = MISSING, timeout: int = MISSING) -> Dict[str, Any]:
+    async def update_session(self, resuming: bool = MISSING, timeout: int = MISSING) -> Optional[Dict[str, Any]]:
         """|coro|
 
         Update the session for this node.
@@ -535,8 +547,9 @@ class Node:
 
         Returns
         -------
-        Dict[str, Any]
-            A raw response from the node containing the current session configuration.
+        Optional[Dict[str, Any]]
+            A raw response from the node containing the current session configuration, or ``None``
+            if a request wasn't made due to an empty payload.
         """
         session_id = self._transport.session_id
 
@@ -558,9 +571,83 @@ class Node:
             json['timeout'] = timeout
 
         if not json:
-            return
+            return None
 
-        return await self._transport._request('PATCH', f'sessions/{session_id}', json=json)
+        return await self.request('PATCH', f'sessions/{session_id}', json=json)  # type: ignore
+
+    @overload
+    async def request(self, method: str, path: str, *, to: Type[T], trace: bool = ..., versioned: bool = ..., **kwargs) -> T:
+        ...
+
+    @overload
+    async def request(self, method: str, path: str, *, to: str, trace: bool = ..., versioned: bool = ..., **kwargs) -> str:
+        ...
+
+    @overload
+    async def request(self, method: str, path: str, *, trace: bool = ..., versioned: bool = ...,
+                      **kwargs) -> Union[Dict[Any, Any], List[Any], bool]:
+        ...
+
+    async def request(self,
+                      method: str,
+                      path: str,
+                      *,
+                      to: Optional[Union[Type[T], str]] = None,
+                      trace: bool = False,
+                      versioned: bool = True,
+                      **kwargs) -> Union[T, str, bool, Dict[Any, Any], List[Any]]:
+        """|coro|
+
+        .. _HTTP method: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
+
+        Makes a HTTP request to this node. Useful for implementing functionality offered by plugins on the server.
+
+        Parameters
+        ----------
+        method: :class:`str`
+            The `HTTP method`_ for this request.
+        path: :class:`str`
+            The path for this request. E.g. ``sessions/{session_id}/players/{guild_id}``.
+        to: Optional[Type[T]]
+            The class to deserialize the response into.
+
+            Warning
+            -------
+            The provided class MUST implement a classmethod called ``from_dict`` that accepts a dict or list object!
+
+            Example:
+
+                .. code:: python
+
+                    @classmethod
+                    def from_dict(cls, res: Union[Dict[Any, Any], List[Any]]):
+                        return cls(res)
+        trace: :class:`bool`
+            Whether to enable trace logging for this request. This will return a more detailed error if the request fails,
+            but could bloat log files and reduce performance if left enabled.
+        versioned: :class:`bool`
+            Whether this request should target a versioned route. For the majority of requests, this should be set to ``True``.
+            This will prepend the route with the latest API version this client supports, e.g. ``v4/``.
+        **kwargs: Any
+            Any additional arguments that should be passed to ``aiohttp``. This could be parameters like ``json``, ``params`` etc.
+
+        Raises
+        ------
+        :class:`AuthenticationError`
+            If the provided authorization was invalid.
+        :class:`RequestError`
+            If the request was unsuccessful.
+        :class:`ClientError`
+            If there were any intermediate issues, such as trying to establish a connection but the server is unreachable.
+
+        Returns
+        -------
+        Union[T, str, bool, Dict[Any, Any], List[Any]]
+            - ``T`` or ``str`` if the ``to`` parameter was specified and either value provided.
+            - The raw JSON response (``Dict[Any, Any]`` or ``List[Any]``) if ``to`` was not provided.
+            - A bool, if the returned status code was ``204``. A value of ``True`` should typically mean the request was successful.
+        """
+        return await self._transport._request(method, path, to, trace, versioned, **kwargs)
 
     def __repr__(self):
         return f'<Node name={self.name} region={self.region}>'
