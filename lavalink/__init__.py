@@ -55,7 +55,7 @@ def listener(*events: Event):
 
     Parameters
     ----------
-    events: List[:class:`Event`]
+    events: :class:`Event`
         The events to listen for. Leave this empty to listen for all events.
     """
     def wrapper(func):
