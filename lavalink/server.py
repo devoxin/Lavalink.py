@@ -25,12 +25,15 @@ This module serves to contain all entities which are deserialized using response
 the Lavalink server.
 """
 from enum import Enum as _Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
+                    Union)
 
 from .errors import InvalidTrack
 
 if TYPE_CHECKING:
     from .abc import DeferredAudioTrack
+
+EnumT = TypeVar('EnumT', bound='Enum')
 
 
 class Enum(_Enum):
@@ -44,7 +47,7 @@ class Enum(_Enum):
         return False
 
     @classmethod
-    def from_str(cls, other: str):
+    def from_str(cls: Type[EnumT], other: str) -> EnumT:
         try:
             return cls[other.upper()]
         except KeyError:
@@ -73,7 +76,7 @@ class AudioTrack:
     ----------
     track: Optional[:class:`str`]
         The base64-encoded string representing a Lavalink-readable AudioTrack.
-        This is marked optional as it could be None when it's not set by a custom :class:`Source`,
+        This is marked optional as it could be ``None`` when it's not set by a custom :class:`Source`,
         which is expected behaviour when the subclass is a :class:`DeferredAudioTrack`.
     identifier: :class:`str`
         The track's id. For example, a youtube track's identifier will look like ``dQw4w9WgXcQ``.
@@ -182,11 +185,11 @@ class EndReason(Enum):
 
 
 class LoadType(Enum):
-    TRACK = 'TRACK'
-    PLAYLIST = 'PLAYLIST'
-    SEARCH = 'SEARCH'
-    EMPTY = 'EMPTY'
-    ERROR = 'ERROR'
+    TRACK = 'track'
+    PLAYLIST = 'playlist'
+    SEARCH = 'search'
+    EMPTY = 'empty'
+    ERROR = 'error'
 
 
 class Severity(Enum):
@@ -217,8 +220,8 @@ class PlaylistInfo:
         return self.__getattribute__(k)
 
     @classmethod
-    def from_dict(cls, mapping: dict):
-        return cls(mapping.get('name'), mapping.get('selectedTrack', -1))
+    def from_dict(cls, mapping: Dict[str, Any]):
+        return cls(mapping['name'], mapping.get('selectedTrack', -1))
 
     @classmethod
     def none(cls):
@@ -255,7 +258,7 @@ class LoadResult:
         The load type of this result.
     tracks: List[Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`]]
         The tracks in this result.
-    playlist_info: Optional[:class:`PlaylistInfo`]
+    playlist_info: :class:`PlaylistInfo`
         The playlist metadata for this result.
         The :class:`PlaylistInfo` could contain empty/false data if the :class:`LoadType`
         is not :enum:`LoadType.PLAYLIST`.
@@ -268,7 +271,7 @@ class LoadResult:
     __slots__ = ('load_type', 'playlist_info', 'tracks', 'plugin_info', 'error')
 
     def __init__(self, load_type: LoadType, tracks: List[Union[AudioTrack, 'DeferredAudioTrack']],
-                 playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none(), plugin_info: Optional[Dict[str, Any]] = None,
+                 playlist_info: PlaylistInfo = PlaylistInfo.none(), plugin_info: Optional[Dict[str, Any]] = None,
                  error: Optional[LoadResultError] = None):
         self.load_type: LoadType = load_type
         self.playlist_info: PlaylistInfo = playlist_info
@@ -292,7 +295,7 @@ class LoadResult:
     def from_dict(cls, mapping: dict):
         plugin_info: Optional[dict] = None
         playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()
-        tracks: Optional[Union[AudioTrack, 'DeferredAudioTrack']] = []
+        tracks: List[Union[AudioTrack, 'DeferredAudioTrack']] = []
 
         data: Union[List[Dict[str, Any]], Dict[str, Any]] = mapping['data']
         load_type = LoadType.from_str(mapping['loadType'])
@@ -301,14 +304,14 @@ class LoadResult:
             plugin_info = data.get('pluginInfo')
 
         if load_type == LoadType.TRACK:
-            tracks = [AudioTrack(data, 0)]
+            tracks = [AudioTrack(data, 0)]  # type: ignore
         elif load_type == LoadType.PLAYLIST:
-            playlist_info = PlaylistInfo.from_dict(data['info'])
-            tracks = [AudioTrack(track, 0) for track in data['tracks']]
+            playlist_info = PlaylistInfo.from_dict(data['info'])  # type: ignore
+            tracks = [AudioTrack(track, 0) for track in data['tracks']]  # type: ignore
         elif load_type == LoadType.SEARCH:
-            tracks = [AudioTrack(track, 0) for track in data]
+            tracks = [AudioTrack(track, 0) for track in data]  # type: ignore
         elif load_type == LoadType.ERROR:
-            error = LoadResultError(data)
+            error = LoadResultError(data)  # type: ignore
             return cls(load_type, [], playlist_info, plugin_info, error)
 
         return cls(load_type, tracks, playlist_info, plugin_info)

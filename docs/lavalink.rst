@@ -3,8 +3,6 @@
 Documentation
 =============
 
-.. autofunction:: enable_debug_logging
-
 .. autofunction:: listener
 
 ABC
@@ -37,9 +35,6 @@ Errors
 .. autoclass:: LoadError
 
 .. autoclass:: RequestError
-    :members:
-
-.. autoclass:: PlayerErrorEvent
     :members:
 
 Events
@@ -86,6 +81,9 @@ All Events are derived from :class:`Event`
     :members:
 
 .. autoclass:: IncomingWebSocketMessage
+    :members:
+
+.. autoclass:: PlayerErrorEvent
     :members:
 
 Filters

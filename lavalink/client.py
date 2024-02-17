@@ -28,7 +28,8 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple,
+                    Type, TypeVar, Union)
 
 import aiohttp
 
@@ -98,7 +99,7 @@ class Client:
                             'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
         self._session: aiohttp.ClientSession = aiohttp.ClientSession()
-        self._user_id: str = int(user_id)
+        self._user_id: int = int(user_id)
         self._event_hooks = defaultdict(list)
         self.node_manager: NodeManager = NodeManager(self, regions, connect_back)
         self.player_manager: PlayerManager = PlayerManager(self, player)
@@ -198,6 +199,40 @@ class Client:
             else:
                 self._event_hooks['Generic'].append(listener)
 
+    def remove_event_hooks(self, *, events: Optional[Sequence[EventT]] = None, hooks: Sequence[Callable]):
+        """
+        Removes the given hooks from the event hook registry.
+
+        Parameters
+        ----------
+        events: Sequence[:class:`Event`]
+            The events to remove the hooks from. This parameter can be omitted,
+            and the events registered on the function via :meth:`listener` will be used instead, if applicable.
+            Otherwise, a default value of ``Generic`` is used instead.
+        hooks: Sequence[Callable]
+            A list of hook methods to remove.
+        """
+        if events is not None:
+            for event in events:
+                if Event not in event.__bases__:
+                    raise TypeError(f'{event.__name__} is not of type Event')
+
+        for hook in hooks:
+            if not callable(hook):
+                raise ValueError(f'Provided hook {hook} is not a callable')
+
+        for hook in hooks:
+            unregister_events = events or getattr(hook, '_lavalink_events', None)
+
+            try:
+                if not unregister_events:
+                    self._event_hooks['Generic'].remove(hook)
+                else:
+                    for event in unregister_events:
+                        self._event_hooks[event.__name__].remove(hook)
+            except ValueError:
+                pass
+
     def register_source(self, source: Source):
         """
         Registers a :class:`Source` that Lavalink.py will use for looking up tracks.
@@ -229,7 +264,7 @@ class Client:
         """
         return next((source for source in self.sources if source.name == source_name), None)
 
-    def add_node(self, host: str, port: int, password: str, region: str, name: str = None,
+    def add_node(self, host: str, port: int, password: str, region: str, name: Optional[str] = None,
                  ssl: bool = False, session_id: Optional[str] = None) -> Node:
         """
         Shortcut for :func:`NodeManager.add_node`.
@@ -345,7 +380,7 @@ class Client:
     async def decode_tracks(self, tracks: List[str], node: Optional[Node] = None) -> List[AudioTrack]:
         """|coro|
 
-        Decodes a list of base64-encoded track strings into ``AudioTrack``s.
+        Decodes a list of base64-encoded track strings into a list of :class:`AudioTrack`.
 
         Parameters
         ----------
@@ -357,7 +392,7 @@ class Client:
         Returns
         -------
         List[:class:`AudioTrack`]
-            A list of decoded ``AudioTrack``s.
+            A list of decoded :class:`AudioTrack`.
         """
         node = node or random.choice(self.node_manager.nodes)
         return await node.decode_tracks(tracks)

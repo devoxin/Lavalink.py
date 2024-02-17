@@ -327,3 +327,22 @@ class IncomingWebSocketMessage(Event):
     def __init__(self, data, node: 'Node'):
         self.data: Union[Dict[Any, Any], List[Any]] = data
         self.node: 'Node' = node
+
+
+class PlayerErrorEvent(Event):
+    """
+    Raised when an error occurs within a :class:`BasePlayer`.
+
+    Attributes
+    ----------
+    player: :class:`BasePlayer`
+        The player in which the error occurred.
+    original: :class:`Exception`
+        The original error.
+    """
+    __slots__ = ('player', 'original')
+
+    def __init__(self, player, original):
+        self.player: 'BasePlayer' = player
+        self.original: Exception = original
+        # TODO: Perhaps an enum denoting which area of the player encountered an exception, e.g. ErrorType.PLAY.

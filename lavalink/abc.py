@@ -1,18 +1,44 @@
+"""
+MIT License
+
+Copyright (c) 2017-present Devoxin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import (TYPE_CHECKING, Any, Dict, Generic, List, Optional, TypeVar,
+                    Union)
 
 from .common import MISSING
 from .errors import InvalidTrack, LoadError
-from .events import TrackLoadFailedEvent
+from .events import Event, TrackLoadFailedEvent
 from .server import AudioTrack
 
 if TYPE_CHECKING:
     from .client import Client
     from .node import Node
-    from .player import LoadResult
+    from .server import LoadResult
 
 _log = logging.getLogger(__name__)
+
+FilterValueT = TypeVar('FilterValueT', Dict[str, Any], List[float], List[int], float)
 
 
 class BasePlayer(ABC):
@@ -29,7 +55,7 @@ class BasePlayer(ABC):
         The node that the player is connected to.
     channel_id: Optional[:class:`int`]
         The ID of the voice channel the player is connected to.
-        This could be None if the player isn't connected.
+        This could be ``None`` if the player isn't connected.
     current: Optional[:class:`AudioTrack`]
         The currently playing track.
     """
@@ -46,11 +72,31 @@ class BasePlayer(ABC):
         self._voice_state = {}
 
     @abstractmethod
-    async def _handle_event(self, event):
+    async def handle_event(self, event: Event):
+        """|coro|
+
+        Handles an :class:`Event` received directly from the websocket.
+
+        Parameters
+        ----------
+        event: :class:`Event`
+            The event that will be handled.
+        """
         raise NotImplementedError
 
     @abstractmethod
-    async def _update_state(self, state: dict):
+    async def update_state(self, state: Dict[str, Any]):
+        """|coro|
+
+        .. _state object: https://lavalink.dev/api/websocket#player-state
+
+        Updates this player's state with the `state object`_ received from the server.
+
+        Parameters
+        ----------
+        state: Dict[:class:`str`, Any]
+            The player state.
+        """
         raise NotImplementedError
 
     async def play_track(self,
@@ -60,8 +106,10 @@ class BasePlayer(ABC):
                          no_replace: bool = MISSING,
                          volume: int = MISSING,
                          pause: bool = MISSING,
-                         **kwargs):
+                         **kwargs) -> Optional[Dict[str, Any]]:
         """|coro|
+
+        .. _player object: https://lavalink.dev/api/rest.html#Player
 
         Plays the given track.
 
@@ -80,7 +128,7 @@ class BasePlayer(ABC):
         no_replace: :class:`bool`
             If set to true, operation will be ignored if a track is already playing or paused.
             The default behaviour is to always replace.
-            If left unspecified or None is provided, the default behaviour is exhibited.
+            If left unspecified or ``None`` is provided, the default behaviour is exhibited.
         volume: :class:`int`
             The initial volume to set. This is useful for changing the volume between tracks etc.
             If left unspecified or ``None`` is provided, the volume will remain at its current setting.
@@ -91,6 +139,11 @@ class BasePlayer(ABC):
         **kwargs: Any
             The kwargs to use when playing. You can specify any extra parameters that may be
             used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
+
+        Returns
+        -------
+        Optional[Dict[:class:`str`, Any]]
+            The updated `player object`_, or ``None`` if a request wasn't made due to an empty payload.
         """
         if track is MISSING or not isinstance(track, AudioTrack):
             raise ValueError('track must be an instance of an AudioTrack!')
@@ -138,13 +191,14 @@ class BasePlayer(ABC):
                 playable_track = await track.load(self.client)
             except LoadError as load_error:
                 await self.client._dispatch_event(TrackLoadFailedEvent(self, track, load_error))
+                return
 
         if playable_track is None:  # This should only fire when a DeferredAudioTrack fails to yield a base64 track string.
-            await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))
+            await self.client._dispatch_event(TrackLoadFailedEvent(self, track, None))  # type: ignore
             return
 
         self._next = track
-        await self.node.update_player(self._internal_id, encoded_track=playable_track, **options)
+        return await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, **options)
 
     def cleanup(self):
         pass
@@ -181,7 +235,7 @@ class BasePlayer(ABC):
 
     async def _dispatch_voice_update(self):
         if {'sessionId', 'endpoint', 'token'} == self._voice_state.keys():
-            await self.node.update_player(self._internal_id, voice_state=self._voice_state)
+            await self.node.update_player(guild_id=self._internal_id, voice_state=self._voice_state)
 
     @abstractmethod
     async def node_unavailable(self):
@@ -270,7 +324,7 @@ class Source(ABC):
         Returns
         -------
         Optional[:class:`LoadResult`]
-            A LoadResult, or None if there were no matches for the provided query.
+            A LoadResult, or ``None`` if there were no matches for the provided query.
         """
         raise NotImplementedError
 
@@ -278,7 +332,7 @@ class Source(ABC):
         return f'<Source name={self.name}>'
 
 
-class Filter:
+class Filter(ABC, Generic[FilterValueT]):
     """
     A class representing a Lavalink audio filter.
 
@@ -297,8 +351,8 @@ class Filter:
     plugin_filter: :class:`bool`
         Whether this filter is part of a Lavalink plugin.
     """
-    def __init__(self, values: Union[Dict[str, Any], List[Union[float, int]], float], plugin_filter: bool = False):
-        self.values = values
+    def __init__(self, values: FilterValueT, plugin_filter: bool = False):
+        self.values: FilterValueT = values
         self.plugin_filter: bool = plugin_filter
 
     @abstractmethod
@@ -307,7 +361,7 @@ class Filter:
         raise NotImplementedError
 
     @abstractmethod
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Dict[str, FilterValueT]:
         """
         Transforms the internal values into a dict matching the structure Lavalink expects.
 
