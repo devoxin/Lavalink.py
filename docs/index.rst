@@ -17,7 +17,7 @@ Welcome to Lavalink.py's documentation!
 
 \
     Lavalink.py is a wrapper for which `Lavalink
-    <https://github.com/freyacodes/Lavalink/>`_ abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
+    <https://github.com/lavalink-devs/Lavalink/>`_ abstracts away most of the code necessary to use Lavalink to allow for easier integration into your bots, while still promising full API coverage and powerful tools to get the most out of it.
 
     **Features:**
 
