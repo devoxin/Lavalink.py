@@ -28,7 +28,7 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple,
+from typing import (Any, Callable, Dict, Generic, List, Optional, Sequence, Set, Tuple,
                     Type, TypeVar, Union)
 
 import aiohttp
@@ -47,7 +47,7 @@ PlayerT = TypeVar('PlayerT', bound=BasePlayer)
 EventT = TypeVar('EventT', bound=Event)
 
 
-class Client:
+class Client(Generic[PlayerT]):
     """
     Represents a Lavalink client used to manage nodes and connections.
 
@@ -102,7 +102,7 @@ class Client:
         self._user_id: int = int(user_id)
         self._event_hooks = defaultdict(list)
         self.node_manager: NodeManager = NodeManager(self, regions, connect_back)
-        self.player_manager: PlayerManager = PlayerManager(self, player)
+        self.player_manager: PlayerManager[PlayerT] = PlayerManager(self, player)
         self.sources: Set[Source] = set()
 
     @property
@@ -113,7 +113,7 @@ class Client:
         return self.node_manager.nodes
 
     @property
-    def players(self) -> Dict[int, BasePlayer]:
+    def players(self) -> Dict[int, PlayerT]:
         """
         Convenience shortcut for :attr:`PlayerManager.players`.
         """
@@ -207,7 +207,7 @@ class Client:
         ----------
         events: Sequence[:class:`Event`]
             The events to remove the hooks from. This parameter can be omitted,
-            and the events registered on the function via :meth:`listener` will be used instead, if applicable.
+            and the events registered on the function via :func:`listener` will be used instead, if applicable.
             Otherwise, a default value of ``Generic`` is used instead.
         hooks: Sequence[Callable]
             A list of hook methods to remove.
