@@ -533,6 +533,20 @@ class DefaultPlayer(BasePlayer):
 
         return self.filters.get(filter_name.lower(), None)
 
+    async def remove_filters(self, *filters: Union[Type[FilterT], str]):
+        """|coro|
+
+        Removes multiple filters from the player, undoing any effects applied to the audio.
+        This is similar to :func:`remove_filter` but instead allows you to remove multiple filters with one call.
+
+        Parameters
+        ----------
+        filters: Union[Type[:class:`Filter`], :class:`str`]
+            The filters to remove. Can be filter name, or filter class (**not** an instance of).
+        """
+        for fltr in filters:
+            await self.remove_filter(fltr)
+
     async def remove_filter(self, _filter: Union[Type[FilterT], str]):
         """|coro|
 
