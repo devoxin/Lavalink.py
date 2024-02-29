@@ -485,7 +485,7 @@ class LowPass(Filter[float]):
         ------
         :class:`ValueError`
         """
-        smoothing = float('smoothing')
+        smoothing = float(smoothing)
 
         if smoothing <= 1:
             raise ValueError('smoothing must be bigger than 1')
