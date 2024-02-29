@@ -25,7 +25,7 @@ This module serves to contain all entities which are deserialized using response
 the Lavalink server.
 """
 from enum import Enum as _Enum
-from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Type, TypeVar,
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
                     Union)
 
 from .errors import InvalidTrack
