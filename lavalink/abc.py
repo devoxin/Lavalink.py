@@ -274,7 +274,7 @@ class DeferredAudioTrack(ABC, AudioTrack):
     for example.
     """
     @abstractmethod
-    async def load(self, client: 'Client'):
+    async def load(self, client: 'Client') -> Optional[str]:
         """|coro|
 
         Retrieves a base64 string that's playable by Lavalink.
@@ -288,8 +288,9 @@ class DeferredAudioTrack(ABC, AudioTrack):
 
         Returns
         -------
-        :class:`str`
+        Optional[:class:`str`]
             A Lavalink-compatible base64-encoded string containing track metadata.
+            If a track string cannot be returned, you may return ``None`` or throw a :class:`LoadError`.
         """
         raise NotImplementedError
 
