@@ -31,9 +31,9 @@ from .utfm_codec import read_utfm
 
 class DataReader:
     def __init__(self, base64_str: str):
-        self._buf: BytesIO = BytesIO(b64decode(base64_str))
+        self._buf = BytesIO(b64decode(base64_str))
 
-    def _read(self, count):
+    def _read(self, count: int):
         return self._buf.read(count)
 
     def read_byte(self) -> bytes:
@@ -55,8 +55,13 @@ class DataReader:
         result, = struct.unpack('>Q', self._read(8))
         return result
 
-    def read_nullable_utf(self) -> Optional[str]:
-        return self.read_utf().decode() if self.read_boolean() else None
+    def read_nullable_utf(self, utfm: bool = False) -> Optional[str]:
+        exists = self.read_boolean()
+
+        if not exists:
+            return None
+
+        return self.read_utfm() if utfm else self.read_utf().decode()
 
     def read_utf(self) -> bytes:
         text_length = self.read_unsigned_short()
@@ -110,7 +115,7 @@ class DataWriter:
         self.write_unsigned_short(byte_len)
         self._write(utf)
 
-    def finish(self):
+    def finish(self) -> bytes:
         with BytesIO() as track_buf:
             byte_len = self._buf.getbuffer().nbytes
             flags = byte_len | (1 << 30)
