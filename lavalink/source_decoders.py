@@ -27,7 +27,7 @@ from .dataio import DataReader
 
 
 def decode_probe_info(reader: DataReader) -> Mapping[str, Any]:
-    probe_info = reader.read_utf()
+    probe_info = reader.read_utf().decode()
     return {'probe_info': probe_info}
 
 
