@@ -33,6 +33,11 @@ class DataReader:
     def __init__(self, base64_str: str):
         self._buf = BytesIO(b64decode(base64_str))
 
+    @property
+    def remaining(self) -> int:
+        """ The amount of bytes left to be read. """
+        return self._buf.getbuffer().nbytes - self._buf.tell()
+
     def _read(self, count: int):
         return self._buf.read(count)
 
