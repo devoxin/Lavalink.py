@@ -32,6 +32,9 @@ def decode_probe_info(reader: DataReader) -> Mapping[str, Any]:
 
 
 def decode_lavasrc_fields(reader: DataReader) -> Mapping[str, Any]:
+    if reader.remaining <= 8:  # 8 bytes (long) = position field
+        return {}
+
     album_name = reader.read_nullable_utf()
     album_url = reader.read_nullable_utf()
     artist_url = reader.read_nullable_utf()
