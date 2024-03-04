@@ -86,7 +86,7 @@ class AudioTrack:
         The track's uploader.
     duration: :class:`int`
         The duration of the track, in milliseconds.
-    stream: :class:`bool`
+    is_stream: :class:`bool`
         Whether the track is a live-stream.
     title: :class:`str`
         The title of the track.
@@ -110,7 +110,7 @@ class AudioTrack:
     extra: Dict[str, Any]
         Any extra properties given to this AudioTrack will be stored here.
     """
-    __slots__ = ('raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'stream', 'title', 'uri',
+    __slots__ = ('raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'is_stream', 'title', 'uri',
                  'artwork_url', 'isrc', 'position', 'source_name', 'plugin_info', 'user_data', 'extra')
 
     def __init__(self, data: dict, requester: int = 0, **extra):
@@ -127,7 +127,7 @@ class AudioTrack:
             self.is_seekable: bool = info['isSeekable']
             self.author: str = info['author']
             self.duration: int = info['length']
-            self.stream: bool = info['isStream']
+            self.is_stream: bool = info['isStream']
             self.title: str = info['title']
             self.uri: str = info['uri']
             self.artwork_url: Optional[str] = info.get('artworkUrl')
@@ -149,6 +149,17 @@ class AudioTrack:
     @classmethod
     def from_dict(cls, mapping: dict):
         return cls(mapping)
+
+    @property
+    def stream(self) -> bool:
+        """
+        Property indicating whether this track is a stream.
+
+        .. deprecated:: 5.3.0
+            To be consistent with attribute naming, this property has been deprecated
+            in favour of ``is_stream``.
+        """
+        return self.is_stream
 
     @property
     def requester(self) -> int:
