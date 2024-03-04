@@ -162,7 +162,7 @@ def decode_track(track: str,  # pylint: disable=R0914
         A mapping of source-specific decoders to use.
         Some Lavaplayer sources have additional fields encoded on a per-sourcemanager basis, so you can
         specify a mapping of decoders that will handle decoding these additional fields. You can find some
-        example decoders within <TODO>. This isn't required for all sources, so ensure that you need them
+        example decoders within the ``source_decoders`` file. This isn't required for all sources, so ensure that you need them
         before specifying.
 
         To overwrite library-provided decoders, just specify them within the mapping and the new decoders will
