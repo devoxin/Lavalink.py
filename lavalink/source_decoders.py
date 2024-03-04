@@ -56,6 +56,3 @@ DEFAULT_DECODER_MAPPING: Dict[str, Callable[[DataReader], Mapping[str, Any]]] = 
     'spotify': decode_lavasrc_fields,
     'applemusic': decode_lavasrc_fields
 }
-"""
-The default mapping of source-specific field decoders for use with :func:`decode_track`.
-"""
