@@ -23,11 +23,13 @@ SOFTWARE.
 """
 import struct
 from base64 import b64encode
-from typing import Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Union
 
+from .common import MISSING
 from .dataio import DataReader, DataWriter
 from .errors import InvalidTrack
 from .player import AudioTrack
+from .source_decoders import DEFAULT_DECODER_MAPPING
 
 V2_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'}
 V3_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'}
@@ -147,7 +149,8 @@ def _write_track_common(track: Dict[str, Union[Optional[str], bool, int]], write
     writer.write_nullable_utf(track['uri'])
 
 
-def decode_track(track: str) -> AudioTrack:
+def decode_track(track: str,  # pylint: disable=R0914
+                 source_decoders: Mapping[str, Callable[[DataReader], Mapping[str, Any]]] = MISSING) -> AudioTrack:
     """
     Decodes a base64 track string into an AudioTrack object.
 
@@ -155,11 +158,25 @@ def decode_track(track: str) -> AudioTrack:
     ----------
     track: :class:`str`
         The base64 track string.
+    source_decoders: Mapping[:class:`str`, Callable[[:class:`DataReader`], Dict[:class:`str`, Any]]]
+        A mapping of source-specific decoders to use.
+        Some Lavaplayer sources have additional fields encoded on a per-sourcemanager basis, so you can
+        specify a mapping of decoders that will handle decoding these additional fields. You can find some
+        example decoders within <TODO>. This isn't required for all sources, so ensure that you need them
+        before specifying.
+
+        To overwrite library-provided decoders, just specify them within the mapping and the new decoders will
+        be used.
 
     Returns
     -------
     :class:`AudioTrack`
     """
+    decoders = DEFAULT_DECODER_MAPPING.copy()
+
+    if decoders is not MISSING:
+        decoders.update(source_decoders)
+
     reader = DataReader(track)
 
     flags = (reader.read_int() & 0xC0000000) >> 30
@@ -173,6 +190,11 @@ def decode_track(track: str) -> AudioTrack:
         extra_fields['isrc'] = reader.read_nullable_utf()
 
     source = reader.read_utf().decode()
+    source_specific_fields = {}
+
+    if source in decoders:
+        source_specific_fields.update(decoders[source](reader))
+
     position = reader.read_long()
 
     track_object = {
@@ -190,7 +212,8 @@ def decode_track(track: str) -> AudioTrack:
         }
     }
 
-    return AudioTrack(track_object, 0, position=position, encoder_version=version)
+    return AudioTrack(track_object, 0, position=position, encoder_version=version,
+                      source_specific=source_specific_fields)
 
 
 def encode_track(track: Dict[str, Union[Optional[str], int, bool]]) -> Tuple[int, str]:

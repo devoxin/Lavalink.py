@@ -24,6 +24,14 @@ Client
 .. autoclass:: Client
     :members:
 
+DataIO
+------
+.. autoclass:: DataReader
+    :members:
+
+.. autoclass:: DataWriter
+    :members:
+
 Errors
 ------
 .. autoclass:: ClientError
