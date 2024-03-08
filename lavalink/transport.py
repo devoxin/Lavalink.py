@@ -181,7 +181,7 @@ class Transport:
                 try:
                     await self._handle_message(msg.json())
                 except Exception:  # pylint: disable=W0718
-                    _log.error('[Node:%s] Unexpected error occurred whilst processing websocket message', self._node.name)
+                    _log.exception('[Node:%s] Unexpected error occurred whilst processing websocket message', self._node.name)
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 exc = self._ws.exception()
                 _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)

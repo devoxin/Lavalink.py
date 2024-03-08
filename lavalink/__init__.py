@@ -4,11 +4,14 @@ __title__ = 'Lavalink'
 __author__ = 'Devoxin'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-present Devoxin'
-__version__ = '5.2.0'
+__version__ = '5.3.0'
 
+
+from typing import Type
 
 from .abc import BasePlayer, DeferredAudioTrack, Source
 from .client import Client
+from .dataio import DataReader, DataWriter
 from .errors import (AuthenticationError, ClientError, InvalidTrack, LoadError,
                      RequestError)
 from .events import (Event, IncomingWebSocketMessage, NodeChangedEvent,
@@ -24,12 +27,13 @@ from .player import DefaultPlayer
 from .playermanager import PlayerManager
 from .server import (AudioTrack, EndReason, LoadResult, LoadResultError,
                      LoadType, PlaylistInfo, Plugin, Severity)
+from .source_decoders import DEFAULT_DECODER_MAPPING
 from .stats import Penalty, Stats
 from .utils import (decode_track, encode_track, format_time, parse_time,
                     timestamp_to_millis)
 
 
-def listener(*events: Event):
+def listener(*events: Type[Event]):
     """
     Marks this function as an event listener for Lavalink.py.
     This **must** be used on class methods, and you must ensure that you register

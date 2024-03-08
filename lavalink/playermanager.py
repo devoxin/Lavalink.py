@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import (TYPE_CHECKING, Callable, Dict, Iterator, Optional, Tuple,
-                    Type, TypeVar)
+from typing import (TYPE_CHECKING, Callable, Dict, Generic, Iterator, Optional,
+                    Tuple, Type, TypeVar, Union, overload)
 
 from .errors import ClientError
 from .node import Node
@@ -35,9 +35,10 @@ if TYPE_CHECKING:
 _log = logging.getLogger(__name__)
 
 PlayerT = TypeVar('PlayerT', bound=BasePlayer)
+CustomPlayerT = TypeVar('CustomPlayerT', bound=BasePlayer)
 
 
-class PlayerManager:
+class PlayerManager(Generic[PlayerT]):
     """
     Represents the player manager that contains all the players.
 
@@ -61,22 +62,22 @@ class PlayerManager:
 
         self.client: 'Client' = client
         self._player_cls: Type[PlayerT] = player
-        self.players: Dict[int, BasePlayer] = {}
+        self.players: Dict[int, PlayerT] = {}
 
     def __len__(self) -> int:
         return len(self.players)
 
-    def __iter__(self) -> Iterator[Tuple[int, BasePlayer]]:
+    def __iter__(self) -> Iterator[Tuple[int, PlayerT]]:
         """ Returns an iterator that yields a tuple of (guild_id, player). """
         for guild_id, player in self.players.items():
             yield guild_id, player
 
-    def values(self) -> Iterator[BasePlayer]:
+    def values(self) -> Iterator[PlayerT]:
         """ Returns an iterator that yields only values. """
         for player in self.players.values():
             yield player
 
-    def find_all(self, predicate: Optional[Callable[[BasePlayer], bool]] = None):
+    def find_all(self, predicate: Optional[Callable[[PlayerT], bool]] = None):
         """
         Returns a list of players that match the given predicate.
 
@@ -96,7 +97,7 @@ class PlayerManager:
 
         return [p for p in self.players.values() if bool(predicate(p))]
 
-    def get(self, guild_id: int) -> Optional[BasePlayer]:
+    def get(self, guild_id: int) -> Optional[PlayerT]:
         """
         Gets a player from cache.
 
@@ -126,13 +127,32 @@ class PlayerManager:
             player = self.players.pop(guild_id)
             player.cleanup()
 
+    @overload
+    def create(self,
+               guild_id: int,
+               *,
+               region: Optional[str] = ...,
+               endpoint: Optional[str] = ...,
+               node: Optional[Node] = ...) -> PlayerT:
+        ...
+
+    @overload
+    def create(self,
+               guild_id: int,
+               *,
+               region: Optional[str] = ...,
+               endpoint: Optional[str] = ...,
+               node: Optional[Node] = ...,
+               cls: Type[CustomPlayerT]) -> CustomPlayerT:
+        ...
+
     def create(self,
                guild_id: int,
                *,
                region: Optional[str] = None,
                endpoint: Optional[str] = None,
                node: Optional[Node] = None,
-               cls: Optional[Type[PlayerT]] = None) -> BasePlayer:
+               cls: Optional[Type[CustomPlayerT]] = None) -> Union[CustomPlayerT, PlayerT]:
         """
         Creates a player if one doesn't exist with the given information.
 
