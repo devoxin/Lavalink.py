@@ -23,7 +23,6 @@ SOFTWARE.
 """
 import struct
 from base64 import b64decode
-from collections.abc import Buffer
 from io import BytesIO
 from typing import Optional
 
