@@ -65,7 +65,7 @@ class DataReader:
     def read_unsigned_short(self) -> int:
         """
         Reads an unsigned short from the stream.
-        
+
         Returns
         -------
         :class:`int`
@@ -76,7 +76,7 @@ class DataReader:
     def read_int(self) -> int:
         """
         Reads an int from the stream.
-        
+
         Returns
         -------
         :class:`int`
@@ -87,7 +87,7 @@ class DataReader:
     def read_long(self) -> int:
         """
         Reads a long from the stream.
-        
+
         Returns
         -------
         :class:`int`
@@ -107,7 +107,7 @@ class DataReader:
         ----------
         utfm: :class:`bool`
             Whether to read the string as `modified UTF`_.
-        
+
         Returns
         -------
         Optional[:class:`str`]
@@ -122,7 +122,7 @@ class DataReader:
     def read_utf(self) -> bytes:
         """
         Reads a UTF string from the stream.
-        
+
         Returns
         -------
         :class:`bytes`
