@@ -4,7 +4,7 @@ __title__ = 'Lavalink'
 __author__ = 'Devoxin'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-present Devoxin'
-__version__ = '5.3.0'
+__version__ = '5.3.1'
 
 
 from typing import Type

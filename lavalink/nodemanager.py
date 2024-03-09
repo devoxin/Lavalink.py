@@ -68,8 +68,7 @@ class NodeManager:
         return len(self.nodes)
 
     def __iter__(self) -> Iterator[Node]:
-        for node in self.nodes:
-            yield node
+        yield from self.nodes
 
     @property
     def available_nodes(self) -> List[Node]:

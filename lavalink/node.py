@@ -576,11 +576,11 @@ class Node:
         return await self.request('PATCH', f'sessions/{session_id}', json=json)  # type: ignore
 
     @overload
-    async def request(self, method: str, path: str, *, to: Type[T], trace: bool = ..., versioned: bool = ..., **kwargs) -> T:
+    async def request(self, method: str, path: str, *, to: Type[str], trace: bool = ..., versioned: bool = ..., **kwargs) -> str:
         ...
 
     @overload
-    async def request(self, method: str, path: str, *, to: str, trace: bool = ..., versioned: bool = ..., **kwargs) -> str:
+    async def request(self, method: str, path: str, *, to: Type[T], trace: bool = ..., versioned: bool = ..., **kwargs) -> T:
         ...
 
     @overload
