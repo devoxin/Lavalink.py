@@ -115,8 +115,8 @@ class BasePlayer(ABC):
 
         Warning
         -------
-        Multiple calls to this method short timeframe could cause issues with the player's internal state,
-        which can cause errors when processing a :class:`TrackStartEvent`.
+        Multiple calls to this method within a short timeframe could cause issues with the player's
+        internal state, which can cause errors when processing a :class:`TrackStartEvent`.
 
         Parameters
         ----------
