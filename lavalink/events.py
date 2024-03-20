@@ -58,6 +58,11 @@ class TrackStuckEvent(Event):
     This event is emitted when the currently playing track is stuck (i.e. has not provided any audio).
     This is typically a fault of the track's underlying audio stream, and not Lavalink itself.
 
+    Note
+    ----
+    You do not need to manually trigger the start of the next track in the queue within
+    this event when using the :class:`DefaultPlayer`. This is handled for you.
+
     Attributes
     ----------
     player: :class:`BasePlayer`
@@ -79,6 +84,11 @@ class TrackStuckEvent(Event):
 class TrackExceptionEvent(Event):
     """
     This event is emitted when a track encounters an exception during playback.
+
+    Note
+    ----
+    You do not need to manually trigger the start of the next track in the queue within
+    this event when using the :class:`DefaultPlayer`. This is handled for you.
 
     Attributes
     ----------
@@ -108,6 +118,11 @@ class TrackEndEvent(Event):
     """
     This event is emitted when the player finished playing a track.
 
+    Note
+    ----
+    You do not need to manually trigger the start of the next track in the queue within
+    this event when using the :class:`DefaultPlayer`. This is handled for you.
+
     Attributes
     ----------
     player: :class:`BasePlayer`
@@ -131,6 +146,11 @@ class TrackLoadFailedEvent(Event):
     This is a custom event, emitted when a deferred audio track fails to
     produce a playable track. The player will not do anything by itself,
     so it is up to you to skip the broken track.
+
+    Note
+    ----
+    This event will not automatically trigger the start of the next track in the queue,
+    so you must ensure that you do this if you want the player to continue playing from the queue.
 
     Attributes
     ----------
