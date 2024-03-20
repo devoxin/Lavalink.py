@@ -231,6 +231,11 @@ class DefaultPlayer(BasePlayer):
         This method differs from :func:`BasePlayer.play_track` in that it contains additional logic
         to handle certain attributes, such as ``loop``, ``shuffle``, and loading a base64 string from :class:`DeferredAudioTrack`.
 
+        Warning
+        -------
+        Multiple calls to this method short timeframe could cause issues with the player's internal state,
+        which can cause errors when processing a :class:`TrackStartEvent`.
+
         Parameters
         ----------
         track: Optional[Union[:class:`DeferredAudioTrack`, :class:`AudioTrack`, Dict[str, Union[Optional[str], bool, int]]]]
@@ -321,6 +326,11 @@ class DefaultPlayer(BasePlayer):
         """|coro|
 
         Plays the next track in the queue, if any.
+
+        Warning
+        -------
+        Multiple calls to this method short timeframe could cause issues with the player's internal state,
+        which can cause errors when processing a :class:`TrackStartEvent`.
         """
         await self.play()
 
