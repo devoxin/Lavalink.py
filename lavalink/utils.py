@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import struct
 from base64 import b64encode
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 
 from .common import MISSING
 from .dataio import DataReader, DataWriter
@@ -140,13 +140,13 @@ def _read_track_common(reader: DataReader) -> Tuple[str, str, int, str, bool, Op
     return (title, author, length, identifier, is_stream, uri)
 
 
-def _write_track_common(track: Dict[str, Union[Optional[str], bool, int]], writer: DataWriter):
-    writer.write_utf(track['title'])  # type: ignore
-    writer.write_utf(track['author'])  # type: ignore
-    writer.write_long(track['length'])  # type: ignore
-    writer.write_utf(track['identifier'])  # type: ignore
-    writer.write_boolean(track['isStream'])  # type: ignore
-    writer.write_nullable_utf(track['uri'])  # type: ignore
+def _write_track_common(track: Dict[str, Any], writer: DataWriter):
+    writer.write_utf(track['title'])
+    writer.write_utf(track['author'])
+    writer.write_long(track['length'])
+    writer.write_utf(track['identifier'])
+    writer.write_boolean(track['isStream'])
+    writer.write_nullable_utf(track['uri'])
 
 
 def decode_track(track: str,  # pylint: disable=R0914
@@ -216,8 +216,8 @@ def decode_track(track: str,  # pylint: disable=R0914
                       source_specific=source_specific_fields)
 
 
-def encode_track(track: Dict[str, Union[Optional[str], int, bool]],
-                 source_encoders: Mapping[str, Callable[[DataWriter]]] = MISSING) -> Tuple[int, str]:
+def encode_track(track: Dict[str, Any],
+                 source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]]]] = MISSING) -> Tuple[int, str]:
     """
     Encodes a track dict into a base64 string, readable by the Lavalink server.
 
@@ -265,8 +265,8 @@ def encode_track(track: Dict[str, Union[Optional[str], int, bool]],
     return (2, encode_track_v2(track, source_encoders))
 
 
-def encode_track_v2(track: Dict[str, Union[Optional[str], bool, int]],
-                    source_encoders: Mapping[str, Callable[[DataWriter]]] = MISSING) -> str:
+def encode_track_v2(track: Dict[str, Any],
+                    source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]]]] = MISSING) -> str:
     assert V2_KEYSET <= track.keys()
 
     writer = DataWriter()
@@ -274,33 +274,33 @@ def encode_track_v2(track: Dict[str, Union[Optional[str], bool, int]],
     version = struct.pack('B', 2)
     writer.write_byte(version)
     _write_track_common(track, writer)
-    writer.write_utf(track['sourceName'])  # type: ignore
+    writer.write_utf(track['sourceName'])
 
     if source_encoders is not MISSING and track['sourceName'] in source_encoders:
-        source_encoders[track['sourceName']](writer)  # type: ignore
+        source_encoders[track['sourceName']](writer, track)
 
-    writer.write_long(track['position'])  # type: ignore
+    writer.write_long(track['position'])
 
     enc = writer.finish()
     return b64encode(enc).decode()
 
 
-def encode_track_v3(track: Dict[str, Union[Optional[str], bool, int]],
-                    source_encoders: Mapping[str, Callable[[DataWriter]]] = MISSING) -> str:
+def encode_track_v3(track: Dict[str, Any],
+                    source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]]]] = MISSING) -> str:
     assert V3_KEYSET <= track.keys()
 
     writer = DataWriter()
     version = struct.pack('B', 3)
     writer.write_byte(version)
     _write_track_common(track, writer)
-    writer.write_nullable_utf(track['artworkUrl'])  # type: ignore
-    writer.write_nullable_utf(track['isrc'])  # type: ignore
-    writer.write_utf(track['sourceName'])  # type: ignore
+    writer.write_nullable_utf(track['artworkUrl'])
+    writer.write_nullable_utf(track['isrc'])
+    writer.write_utf(track['sourceName'])
 
     if source_encoders is not MISSING and track['sourceName'] in source_encoders:
-        source_encoders[track['sourceName']](writer)  # type: ignore
+        source_encoders[track['sourceName']](writer, track)
 
-    writer.write_long(track['position'])  # type: ignore
+    writer.write_long(track['position'])
 
     enc = writer.finish()
     return b64encode(enc).decode()
