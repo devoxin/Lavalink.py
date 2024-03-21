@@ -32,7 +32,7 @@ from .player import AudioTrack
 from .source_decoders import DEFAULT_DECODER_MAPPING
 
 V2_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'}
-V3_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'}
+V3_KEYSET = V2_KEYSET | {'artworkUrl', 'isrc'}
 
 
 def timestamp_to_millis(timestamp: str) -> int:
