@@ -217,7 +217,7 @@ def decode_track(track: str,  # pylint: disable=R0914
 
 
 def encode_track(track: Dict[str, Any],
-                 source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]]]] = MISSING) -> Tuple[int, str]:
+                 source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]], None]] = MISSING) -> Tuple[int, str]:
     """
     Encodes a track dict into a base64 string, readable by the Lavalink server.
 
@@ -266,7 +266,7 @@ def encode_track(track: Dict[str, Any],
 
 
 def encode_track_v2(track: Dict[str, Any],
-                    source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]]]] = MISSING) -> str:
+                    source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]], None]] = MISSING) -> str:
     assert V2_KEYSET <= track.keys()
 
     writer = DataWriter()
@@ -286,7 +286,7 @@ def encode_track_v2(track: Dict[str, Any],
 
 
 def encode_track_v3(track: Dict[str, Any],
-                    source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]]]] = MISSING) -> str:
+                    source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]], None]] = MISSING) -> str:
     assert V3_KEYSET <= track.keys()
 
     writer = DataWriter()
