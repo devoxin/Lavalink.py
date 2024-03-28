@@ -265,7 +265,7 @@ class Client(Generic[PlayerT]):
         return next((source for source in self.sources if source.name == source_name), None)
 
     def add_node(self, host: str, port: int, password: str, region: str, name: Optional[str] = None,
-                 ssl: bool = False, session_id: Optional[str] = None) -> Node:
+                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True) -> Node:
         """
         Shortcut for :func:`NodeManager.add_node`.
 
@@ -283,20 +283,24 @@ class Client(Generic[PlayerT]):
             The region to assign this node to.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
-        ssl: Optional[:class:`bool`]
+        ssl: :class:`bool`
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
         session_id: Optional[:class:`str`]
             The ID of the session to resume. Defaults to ``None``.
             Only specify this if you have the ID of the session you want to resume.
+        connect: :class:`bool`
+            Whether to immediately connect to the node after creating it.
+            If ``False``, you must call :func:`Node.connect` if you require WebSocket functionality.
 
         Returns
         -------
         :class:`Node`
             The created Node instance.
         """
-        return self.node_manager.add_node(host, port, password, region, name, ssl, session_id)
+        return self.node_manager.add_node(host, port, password, region, name, ssl,
+                                          session_id, connect)
 
     async def get_local_tracks(self, query: str) -> LoadResult:
         """|coro|

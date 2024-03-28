@@ -51,11 +51,11 @@ LAVALINK_API_VERSION = 'v4'
 
 
 class Transport:
-    """ The class responsible for dealing with connections to Lavalink. """
+    """ The class responsible for handling connections to a Lavalink server. """
     __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', 'trace_requests',
                  '_host', '_port', '_password', '_ssl', 'session_id', '_destroyed')
 
-    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str]):
+    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str], connect: bool = True):
         self.client: 'Client' = node.client
         self._node: 'Node' = node
 
@@ -72,7 +72,8 @@ class Transport:
         self.session_id: Optional[str] = session_id
         self._destroyed: bool = False
 
-        self.connect()
+        if connect:
+            self.connect()
 
     @property
     def ws_connected(self):
@@ -93,7 +94,7 @@ class Transport:
             await self._ws.close(code=code)
             self._ws = None
 
-    def connect(self) -> asyncio.Task:
+    def connect(self) -> asyncio.Task[Any]:
         """ Attempts to establish a connection to Lavalink. """
         loop = asyncio.get_event_loop()
         return loop.create_task(self._connect())
