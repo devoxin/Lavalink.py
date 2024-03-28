@@ -83,7 +83,7 @@ class NodeManager:
         return [n for n in self.nodes if n.available]
 
     def add_node(self, host: str, port: int, password: str, region: str, name: Optional[str] = None,
-                 ssl: bool = False, session_id: Optional[str] = None) -> Node:
+                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True) -> Node:
         """
         Adds a node to this node manager.
 
@@ -99,23 +99,24 @@ class NodeManager:
             The region to assign this node to.
         name: Optional[:class:`str`]
             An identifier for the node that will show in logs. Defaults to ``None``.
-        reconnect_attempts: Optional[:class:`int`]
-            The amount of times connection with the node will be reattempted before giving up.
-            Set to `-1` for infinite. Defaults to ``3``.
-        ssl: Optional[:class:`bool`]
+        ssl: :class:`bool`
             Whether to use SSL for the node. SSL will use ``wss`` and ``https``, instead of ``ws`` and ``http``,
             respectively. Your node should support SSL if you intend to enable this, either via reverse proxy or
             other methods. Only enable this if you know what you're doing.
         session_id: Optional[:class:`str`]
             The ID of the session to resume. Defaults to ``None``.
             Only specify this if you have the ID of the session you want to resume.
+        connect: :class:`bool`
+            Whether to immediately connect to the node after creating it.
+            If ``False``, you must call :func:`Node.connect` if you require WebSocket functionality.
 
         Returns
         -------
         :class:`Node`
             The created Node instance.
         """
-        node = Node(self, host, port, password, region, name, ssl, session_id)
+        node = Node(self, host, port, password, region, name, ssl,
+                    session_id, connect)
         self.nodes.append(node)
         return node
 
