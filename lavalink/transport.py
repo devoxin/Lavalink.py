@@ -36,6 +36,7 @@ from .server import EndReason, Severity
 from .stats import Stats
 
 if TYPE_CHECKING:
+    from .abc import BasePlayer
     from .client import Client
     from .node import Node
 
@@ -241,10 +242,15 @@ class Transport:
             await self.client._dispatch_event(NodeReadyEvent(self._node, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
-            player = self.client.player_manager.get(guild_id)
+            player: 'BasePlayer' = self.client.player_manager.get(guild_id)  # type: ignore
 
             if not player:
                 _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %d', self._node.name, guild_id)
+                return
+
+            if player.node != self._node:
+                _log.debug('[Node:%s] Received playerUpdate for a player that doesn\'t belong to this node (player is moving?) GuildId: %d',
+                           self._node.name, guild_id)
                 return
 
             state = data['state']
@@ -266,7 +272,7 @@ class Transport:
         data: :class:`dict`
             The data given from Lavalink.
         """
-        player = self.client.player_manager.get(int(data['guildId']))
+        player: 'BasePlayer' = self.client.player_manager.get(int(data['guildId']))  # type: ignore
         event_type = data['type']
 
         if not player:
