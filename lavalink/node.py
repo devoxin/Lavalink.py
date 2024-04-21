@@ -140,7 +140,7 @@ class Node:
 
         return (time() - start) * 1000
 
-    async def connect(self, force: bool = False) -> Optional[Task[Any]]:
+    async def connect(self, force: bool = False) -> Optional[Task]:
         """|coro|
 
         Initiates a WebSocket connection to this node.
@@ -154,7 +154,7 @@ class Node:
 
         Returns
         -------
-        Optional[:class:`asyncio.Task`[Any]]
+        Optional[:class:`asyncio.Task`]
             The WebSocket connection task, or ``None`` if a WebSocket connection already exists and force
             is ``False``.
         """

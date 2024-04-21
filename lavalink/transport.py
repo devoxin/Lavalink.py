@@ -94,7 +94,7 @@ class Transport:
             await self._ws.close(code=code)
             self._ws = None
 
-    def connect(self) -> asyncio.Task[Any]:
+    def connect(self) -> asyncio.Task:
         """ Attempts to establish a connection to Lavalink. """
         loop = asyncio.get_event_loop()
         return loop.create_task(self._connect())
