@@ -36,6 +36,7 @@ from .server import EndReason, Severity
 from .stats import Stats
 
 if TYPE_CHECKING:
+    from .abc import BasePlayer
     from .client import Client
     from .node import Node
 
@@ -50,11 +51,11 @@ LAVALINK_API_VERSION = 'v4'
 
 
 class Transport:
-    """ The class responsible for dealing with connections to Lavalink. """
+    """ The class responsible for handling connections to a Lavalink server. """
     __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', 'trace_requests',
                  '_host', '_port', '_password', '_ssl', 'session_id', '_destroyed')
 
-    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str]):
+    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str], connect: bool = True):
         self.client: 'Client' = node.client
         self._node: 'Node' = node
 
@@ -71,7 +72,8 @@ class Transport:
         self.session_id: Optional[str] = session_id
         self._destroyed: bool = False
 
-        self.connect()
+        if connect:
+            self.connect()
 
     @property
     def ws_connected(self):
@@ -241,10 +243,15 @@ class Transport:
             await self.client._dispatch_event(NodeReadyEvent(self._node, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
-            player = self.client.player_manager.get(guild_id)
+            player: 'BasePlayer' = self.client.player_manager.get(guild_id)  # type: ignore
 
             if not player:
                 _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %d', self._node.name, guild_id)
+                return
+
+            if player.node != self._node:
+                _log.debug('[Node:%s] Received playerUpdate for a player that doesn\'t belong to this node (player is moving?) GuildId: %d',
+                           self._node.name, guild_id)
                 return
 
             state = data['state']
@@ -266,7 +273,7 @@ class Transport:
         data: :class:`dict`
             The data given from Lavalink.
         """
-        player = self.client.player_manager.get(int(data['guildId']))
+        player: 'BasePlayer' = self.client.player_manager.get(int(data['guildId']))  # type: ignore
         event_type = data['type']
 
         if not player:
@@ -372,7 +379,7 @@ class Transport:
 
                 raise RequestError('An invalid response was received from the node.',
                                    status=res.status, response=await res.json(), params=kwargs.get('params', {}))
-        except RequestError:
-            raise
+        except (AuthenticationError, RequestError):
+            raise  # Pass the caught errors back to the caller in their 'original' form.
         except Exception as original:  # It's not pretty but aiohttp doesn't specify what exceptions can be thrown.
             raise ClientError from original

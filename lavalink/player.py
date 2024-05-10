@@ -231,6 +231,11 @@ class DefaultPlayer(BasePlayer):
         This method differs from :func:`BasePlayer.play_track` in that it contains additional logic
         to handle certain attributes, such as ``loop``, ``shuffle``, and loading a base64 string from :class:`DeferredAudioTrack`.
 
+        Warning
+        -------
+        Multiple calls to this method within a short timeframe could cause issues with the player's
+        internal state, which can cause errors when processing a :class:`TrackStartEvent`.
+
         Parameters
         ----------
         track: Optional[Union[:class:`DeferredAudioTrack`, :class:`AudioTrack`, Dict[str, Union[Optional[str], bool, int]]]]
@@ -321,6 +326,11 @@ class DefaultPlayer(BasePlayer):
         """|coro|
 
         Plays the next track in the queue, if any.
+
+        Warning
+        -------
+        Multiple calls to this method within a short timeframe could cause issues with the player's
+        internal state, which can cause errors when processing a :class:`TrackStartEvent`.
         """
         await self.play()
 
@@ -631,6 +641,7 @@ class DefaultPlayer(BasePlayer):
         Called when a player's node becomes unavailable.
         Useful for changing player state before it's moved to another node.
         """
+        self._last_position = self.position
         self._internal_pause = True
 
     async def change_node(self, node: 'Node'):
@@ -643,13 +654,15 @@ class DefaultPlayer(BasePlayer):
         node: :class:`Node`
             The node the player is changed to.
         """
+        old_node = self.node
+        self.node = node
+
+        last_position = self.position
+
         try:
             await self.node.destroy_player(self._internal_id)
         except (ClientError, RequestError):
             pass
-
-        old_node = self.node
-        self.node = node
 
         if self._voice_state:
             await self._dispatch_voice_update()
@@ -660,7 +673,9 @@ class DefaultPlayer(BasePlayer):
             if isinstance(self.current, DeferredAudioTrack) and playable_track is None:
                 playable_track = await self.current.load(self.client)
 
-            await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, position=self.position,
+            self._last_position = last_position  # Ensure that _last_position is correctly set, in case a node sends us bad data.
+
+            await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, position=last_position,
                                           paused=self.paused, volume=self.volume)
             self._last_update = int(time() * 1000)
 

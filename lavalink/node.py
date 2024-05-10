@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from asyncio import Task
 from collections import defaultdict
 from time import time
 from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
@@ -62,10 +63,10 @@ class Node:
     __slots__ = ('client', 'manager', '_transport', 'region', 'name', 'stats')
 
     def __init__(self, manager, host: str, port: int, password: str, region: str, name: Optional[str] = None,
-                 ssl: bool = False, session_id: Optional[str] = None):
+                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True):
         self.client: 'Client' = manager.client
         self.manager: 'NodeManager' = manager
-        self._transport = Transport(self, host, port, password, ssl, session_id)
+        self._transport = Transport(self, host, port, password, ssl, session_id, connect)
 
         self.region: str = region
         self.name: str = name or f'{region}-{host}:{port}'
@@ -138,6 +139,32 @@ class Node:
             return -1
 
         return (time() - start) * 1000
+
+    async def connect(self, force: bool = False) -> Optional[Task]:
+        """|coro|
+
+        Initiates a WebSocket connection to this node.
+        If a connection already exists, and ``force`` is ``False``, this will not do anything.
+
+        Parameters
+        ----------
+        force: :class:`bool`
+            Whether to close any existing WebSocket connections and re-establish a connection to
+            the node.
+
+        Returns
+        -------
+        Optional[:class:`asyncio.Task`]
+            The WebSocket connection task, or ``None`` if a WebSocket connection already exists and force
+            is ``False``.
+        """
+        if self._transport.ws_connected:
+            if not force:
+                return None
+
+            await self._transport.close()
+
+        return self._transport.connect()
 
     async def destroy(self):
         """|coro|
@@ -576,11 +603,11 @@ class Node:
         return await self.request('PATCH', f'sessions/{session_id}', json=json)  # type: ignore
 
     @overload
-    async def request(self, method: str, path: str, *, to: Type[T], trace: bool = ..., versioned: bool = ..., **kwargs) -> T:
+    async def request(self, method: str, path: str, *, to: Type[str], trace: bool = ..., versioned: bool = ..., **kwargs) -> str:
         ...
 
     @overload
-    async def request(self, method: str, path: str, *, to: str, trace: bool = ..., versioned: bool = ..., **kwargs) -> str:
+    async def request(self, method: str, path: str, *, to: Type[T], trace: bool = ..., versioned: bool = ..., **kwargs) -> T:
         ...
 
     @overload
