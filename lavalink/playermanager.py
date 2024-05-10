@@ -69,13 +69,11 @@ class PlayerManager(Generic[PlayerT]):
 
     def __iter__(self) -> Iterator[Tuple[int, PlayerT]]:
         """ Returns an iterator that yields a tuple of (guild_id, player). """
-        for guild_id, player in self.players.items():
-            yield guild_id, player
+        yield from self.players.items()
 
     def values(self) -> Iterator[PlayerT]:
         """ Returns an iterator that yields only values. """
-        for player in self.players.values():
-            yield player
+        yield from self.players.values()
 
     def find_all(self, predicate: Optional[Callable[[PlayerT], bool]] = None):
         """

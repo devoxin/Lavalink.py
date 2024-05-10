@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import struct
 from base64 import b64encode
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 
 from .common import MISSING
 from .dataio import DataReader, DataWriter
@@ -32,7 +32,7 @@ from .player import AudioTrack
 from .source_decoders import DEFAULT_DECODER_MAPPING
 
 V2_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'}
-V3_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'artworkUrl', 'isrc', 'sourceName', 'position'}
+V3_KEYSET = V2_KEYSET | {'artworkUrl', 'isrc'}
 
 
 def timestamp_to_millis(timestamp: str) -> int:
@@ -140,7 +140,7 @@ def _read_track_common(reader: DataReader) -> Tuple[str, str, int, str, bool, Op
     return (title, author, length, identifier, is_stream, uri)
 
 
-def _write_track_common(track: Dict[str, Union[Optional[str], bool, int]], writer: DataWriter):
+def _write_track_common(track: Dict[str, Any], writer: DataWriter):
     writer.write_utf(track['title'])
     writer.write_utf(track['author'])
     writer.write_long(track['length'])
@@ -160,7 +160,7 @@ def decode_track(track: str,  # pylint: disable=R0914
         The base64 track string.
     source_decoders: Mapping[:class:`str`, Callable[[:class:`DataReader`], Dict[:class:`str`, Any]]]
         A mapping of source-specific decoders to use.
-        Some Lavaplayer sources have additional fields encoded on a per-sourcemanager basis, so you can
+        Some Lavaplayer sources have additional fields encoded on a per-source manager basis, so you can
         specify a mapping of decoders that will handle decoding these additional fields. You can find some
         example decoders within the ``source_decoders`` file. This isn't required for all sources, so ensure
         that you need them before specifying.
@@ -216,7 +216,8 @@ def decode_track(track: str,  # pylint: disable=R0914
                       source_specific=source_specific_fields)
 
 
-def encode_track(track: Dict[str, Union[Optional[str], int, bool]]) -> Tuple[int, str]:
+def encode_track(track: Dict[str, Any],
+                 source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]], None]] = MISSING) -> Tuple[int, str]:
     """
     Encodes a track dict into a base64 string, readable by the Lavalink server.
 
@@ -230,6 +231,15 @@ def encode_track(track: Dict[str, Union[Optional[str], int, bool]]) -> Tuple[int
     ----------
     track: Dict[str, Union[Optional[str], int, bool]]
         The track dict to serialize.
+    source_encoders: Mapping[:class:`str`, Callable[[:class:`DataWriter`]]
+        A mapping of source-specific encoders to use.
+        Some Lavaplayer sources have additional fields encoded on a per-source manager basis, so you can
+        specify a mapping of encoders that will handle encoding these additional fields. This isn't required
+        for all sources, so ensure that you need them before specifying.
+
+        The mapping must be in the format of something like ``{'http': http_encoder_function}``, where the
+        key ``str`` is the name of the source. These functions will only be called if track's ``sourceName``
+        field matches.
 
     Raises
     ------
@@ -250,12 +260,13 @@ def encode_track(track: Dict[str, Union[Optional[str], int, bool]]) -> Tuple[int
         raise InvalidTrack(f'Track object is missing keys required for serialization: {", ".join(missing_keys)}')
 
     if V3_KEYSET <= track_keys:
-        return (3, encode_track_v3(track))
+        return (3, encode_track_v3(track, source_encoders))
 
-    return (2, encode_track_v2(track))
+    return (2, encode_track_v2(track, source_encoders))
 
 
-def encode_track_v2(track: Dict[str, Union[Optional[str], bool, int]]) -> str:
+def encode_track_v2(track: Dict[str, Any],
+                    source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]], None]] = MISSING) -> str:
     assert V2_KEYSET <= track.keys()
 
     writer = DataWriter()
@@ -264,13 +275,18 @@ def encode_track_v2(track: Dict[str, Union[Optional[str], bool, int]]) -> str:
     writer.write_byte(version)
     _write_track_common(track, writer)
     writer.write_utf(track['sourceName'])
+
+    if source_encoders is not MISSING and track['sourceName'] in source_encoders:
+        source_encoders[track['sourceName']](writer, track)
+
     writer.write_long(track['position'])
 
     enc = writer.finish()
     return b64encode(enc).decode()
 
 
-def encode_track_v3(track: Dict[str, Union[Optional[str], bool, int]]) -> str:
+def encode_track_v3(track: Dict[str, Any],
+                    source_encoders: Mapping[str, Callable[[DataWriter, Dict[str, Any]], None]] = MISSING) -> str:
     assert V3_KEYSET <= track.keys()
 
     writer = DataWriter()
@@ -280,6 +296,10 @@ def encode_track_v3(track: Dict[str, Union[Optional[str], bool, int]]) -> str:
     writer.write_nullable_utf(track['artworkUrl'])
     writer.write_nullable_utf(track['isrc'])
     writer.write_utf(track['sourceName'])
+
+    if source_encoders is not MISSING and track['sourceName'] in source_encoders:
+        source_encoders[track['sourceName']](writer, track)
+
     writer.write_long(track['position'])
 
     enc = writer.finish()

@@ -26,7 +26,7 @@ def test_pylint():
                                                    'too-many-instance-attributes,protected-access,'
                                                    'too-many-arguments,too-many-public-methods,too-many-branches,'
                                                    'consider-using-with', 'lavalink']
-    pylint.Run(opts, reporter=reporter, do_exit=False)
+    pylint.Run(opts, reporter=reporter, exit=False)
     out = reporter.out.getvalue()
 
     failed = bool(out)
