@@ -265,7 +265,7 @@ class Client(Generic[PlayerT]):
         return next((source for source in self.sources if source.name == source_name), None)
 
     def add_node(self, host: str, port: int, password: str, region: str, name: Optional[str] = None,
-                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True) -> Node:
+                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True, tags: Optional[Dict[str, Any]] = None) -> Node:
         """
         Shortcut for :func:`NodeManager.add_node`.
 
@@ -293,6 +293,9 @@ class Client(Generic[PlayerT]):
         connect: :class:`bool`
             Whether to immediately connect to the node after creating it.
             If ``False``, you must call :func:`Node.connect` if you require WebSocket functionality.
+        tags: Optional[Dict[:class:`str`, Any]]
+            Additional tags to attach to this node. You can use this to store additional metadata
+            that you may need to access later.
 
         Returns
         -------
@@ -300,7 +303,7 @@ class Client(Generic[PlayerT]):
             The created Node instance.
         """
         return self.node_manager.add_node(host, port, password, region, name, ssl,
-                                          session_id, connect)
+                                          session_id, connect, tags)
 
     async def get_local_tracks(self, query: str) -> LoadResult:
         """|coro|
