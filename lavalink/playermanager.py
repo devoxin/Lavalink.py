@@ -140,7 +140,26 @@ class PlayerManager(Generic[PlayerT]):
                *,
                region: Optional[str] = ...,
                endpoint: Optional[str] = ...,
+               node_filter: Optional[Callable[[Node], bool]] = ...) -> PlayerT:
+        ...
+
+    @overload
+    def create(self,
+               guild_id: int,
+               *,
+               region: Optional[str] = ...,
+               endpoint: Optional[str] = ...,
                node: Optional[Node] = ...,
+               cls: Type[CustomPlayerT]) -> CustomPlayerT:
+        ...
+
+    @overload
+    def create(self,
+               guild_id: int,
+               *,
+               region: Optional[str] = ...,
+               endpoint: Optional[str] = ...,
+               node_filter: Optional[Callable[[Node], bool]] = ...,
                cls: Type[CustomPlayerT]) -> CustomPlayerT:
         ...
 
@@ -150,6 +169,7 @@ class PlayerManager(Generic[PlayerT]):
                region: Optional[str] = None,
                endpoint: Optional[str] = None,
                node: Optional[Node] = None,
+               node_filter: Optional[Callable[[Node], bool]] = None,
                cls: Optional[Type[CustomPlayerT]] = None) -> Union[CustomPlayerT, PlayerT]:
         """
         Creates a player if one doesn't exist with the given information.
@@ -177,6 +197,11 @@ class PlayerManager(Generic[PlayerT]):
         node: Optional[:class:`Node`]
             The node to put the player on.
             Defaults to ``None``, which selects the node with the lowest penalty.
+        node_filter: Optional[Callable[[:class:`Node`], :class:`bool`]]
+            A filter to use when selecting nodes this player can be assigned to.
+            This cannot be used with the ``node`` parameter.
+            Nodes are filtered based on the given predicate, and then again based on their penalty score.
+            If no nodes are found after filtering, all available nodes will be considered without filtering.
         cls: Optional[Type[:class:`BasePlayer`]]
             The player class to use when instantiating a new player.
             Defaults to ``None`` which uses the player class provided to :class:`Client`.
@@ -207,7 +232,16 @@ class PlayerManager(Generic[PlayerT]):
         if not issubclass(cls, BasePlayer):  # type: ignore
             raise ValueError('Player must implement BasePlayer.')
 
-        if endpoint:  # Prioritise endpoint over region parameter
+        if node is not None and node_filter is not None:
+            raise ValueError('node and node_filter may not be specified together')
+
+        if node_filter is not None:
+            user_filtered = [n for n in self.client.node_manager.available_nodes if node_filter(n)]
+
+            if user_filtered:
+                node = min(user_filtered, key=lambda node: node.penalty)
+
+        if node is None and endpoint is not None:  # Prioritise endpoint over region parameter
             region = self.client.node_manager.get_region(endpoint)
 
         best_node = node or self.client.node_manager.find_ideal_node(region)
