@@ -308,7 +308,8 @@ class Transport:
         elif event_type == 'WebSocketClosedEvent':
             event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
         else:
-            _log.warning('[Node:%s] Unknown event received of type \'%s\'', self._node.name, event_type)
+            if not self.client.has_listeners(IncomingWebSocketMessage):
+                _log.warning('[Node:%s] Unknown event received of type \'%s\'', self._node.name, event_type)
             return
 
         await self.client._dispatch_event(event)
