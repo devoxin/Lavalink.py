@@ -25,7 +25,7 @@ import logging
 from typing import (TYPE_CHECKING, Callable, Dict, Generic, Iterator, Optional,
                     Tuple, Type, TypeVar, Union, overload)
 
-from .errors import ClientError
+from .errors import ClientError, RequestError
 from .node import Node
 from .player import BasePlayer
 
@@ -237,13 +237,17 @@ class PlayerManager(Generic[PlayerT]):
         guild_id: int
             The guild_id associated with the player to remove.
         """
-        if guild_id not in self.players:
-            return
+        if guild_id in self.players:
+            player = self.players.pop(guild_id)
+            player.cleanup()
 
-        player = self.players.pop(guild_id)
-        player.cleanup()
+            if player.node:
+                await player.node.destroy_player(player._internal_id)
 
-        if player.node:
-            await player.node.destroy_player(player._internal_id)
-
-        _log.debug('Destroyed player with GuildId %d on node \'%s\'', guild_id, player.node.name if player.node else 'UNASSIGNED')
+            _log.debug('Destroyed player with GuildId %d on node \'%s\'', guild_id, player.node.name if player.node else 'UNASSIGNED')
+        else:
+            for node in self.client.node_manager:
+                try:
+                    await node.destroy_player(guild_id)
+                except RequestError:  # Should never happen anyway
+                    pass
