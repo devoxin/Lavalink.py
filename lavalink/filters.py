@@ -164,6 +164,10 @@ class Karaoke(Filter[Dict[str, float]]):
         ...
 
     @overload
+    def update(self, *, filter_band: float):
+        ...
+
+    @overload
     def update(self, *, filter_width: float):
         ...
 
@@ -176,11 +180,31 @@ class Karaoke(Filter[Dict[str, float]]):
         ...
 
     @overload
+    def update(self, *, level: float, filter_band: float):
+        ...
+
+    @overload
     def update(self, *, mono_level: float, filter_width: float):
         ...
 
     @overload
+    def update(self, *, mono_level: float, filter_band: float):
+        ...
+
+    @overload
+    def update(self, *, filter_band: float, filter_width: float):
+        ...
+
+    @overload
     def update(self, *, level: float, mono_level: float, filter_width: float):
+        ...
+
+    @overload
+    def update(self, *, level: float, mono_level: float, filter_band: float):
+        ...
+
+    @overload
+    def update(self, *, level: float, mono_level: float, filter_band: float, filter_width: float):
         ...
 
     def update(self, **kwargs):
