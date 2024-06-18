@@ -69,7 +69,7 @@ class RequestError(Exception):
         self.status: int = status
         self.timestamp: int = response['timestamp']
         self.error: str = response['error']
-        self.message: str = response['message']
+        self.message: str = response.get('message', '')
         self.path: str = response['path']
         self.trace: Optional[str] = response.get('trace', None)
         self.params = params
