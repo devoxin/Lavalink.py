@@ -385,5 +385,5 @@ class Transport:
                                    status=res.status, response=await res.json(), params=kwargs.get('params', {}))
         except (AuthenticationError, RequestError, asyncio.TimeoutError, aiohttp.ClientError):
             raise  # Pass the caught errors back to the caller in their 'original' form.
-        except Exception as original:  # It's not pretty but aiohttp doesn't specify what exceptions can be thrown.
+        except Exception as original:
             raise ClientError from original
