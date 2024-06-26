@@ -59,11 +59,13 @@ class Node:
         The name the :class:`Node` is identified by.
     stats: :class:`Stats`
         The statistics of how the :class:`Node` is performing.
+    tags: Dict[:class:`str`, Any]
+        Additional tags to attach to this node.
     """
-    __slots__ = ('client', 'manager', '_transport', 'region', 'name', 'stats')
+    __slots__ = ('client', 'manager', '_transport', 'region', 'name', 'stats', 'tags')
 
     def __init__(self, manager, host: str, port: int, password: str, region: str, name: Optional[str] = None,
-                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True):
+                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True, tags: Optional[Dict[str, Any]] = None):
         self.client: 'Client' = manager.client
         self.manager: 'NodeManager' = manager
         self._transport = Transport(self, host, port, password, ssl, session_id, connect)
@@ -71,6 +73,7 @@ class Node:
         self.region: str = region
         self.name: str = name or f'{region}-{host}:{port}'
         self.stats: Stats = Stats.empty(self)
+        self.tags: Dict[str, Any] = tags or {}
 
     @property
     def session_id(self) -> Optional[str]:
