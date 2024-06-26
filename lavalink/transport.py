@@ -354,6 +354,9 @@ class Transport:
         if trace is True or self.trace_requests is True:
             kwargs['params'] = {**kwargs.get('params', {}), 'trace': 'true'}
 
+        if path.startswith('/'):
+            path = path[1:]
+
         if versioned:
             request_url = f'{self.http_uri}/{LAVALINK_API_VERSION}/{path}'
         else:
@@ -380,7 +383,7 @@ class Transport:
 
                 raise RequestError('An invalid response was received from the node.',
                                    status=res.status, response=await res.json(), params=kwargs.get('params', {}))
-        except (AuthenticationError, RequestError):
+        except (AuthenticationError, RequestError, asyncio.TimeoutError, aiohttp.ClientError):
             raise  # Pass the caught errors back to the caller in their 'original' form.
         except Exception as original:  # It's not pretty but aiohttp doesn't specify what exceptions can be thrown.
             raise ClientError from original

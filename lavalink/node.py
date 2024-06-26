@@ -614,11 +614,11 @@ class Node:
         ...
 
     @overload
-    async def request(self, method: str, path: str, *, trace: bool = ..., versioned: bool = ...,
+    async def request(self, method: str, path: str, *, trace: bool = ..., versioned: bool = ...,  # type: ignore
                       **kwargs) -> Union[Dict[Any, Any], List[Any], bool]:
         ...
 
-    async def request(self,
+    async def request(self,  # type: ignore
                       method: str,
                       path: str,
                       *,
@@ -669,6 +669,10 @@ class Node:
             If the request was unsuccessful.
         :class:`ClientError`
             If there were any intermediate issues, such as trying to establish a connection but the server is unreachable.
+        :class:`asyncio.TimeoutError`
+            If the request times out.
+        :class:`aiohttp.ClientError`
+            If the request fails for any reason not covered by the above exceptions, but is caught by aiohttp.
 
         Returns
         -------
