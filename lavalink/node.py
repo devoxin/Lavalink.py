@@ -667,12 +667,12 @@ class Node:
             If the provided authorization was invalid.
         :class:`RequestError`
             If the request was unsuccessful.
-        :class:`ClientError`
-            If there were any intermediate issues, such as trying to establish a connection but the server is unreachable.
         :class:`asyncio.TimeoutError`
             If the request times out.
         :class:`aiohttp.ClientError`
             If the request fails for any reason not covered by the above exceptions, but is caught by aiohttp.
+        :class:`ClientError`
+            If there were any intermediate issues, such as trying to establish a connection but the server is unreachable.
 
         Returns
         -------
