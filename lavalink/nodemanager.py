@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
 
 from .errors import ClientError
 from .node import Node
@@ -83,7 +83,7 @@ class NodeManager:
         return [n for n in self.nodes if n.available]
 
     def add_node(self, host: str, port: int, password: str, region: str, name: Optional[str] = None,
-                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True) -> Node:
+                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True, tags: Optional[Dict[str, Any]] = None) -> Node:
         """
         Adds a node to this node manager.
 
@@ -109,6 +109,9 @@ class NodeManager:
         connect: :class:`bool`
             Whether to immediately connect to the node after creating it.
             If ``False``, you must call :func:`Node.connect` if you require WebSocket functionality.
+        tags: Optional[Dict[:class:`str`, Any]]
+            Additional tags to attach to this node. You can use this to store additional metadata
+            that you may need to access later.
 
         Returns
         -------
@@ -116,7 +119,7 @@ class NodeManager:
             The created Node instance.
         """
         node = Node(self, host, port, password, region, name, ssl,
-                    session_id, connect)
+                    session_id, connect, tags)
         self.nodes.append(node)
         return node
 
