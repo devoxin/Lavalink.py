@@ -670,9 +670,9 @@ class Node:
         :class:`asyncio.TimeoutError`
             If the request times out.
         :class:`aiohttp.ClientError`
-            If the request fails for any reason not covered by the above exceptions, but is caught by aiohttp.
+            If the remote server disconnects, or a connection fails to establish etc.
         :class:`ClientError`
-            If there were any intermediate issues, such as trying to establish a connection but the server is unreachable.
+            A catch-all for anything not covered by the above.
 
         Returns
         -------
