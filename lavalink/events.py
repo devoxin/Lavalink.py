@@ -313,11 +313,11 @@ class WebSocketClosedEvent(Event):
     player: :class:`BasePlayer`
         The player whose audio websocket was closed.
     code: :class:`int`
-        The node the player was moved from.
+        The websocket closure code.
     reason: :class:`str`
-        The node the player was moved to.
+        The reason for the websocket closure.
     by_remote: :class:`bool`
-        If the websocket was closed remotely.
+        Whether the websocket was closed by the remote server.
     """
     __slots__ = ('player', 'code', 'reason', 'by_remote')
 
