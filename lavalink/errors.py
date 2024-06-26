@@ -24,23 +24,27 @@ SOFTWARE.
 from typing import Any, Dict, Optional
 
 
-class ClientError(Exception):
+class LavalinkError(Exception):
+    """ Base exception for all errors raised by Lavalink.py. """
+
+
+class ClientError(LavalinkError):
     """ Raised when something goes wrong within the client. """
 
 
-class AuthenticationError(Exception):
+class AuthenticationError(LavalinkError):
     """ Raised when a request fails due to invalid authentication. """
 
 
-class InvalidTrack(Exception):
+class InvalidTrack(LavalinkError):
     """ Raised when an invalid track was passed. """
 
 
-class LoadError(Exception):
+class LoadError(LavalinkError):
     """ Raised when a track fails to load. E.g. if a DeferredAudioTrack fails to find an equivalent. """
 
 
-class RequestError(Exception):
+class RequestError(LavalinkError):
     """
     Raised when a request to the Lavalink server fails.
 
