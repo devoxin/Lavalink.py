@@ -677,7 +677,7 @@ class DefaultPlayer(BasePlayer):
                 self._last_position = last_position  # Ensure that _last_position is correctly set, in case a node sends us bad data.
 
                 await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, position=last_position,
-                                            paused=self.paused, volume=self.volume)
+                                              paused=self.paused, volume=self.volume)
                 self._last_update = int(time() * 1000)
 
             if self.filters:
