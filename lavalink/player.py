@@ -664,27 +664,28 @@ class DefaultPlayer(BasePlayer):
         except (ClientError, RequestError):
             pass
 
-        if self._voice_state:
-            await self._dispatch_voice_update()
+        try:
+            if self._voice_state:
+                await self._dispatch_voice_update()
 
-        if self.current:
-            playable_track = self.current.track
+            if self.current:
+                playable_track = self.current.track
 
-            if isinstance(self.current, DeferredAudioTrack) and playable_track is None:
-                playable_track = await self.current.load(self.client)
+                if isinstance(self.current, DeferredAudioTrack) and playable_track is None:
+                    playable_track = await self.current.load(self.client)
 
-            self._last_position = last_position  # Ensure that _last_position is correctly set, in case a node sends us bad data.
+                self._last_position = last_position  # Ensure that _last_position is correctly set, in case a node sends us bad data.
 
-            await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, position=last_position,
-                                          paused=self.paused, volume=self.volume)
-            self._last_update = int(time() * 1000)
+                await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, position=last_position,
+                                            paused=self.paused, volume=self.volume)
+                self._last_update = int(time() * 1000)
 
-        self._internal_pause = False
+            if self.filters:
+                await self._apply_filters()
 
-        if self.filters:
-            await self._apply_filters()
-
-        await self.client._dispatch_event(NodeChangedEvent(self, old_node, node))
+            await self.client._dispatch_event(NodeChangedEvent(self, old_node, node))
+        finally:
+            self._internal_pause = False
 
     def __repr__(self):
         return f'<DefaultPlayer volume={self.volume} current={self.current}>'

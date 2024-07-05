@@ -291,6 +291,9 @@ class Transport:
 
             assert player.current is not None
             event = TrackStartEvent(player, player.current)
+
+            if hasattr(player, '_internal_pause'):
+                player._internal_pause = False  # type: ignore
         elif event_type == 'TrackEndEvent':
             end_reason = EndReason.from_str(data['reason'])
             event = TrackEndEvent(player, player.current, end_reason)
