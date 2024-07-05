@@ -29,6 +29,7 @@ from .node import Node
 
 if TYPE_CHECKING:
     from .client import Client
+    from .abc import BasePlayer
 
 _log = logging.getLogger(__name__)
 DEFAULT_REGIONS = {
@@ -231,10 +232,13 @@ class NodeManager:
         return best_node
 
     async def _handle_node_ready(self, node: Node):
+        player: 'BasePlayer'
+
         for player in self._player_queue:
             await player.change_node(node)
-            original_node_name = player._original_node.name if player._original_node else '[no node]'
-            _log.debug('Moved player %d from node \'%s\' to node \'%s\'', player.guild_id, original_node_name, node.name)
+            last_node = player._original_node or player.node
+            last_node_name = last_node.name if last_node else '[no node]'
+            _log.debug('Moved player %d from node \'%s\' to node \'%s\'', player.guild_id, last_node_name, node.name)
 
         if self._connect_back:
             for player in node._original_players:
