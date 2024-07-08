@@ -26,7 +26,7 @@ the Lavalink server.
 """
 from enum import Enum as _Enum
 from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
-                    Union)
+                    Union, cast)
 
 from .errors import InvalidTrack
 
@@ -113,7 +113,7 @@ class AudioTrack:
     __slots__ = ('raw', 'track', 'identifier', 'is_seekable', 'author', 'duration', 'is_stream', 'title', 'uri',
                  'artwork_url', 'isrc', 'position', 'source_name', 'plugin_info', 'user_data', 'extra')
 
-    def __init__(self, data: dict, requester: int = 0, **extra):
+    def __init__(self, data: Union['AudioTrack', Dict[str, Union[Optional[str], bool, int]]], requester: int = 0, **extra):
         if isinstance(data, AudioTrack):
             extra = {**data.extra, **extra}
             data = data.raw
@@ -122,20 +122,20 @@ class AudioTrack:
         info = data.get('info', data)
 
         try:
-            self.track: Optional[str] = data.get('encoded')
-            self.identifier: str = info['identifier']
-            self.is_seekable: bool = info['isSeekable']
-            self.author: str = info['author']
-            self.duration: int = info['length']
-            self.is_stream: bool = info['isStream']
-            self.title: str = info['title']
-            self.uri: str = info['uri']
-            self.artwork_url: Optional[str] = info.get('artworkUrl')
-            self.isrc: Optional[str] = info.get('isrc')
-            self.position: int = info.get('position', 0)
-            self.source_name: str = info.get('sourceName', 'unknown')
-            self.plugin_info: Optional[Dict[str, Any]] = data.get('pluginInfo')
-            self.user_data: Optional[Dict[str, Any]] = data.get('userData')
+            self.track: Optional[str] = data.get('encoded')  # type: ignore
+            self.identifier: str = info['identifier']  # type: ignore
+            self.is_seekable: bool = info['isSeekable']  # type: ignore
+            self.author: str = info['author']  # type: ignore
+            self.duration: int = info['length']  # type: ignore
+            self.is_stream: bool = info['isStream']  # type: ignore
+            self.title: str = info['title']  # type: ignore
+            self.uri: str = info['uri']  # type: ignore
+            self.artwork_url: Optional[str] = info.get('artworkUrl')  # type: ignore
+            self.isrc: Optional[str] = info.get('isrc')  # type: ignore
+            self.position: int = info.get('position', 0)  # type: ignore
+            self.source_name: str = info.get('sourceName', 'unknown')  # type: ignore
+            self.plugin_info: Optional[Dict[str, Any]] = data.get('pluginInfo')  # type: ignore
+            self.user_data: Optional[Dict[str, Any]] = data.get('userData')  # type: ignore
             self.extra: Dict[str, Any] = {**extra, 'requester': requester}
         except KeyError as error:
             raise InvalidTrack(f'Cannot build a track from partial data! (Missing key: {error.args[0]})') from error
