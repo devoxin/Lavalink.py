@@ -362,7 +362,7 @@ class Client(Generic[PlayerT]):
                 if load_result:
                     return load_result
 
-        node = node or random.choice(self.node_manager.nodes)
+        node = node or random.choice(self.node_manager.available_nodes) or random.choice(self.node_manager.nodes)
         return await node.get_tracks(query)
 
     async def decode_track(self, track: str, node: Optional[Node] = None) -> AudioTrack:
@@ -381,7 +381,7 @@ class Client(Generic[PlayerT]):
         -------
         :class:`AudioTrack`
         """
-        node = node or random.choice(self.node_manager.nodes)
+        node = node or random.choice(self.node_manager.available_nodes) or random.choice(self.node_manager.nodes)
         return await node.decode_track(track)
 
     async def decode_tracks(self, tracks: List[str], node: Optional[Node] = None) -> List[AudioTrack]:
@@ -401,7 +401,7 @@ class Client(Generic[PlayerT]):
         List[:class:`AudioTrack`]
             A list of decoded :class:`AudioTrack`.
         """
-        node = node or random.choice(self.node_manager.nodes)
+        node = node or random.choice(self.node_manager.available_nodes) or random.choice(self.node_manager.nodes)
         return await node.decode_tracks(tracks)
 
     async def voice_update_handler(self, data: Dict[str, Any]):

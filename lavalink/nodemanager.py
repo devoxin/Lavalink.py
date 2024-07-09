@@ -75,11 +75,7 @@ class NodeManager:
     def available_nodes(self) -> List[Node]:
         """
         Returns a list of available nodes.
-
-        .. deprecated:: 5.0.0
-            As of Lavalink server 4.0.0, a WebSocket connection is no longer required to operate a
-            node. As a result, this property is no longer considered useful as all nodes are considered
-            available.
+        A node is considered available if it has an open WebSocket connection.
         """
         return [n for n in self.nodes if n.available]
 
