@@ -25,12 +25,14 @@ from asyncio import Task
 from collections import defaultdict
 from time import time
 from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
-                    Union, overload)
+                    Union, cast, overload)
 
 from .abc import BasePlayer, Filter
 from .common import MISSING
 from .errors import AuthenticationError, ClientError, RequestError
-from .server import AudioTrack, LoadResult
+from .server import (AudioTrack, LoadResult, RawInfo, RawPlayer,
+                     RawPlayerVoiceState, RawRouteplanner, RawSession,
+                     RawStats)
 from .stats import Stats
 from .transport import Transport
 
@@ -227,17 +229,23 @@ class Node:
         response = await self.request('POST', 'decodetracks', json=tracks)
         return list(map(AudioTrack, response))  # type: ignore
 
-    async def get_routeplanner_status(self) -> Dict[str, Any]:
+    async def get_routeplanner_status(self) -> Optional[RawRouteplanner]:
         """|coro|
 
         Retrieves the status of the target node's routeplanner.
 
         Returns
         -------
-        Dict[str, Any]
-            A dict representing the routeplanner information.
+        Optional[:class:`RawRouteplanner`]
+            A dict representing the routeplanner information, or ``None`` if
+            the routeplanner is not enabled on the server.
         """
-        return await self.request('GET', 'routeplanner/status')  # type: ignore
+        response = await self.request('GET', 'routeplanner/status')
+
+        if response is True:  # HTTP status 204
+            return None
+
+        return cast(RawRouteplanner, response)
 
     async def routeplanner_free_address(self, address: str) -> bool:
         """|coro|
@@ -274,29 +282,29 @@ class Node:
         except RequestError:
             return False
 
-    async def get_info(self) -> Dict[str, Any]:
+    async def get_info(self) -> RawInfo:
         """|coro|
 
         Retrieves information about this node.
 
         Returns
         -------
-        Dict[str, Any]
+        :class:`RawInfo`
             A raw response containing information about the node.
         """
-        return await self.request('GET', 'info')  # type: ignore
+        return cast(RawInfo, await self.request('GET', 'info'))
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> RawStats:
         """|coro|
 
         Retrieves statistics about this node.
 
         Returns
         -------
-        Dict[str, Any]
+        :class:`RawStats`
             A raw response containing information about the node.
         """
-        return await self.request('GET', 'stats')  # type: ignore
+        return cast(RawStats, await self.request('GET', 'stats'))
 
     async def get_version(self) -> str:
         """|coro|
@@ -310,7 +318,7 @@ class Node:
         """
         return await self.request('GET', 'version', to=str, versioned=False)
 
-    async def get_player(self, guild_id: Union[str, int]) -> Dict[str, Any]:
+    async def get_player(self, guild_id: Union[str, int]) -> RawPlayer:
         """|coro|
 
         Retrieves a player from the node.
@@ -318,8 +326,7 @@ class Node:
 
         Returns
         -------
-        Dict[str, Any]
-            A raw player object.
+        :class:`RawPlayer`
         """
         session_id = self.session_id
 
@@ -328,7 +335,7 @@ class Node:
 
         return await self.request('GET', f'sessions/{session_id}/players/{guild_id}')  # type: ignore
 
-    async def get_players(self) -> List[Dict[str, Any]]:
+    async def get_players(self) -> List[RawPlayer]:
         """|coro|
 
         Retrieves a list of players from the node.
@@ -336,8 +343,7 @@ class Node:
 
         Returns
         -------
-        List[Dict[str, Any]]
-            A list of raw player objects.
+        List[:class:`RawPlayer`]
         """
         session_id = self.session_id
 
@@ -357,9 +363,9 @@ class Node:
                             volume: int = ...,
                             paused: bool = ...,
                             filters: Optional[List[Filter]] = ...,
-                            voice_state: Dict[str, Any] = ...,
+                            voice_state: RawPlayerVoiceState = ...,
                             user_data: Dict[str, Any] = ...,
-                            **kwargs) -> Optional[Dict[str, Any]]:
+                            **kwargs) -> Optional[RawPlayer]:
         ...
 
     @overload
@@ -373,9 +379,9 @@ class Node:
                             volume: int = ...,
                             paused: bool = ...,
                             filters: Optional[List[Filter]] = ...,
-                            voice_state: Dict[str, Any] = ...,
+                            voice_state: RawPlayerVoiceState = ...,
                             user_data: Dict[str, Any] = ...,
-                            **kwargs) -> Optional[Dict[str, Any]]:
+                            **kwargs) -> Optional[RawPlayer]:
         ...
 
     @overload
@@ -388,9 +394,9 @@ class Node:
                             volume: int = ...,
                             paused: bool = ...,
                             filters: Optional[List[Filter]] = ...,
-                            voice_state: Dict[str, Any] = ...,
+                            voice_state: RawPlayerVoiceState = ...,
                             user_data: Dict[str, Any] = ...,
-                            **kwargs) -> Optional[Dict[str, Any]]:
+                            **kwargs) -> Optional[RawPlayer]:
         ...
 
     async def update_player(self,  # pylint: disable=too-many-locals
@@ -403,9 +409,9 @@ class Node:
                             volume: int = MISSING,
                             paused: bool = MISSING,
                             filters: Optional[List[Filter]] = MISSING,
-                            voice_state: Dict[str, Any] = MISSING,
+                            voice_state: RawPlayerVoiceState = MISSING,
                             user_data: Dict[str, Any] = MISSING,
-                            **kwargs) -> Optional[Dict[str, Any]]:
+                            **kwargs) -> Optional[RawPlayer]:
         """|coro|
 
         .. _response object: https://lavalink.dev/api/rest#Player
@@ -452,7 +458,7 @@ class Node:
         filters: Optional[List[:class:`Filter`]]
             The filters to apply to the player.
             Specify ``None`` or ``[]`` to clear.
-        voice_state: Dict[str, Any]
+        voice_state: :class:`RawPlayerVoiceState`
             The new voice state of the player.
         user_data: Dict[str, Any]
             The user data to attach to the track, if one is provided.
@@ -463,7 +469,7 @@ class Node:
 
         Returns
         -------
-        Optional[Dict[str, Any]]
+        Optional[:class:`RawPlayer`]
             The raw player update `response object`_, or ``None`` , if a request wasn't made due to an
             empty payload.
         """
@@ -563,7 +569,7 @@ class Node:
 
         return await self.request('DELETE', f'sessions/{session_id}/players/{guild_id}')  # type: ignore
 
-    async def update_session(self, resuming: bool = MISSING, timeout: int = MISSING) -> Optional[Dict[str, Any]]:
+    async def update_session(self, resuming: bool = MISSING, timeout: int = MISSING) -> Optional[RawSession]:
         """|coro|
 
         Update the session for this node.
@@ -577,7 +583,7 @@ class Node:
 
         Returns
         -------
-        Optional[Dict[str, Any]]
+        Optional[:class:`RawSession`]
             A raw response from the node containing the current session configuration, or ``None``
             if a request wasn't made due to an empty payload.
         """

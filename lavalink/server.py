@@ -25,8 +25,8 @@ This module serves to contain all entities which are deserialized using response
 the Lavalink server.
 """
 from enum import Enum as _Enum
-from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
-                    Union, cast)
+from typing import (TYPE_CHECKING, Any, Dict, List, Literal, Optional, Type,
+                    TypedDict, TypeVar, Union)
 
 from .errors import InvalidTrack
 
@@ -55,6 +55,9 @@ class Enum(_Enum):
                 return cls(other)
             except ValueError as error:
                 raise ValueError(f'{other} is not a valid {cls.__name__} enum!') from error
+
+    def __str__(self):
+        return self.value
 
 
 class AudioTrack:
@@ -261,6 +264,12 @@ class LoadResultError:
         self.severity: Severity = Severity.from_str(error['severity'])
         self.cause: str = error['cause']
 
+    def __str__(self):
+        return f'{self.message}: {self.cause} ({self.severity})'
+
+    def __repr__(self):
+        return f'<LoadResultError severity={self.severity} message={self.message} cause={self.cause}>'
+
 
 class LoadResult:
     """
@@ -380,3 +389,108 @@ class Plugin:
 
     def __repr__(self):
         return f'<Plugin name={self.name} version={self.version}>'
+
+
+class RawPlugin(TypedDict):
+    name: str
+    version: str
+
+
+class RawPlayerState(TypedDict):
+    time: int
+    position: int
+    connected: bool
+    ping: int
+
+
+class RawPlayerVoiceState(TypedDict):
+    token: str
+    endpoint: str
+    sessionId: str
+
+
+class RawPlayer(TypedDict):
+    guildId: str
+    track: Optional[Dict[str, Any]]  # TODO
+    volume: int
+    paused: bool
+    state: RawPlayerState
+    voice: RawPlayerVoiceState
+    filters: Dict[str, Any]  # TODO, however the keys are NotRequired (>=3.11)
+
+
+class RawIpBlock(TypedDict):
+    type: Literal['Inet4Address', 'Inet6Address']
+    size: str
+
+
+class RawFailingAddress(TypedDict):
+    failingAddress: str
+    failingTimestamp: int
+    failingTime: str
+
+
+class RawRouteplannerDetails(TypedDict):
+    ipBlock: RawIpBlock
+    failingAddresses: List[RawFailingAddress]
+    rotateIndex: str
+    ipIndex: str
+    currentAddress: str
+    currentAddressIndex: str
+    blockIndex: str
+
+
+class RawVersion(TypedDict):
+    semver: str
+    major: int
+    minor: int
+    patch: int
+    preRelease: Optional[str]
+    build: Optional[str]
+
+
+class RawGit(TypedDict):
+    branch: str
+    commit: str
+    commitTime: int
+
+
+class RawInfo(TypedDict):
+    version: RawVersion
+    buildTime: int
+    git: RawGit
+    jvm: str
+    lavaplayer: str
+    sourceManagers: List[str]
+    filters: List[str]
+    plugins: List[RawPlugin]
+
+
+class RawMemory(TypedDict):
+    free: int
+    used: int
+    allocated: int
+    reservable: int
+
+
+class RawCpu(TypedDict):
+    cores: int
+    systemLoad: float
+    lavalinkLoad: float
+
+
+class RawStats(TypedDict):
+    players: int
+    playingPlayers: int
+    uptime: int
+    memory: RawMemory
+    cpu: RawCpu
+    frameStats: Literal[None]
+
+
+class RawSession(TypedDict):
+    resuming: bool
+    timeout: int
+
+
+RawRouteplanner = TypedDict('RawRouteplanner', {'class': str, 'details': RawRouteplannerDetails})
