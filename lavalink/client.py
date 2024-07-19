@@ -44,7 +44,6 @@ _log = logging.getLogger(__name__)
 
 PlayerT = TypeVar('PlayerT', bound=BasePlayer)
 EventT = TypeVar('EventT', bound=Event)
-ClassT = TypeVar('ClassT', bound=object)
 
 
 class Client(Generic[PlayerT]):
