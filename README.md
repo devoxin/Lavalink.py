@@ -7,7 +7,7 @@
 <img align="right" src="https://raw.githubusercontent.com/devoxin/Lavalink.py/master/.github/assets/library_icon.png" height="150" width="150">
 
 # Lavalink.py
-[![Python](https://img.shields.io/badge/Python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/428eebed5a2e467fb038eacfa1d92e62)](https://www.codacy.com/gh/Devoxin/Lavalink.py/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Devoxin/Lavalink.py&amp;utm_campaign=Badge_Grade) [![License](https://img.shields.io/github/license/Devoxin/Lavalink.py.svg)](LICENSE) [![Documentation Status](https://readthedocs.org/projects/lavalink/badge/?version=development)](https://lavalink.readthedocs.io/en/development/?badge=development)
+[![Python](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-blue.svg)](https://www.python.org) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/428eebed5a2e467fb038eacfa1d92e62)](https://www.codacy.com/gh/Devoxin/Lavalink.py/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Devoxin/Lavalink.py&amp;utm_campaign=Badge_Grade) [![License](https://img.shields.io/github/license/Devoxin/Lavalink.py.svg)](LICENSE) [![Documentation Status](https://readthedocs.org/projects/lavalink/badge/?version=development)](https://lavalink.readthedocs.io/en/development/?badge=development)
 
 Lavalink.py is a wrapper for [Lavalink] which abstracts away most of the code necessary to use Lavalink, allowing for easier integration into your projects, while still promising full API coverage and powerful tools to get the most out of it.
 
