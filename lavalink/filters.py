@@ -28,16 +28,17 @@ SOFTWARE.
 from typing import Any, Dict, List, Tuple, overload
 
 from .abc import Filter
+from .common import MISSING
 
 
 class Volume(Filter[float]):
     """
     Adjusts the audio output volume.
     """
-    def __init__(self):
-        super().__init__(1.0)
+    def __init__(self, volume: float = 1.0):
+        super().__init__(volume)
 
-    def update(self, *, volume: float):
+    def update(self, *, volume: float):  # type: ignore
         """
         Modifies the player volume.
         This uses LavaDSP's volume filter, rather than Lavaplayer's native
@@ -70,8 +71,8 @@ class Equalizer(Filter[List[float]]):
     Allows modifying the gain of 15 bands, to boost or reduce the volume of specific frequency ranges.
     For example, this could be used to boost the low (bass) frequencies to act as a 'bass boost'.
     """
-    def __init__(self):
-        super().__init__([0.0] * 15)
+    def __init__(self, gains: List[float] = MISSING):
+        super().__init__([0.0] * 15 if gains is MISSING else gains)
 
     @overload
     def update(self, *, bands: List[Tuple[int, float]]):
@@ -152,8 +153,9 @@ class Karaoke(Filter[Dict[str, float]]):
     Allows for isolating a frequency range (commonly, the vocal range).
     Useful for karaoke/sing-along.
     """
-    def __init__(self):
-        super().__init__({'level': 1.0, 'monoLevel': 1.0, 'filterBand': 220.0, 'filterWidth': 100.0})
+    def __init__(self, level: float = 1.0, mono_level: float = 1.0,
+                 filter_band: float = 220.0, filter_width: float = 100.0):
+        super().__init__({'level': level, 'monoLevel': mono_level, 'filterBand': filter_band, 'filterWidth': filter_width})
 
     @overload
     def update(self, *, level: float):
@@ -244,8 +246,8 @@ class Timescale(Filter[Dict[str, float]]):
     """
     Allows speeding up/slowing down the audio, adjusting the pitch and playback rate.
     """
-    def __init__(self):
-        super().__init__({'speed': 1.0, 'pitch': 1.0, 'rate': 1.0})
+    def __init__(self, speed: float = 1.0, pitch: float = 1.0, rate: float = 1.0):
+        super().__init__({'speed': speed, 'pitch': pitch, 'rate': rate})
 
     @overload
     def update(self, *, speed: float):
@@ -332,8 +334,8 @@ class Tremolo(Filter[Dict[str, float]]):
     """
     Applies a 'tremble' effect to the audio.
     """
-    def __init__(self):
-        super().__init__({'frequency': 2.0, 'depth': 0.5})
+    def __init__(self, frequency: float = 2.0, depth: float = 0.5):
+        super().__init__({'frequency': frequency, 'depth': depth})
 
     @overload
     def update(self, *, frequency: float):
@@ -392,8 +394,8 @@ class Vibrato(Filter[Dict[str, float]]):
     """
     Applies a 'wobble' effect to the audio.
     """
-    def __init__(self):
-        super().__init__({'frequency': 2.0, 'depth': 0.5})
+    def __init__(self, frequency: float = 2.0, depth: float = 0.5):
+        super().__init__({'frequency': frequency, 'depth': depth})
 
     @overload
     def update(self, *, frequency: float):
@@ -453,10 +455,10 @@ class Rotation(Filter[float]):
     Phases the audio in and out of the left and right channels in an alternating manner.
     This is commonly used to create the 8D effect.
     """
-    def __init__(self):
-        super().__init__(0.0)
+    def __init__(self, rotation_hz: float = 0.0):
+        super().__init__(rotation_hz)
 
-    def update(self, *, rotation_hz: float):
+    def update(self, *, rotation_hz: float):  # type: ignore
         """
         Note
         ----
@@ -480,7 +482,7 @@ class Rotation(Filter[float]):
 
         self.values = rotation_hz
 
-    def serialize(self) -> Dict[str, Dict[str, float]]:
+    def serialize(self) -> Dict[str, Dict[str, float]]:  # type: ignore
         return {'rotation': {'rotationHz': self.values}}
 
 
@@ -489,10 +491,10 @@ class LowPass(Filter[float]):
     Applies a low-pass effect to the audio, whereby only low frequencies can pass,
     effectively cutting off high frequencies meaning more emphasis is put on lower frequencies.
     """
-    def __init__(self):
-        super().__init__(20.0)
+    def __init__(self, smoothing: float = 20.0):
+        super().__init__(smoothing)
 
-    def update(self, *, smoothing: float):
+    def update(self, *, smoothing: float):  # type: ignore
         """
         Note
         ----
@@ -516,7 +518,7 @@ class LowPass(Filter[float]):
 
         self.values = smoothing
 
-    def serialize(self) -> Dict[str, Dict[str, float]]:
+    def serialize(self) -> Dict[str, Dict[str, float]]:  # type: ignore
         return {'lowPass': {'smoothing': self.values}}
 
 
@@ -525,8 +527,10 @@ class ChannelMix(Filter[Dict[str, float]]):
     Allows passing the audio from one channel to the other, or isolating individual
     channels.
     """
-    def __init__(self):
-        super().__init__({'leftToLeft': 1.0, 'leftToRight': 0.0, 'rightToLeft': 0.0, 'rightToRight': 1.0})
+    def __init__(self, left_to_left: float = 1.0, left_to_right: float = 0.0,
+                 right_to_left: float = 0.0, right_to_right: float = 0.0):
+        super().__init__({'leftToLeft': left_to_left, 'leftToRight': left_to_right,
+                          'rightToLeft': right_to_left, 'rightToRight': right_to_right})
 
     def update(self, **kwargs):
         """
@@ -597,9 +601,11 @@ class Distortion(Filter[Dict[str, float]]):
     """
     As the name suggests, this distorts the audio.
     """
-    def __init__(self):
-        super().__init__({'sinOffset': 0.0, 'sinScale': 1.0, 'cosOffset': 0.0, 'cosScale': 1.0,
-                          'tanOffset': 0.0, 'tanScale': 1.0, 'offset': 0.0, 'scale': 1.0})
+    def __init__(self, sin_offset: float = 0.0, sin_scale: float = 1.0, cos_offset: float = 0.0,
+                 cos_scale: float = 1.0, tan_offset: float = 0.0, tan_scale: float = 1.0, offset: float = 0.0,
+                 scale: float = 1.0):
+        super().__init__({'sinOffset': sin_offset, 'sinScale': sin_scale, 'cosOffset': cos_offset, 'cosScale': cos_scale,
+                          'tanOffset': tan_offset, 'tanScale': tan_scale, 'offset': offset, 'scale': scale})
 
     def update(self, **kwargs):
         """
