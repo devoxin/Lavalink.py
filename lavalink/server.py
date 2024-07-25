@@ -115,9 +115,9 @@ class AudioTrack:
 
     def __init__(self, data: Union['AudioTrack', Dict[str, Union[Optional[str], bool, int]]], requester: int = 0, **extra):
         if isinstance(data, AudioTrack):
+            requester = requester or cast(AudioTrack, data).requester
             extra = {**data.extra, **extra}
             data = data.raw
-            requester = requester or cast(AudioTrack, data).requester
 
         self.raw: Dict[str, Union[Optional[str], bool, int]] = data
         info = data.get('info', data)
