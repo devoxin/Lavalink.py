@@ -2,8 +2,7 @@
 [Lavalink Releases]: https://github.com/lavalink-devs/Lavalink/releases/
 [Lavalink Example Config]: https://github.com/lavalink-devs/Lavalink/blob/master/LavalinkServer/application.yml.example/
 [Lavaplayer]: https://github.com/lavalink-devs/lavaplayer
-[Documentation]: https://lavalink.readthedocs.io/en/master/
-[Latest Docs]: https://lavalink.readthedocs.io/en/latest/
+[Documentation]: https://lavalink.readthedocs.io/en/development/
 
 <img align="right" src="https://raw.githubusercontent.com/devoxin/Lavalink.py/master/.github/assets/library_icon.png" height="150" width="150">
 
@@ -48,4 +47,4 @@ It is highly recommended that you invest in a dedicated server or a [VPS](https:
 ## Need Further Help?
 [Discord Server](https://discord.gg/SbJXU9s)
 
-[Documentation] or [Latest Docs]
+[Documentation]
