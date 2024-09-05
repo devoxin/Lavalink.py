@@ -43,8 +43,8 @@ if TYPE_CHECKING:
 _log = logging.getLogger(__name__)
 CLOSE_TYPES = (
     aiohttp.WSMsgType.CLOSE,
-    # aiohttp.WSMsgType.CLOSING,
-    # aiohttp.WSMsgType.CLOSED
+    aiohttp.WSMsgType.CLOSING,
+    aiohttp.WSMsgType.CLOSED
 )
 MESSAGE_QUEUE_MAX_SIZE = 25
 LAVALINK_API_VERSION = 'v4'
@@ -208,6 +208,7 @@ class Transport:
             if msg.type == aiohttp.WSMsgType.ERROR:
                 exc = self._ws.exception()
                 _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
+                break
 
             if msg.type == aiohttp.WSMsgType.TEXT and msg.data is not None:
                 _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
