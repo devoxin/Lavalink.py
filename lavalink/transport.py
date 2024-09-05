@@ -184,8 +184,8 @@ class Transport:
 
                     self._message_queue.clear()
 
-            self._read_task = asyncio.create_task(self._listen())
-            break
+                self._read_task = asyncio.create_task(self._listen())
+                break
 
     async def _listen(self):
         """ Listens for websocket messages. """
