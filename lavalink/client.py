@@ -23,12 +23,11 @@ SOFTWARE.
 """
 import asyncio
 import inspect
-import itertools
 import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import (Any, Callable, Dict, Generic, List, Optional, Sequence, Set, Tuple,
+from typing import (Any, Callable, Coroutine, Dict, Generic, List, Optional, Sequence, Set, Tuple,
                     Type, TypeVar, Union)
 
 import aiohttp
@@ -447,9 +446,8 @@ class Client(Generic[PlayerT]):
         """
         return len(self._event_hooks['Generic']) > 0 or len(self._event_hooks[event.__name__]) > 0
 
-    async def _dispatch_event(self, event: Event):
-        """|coro|
-
+    def _dispatch_event(self, event: Event):
+        """
         Dispatches the given event to all registered hooks.
 
         Parameters
@@ -463,15 +461,19 @@ class Client(Generic[PlayerT]):
         if not generic_hooks and not targeted_hooks:
             return
 
+        hooks = generic_hooks + targeted_hooks
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.__real_dispatch(event, hooks))
+
+    async def __real_dispatch(self, event: Event, hooks: List[Callable[[Event], Coroutine[Any, Any, Any]]]):
         async def _hook_wrapper(hook, event):
             try:
                 await hook(event)
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('Event hook \'%s\' encountered an exception!', hook.__name__)
 
-        tasks = [_hook_wrapper(hook, event) for hook in itertools.chain(generic_hooks, targeted_hooks)]
+        tasks = [_hook_wrapper(hook, event) for hook in hooks]
         await asyncio.gather(*tasks)
-
         _log.debug('Dispatched \'%s\' to all registered hooks', type(event).__name__)
 
     def __repr__(self):

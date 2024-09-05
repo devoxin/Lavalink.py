@@ -292,7 +292,7 @@ class DefaultPlayer(BasePlayer):
         if not track:
             if not self.queue:
                 await self.stop()  # Also sets current to None.
-                await self.client._dispatch_event(QueueEndEvent(self))
+                self.client._dispatch_event(QueueEndEvent(self))
                 return
 
             pop_at = randrange(len(self.queue)) if self.shuffle else 0
@@ -619,7 +619,7 @@ class DefaultPlayer(BasePlayer):
             try:
                 await self.play()
             except RequestError as error:
-                await self.client._dispatch_event(PlayerErrorEvent(self, error))
+                self.client._dispatch_event(PlayerErrorEvent(self, error))
                 _log.exception('[DefaultPlayer:%d] Encountered a request error whilst starting a new track.', self.guild_id)
 
     async def update_state(self, state: dict):
@@ -683,7 +683,7 @@ class DefaultPlayer(BasePlayer):
             if self.filters:
                 await self._apply_filters()
 
-            await self.client._dispatch_event(NodeChangedEvent(self, old_node, node))
+            self.client._dispatch_event(NodeChangedEvent(self, old_node, node))
         finally:
             self._internal_pause = False
 
