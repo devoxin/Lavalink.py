@@ -198,7 +198,6 @@ class Transport:
 
         while True:
             msg = await self._ws.receive()
-            _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
 
             if msg.type in CLOSE_TYPES:
                 _log.debug('[Node:%s] Received close frame with code %d.', self._node.name, msg.data)
@@ -211,6 +210,8 @@ class Transport:
                 _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
 
             if msg.type == aiohttp.WSMsgType.TEXT and msg.data is not None:
+                _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
+
                 try:
                     await self._handle_message(msg.json())
                 except Exception:  # pylint: disable=W0718
