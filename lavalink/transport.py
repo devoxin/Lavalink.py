@@ -155,22 +155,20 @@ class Transport:
                 self._ws = await self._session.ws_connect(f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket',
                                                           headers=headers,
                                                           heartbeat=60)
-            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as error:
-                if isinstance(error, aiohttp.ClientConnectorError):
-                    _log.warning('[Node:%s] Invalid response received; is the server running on the correct port?',
-                                 self._node.name)
-                elif isinstance(error, aiohttp.WSServerHandshakeError):
-                    if error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
-                        _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.',
-                                     self._node.name)
-                        # We shouldn't try to establish any more connections as correcting this particular error
-                        # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
-                        # would be futile, and a waste of resources.
-                    else:
-                        _log.warning('[Node:%s] Received code \'%d\' (expected \'101\'). Check your server\'s ports and try again.',
-                                     self._node.name, error.status)
+            except aiohttp.WSServerHandshakeError as handshake_error:
+                if handshake_error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
+                    _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.', self._node.name)
+                    # We shouldn't try to establish any more connections as correcting this particular error
+                    # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
+                    # would be futile, and a waste of resources.
+                else:
+                    _log.warning('[Node:%s] Received code \'%d\' (expected \'101\'). Check your server\'s ports and try again.',
+                                 self._node.name, handshake_error.status)
 
-                    return
+                return
+            except Exception as exc:  # pylint: disable=W0718
+                if isinstance(exc, aiohttp.ClientConnectorError):
+                    _log.warning('[Node:%s] Invalid response received; is the server running on the correct port?', self._node.name)
                 else:
                     _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink', self._node.name)
 
@@ -200,7 +198,7 @@ class Transport:
             msg = await self._ws.receive()
 
             if msg.type in CLOSE_TYPES:
-                _log.debug('[Node:%s] Received close frame with code %d.', self._node.name, msg.data)
+                _log.debug('[Node:%s] Received close frame with code %s.', self._node.name, msg.data)
                 close_code = msg.data
                 close_reason = msg.extra
                 break
