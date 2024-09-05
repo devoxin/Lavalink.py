@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 
 _log = logging.getLogger(__name__)
 CLOSE_TYPES = (
-    aiohttp.WSMsgType.CLOSE,
+    # aiohttp.WSMsgType.CLOSE,
     aiohttp.WSMsgType.CLOSING,
     aiohttp.WSMsgType.CLOSED
 )
@@ -198,9 +198,9 @@ class Transport:
             msg = await self._ws.receive()
 
             if msg.type in CLOSE_TYPES:
-                _log.debug('[Node:%s] Received close frame with code %s.', self._node.name, msg.data)
                 close_code = msg.data
                 close_reason = msg.extra
+                _log.debug('[Node:%s] Received close frame with code %s.', self._node.name, close_code)
                 break
 
             if msg.type == aiohttp.WSMsgType.ERROR:
