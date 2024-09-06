@@ -52,12 +52,14 @@ LAVALINK_API_VERSION = 'v4'
 
 class Transport:
     """ The class responsible for handling connections to a Lavalink server. """
-    __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', 'trace_requests',
+    __slots__ = ('client', '_node', '_loop', '_session', '_ws', '_message_queue', 'trace_requests',
                  '_host', '_port', '_password', '_ssl', 'session_id', '_read_task', '_destroyed')
 
-    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str], connect: bool = True):
+    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str],
+                 connect: bool = True):
         self.client: 'Client' = node.client
         self._node: 'Node' = node
+        self._loop = asyncio.get_event_loop()
 
         self._session: aiohttp.ClientSession = self.client._session
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
@@ -115,8 +117,7 @@ class Transport:
             except Exception:  # pylint: disable=W0718
                 pass
 
-        loop = asyncio.get_event_loop()
-        return loop.create_task(self._connect())
+        return self._loop.create_task(self._connect())
 
     async def destroy(self):
         """|coro|
@@ -184,7 +185,7 @@ class Transport:
 
                     self._message_queue.clear()
 
-                self._read_task = asyncio.create_task(self._listen())
+                self._read_task = self._loop.create_task(self._listen())
                 break
 
     async def _listen(self):
@@ -210,11 +211,7 @@ class Transport:
 
             if msg.type == aiohttp.WSMsgType.TEXT and msg.data is not None:
                 _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
-
-                try:
-                    await self._handle_message(msg.json())
-                except Exception:  # pylint: disable=W0718
-                    _log.exception('[Node:%s] Unexpected error occurred whilst processing websocket message', self._node.name)
+                self._loop.create_task(self._handle_message_safe(msg))
 
         if close_code is None:
             ws_close_code = self._ws.close_code
@@ -227,6 +224,12 @@ class Transport:
         await self._node.manager._handle_node_disconnect(self._node)
         self.client._dispatch_event(NodeDisconnectedEvent(self._node, close_code, close_reason))
         self.connect()
+
+    async def _handle_message_safe(self, msg: aiohttp.WSMessage):
+        try:
+            await self._handle_message(msg.json())
+        except Exception:  # pylint: disable=W0718
+            _log.exception('[Node:%s] Unexpected error occurred whilst processing websocket message', self._node.name)
 
     async def _handle_message(self, data: Union[Dict[Any, Any], List[Any]]):
         """
