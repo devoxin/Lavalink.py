@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 
 _log = logging.getLogger(__name__)
 CLOSE_TYPES = (
-    aiohttp.WSMsgType.CLOSE,
+    # aiohttp.WSMsgType.CLOSE,
     aiohttp.WSMsgType.CLOSING,
     aiohttp.WSMsgType.CLOSED
 )
@@ -52,12 +52,14 @@ LAVALINK_API_VERSION = 'v4'
 
 class Transport:
     """ The class responsible for handling connections to a Lavalink server. """
-    __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', 'trace_requests',
-                 '_host', '_port', '_password', '_ssl', 'session_id', '_destroyed')
+    __slots__ = ('client', '_node', '_loop', '_session', '_ws', '_message_queue', 'trace_requests',
+                 '_host', '_port', '_password', '_ssl', 'session_id', '_read_task', '_destroyed')
 
-    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str], connect: bool = True):
+    def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str],
+                 connect: bool = True):
         self.client: 'Client' = node.client
         self._node: 'Node' = node
+        self._loop = asyncio.get_event_loop()
 
         self._session: aiohttp.ClientSession = self.client._session
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
@@ -70,6 +72,7 @@ class Transport:
         self._ssl: bool = ssl
 
         self.session_id: Optional[str] = session_id
+        self._read_task: Optional[asyncio.Task] = None
         self._destroyed: bool = False
 
         if connect:
@@ -90,14 +93,31 @@ class Transport:
 
         Shuts down the websocket connection if there is one.
         """
+        if self._read_task is not None:
+            try:
+                self._read_task.cancel()
+            except Exception:  # pylint: disable=W0718
+                # Shouldn't need any specific handling.
+                pass
+
         if self._ws:
-            await self._ws.close(code=code)
-            self._ws = None
+            try:
+                await self._ws.close(code=code)
+            finally:
+                self._ws = None
 
     def connect(self) -> asyncio.Task:
         """ Attempts to establish a connection to Lavalink. """
-        loop = asyncio.get_event_loop()
-        return loop.create_task(self._connect())
+        if self._destroyed:
+            raise IOError('Cannot instantiate any connections with a closed session!')
+
+        if self._read_task is not None:
+            try:
+                self._read_task.cancel()
+            except Exception:  # pylint: disable=W0718
+                pass
+
+        return self._loop.create_task(self._connect())
 
     async def destroy(self):
         """|coro|
@@ -131,26 +151,25 @@ class Transport:
 
         while not self.ws_connected and not self._destroyed:
             attempt += 1
+
             try:
                 self._ws = await self._session.ws_connect(f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket',
                                                           headers=headers,
                                                           heartbeat=60)
-            except (aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError, aiohttp.ServerDisconnectedError) as error:
-                if isinstance(error, aiohttp.ClientConnectorError):
-                    _log.warning('[Node:%s] Invalid response received; is the server running on the correct port?',
-                                 self._node.name)
-                elif isinstance(error, aiohttp.WSServerHandshakeError):
-                    if error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
-                        _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.',
-                                     self._node.name)
-                        # We shouldn't try to establish any more connections as correcting this particular error
-                        # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
-                        # would be futile, and a waste of resources.
-                    else:
-                        _log.warning('[Node:%s] Received code \'%d\' (expected \'101\'). Check your server\'s ports and try again.',
-                                     self._node.name, error.status)
+            except aiohttp.WSServerHandshakeError as handshake_error:
+                if handshake_error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
+                    _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.', self._node.name)
+                    # We shouldn't try to establish any more connections as correcting this particular error
+                    # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
+                    # would be futile, and a waste of resources.
+                else:
+                    _log.warning('[Node:%s] Received code \'%d\' (expected \'101\'). Check your server\'s ports and try again.',
+                                 self._node.name, handshake_error.status)
 
-                    return
+                return
+            except Exception as exc:  # pylint: disable=W0718
+                if isinstance(exc, aiohttp.ClientConnectorError):
+                    _log.warning('[Node:%s] Invalid response received; is the server running on the correct port?', self._node.name)
                 else:
                     _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink', self._node.name)
 
@@ -158,7 +177,7 @@ class Transport:
                 await asyncio.sleep(backoff)
             else:
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
-                await self.client._dispatch_event(NodeConnectedEvent(self._node))
+                self.client._dispatch_event(NodeConnectedEvent(self._node))
 
                 if self._message_queue:
                     for message in self._message_queue:
@@ -166,59 +185,51 @@ class Transport:
 
                     self._message_queue.clear()
 
-                attempt = 0
-                await self._listen()
+                self._read_task = self._loop.create_task(self._listen())
+                break
 
     async def _listen(self):
         """ Listens for websocket messages. """
         close_code: Optional[aiohttp.WSCloseCode] = None
-        close_reason: Optional[str] = 'Improper websocket closure'
+        close_reason: Optional[str] = 'Closed without close frame (improper closure)'
 
         assert self._ws is not None
 
-        async for msg in self._ws:
-            _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
+        while True:
+            msg = await self._ws.receive()
 
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                try:
-                    await self._handle_message(msg.json())
-                except Exception:  # pylint: disable=W0718
-                    _log.exception('[Node:%s] Unexpected error occurred whilst processing websocket message', self._node.name)
-            elif msg.type == aiohttp.WSMsgType.ERROR:
-                exc = self._ws.exception()
-                _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
-                close_code = aiohttp.WSCloseCode.INTERNAL_ERROR
-                close_reason = 'WebSocket error'
-                break
-            elif msg.type in CLOSE_TYPES:
-                _log.debug('[Node:%s] Received close frame with code %d.', self._node.name, msg.data)
+            if msg.type in CLOSE_TYPES:
                 close_code = msg.data
                 close_reason = msg.extra
+                _log.debug('[Node:%s] Received close frame with code %s.', self._node.name, close_code)
                 break
 
-        ws_close_code = self._ws.close_code
+            if msg.type == aiohttp.WSMsgType.ERROR:
+                exc = self._ws.exception()
+                _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
+                break
 
-        if close_code is None and ws_close_code is not None:
-            close_code = aiohttp.WSCloseCode(ws_close_code)
+            if msg.type == aiohttp.WSMsgType.TEXT and msg.data is not None:
+                _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
+                self._loop.create_task(self._handle_message_safe(msg))
 
-        await self.close(close_code or aiohttp.WSCloseCode.ABNORMAL_CLOSURE)
-        await self._websocket_closed(close_code, close_reason)
+        if close_code is None:
+            ws_close_code = self._ws.close_code
 
-    async def _websocket_closed(self, code: Optional[int] = None, reason: Optional[str] = None):
-        """
-        Handles when the websocket is closed.
+            if ws_close_code is not None:
+                close_code = aiohttp.WSCloseCode(ws_close_code)
 
-        Parameters
-        ----------
-        code: Optional[:class:`int`]
-            The response code.
-        reason: Optional[:class:`str`]
-            Reason why the websocket was closed. Defaults to ``None``.
-        """
-        _log.warning('[Node:%s] WebSocket disconnected with the following: code=%s reason=%s', self._node.name, code, reason)
+        _log.warning('[Node:%s] WebSocket disconnected with the following: code=%s reason=%s', self._node.name, close_code, close_reason)
         self._ws = None
         await self._node.manager._handle_node_disconnect(self._node)
-        await self.client._dispatch_event(NodeDisconnectedEvent(self._node, code, reason))
+        self.client._dispatch_event(NodeDisconnectedEvent(self._node, close_code, close_reason))
+        self.connect()
+
+    async def _handle_message_safe(self, msg: aiohttp.WSMessage):
+        try:
+            await self._handle_message(msg.json())
+        except Exception:  # pylint: disable=W0718
+            _log.exception('[Node:%s] Unexpected error occurred whilst processing websocket message', self._node.name)
 
     async def _handle_message(self, data: Union[Dict[Any, Any], List[Any]]):
         """
@@ -230,7 +241,7 @@ class Transport:
             The payload received from the Lavalink server.
         """
         if self.client.has_listeners(IncomingWebSocketMessage):
-            await self.client._dispatch_event(IncomingWebSocketMessage(data.copy(), self._node))
+            self.client._dispatch_event(IncomingWebSocketMessage(data.copy(), self._node))
 
         if not isinstance(data, dict) or 'op' not in data:
             return
@@ -240,10 +251,10 @@ class Transport:
         if op == 'ready':
             self.session_id = data['sessionId']
             await self._node.manager._handle_node_ready(self._node)
-            await self.client._dispatch_event(NodeReadyEvent(self._node, data['sessionId'], data['resumed']))
+            self.client._dispatch_event(NodeReadyEvent(self._node, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
-            player: 'BasePlayer' = self.client.player_manager.get(guild_id)  # type: ignore
+            player: Optional['BasePlayer'] = self.client.player_manager.get(guild_id)  # type: ignore
 
             if not player:
                 _log.debug('[Node:%s] Received playerUpdate for non-existent player! GuildId: %d', self._node.name, guild_id)
@@ -256,7 +267,7 @@ class Transport:
 
             state = data['state']
             await player.update_state(state)
-            await self.client._dispatch_event(PlayerUpdateEvent(player, state))
+            self.client._dispatch_event(PlayerUpdateEvent(player, state))
         elif op == 'stats':
             self._node.stats = Stats(self._node, data)
         elif op == 'event':
@@ -273,7 +284,7 @@ class Transport:
         data: :class:`dict`
             The data given from Lavalink.
         """
-        player: 'BasePlayer' = self.client.player_manager.get(int(data['guildId']))  # type: ignore
+        player: Optional['BasePlayer'] = self.client.player_manager.get(int(data['guildId']))  # type: ignore
         event_type = data['type']
 
         if not player:
@@ -315,7 +326,7 @@ class Transport:
                 _log.warning('[Node:%s] Unknown event received of type \'%s\'', self._node.name, event_type)
             return
 
-        await self.client._dispatch_event(event)
+        self.client._dispatch_event(event)
 
         if player:
             try:
