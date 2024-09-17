@@ -469,6 +469,9 @@ class Client(Generic[PlayerT]):
         async def _hook_wrapper(hook, event):
             try:
                 await hook(event)
+            except asyncio.CancelledError:
+                _log.debug('Event hook \'%s\' was cancelled.', hook.__name__)
+                pass
             except:  # noqa: E722 pylint: disable=bare-except
                 _log.exception('Event hook \'%s\' encountered an exception!', hook.__name__)
 
