@@ -160,7 +160,7 @@ class Client(Generic[PlayerT]):
             if hook not in event_hooks:
                 event_hooks.append(hook)
 
-    def add_event_hooks(self, cls: Any):  # TODO: I don't think Any is the correct type here...
+    def add_event_hooks(self, cls: object):
         """
         Scans the provided class ``cls`` for functions decorated with :func:`listener`,
         and sets them up to process Lavalink events.
@@ -181,7 +181,7 @@ class Client(Generic[PlayerT]):
 
         Parameters
         ----------
-        cls: Any
+        cls: object
             An instance of a class containing event hook methods.
         """
         methods = getmembers(cls, predicate=lambda meth: hasattr(meth, '__name__')
@@ -198,7 +198,7 @@ class Client(Generic[PlayerT]):
             else:
                 self._event_hooks['Generic'].append(listener)
 
-    def remove_event_hooks(self, *, events: Optional[Sequence[EventT]] = None, hooks: Sequence[Callable]):
+    def remove_event_hooks(self, *, events: Optional[Sequence[Type[EventT]]] = None, hooks: Sequence[Callable]):
         """
         Removes the given hooks from the event hook registry.
 
