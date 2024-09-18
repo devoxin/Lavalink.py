@@ -26,7 +26,7 @@ the Lavalink server.
 """
 from enum import Enum as _Enum
 from typing import (TYPE_CHECKING, Any, Dict, List, Literal, Optional, Type,
-                    TypedDict, TypeVar, Union)
+                    TypedDict, TypeVar, Union, cast)
 
 from .errors import InvalidTrack
 

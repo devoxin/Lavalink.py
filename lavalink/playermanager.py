@@ -250,7 +250,8 @@ class PlayerManager(Generic[PlayerT]):
             raise ClientError('No available nodes!')
 
         id_int = int(guild_id)
-        self.players[id_int] = player = cls(id_int, best_node)
+        player = cls(id_int, best_node)
+        self.players[id_int] = player  # type: ignore
         _log.debug('Created player with GuildId %d on node \'%s\'', id_int, best_node.name)
         return player
 

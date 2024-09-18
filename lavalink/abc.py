@@ -24,12 +24,12 @@ SOFTWARE.
 import logging
 from abc import ABC, abstractmethod
 from typing import (TYPE_CHECKING, Any, Dict, Generic, List, Optional, TypeVar,
-                    Union)
+                    Union, cast)
 
 from .common import MISSING
 from .errors import InvalidTrack, LoadError
 from .events import Event, TrackLoadFailedEvent
-from .server import AudioTrack
+from .server import AudioTrack, RawPlayer
 
 if TYPE_CHECKING:
     from .client import Client
@@ -106,7 +106,7 @@ class BasePlayer(ABC):
                          no_replace: bool = MISSING,
                          volume: int = MISSING,
                          pause: bool = MISSING,
-                         **kwargs) -> Optional[Dict[str, Any]]:
+                         **kwargs) -> Optional[RawPlayer]:
         """|coro|
 
         .. _player object: https://lavalink.dev/api/rest.html#Player
@@ -147,7 +147,7 @@ class BasePlayer(ABC):
 
         Returns
         -------
-        Optional[Dict[:class:`str`, Any]]
+        Optional[:class:`RawPlayer`]
             The updated `player object`_, or ``None`` if a request wasn't made due to an empty payload.
         """
         if track is MISSING or not isinstance(track, AudioTrack):
@@ -203,7 +203,8 @@ class BasePlayer(ABC):
             return
 
         self._next = track
-        return await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, **options)
+        response = await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, **options)
+        return cast(RawPlayer, response)
 
     def cleanup(self):
         pass
@@ -240,7 +241,7 @@ class BasePlayer(ABC):
 
     async def _dispatch_voice_update(self):
         if {'sessionId', 'endpoint', 'token'} == self._voice_state.keys():
-            await self.node.update_player(guild_id=self._internal_id, voice_state=self._voice_state)
+            await self.node.update_player(guild_id=self._internal_id, voice_state=self._voice_state)  # type: ignore
 
     @abstractmethod
     async def node_unavailable(self):
