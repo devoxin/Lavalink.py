@@ -77,6 +77,8 @@ class Client(Generic[PlayerT]):
         the player was moved via the failover mechanism, the player will still move back to the original
         node when it becomes available. This behaviour can be avoided in custom player implementations by
         setting ``self._original_node`` to ``None`` in the :func:`BasePlayer.change_node` function.
+    request_timeout: Optional[:class:`aiohttp.ClientTimeout`]
+        A ``ClientTimeout`` object to be used for requests. If unspecified, defaults will be used.
 
     Attributes
     ----------
@@ -90,15 +92,16 @@ class Client(Generic[PlayerT]):
     __slots__ = ('_session', '_user_id', '_event_hooks', 'node_manager', 'player_manager', 'sources')
 
     def __init__(self, user_id: Union[int, str], player: Type[PlayerT] = DefaultPlayer,
-                 regions: Optional[Dict[str, Tuple[str]]] = None, connect_back: bool = False):
+                 regions: Optional[Dict[str, Tuple[str]]] = None, connect_back: bool = False,
+                 request_timeout: Optional[aiohttp.ClientTimeout] = None):
         if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
             # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
             raise TypeError(f'user_id must be either an int or str (not {type(user_id).__name__}). If the type is None, '
                             'ensure your bot has fired "on_ready" before instantiating '
                             'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
-        self._session: aiohttp.ClientSession = aiohttp.ClientSession()
-        self._user_id: int = int(user_id)
+        self._session = aiohttp.ClientSession(timeout=request_timeout)
+        self._user_id = int(user_id)
         self._event_hooks = defaultdict(list)
         self.node_manager: NodeManager = NodeManager(self, regions, connect_back)
         self.player_manager: PlayerManager[PlayerT] = PlayerManager(self, player)

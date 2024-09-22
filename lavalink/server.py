@@ -409,9 +409,29 @@ class RawPlayerVoiceState(TypedDict):
     sessionId: str
 
 
+class RawTrackInfo(TypedDict):
+    identifier: str
+    isSeekable: bool
+    author: str
+    length: int
+    isStream: bool
+    position: int
+    title: str
+    uri: Optional[str]
+    artworkUrl: Optional[str]
+    isrc: Optional[str]
+    sourceName: str
+
+
+class RawTrack(TypedDict):
+    encoded: str
+    info: RawTrackInfo
+    pluginInfo: Dict[str, Any]
+    userData: Dict[Any, Any]
+
 class RawPlayer(TypedDict):
     guildId: str
-    track: Optional[Dict[str, Any]]  # TODO
+    track: Optional[RawTrack]
     volume: int
     paused: bool
     state: RawPlayerState
