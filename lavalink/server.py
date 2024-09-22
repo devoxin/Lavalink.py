@@ -429,6 +429,7 @@ class RawTrack(TypedDict):
     pluginInfo: Dict[str, Any]
     userData: Dict[Any, Any]
 
+
 class RawPlayer(TypedDict):
     guildId: str
     track: Optional[RawTrack]
