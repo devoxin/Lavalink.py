@@ -132,8 +132,7 @@ class Transport:
         if self._destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
-        if self._ws:
-            await self.close()
+        await self.close()
 
         headers = {
             'Authorization': self._password,
@@ -221,9 +220,11 @@ class Transport:
 
         _log.warning('[Node:%s] WebSocket disconnected with the following: code=%s reason=%s', self._node.name, close_code, close_reason)
         self._ws = None
-        await self._node.manager._handle_node_disconnect(self._node)
+        self._loop.create_task(self._node.manager._handle_node_disconnect(self._node))
         self.client._dispatch_event(NodeDisconnectedEvent(self._node, close_code, close_reason))
-        self.connect()
+
+        if not self._destroyed:
+            self._loop.create_task(self._connect())
 
     async def _handle_message_safe(self, msg: aiohttp.WSMessage):
         try:
