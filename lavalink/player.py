@@ -313,6 +313,7 @@ class DefaultPlayer(BasePlayer):
 
         if response is not None:
             self.paused = response['paused']
+            self.volume = response['volume']
 
     async def stop(self):
         """|coro|

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import (TYPE_CHECKING, Callable, Dict, Generic, Iterator, Optional,
+from typing import (TYPE_CHECKING, Callable, Dict, Final, Generic, Iterator, Optional,
                     Tuple, Type, TypeVar, Union, overload)
 
 from .errors import ClientError, RequestError
@@ -60,9 +60,9 @@ class PlayerManager(Generic[PlayerT]):
         if not issubclass(player, BasePlayer):
             raise ValueError('Player must implement BasePlayer.')
 
-        self.client: 'Client' = client
-        self._player_cls: Type[PlayerT] = player
-        self.players: Dict[int, PlayerT] = {}
+        self.client: Final['Client'] = client
+        self._player_cls: Final[Type[PlayerT]] = player
+        self.players: Final[Dict[int, PlayerT]] = {}
 
     def __len__(self) -> int:
         return len(self.players)

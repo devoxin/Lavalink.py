@@ -24,14 +24,16 @@ SOFTWARE.
 import struct
 from base64 import b64decode
 from io import BytesIO
-from typing import Optional
+from typing import Final, Optional
 
 from .utfm_codec import read_utfm
 
 
 class DataReader:
+    __slots__ = ('_buf',)
+
     def __init__(self, base64_str: str):
-        self._buf = BytesIO(b64decode(base64_str))
+        self._buf: Final[BytesIO] = BytesIO(b64decode(base64_str))
 
     @property
     def remaining(self) -> int:
@@ -150,8 +152,10 @@ class DataReader:
 
 
 class DataWriter:
+    __slots__ = ('_buf',)
+
     def __init__(self):
-        self._buf = BytesIO()
+        self._buf: Final[BytesIO] = BytesIO()
 
     def _write(self, data):
         self._buf.write(data)

@@ -25,8 +25,8 @@ This module serves to contain all entities which are deserialized using response
 the Lavalink server.
 """
 from enum import Enum as _Enum
-from typing import (TYPE_CHECKING, Any, Dict, List, Literal, Optional, Type,
-                    TypedDict, TypeVar, Union, cast)
+from typing import (TYPE_CHECKING, Any, Dict, Final, List, Literal, Optional,
+                    Type, TypedDict, TypeVar, Union, cast)
 
 from .errors import InvalidTrack
 
@@ -226,8 +226,8 @@ class PlaylistInfo:
     __slots__ = ('name', 'selected_track')
 
     def __init__(self, name: str, selected_track: int = -1):
-        self.name: str = name
-        self.selected_track: int = selected_track
+        self.name: Final[str] = name
+        self.selected_track: Final[int] = selected_track
 
     def __getitem__(self, k):  # Exists only for compatibility, don't blame me
         if k == 'selectedTrack':
@@ -260,9 +260,9 @@ class LoadResultError:
     __slots__ = ('message', 'severity', 'cause')
 
     def __init__(self, error: Dict[str, Any]):
-        self.message: str = error['message']
-        self.severity: Severity = Severity.from_str(error['severity'])
-        self.cause: str = error['cause']
+        self.message: Final[str] = error['message']
+        self.severity: Final[Severity] = Severity.from_str(error['severity'])
+        self.cause: Final[str] = error['cause']
 
     def __str__(self):
         return f'{self.message}: {self.cause} ({self.severity})'
@@ -294,11 +294,11 @@ class LoadResult:
     def __init__(self, load_type: LoadType, tracks: List[Union[AudioTrack, 'DeferredAudioTrack']],
                  playlist_info: PlaylistInfo = PlaylistInfo.none(), plugin_info: Optional[Dict[str, Any]] = None,
                  error: Optional[LoadResultError] = None):
-        self.load_type: LoadType = load_type
-        self.playlist_info: PlaylistInfo = playlist_info
-        self.tracks: List[Union[AudioTrack, 'DeferredAudioTrack']] = tracks
-        self.plugin_info: Optional[Dict[str, Any]] = plugin_info
-        self.error: Optional[LoadResultError] = error
+        self.load_type: Final[LoadType] = load_type
+        self.playlist_info: Final[PlaylistInfo] = playlist_info
+        self.tracks: Final[List[Union[AudioTrack, 'DeferredAudioTrack']]] = tracks
+        self.plugin_info: Final[Optional[Dict[str, Any]]] = plugin_info
+        self.error: Final[Optional[LoadResultError]] = error
 
     def __getitem__(self, k):  # Exists only for compatibility, don't blame me
         if k == 'loadType':
@@ -381,8 +381,8 @@ class Plugin:
     __slots__ = ('name', 'version')
 
     def __init__(self, data: Dict[str, Any]):
-        self.name: str = data['name']
-        self.version: str = data['version']
+        self.name: Final[str] = data['name']
+        self.version: Final[str] = data['version']
 
     def __str__(self):
         return f'{self.name} v{self.version}'

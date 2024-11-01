@@ -27,12 +27,14 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import (Any, Callable, Coroutine, Dict, Generic, List, Optional, Sequence, Set, Tuple,
-                    Type, TypeVar, Union)
+from typing import (Any, Callable, Coroutine, Dict, Final, Generic, List,
+                    Optional, Sequence, Set, Tuple, Type, TypeVar, Union)
 
 import aiohttp
 
 from .abc import BasePlayer, Source
+from .common import VoiceServerUpdatePayload, VoiceStateUpdatePayload
+from .errors import ClientError
 from .events import Event
 from .node import Node
 from .nodemanager import NodeManager
@@ -96,16 +98,16 @@ class Client(Generic[PlayerT]):
                  request_timeout: Optional[aiohttp.ClientTimeout] = None):
         if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
             # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
-            raise TypeError(f'user_id must be either an int or str (not {type(user_id).__name__}). If the type is None, '
-                            'ensure your bot has fired "on_ready" before instantiating '
+            raise TypeError(f'user_id must be either an int or str (not {type(user_id).__name__}). '
+                            'If the type is None, ensure your bot has fired "on_ready" before instantiating '
                             'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
-        self._session = aiohttp.ClientSession(timeout=request_timeout)
-        self._user_id = int(user_id)
-        self._event_hooks = defaultdict(list)
-        self.node_manager: NodeManager = NodeManager(self, regions, connect_back)
-        self.player_manager: PlayerManager[PlayerT] = PlayerManager(self, player)
-        self.sources: Set[Source] = set()
+        self._session: Final[aiohttp.ClientSession] = aiohttp.ClientSession(timeout=request_timeout)
+        self._user_id: Final[int] = int(user_id)
+        self._event_hooks: Final[dict[str, list]] = defaultdict(list)
+        self.node_manager: Final[NodeManager] = NodeManager(self, regions, connect_back)
+        self.player_manager: Final[PlayerManager[PlayerT]] = PlayerManager(self, player)
+        self.sources: Final[Set[Source]] = set()
 
     @property
     def nodes(self) -> List[Node]:
@@ -267,7 +269,8 @@ class Client(Generic[PlayerT]):
         return next((source for source in self.sources if source.name == source_name), None)
 
     def add_node(self, host: str, port: int, password: str, region: str, name: Optional[str] = None,
-                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True, tags: Optional[Dict[str, Any]] = None) -> Node:
+                 ssl: bool = False, session_id: Optional[str] = None, connect: bool = True,
+                 tags: Optional[Dict[str, Any]] = None) -> Node:
         """
         Shortcut for :func:`NodeManager.add_node`.
 
@@ -353,6 +356,11 @@ class Client(Generic[PlayerT]):
         check_local: :class:`bool`
             Whether to also search the query on sources registered with this Lavalink client.
 
+        Raises
+        ------
+        :class:`ClientError`
+            If there are no nodes assigned to this client.
+
         Returns
         -------
         :class:`LoadResult`
@@ -364,7 +372,16 @@ class Client(Generic[PlayerT]):
                 if load_result:
                     return load_result
 
-        node = node or random.choice(self.node_manager.available_nodes) or random.choice(self.node_manager.nodes)
+        if not node:
+            available_nodes = self.node_manager.available_nodes
+
+            if available_nodes:
+                node = random.choice(available_nodes)
+            elif self.node_manager.nodes:
+                node = random.choice(self.node_manager.nodes)
+            else:
+                raise ClientError('No available nodes!')
+
         return await node.get_tracks(query)
 
     async def decode_track(self, track: str, node: Optional[Node] = None) -> AudioTrack:
@@ -379,11 +396,25 @@ class Client(Generic[PlayerT]):
         node: Optional[:class:`Node`]
             The node to use for the query. Defaults to ``None`` which is a random node.
 
+        Raises
+        ------
+        :class:`ClientError`
+            If there are no nodes assigned to this client.
+
         Returns
         -------
         :class:`AudioTrack`
         """
-        node = node or random.choice(self.node_manager.available_nodes) or random.choice(self.node_manager.nodes)
+        if not node:
+            available_nodes = self.node_manager.available_nodes
+
+            if available_nodes:
+                node = random.choice(available_nodes)
+            elif self.node_manager.nodes:
+                node = random.choice(self.node_manager.nodes)
+            else:
+                raise ClientError('No available nodes!')
+
         return await node.decode_track(track)
 
     async def decode_tracks(self, tracks: List[str], node: Optional[Node] = None) -> List[AudioTrack]:
@@ -398,15 +429,29 @@ class Client(Generic[PlayerT]):
         node: Optional[:class:`Node`]
             The node to use for the query. Defaults to ``None`` which is a random node.
 
+        Raises
+        ------
+        :class:`ClientError`
+            If there are no nodes assigned to this client.
+
         Returns
         -------
         List[:class:`AudioTrack`]
             A list of decoded :class:`AudioTrack`.
         """
-        node = node or random.choice(self.node_manager.available_nodes) or random.choice(self.node_manager.nodes)
+        if not node:
+            available_nodes = self.node_manager.available_nodes
+
+            if available_nodes:
+                node = random.choice(available_nodes)
+            elif self.node_manager.nodes:
+                node = random.choice(self.node_manager.nodes)
+            else:
+                raise ClientError('No available nodes!')
+
         return await node.decode_tracks(tracks)
 
-    async def voice_update_handler(self, data: Dict[str, Any]):
+    async def voice_update_handler(self, data: Union[VoiceStateUpdatePayload, VoiceServerUpdatePayload]):
         """|coro|
 
         This function intercepts websocket data from your Discord library and

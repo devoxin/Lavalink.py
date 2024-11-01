@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Union
 
 from .server import EndReason, Severity
 
@@ -49,8 +49,8 @@ class TrackStartEvent(Event):
     __slots__ = ('player', 'track')
 
     def __init__(self, player: 'BasePlayer', track: 'AudioTrack'):
-        self.player: 'BasePlayer' = player
-        self.track: 'AudioTrack' = track
+        self.player: Final['BasePlayer'] = player
+        self.track: Final['AudioTrack'] = track
 
 
 class TrackStuckEvent(Event):
@@ -76,9 +76,9 @@ class TrackStuckEvent(Event):
     __slots__ = ('player', 'track', 'threshold')
 
     def __init__(self, player: 'BasePlayer', track: 'AudioTrack', threshold: int):
-        self.player: 'BasePlayer' = player
-        self.track: 'AudioTrack' = track
-        self.threshold: int = threshold
+        self.player: Final['BasePlayer'] = player
+        self.track: Final['AudioTrack'] = track
+        self.threshold: Final[int] = threshold
 
 
 class TrackExceptionEvent(Event):
@@ -107,11 +107,11 @@ class TrackExceptionEvent(Event):
 
     def __init__(self, player: 'BasePlayer', track: 'AudioTrack', message: Optional[str], severity: Severity,
                  cause: str):
-        self.player: 'BasePlayer' = player
-        self.track: 'AudioTrack' = track
-        self.message: Optional[str] = message
-        self.severity: Severity = severity
-        self.cause: str = cause
+        self.player: Final['BasePlayer'] = player
+        self.track: Final['AudioTrack'] = track
+        self.message: Final[Optional[str]] = message
+        self.severity: Final[Severity] = severity
+        self.cause: Final[str] = cause
 
 
 class TrackEndEvent(Event):
@@ -136,9 +136,9 @@ class TrackEndEvent(Event):
     __slots__ = ('player', 'track', 'reason')
 
     def __init__(self, player: 'BasePlayer', track: Optional['AudioTrack'], reason: EndReason):
-        self.player: 'BasePlayer' = player
-        self.track: Optional['AudioTrack'] = track
-        self.reason: EndReason = reason
+        self.player: Final['BasePlayer'] = player
+        self.track: Final[Optional['AudioTrack']] = track
+        self.reason: Final[EndReason] = reason
 
 
 class TrackLoadFailedEvent(Event):
@@ -166,9 +166,9 @@ class TrackLoadFailedEvent(Event):
     __slots__ = ('player', 'track', 'original')
 
     def __init__(self, player: 'BasePlayer', track: 'DeferredAudioTrack', original: Optional[Exception]):
-        self.player: 'BasePlayer' = player
-        self.track: 'DeferredAudioTrack' = track
-        self.original: Optional[Exception] = original
+        self.player: Final['BasePlayer'] = player
+        self.track: Final['DeferredAudioTrack'] = track
+        self.original: Final[Optional[Exception]] = original
 
 
 class QueueEndEvent(Event):
@@ -184,7 +184,7 @@ class QueueEndEvent(Event):
     __slots__ = ('player',)
 
     def __init__(self, player: 'BasePlayer'):
-        self.player: 'BasePlayer' = player
+        self.player: Final['BasePlayer'] = player
 
 
 class PlayerUpdateEvent(Event):
@@ -209,11 +209,11 @@ class PlayerUpdateEvent(Event):
     __slots__ = ('player', 'position', 'timestamp', 'connected', 'ping')
 
     def __init__(self, player: 'BasePlayer', raw_state):
-        self.player: 'BasePlayer' = player
-        self.position: int = raw_state.get('position')
-        self.timestamp: int = raw_state.get('time')
-        self.connected: bool = raw_state.get('connected')
-        self.ping: int = raw_state.get('ping', -1)
+        self.player: Final['BasePlayer'] = player
+        self.position: Final[int] = raw_state.get('position')
+        self.timestamp: Final[int] = raw_state.get('time')
+        self.connected: Final[bool] = raw_state.get('connected')
+        self.ping: Final[int] = raw_state.get('ping', -1)
 
 
 class NodeConnectedEvent(Event):
@@ -229,7 +229,7 @@ class NodeConnectedEvent(Event):
     __slots__ = ('node',)
 
     def __init__(self, node: 'Node'):
-        self.node: 'Node' = node
+        self.node: Final['Node'] = node
 
 
 class NodeDisconnectedEvent(Event):
@@ -249,9 +249,9 @@ class NodeDisconnectedEvent(Event):
     __slots__ = ('node', 'code', 'reason')
 
     def __init__(self, node: 'Node', code: Optional[int], reason: Optional[str]):
-        self.node: 'Node' = node
-        self.code: Optional[int] = code
-        self.reason: Optional[str] = reason
+        self.node: Final['Node'] = node
+        self.code: Final[Optional[int]] = code
+        self.reason: Final[Optional[str]] = reason
 
 
 class NodeChangedEvent(Event):
@@ -272,9 +272,9 @@ class NodeChangedEvent(Event):
     __slots__ = ('player', 'old_node', 'new_node')
 
     def __init__(self, player: 'BasePlayer', old_node: 'Node', new_node: 'Node'):
-        self.player: 'BasePlayer' = player
-        self.old_node: 'Node' = old_node
-        self.new_node: 'Node' = new_node
+        self.player: Final['BasePlayer'] = player
+        self.old_node: Final['Node'] = old_node
+        self.new_node: Final['Node'] = new_node
 
 
 class NodeReadyEvent(Event):
@@ -294,9 +294,9 @@ class NodeReadyEvent(Event):
     __slots__ = ('node', 'session_id', 'resumed')
 
     def __init__(self, node: 'Node', session_id: str, resumed: bool):
-        self.node: 'Node' = node
-        self.session_id: str = session_id
-        self.resumed: bool = resumed
+        self.node: Final['Node'] = node
+        self.session_id: Final[str] = session_id
+        self.resumed: Final[bool] = resumed
 
 
 class WebSocketClosedEvent(Event):
@@ -322,10 +322,10 @@ class WebSocketClosedEvent(Event):
     __slots__ = ('player', 'code', 'reason', 'by_remote')
 
     def __init__(self, player: 'BasePlayer', code: int, reason: str, by_remote: bool):
-        self.player: 'BasePlayer' = player
-        self.code: int = code
-        self.reason: str = reason
-        self.by_remote: bool = by_remote
+        self.player: Final['BasePlayer'] = player
+        self.code: Final[int] = code
+        self.reason: Final[str] = reason
+        self.by_remote: Final[bool] = by_remote
 
 
 class IncomingWebSocketMessage(Event):
@@ -345,8 +345,8 @@ class IncomingWebSocketMessage(Event):
     __slots__ = ('data', 'node')
 
     def __init__(self, data, node: 'Node'):
-        self.data: Union[Dict[Any, Any], List[Any]] = data
-        self.node: 'Node' = node
+        self.data: Final[Union[Dict[Any, Any], List[Any]]] = data
+        self.node: Final['Node'] = node
 
 
 class PlayerErrorEvent(Event):
@@ -363,6 +363,6 @@ class PlayerErrorEvent(Event):
     __slots__ = ('player', 'original')
 
     def __init__(self, player, original):
-        self.player: 'BasePlayer' = player
-        self.original: Exception = original
+        self.player: Final['BasePlayer'] = player
+        self.original: Final[Exception] = original
         # TODO: Perhaps an enum denoting which area of the player encountered an exception, e.g. ErrorType.PLAY.

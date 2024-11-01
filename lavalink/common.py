@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Any
+from typing import Any, Literal, Optional, TypedDict
 
 
 class _MissingObj:
@@ -32,3 +32,26 @@ class _MissingObj:
 
 
 MISSING: Any = _MissingObj()
+
+
+class VoiceStateUpdateData(TypedDict):
+    guild_id: str
+    channel_id: Optional[str]
+    user_id: str
+    session_id: str
+
+
+class VoiceServerUpdateData(TypedDict):
+    guild_id: str
+    endpoint: Optional[str]
+    token: str
+
+
+class VoiceStateUpdatePayload(TypedDict):
+    t: Literal['VOICE_STATE_UPDATE']
+    d: VoiceStateUpdateData
+
+
+class VoiceServerUpdatePayload(TypedDict):
+    t: Literal['VOICE_SERVER_UPDATE']
+    d: VoiceServerUpdateData

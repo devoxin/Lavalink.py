@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Union
 
 import aiohttp
 
@@ -57,19 +57,19 @@ class Transport:
 
     def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str],
                  connect: bool = True):
-        self.client: 'Client' = node.client
-        self._node: 'Node' = node
-        self._loop = asyncio.get_event_loop()
+        self.client: Final['Client'] = node.client
+        self._node: Final['Node'] = node
+        self._loop: Final[asyncio.AbstractEventLoop] = asyncio.get_event_loop()
 
-        self._session: aiohttp.ClientSession = self.client._session
+        self._session: Final[aiohttp.ClientSession] = self.client._session
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
-        self._message_queue = []
+        self._message_queue: Final[List[Dict[str, Any]]] = []
         self.trace_requests = False
 
-        self._host: str = host
-        self._port: int = port
-        self._password: str = password
-        self._ssl: bool = ssl
+        self._host: Final[str] = host
+        self._port: Final[int] = port
+        self._password: Final[str] = password
+        self._ssl: Final[bool] = ssl
 
         self.session_id: Optional[str] = session_id
         self._read_task: Optional[asyncio.Task] = None

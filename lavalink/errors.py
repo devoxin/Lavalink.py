@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Final, Optional
 
 
 class LavalinkError(Exception):
@@ -70,10 +70,10 @@ class RequestError(LavalinkError):
 
     def __init__(self, message, status: int, response: dict, params: Dict[str, Any]):
         super().__init__(message)
-        self.status: int = status
-        self.timestamp: int = response['timestamp']
-        self.error: str = response['error']
-        self.message: str = response.get('message', '')
-        self.path: str = response['path']
-        self.trace: Optional[str] = response.get('trace', None)
-        self.params = params
+        self.status: Final[int] = status
+        self.timestamp: Final[int] = response['timestamp']
+        self.error: Final[str] = response['error']
+        self.message: Final[str] = response.get('message', '')
+        self.path: Final[str] = response['path']
+        self.trace: Final[Optional[str]] = response.get('trace', None)
+        self.params: Final[Dict[str, Any]] = params

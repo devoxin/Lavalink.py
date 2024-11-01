@@ -21,6 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from .node import Node
 
 
 class Penalty:
@@ -43,12 +47,11 @@ class Penalty:
     __slots__ = ('player_penalty', 'cpu_penalty', 'null_frame_penalty', 'deficit_frame_penalty', 'total')
 
     def __init__(self, stats):
-        self.player_penalty: int = stats.playing_players
-        self.cpu_penalty: float = 1.05 ** (100 * stats.system_load) * 10 - 10
-        self.null_frame_penalty: float = ((1.03 ** (500 * (stats.frames_nulled / 3000))) * 300 - 300) * 2
-        self.deficit_frame_penalty: float = (1.03 ** (500 * (stats.frames_deficit / 3000))) * 600 - 600
-
-        self.total: float = self.player_penalty + self.cpu_penalty + self.null_frame_penalty + self.deficit_frame_penalty
+        self.player_penalty: Final[int] = stats.playing_players
+        self.cpu_penalty: Final[float] = 1.05 ** (100 * stats.system_load) * 10 - 10
+        self.null_frame_penalty: Final[float] = ((1.03 ** (500 * (stats.frames_nulled / 3000))) * 300 - 300) * 2
+        self.deficit_frame_penalty: Final[float] = (1.03 ** (500 * (stats.frames_deficit / 3000))) * 600 - 600
+        self.total: Final[float] = self.player_penalty + self.cpu_penalty + self.null_frame_penalty + self.deficit_frame_penalty
 
 
 class Stats:
@@ -101,30 +104,30 @@ class Stats:
                  'frames_deficit', 'penalty')
 
     def __init__(self, node, data):
-        self._node = node
+        self._node: Final['Node'] = node
 
-        self.is_fake: bool = data.get('isFake', False)
-        self.uptime: int = data['uptime']
+        self.is_fake: Final[bool] = data.get('isFake', False)
+        self.uptime: Final[int] = data['uptime']
 
-        self.players: int = data['players']
-        self.playing_players: int = data['playingPlayers']
+        self.players: Final[int] = data['players']
+        self.playing_players: Final[int] = data['playingPlayers']
 
         memory = data['memory']
-        self.memory_free: int = memory['free']
-        self.memory_used: int = memory['used']
-        self.memory_allocated: int = memory['allocated']
-        self.memory_reservable: int = memory['reservable']
+        self.memory_free: Final[int] = memory['free']
+        self.memory_used: Final[int] = memory['used']
+        self.memory_allocated: Final[int] = memory['allocated']
+        self.memory_reservable: Final[int] = memory['reservable']
 
         cpu = data['cpu']
-        self.cpu_cores: int = cpu['cores']
-        self.system_load: float = cpu['systemLoad']
-        self.lavalink_load: float = cpu['lavalinkLoad']
+        self.cpu_cores: Final[int] = cpu['cores']
+        self.system_load: Final[float] = cpu['systemLoad']
+        self.lavalink_load: Final[float] = cpu['lavalinkLoad']
 
         frame_stats = data.get('frameStats') or {}
-        self.frames_sent: int = frame_stats.get('sent', 0)
-        self.frames_nulled: int = frame_stats.get('nulled', 0)
-        self.frames_deficit: int = frame_stats.get('deficit', 0)
-        self.penalty: Penalty = Penalty(self)
+        self.frames_sent: Final[int] = frame_stats.get('sent', 0)
+        self.frames_nulled: Final[int] = frame_stats.get('nulled', 0)
+        self.frames_deficit: Final[int] = frame_stats.get('deficit', 0)
+        self.penalty: Final[Penalty] = Penalty(self)
 
     @classmethod
     def empty(cls, node):

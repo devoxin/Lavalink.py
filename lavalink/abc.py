@@ -23,10 +23,10 @@ SOFTWARE.
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import (TYPE_CHECKING, Any, Dict, Generic, List, Optional, TypeVar,
-                    Union, cast)
+from typing import (TYPE_CHECKING, Any, Dict, Final, Generic, List, Optional,
+                    TypeVar, Union, cast)
 
-from .common import MISSING
+from .common import MISSING, VoiceServerUpdateData, VoiceStateUpdateData
 from .errors import InvalidTrack, LoadError
 from .events import Event, TrackLoadFailedEvent
 from .server import AudioTrack, RawPlayer
@@ -59,15 +59,18 @@ class BasePlayer(ABC):
     current: Optional[:class:`AudioTrack`]
         The currently playing track.
     """
+    __slots__ = ('client', 'guild_id', 'node', 'channel_id', 'current', '_next', '_internal_id',
+                 '_original_node', '_voice_state')
+
     def __init__(self, guild_id: int, node: 'Node'):
-        self.client: 'Client' = node.manager.client
-        self.guild_id: int = guild_id
+        self.client: Final['Client'] = node.manager.client
+        self.guild_id: Final[int] = guild_id
         self.node: 'Node' = node
         self.channel_id: Optional[int] = None
         self.current: Optional[AudioTrack] = None
 
         self._next: Optional[AudioTrack] = None
-        self._internal_id: str = str(guild_id)
+        self._internal_id: Final[str] = str(guild_id)
         self._original_node: Optional['Node'] = None  # This is used internally for failover.
         self._voice_state = {}
 
@@ -177,8 +180,7 @@ class BasePlayer(ABC):
             if not isinstance(volume, int):
                 raise TypeError('volume must be an int')
 
-            self.volume = max(min(volume, 1000), 0)
-            options['volume'] = self.volume
+            options['volume'] = max(min(volume, 1000), 0)
 
         if pause is not MISSING:
             if not isinstance(pause, bool):
@@ -218,15 +220,16 @@ class BasePlayer(ABC):
         """
         await self.client.player_manager.destroy(self.guild_id)
 
-    async def _voice_server_update(self, data):
+    async def _voice_server_update(self, data: VoiceServerUpdateData):
         self._voice_state.update(endpoint=data['endpoint'], token=data['token'])
 
-        if 'sessionId' not in self._voice_state:  # We should've received session_id from a VOICE_STATE_UPDATE before receiving a VOICE_SERVER_UPDATE.
+        if 'sessionId' not in self._voice_state:
+            # We should've received session_id from a VOICE_STATE_UPDATE before receiving a VOICE_SERVER_UPDATE.
             _log.warning('[Player:%s] Missing sessionId, is the client User ID correct?', self.guild_id)
 
         await self._dispatch_voice_update()
 
-    async def _voice_state_update(self, data):
+    async def _voice_state_update(self, data: VoiceStateUpdateData):
         raw_channel_id = data['channel_id']
         self.channel_id = int(raw_channel_id) if raw_channel_id else None
 
@@ -279,6 +282,8 @@ class DeferredAudioTrack(ABC, AudioTrack):
     This should serve the purpose of speeding up subsequent play calls in the event of repeat being enabled,
     for example.
     """
+    __slots__ = ()
+
     @abstractmethod
     async def load(self, client: 'Client') -> Optional[str]:
         """|coro|
@@ -302,6 +307,8 @@ class DeferredAudioTrack(ABC, AudioTrack):
 
 
 class Source(ABC):
+    __slots__ = ('name',)
+
     def __init__(self, name: str):
         self.name: str = name
 
@@ -358,9 +365,11 @@ class Filter(ABC, Generic[FilterValueT]):
     plugin_filter: :class:`bool`
         Whether this filter is part of a Lavalink plugin.
     """
+    __slots__ = ('values', 'plugin_filter')
+
     def __init__(self, values: FilterValueT, plugin_filter: bool = False):
         self.values: FilterValueT = values
-        self.plugin_filter: bool = plugin_filter
+        self.plugin_filter: Final[bool] = plugin_filter
 
     @abstractmethod
     def update(self, **kwargs):

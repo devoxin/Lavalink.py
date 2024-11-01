@@ -24,7 +24,7 @@ SOFTWARE.
 from asyncio import Task
 from collections import defaultdict
 from time import time
-from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type, TypeVar,
+from typing import (TYPE_CHECKING, Any, Dict, Final, List, Optional, Type, TypeVar,
                     Union, cast, overload)
 
 from .abc import BasePlayer, Filter
@@ -68,14 +68,14 @@ class Node:
 
     def __init__(self, manager, host: str, port: int, password: str, region: str, name: Optional[str] = None,
                  ssl: bool = False, session_id: Optional[str] = None, connect: bool = True, tags: Optional[Dict[str, Any]] = None):
-        self.client: 'Client' = manager.client
-        self.manager: 'NodeManager' = manager
-        self._transport = Transport(self, host, port, password, ssl, session_id, connect)
+        self.client: Final['Client'] = manager.client
+        self.manager: Final['NodeManager'] = manager
+        self._transport: Final[Transport] = Transport(self, host, port, password, ssl, session_id, connect)
 
-        self.region: str = region
-        self.name: str = name or f'{region}-{host}:{port}'
+        self.region: Final[str] = region
+        self.name: Final[str] = name or f'{region}-{host}:{port}'
         self.stats: Stats = Stats.empty(self)
-        self.tags: Dict[str, Any] = tags or {}
+        self.tags: Final[Dict[str, Any]] = tags or {}
 
     @property
     def session_id(self) -> Optional[str]:
