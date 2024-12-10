@@ -251,7 +251,7 @@ class NodeManager:
         Parameters
         ----------
         node: :class:`Node`
-            The node that has just connected.
+            The node that has disconnected.
         """
         for player in node.players:
             try:
