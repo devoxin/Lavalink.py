@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from .abc import BasePlayer
 
 _log = logging.getLogger(__name__)
+
 DEFAULT_REGIONS = {
     'asia': ('hongkong', 'singapore', 'sydney', 'japan', 'southafrica', 'india'),
     'eu': ('rotterdam', 'russia'),
@@ -246,7 +247,7 @@ class NodeManager:
     async def _handle_node_disconnect(self, node: Node):
         """|coro|
 
-        Called when a node is disconnected from Lavalink.
+        Called when a node is disconnected.
 
         Parameters
         ----------
