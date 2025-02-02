@@ -102,16 +102,20 @@ class TrackExceptionEvent(Event):
         The severity of the exception.
     cause: :class:`str`
         The cause of the exception.
+    cause_stacktrace: :class:`str`
+        The stacktrace for the error.
+        May be empty if the server has not been updated to support this.
     """
-    __slots__ = ('player', 'track', 'message', 'severity', 'cause')
+    __slots__ = ('player', 'track', 'message', 'severity', 'cause', 'cause_stacktrace')
 
     def __init__(self, player: 'BasePlayer', track: 'AudioTrack', message: Optional[str], severity: Severity,
-                 cause: str):
+                 cause: str, cause_stacktrace: str):
         self.player: Final['BasePlayer'] = player
         self.track: Final['AudioTrack'] = track
         self.message: Final[Optional[str]] = message
         self.severity: Final[Severity] = severity
         self.cause: Final[str] = cause
+        self.cause_stacktrace: Final[str] = cause_stacktrace
 
 
 class TrackEndEvent(Event):

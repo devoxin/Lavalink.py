@@ -310,13 +310,14 @@ class Transport:
             end_reason = EndReason.from_str(data['reason'])
             event = TrackEndEvent(player, player.current, end_reason)
         elif event_type == 'TrackExceptionEvent':
-            exception = data['exception']
+            exception: dict[str, Any] = data['exception']
             message = exception['message']
             severity = Severity.from_str(exception['severity'])
             cause = exception['cause']
+            cause_stacktrace = exception.get('causeStackTrace', '')
 
             assert player.current is not None
-            event = TrackExceptionEvent(player, player.current, message, severity, cause)
+            event = TrackExceptionEvent(player, player.current, message, severity, cause, cause_stacktrace)
         elif event_type == 'TrackStuckEvent':
             assert player.current is not None
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
