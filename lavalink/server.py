@@ -256,13 +256,17 @@ class LoadResultError:
         The severity of the error.
     cause: :class:`str`
         The cause of the error.
+    cause_stacktrace: :class:`str`
+        The stacktrace for the error.
+        May be empty if the server has not been updated to support this.
     """
-    __slots__ = ('message', 'severity', 'cause')
+    __slots__ = ('message', 'severity', 'cause', 'cause_stacktrace')
 
     def __init__(self, error: Dict[str, Any]):
         self.message: Final[str] = error['message']
         self.severity: Final[Severity] = Severity.from_str(error['severity'])
         self.cause: Final[str] = error['cause']
+        self.cause_stacktrace: Final[str] = error.get('causeStackTrace', '')
 
     def __str__(self):
         return f'{self.message}: {self.cause} ({self.severity})'
