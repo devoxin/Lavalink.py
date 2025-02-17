@@ -198,7 +198,7 @@ def decode_track(track: str,  # pylint: disable=R0914
     position = reader.read_long()
 
     track_object = {
-        'track': track,
+        'encoded': track,
         'info': {
             'title': title,
             'author': author,
