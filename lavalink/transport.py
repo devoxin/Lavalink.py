@@ -397,8 +397,8 @@ class Transport:
                 if res.status == 204:
                     return True
 
-                raise RequestError('An invalid response was received from the node.',
-                                   status=res.status, response=await res.json(), params=kwargs.get('params', {}))
+                raise RequestError(node=self._node, status=res.status, response=await res.json(),
+                                   params=kwargs.get('params', {}))
         except (AuthenticationError, RequestError, asyncio.TimeoutError, aiohttp.ClientError):
             raise  # Pass the caught errors back to the caller in their 'original' form.
         except Exception as original:

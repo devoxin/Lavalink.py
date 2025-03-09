@@ -21,7 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Any, Dict, Final, Optional
+from typing import TYPE_CHECKING, Any, Dict, Final, Optional
+
+if TYPE_CHECKING:
+    from .node import Node
 
 
 class LavalinkError(Exception):
@@ -66,10 +69,10 @@ class RequestError(LavalinkError):
     params: Dict[str, Any]
         The parameters passed to the request that errored.
     """
-    __slots__ = ('status', 'timestamp', 'error', 'message', 'path', 'trace', 'params')
+    __slots__ = ('node', 'status', 'timestamp', 'error', 'message', 'path', 'trace', 'params')
 
-    def __init__(self, message, status: int, response: dict, params: Dict[str, Any]):
-        super().__init__(message)
+    def __init__(self, node: 'Node', status: int, response: dict, params: Dict[str, Any]):
+        self.node: Final['Node'] = node
         self.status: Final[int] = status
         self.timestamp: Final[int] = response['timestamp']
         self.error: Final[str] = response['error']
@@ -77,3 +80,4 @@ class RequestError(LavalinkError):
         self.path: Final[str] = response['path']
         self.trace: Final[Optional[str]] = response.get('trace', None)
         self.params: Final[Dict[str, Any]] = params
+        super().__init__(f'An error occurred during a request to the node ({self.message}): {self.error}')
