@@ -29,7 +29,7 @@ from typing import (TYPE_CHECKING, Any, Dict, Final, Generic, List, Optional,
 from .common import MISSING, VoiceServerUpdateData, VoiceStateUpdateData
 from .errors import InvalidTrack, LoadError
 from .events import Event, TrackLoadFailedEvent
-from .server import AudioTrack, RawPlayer
+from .server import AudioTrack, RawPlayer, RawPlayerState
 
 if TYPE_CHECKING:
     from .client import Client
@@ -88,7 +88,7 @@ class BasePlayer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def update_state(self, state: Dict[str, Any]):
+    async def update_state(self, state: RawPlayerState):
         """|coro|
 
         .. _state object: https://lavalink.dev/api/websocket#player-state

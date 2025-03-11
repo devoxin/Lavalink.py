@@ -177,6 +177,7 @@ class Transport:
             else:
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 self.client._dispatch_event(NodeConnectedEvent(self._node))
+                self._read_task = self._loop.create_task(self._listen())
 
                 if self._message_queue:
                     for message in self._message_queue:
@@ -184,7 +185,6 @@ class Transport:
 
                     self._message_queue.clear()
 
-                self._read_task = self._loop.create_task(self._listen())
                 break
 
     async def _listen(self):

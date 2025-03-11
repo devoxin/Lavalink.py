@@ -30,10 +30,10 @@ from typing import (TYPE_CHECKING, Dict, List, Optional, Type,  # Literal
 from .abc import BasePlayer, DeferredAudioTrack
 from .common import MISSING
 from .errors import ClientError, RequestError
-from .events import (NodeChangedEvent, PlayerErrorEvent, QueueEndEvent,
+from .events import (Event, NodeChangedEvent, PlayerErrorEvent, QueueEndEvent,
                      TrackEndEvent, TrackStuckEvent)
 from .filters import Filter
-from .server import AudioTrack
+from .server import AudioTrack, RawPlayerState
 
 if TYPE_CHECKING:
     from .node import Node
@@ -603,7 +603,7 @@ class DefaultPlayer(BasePlayer):
     async def _apply_filters(self):
         await self.node.update_player(guild_id=self._internal_id, filters=list(self.filters.values()))
 
-    async def handle_event(self, event):
+    async def handle_event(self, event: Event):
         """
         Handles the given event as necessary.
 
@@ -623,7 +623,7 @@ class DefaultPlayer(BasePlayer):
                 self.client._dispatch_event(PlayerErrorEvent(self, error))
                 _log.exception('[DefaultPlayer:%d] Encountered a request error whilst starting a new track.', self.guild_id)
 
-    async def update_state(self, state: dict):
+    async def update_state(self, state: RawPlayerState):
         """
         Updates the position of the player.
 
