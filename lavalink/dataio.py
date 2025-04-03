@@ -30,17 +30,42 @@ from .utfm_codec import read_utfm
 
 
 class DataReader:
-    __slots__ = ('_buf',)
+    __slots__ = ('_buf', '_mark')
 
     def __init__(self, base64_str: str):
         self._buf: Final[BytesIO] = BytesIO(b64decode(base64_str))
+        self._mark: Optional[int] = None
 
     @property
     def remaining(self) -> int:
-        """ The amount of bytes left to be read. """
+        """
+        The amount of bytes left to be read.
+        """
         return self._buf.getbuffer().nbytes - self._buf.tell()
 
-    def _read(self, count: int):
+    def mark(self) -> None:
+        """
+        Marks the current position of the buffer to allow rewinding.
+        """
+        self._mark = self._buf.tell()
+
+    def rewind(self) -> None:
+        """
+        Rewinds the buffer back to its marked position. If a position has not been marked,
+        this will raise ``IOError``.
+
+        After rewinding, the mark is cleared.
+        """
+        if self._mark is None or not isinstance(self._mark, int):
+            raise IOError('Cannot rewind buffer without a marker!')
+
+        if self._mark < 0:
+            raise IOError('Cannot rewind buffer to a negative position!')
+
+        self._buf.seek(self._mark)
+        self._mark = None
+
+    def _read(self, count: int) -> bytes:
         return self._buf.read(count)
 
     def read_byte(self) -> bytes:
