@@ -251,7 +251,7 @@ class Transport:
 
         if op == 'ready':
             self.session_id = data['sessionId']
-            await self._node.manager._handle_node_ready(self._node)
+            self._loop.create_task(self._node.manager._handle_node_ready(self._node))
             self.client._dispatch_event(NodeReadyEvent(self._node, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
