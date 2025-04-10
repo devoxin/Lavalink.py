@@ -167,7 +167,9 @@ class Transport:
 
                 return
             except Exception as exc:  # pylint: disable=W0718
-                if isinstance(exc, aiohttp.ClientConnectorError):
+                if isinstance(exc, asyncio.TimeoutError):
+                    _log.warning('[Node:%s] Timed out whilst attempting to establish a connection', self._node.name)
+                elif isinstance(exc, aiohttp.ClientConnectorError):
                     _log.warning('[Node:%s] Invalid response received; is the server running on the correct port?', self._node.name)
                 else:
                     _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink', self._node.name)
