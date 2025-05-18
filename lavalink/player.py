@@ -408,7 +408,7 @@ class DefaultPlayer(BasePlayer):
 
         await self.node.update_player(guild_id=self._internal_id, position=position)
 
-    async def set_filters(self, *filters: Filter):
+    async def set_filters(self, *filters: Filter, replace: bool = False):
         """|coro|
 
         This sets multiple filters at once.
@@ -420,6 +420,8 @@ class DefaultPlayer(BasePlayer):
         ----------
         *filters: :class:`Filter`
             The filters to apply.
+        replace: :class:`bool`
+            Whether to clear all existing filters.
 
         Raises
         ------
@@ -430,12 +432,15 @@ class DefaultPlayer(BasePlayer):
             if not isinstance(_filter, Filter):
                 raise TypeError(f'Expected object of type Filter, not {type(_filter).__name__}')
 
-            filter_name = type(_filter).__name__.lower()
-            self.filters[filter_name] = _filter
+        if replace:
+            self.filters.clear()
+
+        for _filter in filters:
+            self.filters[type(_filter).__name__.lower()] = _filter
 
         await self._apply_filters()
 
-    async def set_filter(self, _filter: Filter):
+    async def set_filter(self, _filter: Filter, *, replace: bool = False):
         """|coro|
 
         Applies the corresponding filter within Lavalink.
@@ -453,6 +458,8 @@ class DefaultPlayer(BasePlayer):
         ----------
         _filter: :class:`Filter`
             The filter instance to set.
+        replace: :class:`bool`
+            Whether to clear all existing filters.
 
         Raises
         ------
@@ -462,8 +469,10 @@ class DefaultPlayer(BasePlayer):
         if not isinstance(_filter, Filter):
             raise TypeError(f'Expected object of type Filter, not {type(_filter).__name__}')
 
-        filter_name = type(_filter).__name__.lower()
-        self.filters[filter_name] = _filter
+        if replace:
+            self.filters.clear()
+
+        self.filters[type(_filter).__name__.lower()] = _filter
         await self._apply_filters()
 
     async def update_filter(self, _filter: Type[FilterT], **kwargs):
