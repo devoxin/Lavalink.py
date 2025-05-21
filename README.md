@@ -45,6 +45,6 @@ The Lavalink server requires an x86 or ARM machine running either Windows, or an
 It is highly recommended that you invest in a dedicated server or a [VPS](https://en.wikipedia.org/wiki/Virtual_private_server). "Hosts" like Glitch, Heroku, etc., are not guaranteed to work with Lavalink, therefore you should try to avoid them. Support will not be offered should you choose to try and host Lavalink on these platforms.
 
 ## Need Further Help?
-<!--[Discord Server](...)-->
+[Discord Server](https://discord.gg/SbJXU9s)
 
 [Documentation]
