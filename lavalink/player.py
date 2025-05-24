@@ -24,7 +24,7 @@ SOFTWARE.
 import logging
 from random import randrange
 from time import time
-from typing import (TYPE_CHECKING, Dict, List, Optional, Type,  # Literal
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type,  # Literal
                     TypeVar, Union)
 
 from .abc import BasePlayer, DeferredAudioTrack
@@ -154,7 +154,7 @@ class DefaultPlayer(BasePlayer):
         """
         self._user_data.update({key: value})
 
-    def fetch(self, key: object, default=None):
+    def fetch(self, key: object, default=None) -> Any:
         """
         Retrieves the related value from the stored user data.
 
