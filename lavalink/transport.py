@@ -70,7 +70,7 @@ class Transport:
             _log.debug("[Node:%s] Host prefixed with secure protocol, implicitly using SSL.")
             ssl = True
 
-        for prefix in ("http://", "https://", "ws://", "ws://"):
+        for prefix in ("http://", "https://", "ws://", "wss://"):
             host = host.removeprefix(prefix)
 
         self._host: Final[str] = host
