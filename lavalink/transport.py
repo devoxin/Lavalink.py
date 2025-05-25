@@ -66,6 +66,13 @@ class Transport:
         self._message_queue: Final[List[Dict[str, Any]]] = []
         self.trace_requests = False
 
+        if host.startswith(("https://", "wss://")):
+            _log.debug("[Node:%s] Host prefixed with secure protocol, implicitly using SSL.")
+            ssl = True
+
+        for prefix in ("http://", "https://", "ws://", "ws://"):
+            host = host.removeprefix(prefix)
+
         self._host: Final[str] = host
         self._port: Final[int] = port
         self._password: Final[str] = password
