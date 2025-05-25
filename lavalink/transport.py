@@ -71,7 +71,8 @@ class Transport:
             ssl = True
 
         for prefix in ("http://", "https://", "ws://", "wss://"):
-            host = host.removeprefix(prefix)
+            if host.startswith(prefix):
+                host = host[len(prefix):]
 
         self._host: Final[str] = host
         self._port: Final[int] = port
