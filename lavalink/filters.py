@@ -25,10 +25,23 @@ SOFTWARE.
 # At least, until I can come up with a better solution to doing this.
 # pylint: disable=arguments-differ
 
-from typing import Any, Dict, List, Tuple, overload
+from typing import Any, Dict, Sequence, Tuple, overload
 
 from .abc import Filter
 from .common import MISSING
+
+__all__ = (
+    "Volume",
+    "Equalizer",
+    "Karaoke",
+    "Timescale",
+    "Tremolo",
+    "Vibrato",
+    "Rotation",
+    "LowPass",
+    "ChannelMix",
+    "Distortion",
+)
 
 
 class Volume(Filter[float]):
@@ -66,16 +79,16 @@ class Volume(Filter[float]):
         return {'volume': self.values}
 
 
-class Equalizer(Filter[List[float]]):
+class Equalizer(Filter[Sequence[float]]):
     """
     Allows modifying the gain of 15 bands, to boost or reduce the volume of specific frequency ranges.
     For example, this could be used to boost the low (bass) frequencies to act as a 'bass boost'.
     """
-    def __init__(self, gains: List[float] = MISSING):
+    def __init__(self, gains: Sequence[float] = MISSING):
         super().__init__([0.0] * 15 if gains is MISSING else gains)
 
     @overload
-    def update(self, *, bands: List[Tuple[int, float]]):
+    def update(self, *, bands: Sequence[Tuple[int, float]]):
         ...
 
     @overload
@@ -106,7 +119,7 @@ class Equalizer(Filter[List[float]]):
 
         Parameters
         ----------
-        bands: List[Tuple[:class:`int`, :class:`float`]]
+        bands: Sequence[Tuple[:class:`int`, :class:`float`]]
             The bands to modify, and their respective gains.
         band: :class:`int`
             The band to modify.

@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import (TYPE_CHECKING, Any, Dict, Final, Generic, List, Optional,
+from typing import (TYPE_CHECKING, Any, Dict, Final, Generic, Optional, Sequence,
                     TypeVar, Union, cast)
 
 from .common import MISSING, VoiceServerUpdateData, VoiceStateUpdateData
@@ -36,9 +36,18 @@ if TYPE_CHECKING:
     from .node import Node
     from .server import LoadResult
 
+__all__ = (
+    "BasePlayer",
+    "DeferredAudioTrack",
+    "Source",
+    "Filter",
+)
+
 _log = logging.getLogger(__name__)
 
-FilterValueT = TypeVar('FilterValueT', Dict[str, Any], List[float], List[int], float)
+FilterValueT = TypeVar('FilterValueT', Dict[str, Any], Sequence[float], Sequence[int], float)
+
+
 
 
 class BasePlayer(ABC):
@@ -352,7 +361,7 @@ class Filter(ABC, Generic[FilterValueT]):
 
     Parameters
     ----------
-    values: Union[Dict[str, Any], List[Union[float, int]], float]
+    values: Union[Dict[str, Any], Sequence[Union[float, int]], float]
         The values for this filter.
     plugin_filter: :class:`bool`
         Whether this filter is part of a Lavalink plugin. Typically, this will be ``True``
@@ -360,7 +369,7 @@ class Filter(ABC, Generic[FilterValueT]):
 
     Attributes
     ----------
-    values: Union[Dict[str, Any], List[Union[float, int]], float]
+    values: Union[Dict[str, Any], Sequence[Union[float, int]], float]
         The values for this filter.
     plugin_filter: :class:`bool`
         Whether this filter is part of a Lavalink plugin.

@@ -24,7 +24,7 @@ SOFTWARE.
 from asyncio import Task
 from collections import defaultdict
 from time import time
-from typing import (TYPE_CHECKING, Any, Dict, Final, List, Optional, Type, TypeVar,
+from typing import (TYPE_CHECKING, Any, Dict, Final, List, Optional, Sequence, Type, TypeVar,
                     Union, cast, overload)
 
 from .abc import BasePlayer, Filter
@@ -39,6 +39,10 @@ from .transport import Transport
 if TYPE_CHECKING:
     from .client import Client
     from .nodemanager import NodeManager
+
+__all__ = (
+    "Node",
+)
 
 T = TypeVar('T')
 
@@ -94,24 +98,24 @@ class Node:
         return self._transport.ws_connected
 
     @property
-    def _original_players(self) -> List[BasePlayer]:
+    def _original_players(self) -> Sequence[BasePlayer]:
         """
         Returns a list of players that were assigned to this node, but were moved due to failover etc.
 
         Returns
         -------
-        List[:class:`BasePlayer`]
+        Sequence[:class:`BasePlayer`]
         """
         return [p for p in self.client.player_manager.values() if p._original_node == self]
 
     @property
-    def players(self) -> List[BasePlayer]:
+    def players(self) -> Sequence[BasePlayer]:
         """
         Returns a list of all players on this node.
 
         Returns
         -------
-        List[:class:`BasePlayer`]
+        Sequence[:class:`BasePlayer`]
         """
         return [p for p in self.client.player_manager.values() if p.node == self]
 
@@ -211,19 +215,19 @@ class Node:
         """
         return await self.request('GET', 'decodetrack', params={'track': track}, to=AudioTrack)
 
-    async def decode_tracks(self, tracks: List[str]) -> List[AudioTrack]:
+    async def decode_tracks(self, tracks: Sequence[str]) -> Sequence[AudioTrack]:
         """|coro|
 
         Decodes a list of base64-encoded track strings into a list of :class:`AudioTrack`.
 
         Parameters
         ----------
-        tracks: List[:class:`str`]
+        tracks: Sequence[:class:`str`]
             A list of base64-encoded ``track`` strings.
 
         Returns
         -------
-        List[:class:`AudioTrack`]
+        Sequence[:class:`AudioTrack`]
             A list of decoded AudioTracks.
         """
         response = await self.request('POST', 'decodetracks', json=tracks)
@@ -335,7 +339,7 @@ class Node:
 
         return await self.request('GET', f'sessions/{session_id}/players/{guild_id}')  # type: ignore
 
-    async def get_players(self) -> List[RawPlayer]:
+    async def get_players(self) -> Sequence[RawPlayer]:
         """|coro|
 
         Retrieves a list of players from the node.
@@ -343,7 +347,7 @@ class Node:
 
         Returns
         -------
-        List[:class:`RawPlayer`]
+        Sequence[:class:`RawPlayer`]
         """
         session_id = self.session_id
 
@@ -362,7 +366,7 @@ class Node:
                             end_time: int = ...,
                             volume: int = ...,
                             paused: bool = ...,
-                            filters: Optional[List[Filter]] = ...,
+                            filters: Optional[Sequence[Filter]] = ...,
                             voice_state: RawPlayerVoiceState = ...,
                             user_data: Dict[str, Any] = ...,
                             **kwargs) -> Optional[RawPlayer]:
@@ -378,7 +382,7 @@ class Node:
                             end_time: int = ...,
                             volume: int = ...,
                             paused: bool = ...,
-                            filters: Optional[List[Filter]] = ...,
+                            filters: Optional[Sequence[Filter]] = ...,
                             voice_state: RawPlayerVoiceState = ...,
                             user_data: Dict[str, Any] = ...,
                             **kwargs) -> Optional[RawPlayer]:
@@ -393,7 +397,7 @@ class Node:
                             end_time: int = ...,
                             volume: int = ...,
                             paused: bool = ...,
-                            filters: Optional[List[Filter]] = ...,
+                            filters: Optional[Sequence[Filter]] = ...,
                             voice_state: RawPlayerVoiceState = ...,
                             user_data: Dict[str, Any] = ...,
                             **kwargs) -> Optional[RawPlayer]:
@@ -408,7 +412,7 @@ class Node:
                             end_time: int = MISSING,
                             volume: int = MISSING,
                             paused: bool = MISSING,
-                            filters: Optional[List[Filter]] = MISSING,
+                            filters: Optional[Sequence[Filter]] = MISSING,
                             voice_state: RawPlayerVoiceState = MISSING,
                             user_data: Dict[str, Any] = MISSING,
                             **kwargs) -> Optional[RawPlayer]:
@@ -455,7 +459,7 @@ class Node:
             The new volume of the player. This must be within the range of 0 to 1000.
         paused: bool
             Whether to pause the player.
-        filters: Optional[List[:class:`Filter`]]
+        filters: Optional[Sequence[:class:`Filter`]]
             The filters to apply to the player.
             Specify ``None`` or ``[]`` to clear.
         voice_state: :class:`RawPlayerVoiceState`
@@ -621,7 +625,7 @@ class Node:
 
     @overload
     async def request(self, method: str, path: str, *, trace: bool = ..., versioned: bool = ...,  # type: ignore
-                      **kwargs) -> Union[Dict[Any, Any], List[Any], bool]:
+                      **kwargs) -> Union[Dict[Any, Any], Sequence[Any], bool]:
         ...
 
     async def request(self,  # type: ignore
@@ -631,7 +635,7 @@ class Node:
                       to: Optional[Union[Type[T], str]] = None,
                       trace: bool = False,
                       versioned: bool = True,
-                      **kwargs) -> Union[T, str, bool, Dict[Any, Any], List[Any]]:
+                      **kwargs) -> Union[T, str, bool, Dict[Any, Any], Sequence[Any]]:
         """|coro|
 
         .. _HTTP method: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
@@ -656,7 +660,7 @@ class Node:
                 .. code:: python
 
                     @classmethod
-                    def from_dict(cls, res: Union[Dict[Any, Any], List[Any]]):
+                    def from_dict(cls, res: Union[Dict[Any, Any], Sequence[Any]]):
                         return cls(res)
         trace: :class:`bool`
             Whether to enable trace logging for this request. This will return a more detailed error if the request fails,
@@ -682,9 +686,9 @@ class Node:
 
         Returns
         -------
-        Union[T, str, bool, Dict[Any, Any], List[Any]]
+        Union[T, str, bool, Dict[Any, Any], Sequence[Any]]
             - ``T`` or ``str`` if the ``to`` parameter was specified and either value provided.
-            - The raw JSON response (``Dict[Any, Any]`` or ``List[Any]``) if ``to`` was not provided.
+            - The raw JSON response (``Dict[Any, Any]`` or ``Sequence[Any]``) if ``to`` was not provided.
             - A bool, if the returned status code was ``204``. A value of ``True`` should typically mean the request was successful.
         """
         return await self._transport._request(method, path, to, trace, versioned, **kwargs)

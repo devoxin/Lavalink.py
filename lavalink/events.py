@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Final, Optional, Sequence, Union
 
 from .server import EndReason, Severity
 
@@ -29,6 +29,24 @@ if TYPE_CHECKING:
     from .abc import BasePlayer, DeferredAudioTrack
     from .node import Node
     from .server import AudioTrack
+
+__all__ = (
+    "Event",
+    "TrackStartEvent",
+    "TrackStuckEvent",
+    "TrackExceptionEvent",
+    "TrackEndEvent",
+    "TrackLoadFailedEvent",
+    "QueueEndEvent",
+    "PlayerUpdateEvent",
+    "NodeConnectedEvent",
+    "NodeDisconnectedEvent",
+    "NodeChangedEvent",
+    "NodeReadyEvent",
+    "WebSocketClosedEvent",
+    "IncomingWebSocketMessage",
+    "PlayerErrorEvent",
+)
 
 
 class Event:
@@ -341,7 +359,7 @@ class IncomingWebSocketMessage(Event):
 
     Attributes
     ----------
-    data: Union[Dict[Any, Any], List[Any]]
+    data: Union[Dict[Any, Any], Sequence[Any]]
         The received JSON-formatted data from the websocket.
     node: :class:`Node`
         The node responsible for this websocket message.
@@ -349,7 +367,7 @@ class IncomingWebSocketMessage(Event):
     __slots__ = ('data', 'node')
 
     def __init__(self, data, node: 'Node'):
-        self.data: Final[Union[Dict[Any, Any], List[Any]]] = data
+        self.data: Final[Union[Dict[Any, Any], Sequence[Any]]] = data
         self.node: Final['Node'] = node
 
 

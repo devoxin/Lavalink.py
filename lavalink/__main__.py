@@ -27,7 +27,7 @@ import sys
 import traceback
 from subprocess import PIPE, Popen
 from time import time
-from typing import List, Optional
+from typing import Optional, Sequence
 
 import requests
 
@@ -201,7 +201,7 @@ def download(dl_url, path):
         read_chunk(out)
 
 
-def select_release_unattended(non_draft: List[Release], version_selector: str) -> Release:
+def select_release_unattended(non_draft: Sequence[Release], version_selector: str) -> Release:
     matcher = SEMVER_REGEX.match(version_selector)
 
     if matcher:
@@ -253,7 +253,7 @@ def select_release_unattended(non_draft: List[Release], version_selector: str) -
     return selected_release
 
 
-def select_release(non_draft: List[Release]) -> Release:
+def select_release(non_draft: Sequence[Release]) -> Release:
     suitable_releases = []
 
     for release in non_draft:
@@ -301,7 +301,7 @@ def select_release(non_draft: List[Release]) -> Release:
     return suitable_releases[selected]
 
 
-def download_jar(arguments: List[str]):
+def download_jar(arguments: Sequence[str]):
     try:
         res = requests.get(RELEASES_URL, timeout=15).json()
     except requests.exceptions.JSONDecodeError:
@@ -332,7 +332,7 @@ def download_jar(arguments: List[str]):
     sys.exit(0)
 
 
-def download_config(arguments: List[str], branch: str):
+def download_config(arguments: Sequence[str], branch: str):
     cwd = os.getcwd()
     dl_url = APPLICATION_BASE_URL.format(branch)
     dl_path = os.path.join(cwd, 'application.yml')
@@ -345,7 +345,7 @@ def download_config(arguments: List[str], branch: str):
     sys.exit(0)
 
 
-def print_info(arguments: List[str]):
+def print_info(arguments: Sequence[str]):
     check_names = ['lavalink.jar', 'Lavalink.jar', 'LAVALINK.JAR']
 
     if arguments:

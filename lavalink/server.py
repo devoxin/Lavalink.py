@@ -25,13 +25,41 @@ This module serves to contain all entities which are deserialized using response
 the Lavalink server.
 """
 from enum import Enum as _Enum
-from typing import (TYPE_CHECKING, Any, Dict, Final, List, Literal, Optional,
+from typing import (TYPE_CHECKING, Any, Dict, Final, List, Literal, Optional, Sequence,
                     Type, TypedDict, TypeVar, Union, cast)
 
 from .errors import InvalidTrack
 
 if TYPE_CHECKING:
     from .abc import DeferredAudioTrack
+
+__all__ = (
+    "AudioTrack",
+    "EndReason",
+    "LoadType",
+    "Severity",
+    "PlaylistInfo",
+    "LoadResultError",
+    "LoadResult",
+    "Plugin",
+    "RawPlugin",
+    "RawPlayerState",
+    "RawPlayerVoiceState",
+    "RawTrackInfo",
+    "RawTrack",
+    "RawPlayer",
+    "RawIpBlock",
+    "RawFailingAddress",
+    "RawRouteplannerDetails",
+    "RawVersion",
+    "RawGit",
+    "RawInfo",
+    "RawMemory",
+    "RawCpu",
+    "RawStats",
+    "RawSession",
+    "RawRouteplanner",
+)
 
 EnumT = TypeVar('EnumT', bound='Enum')
 
@@ -281,7 +309,7 @@ class LoadResult:
     ----------
     load_type: :class:`LoadType`
         The load type of this result.
-    tracks: List[Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`]]
+    tracks: Sequence[Union[:class:`AudioTrack`, :class:`DeferredAudioTrack`]]
         The tracks in this result.
     playlist_info: :class:`PlaylistInfo`
         The playlist metadata for this result.
@@ -295,12 +323,12 @@ class LoadResult:
     """
     __slots__ = ('load_type', 'playlist_info', 'tracks', 'plugin_info', 'error')
 
-    def __init__(self, load_type: LoadType, tracks: List[Union[AudioTrack, 'DeferredAudioTrack']],
+    def __init__(self, load_type: LoadType, tracks: Sequence[Union[AudioTrack, 'DeferredAudioTrack']],
                  playlist_info: PlaylistInfo = PlaylistInfo.none(), plugin_info: Optional[Dict[str, Any]] = None,
                  error: Optional[LoadResultError] = None):
         self.load_type: Final[LoadType] = load_type
         self.playlist_info: Final[PlaylistInfo] = playlist_info
-        self.tracks: Final[List[Union[AudioTrack, 'DeferredAudioTrack']]] = tracks
+        self.tracks: Final[Sequence[Union[AudioTrack, 'DeferredAudioTrack']]] = tracks
         self.plugin_info: Final[Optional[Dict[str, Any]]] = plugin_info
         self.error: Final[Optional[LoadResultError]] = error
 
@@ -320,9 +348,9 @@ class LoadResult:
     def from_dict(cls, mapping: dict):
         plugin_info: Optional[dict] = None
         playlist_info: Optional[PlaylistInfo] = PlaylistInfo.none()
-        tracks: List[Union[AudioTrack, 'DeferredAudioTrack']] = []
+        tracks: Sequence[Union[AudioTrack, 'DeferredAudioTrack']] = []
 
-        data: Union[List[Dict[str, Any]], Dict[str, Any]] = mapping['data']
+        data: Union[Sequence[Dict[str, Any]], Dict[str, Any]] = mapping['data']
         load_type = LoadType.from_str(mapping['loadType'])
 
         if isinstance(data, dict):
@@ -457,7 +485,7 @@ class RawFailingAddress(TypedDict):
 
 class RawRouteplannerDetails(TypedDict):
     ipBlock: RawIpBlock
-    failingAddresses: List[RawFailingAddress]
+    failingAddresses: Sequence[RawFailingAddress]
     rotateIndex: str
     ipIndex: str
     currentAddress: str
@@ -486,9 +514,9 @@ class RawInfo(TypedDict):
     git: RawGit
     jvm: str
     lavaplayer: str
-    sourceManagers: List[str]
-    filters: List[str]
-    plugins: List[RawPlugin]
+    sourceManagers: Sequence[str]
+    filters: Sequence[str]
+    plugins: Sequence[RawPlugin]
 
 
 class RawMemory(TypedDict):

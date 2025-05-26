@@ -31,6 +31,18 @@ from .errors import InvalidTrack
 from .player import AudioTrack
 from .source_decoders import DEFAULT_DECODER_MAPPING
 
+__all__ = (
+    "V2_KEYSET",
+    "V3_KEYSET",
+    "timestamp_to_millis",
+    "format_time",
+    "parse_time",
+    "decode_track",
+    "encode_track",
+    "encode_track_v2",
+    "encode_track_v3",
+)
+
 V2_KEYSET = {'title', 'author', 'length', 'identifier', 'isStream', 'uri', 'sourceName', 'position'}
 V3_KEYSET = V2_KEYSET | {'artworkUrl', 'isrc'}
 

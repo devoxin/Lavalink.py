@@ -23,6 +23,14 @@ SOFTWARE.
 """
 from typing import Any, Literal, Optional, TypedDict
 
+__all__ = (
+    "MISSING",
+    "VoiceStateUpdateData",
+    "VoiceServerUpdateData",
+    "VoiceStateUpdatePayload",
+    "VoiceServerUpdatePayload",
+)
+
 
 class _MissingObj:
     __slots__ = ()

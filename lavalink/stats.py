@@ -26,6 +26,11 @@ from typing import TYPE_CHECKING, Final
 if TYPE_CHECKING:
     from .node import Node
 
+__all__ = (
+    "Penalty",
+    "Stats",
+)
+
 
 class Penalty:
     """

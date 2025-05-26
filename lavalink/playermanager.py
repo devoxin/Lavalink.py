@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import (TYPE_CHECKING, Callable, Dict, Final, Generic, Iterator, Optional,
+from typing import (TYPE_CHECKING, Callable, Dict, Final, Generic, Iterator, Optional, Sequence,
                     Tuple, Type, TypeVar, Union, overload)
 
 from .errors import ClientError, RequestError
@@ -31,6 +31,10 @@ from .player import BasePlayer
 
 if TYPE_CHECKING:
     from .client import Client
+
+__all__ = (
+    "PlayerManager",
+)
 
 _log = logging.getLogger(__name__)
 
@@ -75,7 +79,7 @@ class PlayerManager(Generic[PlayerT]):
         """ Returns an iterator that yields only values. """
         yield from self.players.values()
 
-    def find_all(self, predicate: Optional[Callable[[PlayerT], bool]] = None):
+    def find_all(self, predicate: Optional[Callable[[PlayerT], bool]] = None) -> Sequence[PlayerT]:
         """
         Returns a list of players that match the given predicate.
 
@@ -86,7 +90,7 @@ class PlayerManager(Generic[PlayerT]):
 
         Returns
         -------
-        List[:class:`BasePlayer`]
+        Sequence[:class:`BasePlayer`]
             This could be a :class:`DefaultPlayer` if no custom player implementation
             was provided.
         """

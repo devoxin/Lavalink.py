@@ -38,6 +38,10 @@ from .server import AudioTrack, RawPlayerState
 if TYPE_CHECKING:
     from .node import Node
 
+__all__ = (
+    "DefaultPlayer",
+)
+
 _log = logging.getLogger(__name__)
 
 FilterT = TypeVar('FilterT', bound=Filter)

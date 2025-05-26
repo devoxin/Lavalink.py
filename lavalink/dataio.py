@@ -28,6 +28,11 @@ from typing import Final, Optional
 
 from .utfm_codec import read_utfm
 
+__all__ = (
+    "DataReader",
+    "DataWriter",
+)
+
 
 class DataReader:
     __slots__ = ('_buf', '_mark')

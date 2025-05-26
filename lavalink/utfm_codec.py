@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+__all__ = (
+    "read_utfm",
+)
+
 
 def read_utfm(utf_len: int, utf_bytes: bytes) -> str:
     chars = []

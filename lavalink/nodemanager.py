@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Sequence, Tuple
 
 from .errors import ClientError
 from .node import Node
@@ -30,6 +30,10 @@ from .node import Node
 if TYPE_CHECKING:
     from .client import Client
     from .abc import BasePlayer
+
+__all__ = (
+    "NodeManager",
+)
 
 _log = logging.getLogger(__name__)
 
@@ -73,7 +77,7 @@ class NodeManager:
         yield from self.nodes
 
     @property
-    def available_nodes(self) -> List[Node]:
+    def available_nodes(self) -> Sequence[Node]:
         """
         Returns a list of available nodes.
         A node is considered available if it has an open WebSocket connection.
@@ -151,7 +155,7 @@ class NodeManager:
         """
         self.nodes.remove(node)
 
-    def get_nodes_by_region(self, region_key: str) -> List[Node]:
+    def get_nodes_by_region(self, region_key: str) -> Sequence[Node]:
         """
         Get a list of nodes by their region.
         This does not account for node availability, so the nodes returned
@@ -166,7 +170,7 @@ class NodeManager:
 
         Returns
         -------
-        List[:class:`Node`]
+        Sequence[:class:`Node`]
             A list of nodes. Could be empty if no nodes were found with the specified region key.
         """
         return [n for n in self.nodes if n.region == region_key]
@@ -198,7 +202,7 @@ class NodeManager:
 
         return None
 
-    def find_ideal_node(self, region: Optional[str] = None, exclude: Optional[List[Node]] = None) -> Optional[Node]:
+    def find_ideal_node(self, region: Optional[str] = None, exclude: Optional[Sequence[Node]] = None) -> Optional[Node]:
         """
         Finds the best (least used) node in the given region, if applicable.
 
@@ -206,7 +210,7 @@ class NodeManager:
         ----------
         region: Optional[:class:`str`]
             The region to find a node in. Defaults to ``None``.
-        exclude: Optional[List[:class:`Node`]]
+        exclude: Optional[Sequence[:class:`Node`]]
             A list of nodes to exclude from the choice.
 
         Returns

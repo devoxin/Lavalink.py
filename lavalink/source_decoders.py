@@ -25,6 +25,12 @@ from typing import Any, Callable, Dict, Mapping
 
 from .dataio import DataReader
 
+__all__ = (
+    "decode_probe_info",
+    "decode_lavasrc_fields",
+    "DEFAULT_DECODER_MAPPING",
+)
+
 
 def decode_probe_info(reader: DataReader) -> Mapping[str, Any]:
     probe_info = reader.read_utf().decode()

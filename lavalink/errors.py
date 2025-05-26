@@ -26,6 +26,15 @@ from typing import TYPE_CHECKING, Any, Dict, Final, Optional
 if TYPE_CHECKING:
     from .node import Node
 
+__all__ = (
+    "LavalinkError",
+    "ClientError",
+    "AuthenticationError",
+    "InvalidTrack",
+    "LoadError",
+    "RequestError",
+)
+
 
 class LavalinkError(Exception):
     """ Base exception for all errors raised by Lavalink.py. """

@@ -27,8 +27,8 @@ import logging
 import random
 from collections import defaultdict
 from inspect import getmembers, ismethod
-from typing import (Any, Callable, Coroutine, Dict, Final, Generic, List,
-                    Optional, Sequence, Set, Tuple, Type, TypeVar, Union)
+from typing import (Any, Callable, Coroutine, Dict, Final, Generic, Optional,
+                    Sequence, Set, Tuple, Type, TypeVar, Union)
 
 import aiohttp
 
@@ -41,6 +41,10 @@ from .nodemanager import NodeManager
 from .player import DefaultPlayer
 from .playermanager import PlayerManager
 from .server import AudioTrack, LoadResult
+
+__all__ = (
+    "Client",
+)
 
 _log = logging.getLogger(__name__)
 
@@ -110,7 +114,7 @@ class Client(Generic[PlayerT]):
         self.sources: Final[Set[Source]] = set()
 
     @property
-    def nodes(self) -> List[Node]:
+    def nodes(self) -> Sequence[Node]:
         """
         Convenience shortcut for :attr:`NodeManager.nodes`.
         """
@@ -417,14 +421,14 @@ class Client(Generic[PlayerT]):
 
         return await node.decode_track(track)
 
-    async def decode_tracks(self, tracks: List[str], node: Optional[Node] = None) -> List[AudioTrack]:
+    async def decode_tracks(self, tracks: Sequence[str], node: Optional[Node] = None) -> Sequence[AudioTrack]:
         """|coro|
 
         Decodes a list of base64-encoded track strings into a list of :class:`AudioTrack`.
 
         Parameters
         ----------
-        tracks: List[:class:`str`]
+        tracks: Sequence[:class:`str`]
             A list of base64-encoded ``track`` strings.
         node: Optional[:class:`Node`]
             The node to use for the query. Defaults to ``None`` which is a random node.
@@ -436,7 +440,7 @@ class Client(Generic[PlayerT]):
 
         Returns
         -------
-        List[:class:`AudioTrack`]
+        Sequence[:class:`AudioTrack`]
             A list of decoded :class:`AudioTrack`.
         """
         if not node:
@@ -513,7 +517,7 @@ class Client(Generic[PlayerT]):
         loop = asyncio.get_event_loop()
         loop.create_task(self.__real_dispatch(event, hooks))
 
-    async def __real_dispatch(self, event: Event, hooks: List[Callable[[Event], Coroutine[Any, Any, Any]]]):
+    async def __real_dispatch(self, event: Event, hooks: Sequence[Callable[[Event], Coroutine[Any, Any, Any]]]):
         async def _hook_wrapper(hook, event):
             try:
                 await hook(event)

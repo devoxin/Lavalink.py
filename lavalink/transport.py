@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Sequence, Union
 
 import aiohttp
 
@@ -40,7 +40,12 @@ if TYPE_CHECKING:
     from .client import Client
     from .node import Node
 
+__all__ = (
+    "Transport",
+)
+
 _log = logging.getLogger(__name__)
+
 CLOSE_TYPES = (
     # aiohttp.WSMsgType.CLOSE,
     aiohttp.WSMsgType.CLOSING,
