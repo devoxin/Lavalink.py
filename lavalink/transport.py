@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Union
 
 import aiohttp
 

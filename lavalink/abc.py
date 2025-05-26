@@ -48,8 +48,6 @@ _log = logging.getLogger(__name__)
 FilterValueT = TypeVar('FilterValueT', Dict[str, Any], Sequence[float], Sequence[int], float)
 
 
-
-
 class BasePlayer(ABC):
     """
     Represents the BasePlayer all players must be inherited from.

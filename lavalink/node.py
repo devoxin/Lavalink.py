@@ -24,7 +24,7 @@ SOFTWARE.
 from asyncio import Task
 from collections import defaultdict
 from time import time
-from typing import (TYPE_CHECKING, Any, Dict, Final, List, Optional, Sequence, Type, TypeVar,
+from typing import (TYPE_CHECKING, Any, Dict, Final, Optional, Sequence, Type, TypeVar,
                     Union, cast, overload)
 
 from .abc import BasePlayer, Filter
