@@ -256,7 +256,10 @@ class Music(commands.Cog):
             for track in tracks:
                 # requester isn't necessary but it helps keep track of who queued what.
                 # You can store additional metadata by passing it as a kwarg (i.e. key=value)
-                player.add(track=track, requester=ctx.author.id)
+                # Requester can be set with `track.requester = ctx.author.id`. Any other extra attributes
+                # must be set via track.extra.
+                track.extra["requester"] = ctx.author.id
+                player.add(track=track)
 
             embed.title = 'Playlist Enqueued!'
             embed.description = f'{results.playlist_info.name} - {len(tracks)} tracks'
@@ -267,7 +270,11 @@ class Music(commands.Cog):
 
             # requester isn't necessary but it helps keep track of who queued what.
             # You can store additional metadata by passing it as a kwarg (i.e. key=value)
-            player.add(track=track, requester=ctx.author.id)
+            # Requester can be set with `track.requester = ctx.author.id`. Any other extra attributes
+            # must be set via track.extra.
+            track.extra["requester"] = ctx.author.id
+
+            player.add(track=track)
 
         await ctx.send(embed=embed)
 

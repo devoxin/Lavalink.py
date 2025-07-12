@@ -212,6 +212,11 @@ class BasePlayer(ABC):
             return
 
         self._next = track
+
+        if 'user_data' not in options:
+            if track.user_data:
+                options['user_data'] = track.user_data
+
         response = await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, **options)
         return cast(RawPlayer, response)
 
