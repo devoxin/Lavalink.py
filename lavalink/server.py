@@ -138,6 +138,8 @@ class AudioTrack:
         Addition track info provided by plugins.
     user_data: Optional[Dict[str, Any]]
         The user data that was attached to the track, if any.
+        Any data contained within this dict will be sent to the server when the track instance
+        is passed to :func:`BasePlayer.play_track`. This can be useful for, e.g., setting a playback token per-track.
     extra: Dict[str, Any]
         Any extra properties given to this AudioTrack will be stored here.
     """
