@@ -155,6 +155,11 @@ class BasePlayer(ABC):
             The kwargs to use when playing. You can specify any extra parameters that may be
             used by plugins, which offer extra features not supported out-of-the-box by Lavalink.py.
 
+            Note
+            ----
+            Keyword argument names are given to the server exactly as they are typed, so make sure you don't
+            mix up snake_case and camelCase!
+
         Returns
         -------
         Optional[:class:`RawPlayer`]
