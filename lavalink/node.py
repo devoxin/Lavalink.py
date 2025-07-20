@@ -23,7 +23,7 @@ SOFTWARE.
 """
 from asyncio import Task
 from collections import defaultdict
-from time import time
+from time import monotonic
 from typing import (TYPE_CHECKING, Any, Dict, Final, Optional, Sequence, Type, TypeVar,
                     Union, cast, overload)
 
@@ -140,14 +140,14 @@ class Node:
             The latency, in milliseconds. ``-1`` if an error occurred during the request (e.g. node is unreachable),
             otherwise, a positive number.
         """
-        start = time()
+        start = monotonic()
 
         try:
             await self.get_version()
         except (AuthenticationError, ClientError, RequestError):
             return -1
 
-        return (time() - start) * 1000
+        return (monotonic() - start) * 1000
 
     async def connect(self, force: bool = False) -> Optional[Task]:
         """|coro|
