@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import logging
 from random import randrange
-from time import time
+from time import monotonic
 from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Type,  # Literal
                     TypeVar, Union)
 
@@ -142,7 +142,7 @@ class DefaultPlayer(BasePlayer):
         if self.paused or self._internal_pause:
             return min(self._last_position, self.current.duration)
 
-        difference = int(time() * 1000) - self._last_update
+        difference = int(monotonic() * 1000) - self._last_update
         return min(self._last_position + difference, self.current.duration)
 
     def store(self, key: object, value: object):
@@ -645,7 +645,7 @@ class DefaultPlayer(BasePlayer):
         state: :class:`dict`
             The state that is given to update.
         """
-        self._last_update = int(time() * 1000)
+        self._last_update = int(monotonic() * 1000)
         self._last_position = state.get('position', 0)
         self.position_timestamp = state.get('time', 0)
 
@@ -692,7 +692,7 @@ class DefaultPlayer(BasePlayer):
 
                 await self.node.update_player(guild_id=self._internal_id, encoded_track=playable_track, position=last_position,
                                               paused=self.paused, volume=self.volume)
-                self._last_update = int(time() * 1000)
+                self._last_update = int(monotonic() * 1000)
 
             if self.filters:
                 await self._apply_filters()

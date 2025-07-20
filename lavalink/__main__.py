@@ -26,7 +26,7 @@ import re
 import sys
 import traceback
 from subprocess import PIPE, Popen
-from time import time
+from time import monotonic
 from typing import Optional, Sequence
 
 import requests
@@ -166,15 +166,15 @@ def format_bytes(length: float) -> str:
 def download(dl_url, path):
     res = requests.get(dl_url, stream=True, timeout=15)
 
-    download_begin = round(time() * 1000)
+    download_begin = round(monotonic() * 1000)
 
     def report_progress(cur, tot):
         bar_len = 32
         progress = float(cur) / tot
         filled_len = int(round(bar_len * progress))
         percent = round(progress * 100, 2)
+        elapsed = round(monotonic() * 1000) - download_begin
 
-        elapsed = round(time() * 1000) - download_begin
         if elapsed > 0:
             correction = 1000 / elapsed
             speed = cur * correction
