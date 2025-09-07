@@ -259,11 +259,6 @@ class PlaylistInfo:
         self.name: Final[str] = name
         self.selected_track: Final[int] = selected_track
 
-    def __getitem__(self, k):  # Exists only for compatibility, don't blame me
-        if k == 'selectedTrack':
-            k = 'selected_track'
-        return self.__getattribute__(k)
-
     @classmethod
     def from_dict(cls, mapping: Dict[str, Any]):
         return cls(mapping['name'], mapping.get('selectedTrack', -1))
