@@ -333,14 +333,6 @@ class LoadResult:
         self.plugin_info: Final[Optional[Dict[str, Any]]] = plugin_info
         self.error: Final[Optional[LoadResultError]] = error
 
-    def __getitem__(self, k):  # Exists only for compatibility, don't blame me
-        if k == 'loadType':
-            k = 'load_type'
-        elif k == 'playlistInfo':
-            k = 'playlist_info'
-
-        return self.__getattribute__(k)
-
     @classmethod
     def empty(cls):
         return LoadResult(LoadType.EMPTY, [])
