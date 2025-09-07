@@ -298,6 +298,10 @@ class LoadResultError:
         self.cause: Final[str] = error['cause']
         self.cause_stacktrace: Final[str] = error.get('causeStackTrace', '')
 
+    @classmethod
+    def create(cls, message: str, severity: Severity, cause: str, stacktrace: str = '') -> 'LoadResultError':
+        return cls({'message': message, 'severity': severity, 'cause': cause, 'causeStackTrace': stacktrace})
+
     def __str__(self):
         return f'{self.message}: {self.cause} ({self.severity})'
 
@@ -326,10 +330,10 @@ class LoadResult:
     __slots__ = ('load_type', 'playlist_info', 'tracks', 'plugin_info', 'error')
 
     def __init__(self, load_type: LoadType, tracks: Sequence[Union[AudioTrack, 'DeferredAudioTrack']],
-                 playlist_info: PlaylistInfo = PlaylistInfo.none(), plugin_info: Optional[Dict[str, Any]] = None,
+                 playlist_info: Optional[PlaylistInfo] = None, plugin_info: Optional[Dict[str, Any]] = None,
                  error: Optional[LoadResultError] = None):
         self.load_type: Final[LoadType] = load_type
-        self.playlist_info: Final[PlaylistInfo] = playlist_info
+        self.playlist_info: Final[PlaylistInfo] = playlist_info or PlaylistInfo.none()
         self.tracks: Final[Sequence[Union[AudioTrack, 'DeferredAudioTrack']]] = tracks
         self.plugin_info: Final[Optional[Dict[str, Any]]] = plugin_info
         self.error: Final[Optional[LoadResultError]] = error
@@ -345,6 +349,24 @@ class LoadResult:
     @classmethod
     def empty(cls):
         return LoadResult(LoadType.EMPTY, [])
+
+    @classmethod
+    def from_search(cls, tracks: Sequence[Union[AudioTrack, 'DeferredAudioTrack']], playlist_info: Optional[PlaylistInfo] = None,
+                    plugin_info: Optional[Dict[str, Any]] = None) -> 'LoadResult':
+        return cls(LoadType.SEARCH, tracks, playlist_info, plugin_info)
+
+    @classmethod
+    def from_track(cls, track: Union[AudioTrack, 'DeferredAudioTrack'], plugin_info: Optional[Dict[str, Any]] = None) -> 'LoadResult':
+        return cls(LoadType.TRACK, [track], plugin_info=plugin_info)
+
+    @classmethod
+    def from_playlist(cls, tracks: Sequence[Union[AudioTrack, 'DeferredAudioTrack']], playlist_info: Optional[PlaylistInfo] = None,
+                      plugin_info: Optional[Dict[str, Any]] = None) -> 'LoadResult':
+        return cls(LoadType.PLAYLIST, tracks, playlist_info, plugin_info)
+
+    @classmethod
+    def from_error(cls, error: LoadResultError) -> 'LoadResult':
+        return cls(LoadType.ERROR, [], error=error)
 
     @classmethod
     def from_dict(cls, mapping: dict):
