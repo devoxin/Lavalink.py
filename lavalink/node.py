@@ -213,7 +213,7 @@ class Node:
         -------
         :class:`AudioTrack`
         """
-        return await self.request('GET', 'decodetrack', params={'track': track}, to=AudioTrack)
+        return await self.request('GET', 'decodetrack', params={'encodedTrack': track}, to=AudioTrack)
 
     async def decode_tracks(self, tracks: Sequence[str]) -> Sequence[AudioTrack]:
         """|coro|
