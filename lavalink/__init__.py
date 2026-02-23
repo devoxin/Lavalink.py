@@ -24,6 +24,10 @@ from .source_decoders import *
 from .stats import *
 from .utils import *
 
+__all__ = [
+    "listener",
+]
+
 
 def listener(*events: Type[Event]):
     """

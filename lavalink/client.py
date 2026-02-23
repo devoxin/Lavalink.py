@@ -26,9 +26,10 @@ import inspect
 import logging
 import random
 from collections import defaultdict
+from collections.abc import Awaitable
 from inspect import getmembers, ismethod
-from typing import (Any, Callable, Coroutine, Dict, Final, Generic, Optional,
-                    Sequence, Set, Tuple, Type, TypeVar, Union)
+from typing import (Any, Callable, Dict, Final, Generic, Optional, Sequence,
+                    Set, Tuple, Type, TypeVar, Union)
 
 import aiohttp
 
@@ -517,7 +518,7 @@ class Client(Generic[PlayerT]):
         loop = asyncio.get_event_loop()
         loop.create_task(self.__real_dispatch(event, hooks))
 
-    async def __real_dispatch(self, event: Event, hooks: Sequence[Callable[[Event], Coroutine[Any, Any, Any]]]):
+    async def __real_dispatch(self, event: Event, hooks: Sequence[Callable[[Event], Awaitable[Any]]]):
         async def _hook_wrapper(hook, event):
             try:
                 await hook(event)
