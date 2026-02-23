@@ -259,6 +259,8 @@ class BasePlayer(ABC):
 
             await self._dispatch_voice_update()
 
+        self._voice_state.update(channelId=data['channel_id'])
+
     async def _dispatch_voice_update(self):
         if {'sessionId', 'endpoint', 'token'} == self._voice_state.keys():
             await self.node.update_player(guild_id=self._internal_id, voice_state=self._voice_state)  # type: ignore
