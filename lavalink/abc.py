@@ -255,12 +255,13 @@ class BasePlayer(ABC):
             return
 
         if data['session_id'] != self._voice_state.get('sessionId'):
-            self._voice_state.update(sessionId=data['session_id'])
+            self._voice_state.update(sessionId=data['session_id'],
+                                     channelId=str(raw_channel_id))
 
             await self._dispatch_voice_update()
 
     async def _dispatch_voice_update(self):
-        if {'sessionId', 'endpoint', 'token'} == self._voice_state.keys():
+        if {'sessionId', 'endpoint', 'token', 'channelId'} == self._voice_state.keys():
             await self.node.update_player(guild_id=self._internal_id, voice_state=self._voice_state)  # type: ignore
 
     @abstractmethod
