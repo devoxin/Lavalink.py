@@ -450,6 +450,7 @@ class RawPlayerVoiceState(TypedDict):
     token: str
     endpoint: str
     sessionId: str
+    channelId: Optional[str]
 
 
 class RawTrackInfo(TypedDict):
