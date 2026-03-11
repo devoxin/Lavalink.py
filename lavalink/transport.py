@@ -412,7 +412,12 @@ class Transport:
                 if res.status == 204:
                     return True
 
-                raise RequestError(node=self._node, status=res.status, response=await res.json(),
+                try:
+                    response = await res.json()
+                except aiohttp.ContentTypeError:
+                    response = {}
+
+                raise RequestError(node=self._node, status=res.status, response=response,
                                    params=kwargs.get('params', {}))
         except (AuthenticationError, RequestError, asyncio.TimeoutError, aiohttp.ClientError):
             raise  # Pass the caught errors back to the caller in their 'original' form.
