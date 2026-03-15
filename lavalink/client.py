@@ -194,9 +194,7 @@ class Client(Generic[PlayerT]):
         cls: object
             An instance of a class containing event hook methods.
         """
-        methods = getmembers(cls, predicate=lambda meth: hasattr(meth, '__name__')
-                             and not meth.__name__.startswith('_') and ismethod(meth)
-                             and hasattr(meth, '_lavalink_events'))
+        methods = getmembers(cls, predicate=lambda meth: ismethod(meth) and hasattr(meth, '_lavalink_events'))
 
         for _, listener in methods:  # _ = meth_name
             # wrapped = partial(listener, cls)
