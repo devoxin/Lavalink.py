@@ -92,7 +92,7 @@ class Equalizer(Filter[Sequence[float]]):
         ...
 
     @overload
-    def update(self, *, band: int, gain: int):
+    def update(self, *, band: int, gain: float):
         ...
 
     def update(self, **kwargs):
