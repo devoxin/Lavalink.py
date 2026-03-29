@@ -69,7 +69,7 @@ class Transport:
         self._session: Final[aiohttp.ClientSession] = self.client._session
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self._message_queue: Final[List[Dict[str, Any]]] = []
-        self.trace_requests = self.client._request_tracebacks
+        self.trace_requests: bool = self.client._request_tracebacks
 
         if host.startswith(("https://", "wss://")):
             _log.debug("[Node:%s] Host prefixed with secure protocol, implicitly using SSL.")
