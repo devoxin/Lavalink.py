@@ -127,6 +127,18 @@ class Node:
 
         return self.stats.penalty.total
 
+    def set_request_tracebacks(self, enabled: bool):
+        """
+        Enables or disables request tracebacks for this node. When enabled, this will return any error traces in responses if an error occurs.
+        This **can** have an impact on overall performance, so is best left disabled unless you need it.
+
+        Parameters
+        ----------
+        enabled: :class:`bool`
+            Whether to enable request tracebacks for this node.
+        """
+        self._transport.trace_requests = enabled
+
     async def get_rest_latency(self) -> float:
         """|coro|
 

@@ -85,7 +85,7 @@ class PlayerManager(Generic[PlayerT]):
 
         Parameters
         ----------
-        predicate: Optional[Callable[[:class:BasePlayer], bool]]
+        predicate: Optional[Callable[[:class:`BasePlayer`], :class:`bool`]]
             A predicate to return specific players. Defaults to ``None``.
 
         Returns
