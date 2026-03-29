@@ -541,8 +541,7 @@ class Client(Generic[PlayerT]):
             return
 
         hooks = generic_hooks + targeted_hooks
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.__real_dispatch(event, hooks))
+        asyncio.create_task(self.__real_dispatch(event, hooks))
 
     async def __real_dispatch(self, event: Event, hooks: Sequence[Callable[[Event], Awaitable[Any]]]):
         async def _hook_wrapper(hook, event):
