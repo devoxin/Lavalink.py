@@ -57,14 +57,13 @@ LAVALINK_API_VERSION = 'v4'
 
 class Transport:
     """ The class responsible for handling connections to a Lavalink server. """
-    __slots__ = ('client', '_node', '_loop', '_session', '_ws', '_message_queue', 'trace_requests',
+    __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', 'trace_requests',
                  '_host', '_port', '_password', '_ssl', 'session_id', '_read_task', '_destroyed')
 
     def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str],
                  connect: bool = True):
         self.client: Final['Client'] = node.client
         self._node: Final['Node'] = node
-        self._loop: Final[asyncio.AbstractEventLoop] = asyncio.get_event_loop()
 
         self._session: Final[aiohttp.ClientSession] = self.client._session
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
@@ -130,7 +129,7 @@ class Transport:
             except Exception:  # pylint: disable=W0718
                 pass
 
-        return self._loop.create_task(self._connect())
+        return asyncio.create_task(self._connect())
 
     async def destroy(self):
         """|coro|
@@ -192,7 +191,7 @@ class Transport:
             else:
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 self.client._dispatch_event(NodeConnectedEvent(self._node))
-                self._read_task = self._loop.create_task(self._listen())
+                self._read_task = asyncio.create_task(self._listen())
 
                 if self._message_queue:
                     for message in self._message_queue:
@@ -225,7 +224,7 @@ class Transport:
 
             if msg.type == aiohttp.WSMsgType.TEXT and msg.data is not None:
                 _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
-                self._loop.create_task(self._handle_message_safe(msg))
+                asyncio.create_task(self._handle_message_safe(msg))
 
         if close_code is None:
             ws_close_code = self._ws.close_code
@@ -235,11 +234,11 @@ class Transport:
 
         _log.warning('[Node:%s] WebSocket disconnected with the following: code=%s reason=%s', self._node.name, close_code, close_reason)
         self._ws = None
-        self._loop.create_task(self._node.manager._handle_node_disconnect(self._node))
+        asyncio.create_task(self._node.manager._handle_node_disconnect(self._node))
         self.client._dispatch_event(NodeDisconnectedEvent(self._node, close_code, close_reason))
 
         if not self._destroyed:
-            self._loop.create_task(self._connect())
+            asyncio.create_task(self._connect())
 
     async def _handle_message_safe(self, msg: aiohttp.WSMessage):
         try:
@@ -266,7 +265,7 @@ class Transport:
 
         if op == 'ready':
             self.session_id = data['sessionId']
-            self._loop.create_task(self._node.manager._handle_node_ready(self._node))
+            asyncio.create_task(self._node.manager._handle_node_ready(self._node))
             self.client._dispatch_event(NodeReadyEvent(self._node, data['sessionId'], data['resumed']))
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
