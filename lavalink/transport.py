@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Union
 
 import aiohttp
 
+from .backoff import ExponentialBackoff
 from .errors import AuthenticationError, ClientError, RequestError
 from .events import (IncomingWebSocketMessage, NodeConnectedEvent,
                      NodeDisconnectedEvent, NodeReadyEvent, PlayerUpdateEvent,
@@ -158,11 +159,9 @@ class Transport:
         _log.info('[Node:%s] Establishing WebSocket connection to Lavalink...', self._node.name)
 
         protocol = 'wss' if self._ssl else 'ws'
-        attempt = 0
+        backoff = ExponentialBackoff()
 
         while not self.ws_connected and not self._destroyed:
-            attempt += 1
-
             try:
                 self._ws = await self._session.ws_connect(f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket',
                                                           headers=headers,
@@ -180,14 +179,16 @@ class Transport:
                 return
             except Exception as exc:  # pylint: disable=W0718
                 if isinstance(exc, asyncio.TimeoutError):
-                    _log.warning('[Node:%s] Timed out whilst attempting to establish a connection', self._node.name)
+                    _log.warning('[Node:%s] Timed out whilst attempting to establish a connection. Retrying in %.2f seconds',
+                                 self._node.name, backoff.current)
                 elif isinstance(exc, aiohttp.ClientConnectorError):
-                    _log.warning('[Node:%s] Invalid response received; is the server running on the correct port?', self._node.name)
+                    _log.warning('[Node:%s] Invalid response received; is the server running on the correct port? Retrying in %.2f seconds',
+                                 self._node.name, backoff.current)
                 else:
-                    _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink', self._node.name)
+                    _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink. Retrying in %.2f seconds',
+                                   self._node.name, backoff.current)
 
-                backoff = min(10 * attempt, 60)
-                await asyncio.sleep(backoff)
+                await asyncio.sleep(backoff.next())
             else:
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 self.client._dispatch_event(NodeConnectedEvent(self._node))
@@ -265,8 +266,8 @@ class Transport:
 
         if op == 'ready':
             self.session_id = data['sessionId']
-            asyncio.create_task(self._node.manager._handle_node_ready(self._node))
             self.client._dispatch_event(NodeReadyEvent(self._node, data['sessionId'], data['resumed']))
+            await self._node.manager._handle_node_ready(self._node)
         elif op == 'playerUpdate':
             guild_id = int(data['guildId'])
             player: Optional['BasePlayer'] = self.client.player_manager.get(guild_id)  # type: ignore
