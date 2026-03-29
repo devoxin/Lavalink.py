@@ -86,6 +86,10 @@ class Client(Generic[PlayerT]):
         setting ``self._original_node`` to ``None`` in the :func:`BasePlayer.change_node` function.
     request_timeout: Optional[:class:`aiohttp.ClientTimeout`]
         A ``ClientTimeout`` object to be used for requests. If unspecified, defaults will be used.
+    request_tracebacks: :class:`bool`
+        Whether to enable request tracebacks for debugging purposes. Defaults to ``False``.
+        This **can** have an impact on overall performance, so is best left disabled unless you need it.
+        When enabled, this will return any error traces in responses if an error occurs.
 
     Attributes
     ----------
@@ -96,11 +100,15 @@ class Client(Generic[PlayerT]):
     sources: Set[:class:`Source`]
         The custom sources registered to this client.
     """
-    __slots__ = ('_session', '_user_id', '_event_hooks', 'node_manager', 'player_manager', 'sources')
+    __slots__ = ('_session', '_user_id', '_event_hooks', 'node_manager', 'player_manager', 'sources', '_request_tracebacks')
 
-    def __init__(self, user_id: Union[int, str], player: Type[PlayerT] = DefaultPlayer,
-                 regions: Optional[Dict[str, Tuple[str]]] = None, connect_back: bool = False,
-                 request_timeout: Optional[aiohttp.ClientTimeout] = None):
+    def __init__(self,
+                 user_id: Union[int, str],
+                 player: Type[PlayerT] = DefaultPlayer,
+                 regions: Optional[Dict[str, Tuple[str]]] = None,
+                 connect_back: bool = False,
+                 request_timeout: Optional[aiohttp.ClientTimeout] = None,
+                 request_tracebacks: bool = False):
         if not isinstance(user_id, (str, int)) or isinstance(user_id, bool):
             # bool has special handling because it subclasses `int`, so will return True for the first isinstance check.
             raise TypeError(f'user_id must be either an int or str (not {type(user_id).__name__}). '
@@ -113,6 +121,7 @@ class Client(Generic[PlayerT]):
         self.node_manager: Final[NodeManager] = NodeManager(self, regions, connect_back)
         self.player_manager: Final[PlayerManager[PlayerT]] = PlayerManager(self, player)
         self.sources: Final[Set[Source]] = set()
+        self._request_tracebacks: bool = request_tracebacks
 
     @property
     def nodes(self) -> Sequence[Node]:
@@ -127,6 +136,25 @@ class Client(Generic[PlayerT]):
         Convenience shortcut for :attr:`PlayerManager.players`.
         """
         return self.player_manager.players
+
+    def set_request_tracebacks(self, enabled: bool):
+        """
+        Enables or disables request tracebacks for debugging purposes.
+        This applies to all nodes managed by this client instance.
+        For per-node control over request tracebacks, use :func:`Node.set_request_tracebacks` instead.
+
+        When enabled, this will return any error traces in responses if an error occurs.
+        This **can** have an impact on overall performance, so is best left disabled unless you need it.
+
+        Parameters
+        ----------
+        enabled: :class:`bool`
+            Whether to enable request tracebacks.
+        """
+        self._request_tracebacks = enabled
+
+        for node in self.nodes:
+            node.set_request_tracebacks(enabled)
 
     async def close(self):
         """|coro|
