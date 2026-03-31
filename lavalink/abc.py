@@ -262,7 +262,11 @@ class BasePlayer(ABC):
 
     async def _dispatch_voice_update(self):
         if {'sessionId', 'endpoint', 'token', 'channelId'} == self._voice_state.keys():
-            await self.node.update_player(guild_id=self._internal_id, voice_state=self._voice_state)  # type: ignore
+            # Endpoint can be 'None' when the voice server has gone away and a new one is trying
+            # to be allocated. We shouldn't dispatch a voice state update in this case, as Lavalink
+            # expects all fields to be non-null.
+            if self._voice_state.get('endpoint', None) is not None:
+                await self.node.update_player(guild_id=self._internal_id, voice_state=self._voice_state)  # type: ignore
 
     @abstractmethod
     async def node_unavailable(self):
