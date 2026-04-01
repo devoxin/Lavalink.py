@@ -289,7 +289,8 @@ class LoadResultError:
 
     def __init__(self, error: Dict[str, Any]):
         self.message: Final[str] = error['message']
-        self.severity: Final[Severity] = Severity.from_str(error['severity'])
+        severity = error['severity']
+        self.severity: Final[Severity] = severity if isinstance(severity, Severity) else Severity.from_str(str(severity))
         self.cause: Final[str] = error['cause']
         self.cause_stacktrace: Final[str] = error.get('causeStackTrace', '')
 
