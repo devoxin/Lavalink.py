@@ -24,6 +24,7 @@ SOFTWARE.
 import asyncio
 import inspect
 import logging
+import traceback
 import random
 from collections import defaultdict
 from collections.abc import Awaitable
@@ -41,7 +42,7 @@ from .node import Node
 from .nodemanager import NodeManager
 from .player import DefaultPlayer
 from .playermanager import PlayerManager
-from .server import AudioTrack, LoadResult
+from .server import AudioTrack, LoadResult, LoadResultError, Severity
 
 __all__ = (
     "Client",
@@ -403,11 +404,21 @@ class Client(Generic[PlayerT]):
         :class:`LoadResult`
         """
         if check_local:
-            for source in self.sources:
-                load_result = await source.load_item(self, query)
+            try:
+                for source in self.sources:
+                    load_result = await source.load_item(self, query)
 
-                if load_result:
-                    return load_result
+                    if load_result:
+                        return load_result
+            except Exception as e:
+                error = LoadResultError.create(
+                    message='Something went wrong when looking up the track',
+                    severity=Severity.FAULT,
+                    cause=str(e),
+                    stacktrace='\n'.join(traceback.format_exception(e))
+                )
+
+                return LoadResult.from_error(error)
 
         if not node:
             available_nodes = self.node_manager.available_nodes
