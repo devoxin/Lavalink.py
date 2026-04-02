@@ -24,8 +24,8 @@ SOFTWARE.
 import asyncio
 import inspect
 import logging
-import traceback
 import random
+import traceback
 from collections import defaultdict
 from collections.abc import Awaitable
 from inspect import getmembers, ismethod
