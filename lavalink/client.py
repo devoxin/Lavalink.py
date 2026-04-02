@@ -268,6 +268,12 @@ class Client(Generic[PlayerT]):
             except ValueError:
                 pass
 
+    def clear_event_hooks(self):
+        """
+        Clears all registered event hooks from the client.
+        """
+        self._event_hooks.clear()
+
     def register_source(self, source: Source):
         """
         Registers a :class:`Source` that Lavalink.py will use for looking up tracks.
