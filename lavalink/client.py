@@ -410,12 +410,12 @@ class Client(Generic[PlayerT]):
 
                     if load_result:
                         return load_result
-            except Exception as e:
+            except Exception as exc:  # pylint: disable=broad-exception-caught
                 error = LoadResultError.create(
                     message='Something went wrong when looking up the track',
                     severity=Severity.FAULT,
-                    cause=str(e),
-                    stacktrace='\n'.join(traceback.format_exception(e))
+                    cause=str(exc),
+                    stacktrace='\n'.join(traceback.format_exception(exc))
                 )
 
                 return LoadResult.from_error(error)
