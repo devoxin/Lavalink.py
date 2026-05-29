@@ -23,7 +23,7 @@ SOFTWARE.
 """
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Set, Tuple, Union
 
 import aiohttp
 
@@ -59,7 +59,8 @@ LAVALINK_API_VERSION = 'v4'
 class Transport:
     """ The class responsible for handling connections to a Lavalink server. """
     __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', 'trace_requests',
-                 '_host', '_port', '_password', '_ssl', 'session_id', '_read_task', '_destroyed')
+                 '_host', '_port', '_password', '_ssl', 'session_id', '_connection_task', '_connection_lock',
+                 '_lifecycle_tasks', '_destroyed')
 
     def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str],
                  connect: bool = True):
@@ -85,11 +86,18 @@ class Transport:
         self._ssl: Final[bool] = ssl
 
         self.session_id: Optional[str] = session_id
-        self._read_task: Optional[asyncio.Task] = None
-        self._destroyed: bool = False
+        self._connection_task: Optional[asyncio.Task] = None
+        self._connection_lock: asyncio.Lock = asyncio.Lock()
+        self._lifecycle_tasks: Set[asyncio.Task] = set()
+        self._destroyed: asyncio.Event = asyncio.Event()
 
         if connect:
             self.connect()
+
+    @property
+    def destroyed(self) -> bool:
+        """ Returns whether this transport has been destroyed. """
+        return self._destroyed.is_set()
 
     @property
     def ws_connected(self):
@@ -101,36 +109,55 @@ class Transport:
         """ Returns a 'base' URI pointing to the node's address and port, also factoring in SSL. """
         return f'{"https" if self._ssl else "http"}://{self._host}:{self._port}'
 
-    async def close(self, code=aiohttp.WSCloseCode.OK):
+    async def close(self, code: aiohttp.WSCloseCode = aiohttp.WSCloseCode.OK, reconnect: bool = True):
         """|coro|
 
         Shuts down the websocket connection if there is one.
+
+        Parameters
+        ----------
+        code: :class:`aiohttp.WSCloseCode`
+            The close code to send when closing the connection. Defaults to 1000 (OK).
+        reconnect: :class:`bool`
+            Whether to attempt to reconnect after closing the connection. Defaults to ``True``.
+            If a reconnect isn't requested, you will need to trigger a reconnection manually later.
         """
-        if self._read_task is not None:
+        # Lock the connection to prevent the _connect() method from attempting automatic reconnection.
+        await self._connection_lock.acquire()
+
+        ws = self._ws  # pylint: disable=invalid-name
+        connection_task = self._connection_task
+
+        self._ws = None
+        self._connection_task = None
+
+        if ws:
             try:
-                self._read_task.cancel()
+                await ws.close(code=code)
             except Exception:  # pylint: disable=W0718
-                # Shouldn't need any specific handling.
                 pass
 
-        if self._ws:
+        if connection_task is not None:
             try:
-                await self._ws.close(code=code)
-            finally:
-                self._ws = None
+                connection_task.cancel()
+            except Exception:  # pylint: disable=W0718
+                pass  # Shouldn't need any specific handling.
+
+        self._connection_lock.release()
+
+        if reconnect is True and not self.destroyed:
+            self.connect()
 
     def connect(self) -> asyncio.Task:
         """ Attempts to establish a connection to Lavalink. """
-        if self._destroyed:
+        if self.destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
-        if self._read_task is not None:
-            try:
-                self._read_task.cancel()
-            except Exception:  # pylint: disable=W0718
-                pass
+        if self.ws_connected:
+            raise RuntimeError('Cannot establish a new connection while already connected. Close the existing connection first.')
 
-        return asyncio.create_task(self._connect())
+        self._connection_task = asyncio.create_task(self._connect())
+        return self._connection_task
 
     async def destroy(self):
         """|coro|
@@ -138,14 +165,12 @@ class Transport:
         Closes the WebSocket gracefully, and stops any further reconnecting.
         Useful when needing to remove a node.
         """
-        self._destroyed = True
-        await self.close()
+        self._destroyed.set()
+        await self.close(reconnect=False)
 
-    async def _connect(self):
-        if self._destroyed:
+    async def _connect(self):  # pylint: disable=too-many-statements
+        if self.destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
-
-        await self.close()
 
         headers = {
             'Authorization': self._password,
@@ -161,85 +186,141 @@ class Transport:
         protocol = 'wss' if self._ssl else 'ws'
         backoff = ExponentialBackoff()
 
-        while not self.ws_connected and not self._destroyed:
-            try:
-                self._ws = await self._session.ws_connect(f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket',
-                                                          headers=headers,
-                                                          heartbeat=60)
-            except aiohttp.WSServerHandshakeError as handshake_error:
-                if handshake_error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
-                    _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.', self._node.name)
-                    # We shouldn't try to establish any more connections as correcting this particular error
-                    # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
-                    # would be futile, and a waste of resources.
-                else:
-                    _log.warning('[Node:%s] Received code \'%d\' (expected \'101\'). Check your server\'s ports and try again.',
-                                 self._node.name, handshake_error.status)
+        try:  # catch: CancelledError, TimeoutError
+            while not self.destroyed:
+                # Check if the connection lock has already been acquired. If it has, then it likely means we're either already trying to connect,
+                # or we're trying to close the connection. In either case, we shouldn't retry here because we don't want duplicate connections.
+                if self._connection_lock.locked():
+                    return
 
-                return
-            except Exception as exc:  # pylint: disable=W0718
-                if isinstance(exc, asyncio.TimeoutError):
-                    _log.warning('[Node:%s] Timed out whilst attempting to establish a connection. Retrying in %.2f seconds',
-                                 self._node.name, backoff.current)
-                elif isinstance(exc, aiohttp.ClientConnectorError):
-                    _log.warning('[Node:%s] Invalid response received; is the server running on the correct port? Retrying in %.2f seconds',
-                                 self._node.name, backoff.current)
-                else:
-                    _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink. Retrying in %.2f seconds',
-                                   self._node.name, backoff.current)
+                try:
+                    # Trying to avoid deadlocks. Wait for 1 second, this should be as quick as possible.
+                    await asyncio.wait_for(self._connection_lock.acquire(), timeout=1)
+                except asyncio.TimeoutError:
+                    continue
 
-                await asyncio.sleep(backoff.next())
-            else:
+                connection_url = f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket'
+
+                try:
+                    self._ws = await self._session.ws_connect(connection_url, headers=headers, heartbeat=40)
+                except aiohttp.WSServerHandshakeError as handshake_error:
+                    if handshake_error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
+                        _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.', self._node.name)
+                        # We shouldn't try to establish any more connections as correcting this particular error
+                        # would require the cog to be reloaded (or the bot to be rebooted), so further attempts
+                        # would be futile, and a waste of resources.
+                    else:
+                        # This is considered 'Fatal' because it usually means an entire local networking reconfiguration is required.
+                        # It's not like a simple configuration change because it means the node details need changing, or both the
+                        # lavalink server and whatever is already occupying that port.
+                        _log.warning('[Node:%s] Received code \'%d\' (expected \'101\'). Check your server\'s ports and try again.',
+                                     self._node.name, handshake_error.status)
+
+                    return
+                except Exception as exc:  # pylint: disable=W0718
+                    if isinstance(exc, asyncio.TimeoutError):
+                        _log.warning('[Node:%s] Timed out whilst attempting to establish a connection. Retrying in %.2f seconds',
+                                     self._node.name, backoff.current)
+                    elif isinstance(exc, aiohttp.ClientConnectorError):
+                        _log.warning('[Node:%s] Invalid response received; is the server running on the correct port? Retrying in %.2f seconds',
+                                     self._node.name, backoff.current)
+                    else:
+                        _log.exception('[Node:%s] An unknown error occurred whilst trying to establish a connection to Lavalink.'
+                                       'Retrying in %.2f seconds', self._node.name, backoff.current)
+
+                    await asyncio.sleep(backoff.next())
+                    continue
+                finally:
+                    backoff.reset()
+                    self._connection_lock.release()
+
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 self.client._dispatch_event(NodeConnectedEvent(self._node))
-                self._read_task = asyncio.create_task(self._listen())
+                asyncio.create_task(self._dispatch_message_queue())
+                close_code, close_reason, cancelled = await self._listen()
 
-                if self._message_queue:
-                    for message in self._message_queue:
-                        await self._send(**message)
+                ws = self._ws  # pylint: disable=invalid-name
 
-                    self._message_queue.clear()
+                if ws is not None and not ws.closed:
+                    # discard websocket connection before creating a new one.
+                    self._ws = None
 
-                break
+                    try:
+                        await ws.close()
+                    except Exception:  # pylint: disable=broad-exception-caught
+                        pass  # Don't care, as long as it closes.
 
-    async def _listen(self):
-        """ Listens for websocket messages. """
+                _log.warning('[Node:%s] WebSocket disconnected with the following: code=%s reason=%s', self._node.name, close_code, close_reason)
+                asyncio.create_task(self._node.manager._handle_node_disconnect(self._node))
+                self.client._dispatch_event(NodeDisconnectedEvent(self._node, close_code, close_reason))
+
+                if cancelled:
+                    # propagate, there is nothing more to be done within this task.
+                    # could probably be implemented a little more elegantly but i've literally spent a couple of hours
+                    # trying to best decide on the design for this.
+                    raise asyncio.CancelledError
+        except asyncio.CancelledError:
+            # Nothing to do here
+            pass
+
+    async def _dispatch_message_queue(self):
+        """ Dispatches all messages in the message queue. """
+        for message in self._message_queue:
+            try:
+                await self._send(**message)
+            except Exception:  # pylint: disable=broad-exception-caught
+                _log.exception('[Node:%s] Failed to send a queued message!', self._node.name)
+
+        self._message_queue.clear()
+
+    async def _listen(self) -> Tuple[Optional[aiohttp.WSCloseCode], Optional[str], bool]:
+        """
+        Listens for websocket messages.
+
+        Raises
+        ------
+        :class:`asyncio.CancelledError`
+        """
         close_code: Optional[aiohttp.WSCloseCode] = None
         close_reason: Optional[str] = 'Closed without close frame (improper closure)'
+        cancelled = False
 
         assert self._ws is not None
 
-        while True:
-            msg = await self._ws.receive()
+        try:
+            while True:
+                msg = await self._ws.receive()
 
-            if msg.type in CLOSE_TYPES:
-                close_code = msg.data
-                close_reason = msg.extra
-                _log.debug('[Node:%s] Received close frame with code %s.', self._node.name, close_code)
-                break
+                if msg.type in CLOSE_TYPES:
+                    close_code = msg.data
+                    close_reason = msg.extra
+                    _log.debug('[Node:%s] Received close frame with code %s.', self._node.name, close_code)
+                    break
 
-            if msg.type == aiohttp.WSMsgType.ERROR:
-                exc = self._ws.exception()
-                _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
-                break
+                if msg.type == aiohttp.WSMsgType.ERROR:
+                    exc = self._ws.exception()
+                    _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
+                    break
 
-            if msg.type == aiohttp.WSMsgType.TEXT and msg.data is not None:
-                _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
-                asyncio.create_task(self._handle_message_safe(msg))
+                if msg.type == aiohttp.WSMsgType.TEXT and msg.data is not None:
+                    _log.debug('[Node:%s] Received WebSocket message: %s', self._node.name, msg.data)
+                    task = asyncio.create_task(self._handle_message_safe(msg))
+                    self._lifecycle_tasks.add(task)
+                    task.add_done_callback(self._lifecycle_tasks.discard)
+        except asyncio.CancelledError:
+            cancelled = True
+        except Exception:  # pylint: disable=broad-exception-caught
+            _log.exception('[Node:%s] An error occurred while listening to the WebSocket connection.', self._node.name)
 
-        if close_code is None:
-            ws_close_code = self._ws.close_code
+        ws = self._ws  # pylint: disable=invalid-name
+
+        if close_code is None and ws is not None:
+            ws_close_code = ws.close_code
 
             if ws_close_code is not None:
                 close_code = aiohttp.WSCloseCode(ws_close_code)
 
-        _log.warning('[Node:%s] WebSocket disconnected with the following: code=%s reason=%s', self._node.name, close_code, close_reason)
-        self._ws = None
-        asyncio.create_task(self._node.manager._handle_node_disconnect(self._node))
-        self.client._dispatch_event(NodeDisconnectedEvent(self._node, close_code, close_reason))
-
-        if not self._destroyed:
-            asyncio.create_task(self._connect())
+        return close_code, close_reason, cancelled
 
     async def _handle_message_safe(self, msg: aiohttp.WSMessage):
         try:
@@ -379,7 +460,7 @@ class Transport:
             _log.warning('[Node:%s] Failed to send payload due to connection reset!', self._node.name)
 
     async def _request(self, method: str, path: str, to=None, trace: bool = False, versioned: bool = True, **kwargs):  # pylint: disable=C0103
-        if self._destroyed:
+        if self.destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
         if trace is True or self.trace_requests is True:

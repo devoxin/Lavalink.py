@@ -30,7 +30,7 @@ class ExponentialBackoff:
     """
     __slots__ = ('base', 'max', '_current')
 
-    def __init__(self, base: float = 1.0, max: float = 30.0) -> None:
+    def __init__(self, base: float = 1.0, max: float = 30.0) -> None:  # pylint: disable=redefined-builtin
         self.base: Final[float] = min(base, max)
         self.max: Final[float] = max
         self._current: float = self.base

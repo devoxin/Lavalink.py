@@ -183,7 +183,7 @@ class Node:
             if not force:
                 return None
 
-            await self._transport.close()
+            await self._transport.close(reconnect=False)
 
         return self._transport.connect()
 
