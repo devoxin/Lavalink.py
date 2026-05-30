@@ -59,7 +59,7 @@ LAVALINK_API_VERSION = 'v4'
 class Transport:
     """ The class responsible for handling connections to a Lavalink server. """
     __slots__ = ('client', '_node', '_session', '_ws', '_message_queue', 'trace_requests',
-                 '_host', '_port', '_password', '_ssl', 'session_id', '_connection_task', '_connection_lock',
+                 '_host', '_port', '_password', '_ssl', 'session_id', '_connection_task',
                  '_lifecycle_tasks', '_destroyed')
 
     def __init__(self, node, host: str, port: int, password: str, ssl: bool, session_id: Optional[str],
@@ -87,7 +87,6 @@ class Transport:
 
         self.session_id: Optional[str] = session_id
         self._connection_task: Optional[asyncio.Task] = None
-        self._connection_lock: asyncio.Lock = asyncio.Lock()
         self._lifecycle_tasks: Set[asyncio.Task] = set()
         self._destroyed: asyncio.Event = asyncio.Event()
 
@@ -120,40 +119,34 @@ class Transport:
             The close code to send when closing the connection. Defaults to 1000 (OK).
         reconnect: :class:`bool`
             Whether to attempt to reconnect after closing the connection. Defaults to ``True``.
-            If a reconnect isn't requested, you will need to trigger a reconnection manually later.
+            If a reconnect is set to ``False``, the connection task will be cancelled to halt
+            any further processing and reconnection attempts. Afterwards, you will need to call
+            :func:`connect` to re-establish a connection.
         """
-        # Lock the connection to prevent the _connect() method from attempting automatic reconnection.
-        await self._connection_lock.acquire()
+        socket = self._ws  # pylint: disable=invalid-name
 
-        ws = self._ws  # pylint: disable=invalid-name
-        connection_task = self._connection_task
+        if socket is not None and not socket.closed:
+            self._ws = None
 
-        self._ws = None
-        self._connection_task = None
-
-        if ws:
             try:
-                await ws.close(code=code)
+                await socket.close(code=code)
             except Exception:  # pylint: disable=W0718
                 pass
 
-        if connection_task is not None:
-            try:
+        if reconnect is False:
+            # Cancel any existing connection task, if there is one, to prevent it from trying to reconnect after we've explicitly said not to.
+            connection_task = self._connection_task
+
+            if connection_task is not None and not connection_task.done():
+                self._connection_task = None
                 connection_task.cancel()
-            except Exception:  # pylint: disable=W0718
-                pass  # Shouldn't need any specific handling.
-
-        self._connection_lock.release()
-
-        if reconnect is True and not self.destroyed:
-            self.connect()
 
     def connect(self) -> asyncio.Task:
         """ Attempts to establish a connection to Lavalink. """
         if self.destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
-        if self.ws_connected:
+        if self._connection_task is not None and not self._connection_task.done():
             raise RuntimeError('Cannot establish a new connection while already connected. Close the existing connection first.')
 
         self._connection_task = asyncio.create_task(self._connect())
@@ -188,17 +181,6 @@ class Transport:
 
         try:  # catch: CancelledError, TimeoutError
             while not self.destroyed:
-                # Check if the connection lock has already been acquired. If it has, then it likely means we're either already trying to connect,
-                # or we're trying to close the connection. In either case, we shouldn't retry here because we don't want duplicate connections.
-                if self._connection_lock.locked():
-                    return
-
-                try:
-                    # Trying to avoid deadlocks. Wait for 1 second, this should be as quick as possible.
-                    await asyncio.wait_for(self._connection_lock.acquire(), timeout=1)
-                except asyncio.TimeoutError:
-                    continue
-
                 connection_url = f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket'
 
                 try:
@@ -232,7 +214,6 @@ class Transport:
                     continue
                 finally:
                     backoff.reset()
-                    self._connection_lock.release()
 
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 self.client._dispatch_event(NodeConnectedEvent(self._node))
