@@ -119,11 +119,10 @@ class Transport:
             The close code to send when closing the connection. Defaults to 1000 (OK).
         reconnect: :class:`bool`
             Whether to attempt to reconnect after closing the connection. Defaults to ``True``.
-            If a reconnect is set to ``False``, the connection task will be cancelled to halt
-            any further processing and reconnection attempts. Afterwards, you will need to call
-            :func:`connect` to re-establish a connection.
+            If set to ``False``, the connection task will be cancelled to halt any further processing and
+            reconnection attempts. Afterwards, you will need to call :func:`connect` to re-establish a connection.
         """
-        socket = self._ws  # pylint: disable=invalid-name
+        socket = self._ws
 
         if socket is not None and not socket.closed:
             self._ws = None
