@@ -211,9 +211,8 @@ class Transport:
 
                     await asyncio.sleep(backoff.next())
                     continue
-                finally:
-                    backoff.reset()
 
+                backoff.reset()
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 self.client._dispatch_event(NodeConnectedEvent(self._node))
                 asyncio.create_task(self._dispatch_message_queue())
