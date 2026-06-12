@@ -168,6 +168,9 @@ class Transport:
         if self.destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
+        if self._connection_task is not None and not self._connection_task.done():
+            raise RuntimeError('Cannot establish a new connection while already connected. Close the existing connection first.')
+
         headers = {
             'Authorization': self._password,
             'User-Id': str(self.client._user_id),
@@ -180,12 +183,14 @@ class Transport:
         _log.info('[Node:%s] Establishing WebSocket connection to Lavalink...', self._node.name)
 
         protocol = 'wss' if self._ssl else 'ws'
+        connection_url = f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket'
+
         backoff = ExponentialBackoff()
         socket: Optional[aiohttp.ClientWebSocketResponse] = None
 
         try:  # catch: CancelledError, TimeoutError
             while not self.destroyed:
-                connection_url = f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket'
+                await self._close_socket(self._ws)
 
                 try:
                     socket = await self._session.ws_connect(connection_url, headers=headers, heartbeat=40)
