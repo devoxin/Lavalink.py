@@ -108,6 +108,15 @@ class Transport:
         """ Returns a 'base' URI pointing to the node's address and port, also factoring in SSL. """
         return f'{"https" if self._ssl else "http"}://{self._host}:{self._port}'
 
+    async def _close_socket(self,
+                            socket: Optional[aiohttp.ClientWebSocketResponse],
+                            code: aiohttp.WSCloseCode = aiohttp.WSCloseCode.OK):
+        if socket is not None:
+            try:
+                await socket.close(code=code)
+            except Exception:  # pylint: disable=W0718
+                _log.warning('[Node:%s] Failed to close WebSocket connection!', self._node.name, exc_info=True)
+
     async def close(self, code: aiohttp.WSCloseCode = aiohttp.WSCloseCode.OK, reconnect: bool = True):
         """|coro|
 
@@ -123,14 +132,9 @@ class Transport:
             reconnection attempts. Afterwards, you will need to call :func:`connect` to re-establish a connection.
         """
         socket = self._ws
+        self._ws = None
 
-        if socket is not None and not socket.closed:
-            self._ws = None
-
-            try:
-                await socket.close(code=code)
-            except Exception:  # pylint: disable=W0718
-                pass
+        await self._close_socket(socket, code)
 
         if reconnect is False:
             # Cancel any existing connection task, if there is one, to prevent it from trying to reconnect after we've explicitly said not to.
@@ -177,13 +181,15 @@ class Transport:
 
         protocol = 'wss' if self._ssl else 'ws'
         backoff = ExponentialBackoff()
+        socket: Optional[aiohttp.ClientWebSocketResponse] = None
 
         try:  # catch: CancelledError, TimeoutError
             while not self.destroyed:
                 connection_url = f'{protocol}://{self._host}:{self._port}/{LAVALINK_API_VERSION}/websocket'
 
                 try:
-                    self._ws = await self._session.ws_connect(connection_url, headers=headers, heartbeat=40)
+                    socket = await self._session.ws_connect(connection_url, headers=headers, heartbeat=40)
+                    self._ws = socket
                 except aiohttp.WSServerHandshakeError as handshake_error:
                     if handshake_error.status in (401, 403):  # Special handling for 401/403 (Unauthorized/Forbidden).
                         _log.warning('[Node:%s] Authentication failed while trying to establish a connection to the node.', self._node.name)
@@ -216,31 +222,20 @@ class Transport:
                 _log.info('[Node:%s] WebSocket connection established', self._node.name)
                 self.client._dispatch_event(NodeConnectedEvent(self._node))
                 asyncio.create_task(self._dispatch_message_queue())
-                close_code, close_reason, cancelled = await self._listen()
+                close_code, close_reason, cancelled = await self._listen(socket)
 
-                ws = self._ws  # pylint: disable=invalid-name
-
-                if ws is not None and not ws.closed:
-                    # discard websocket connection before creating a new one.
-                    self._ws = None
-
-                    try:
-                        await ws.close()
-                    except Exception:  # pylint: disable=broad-exception-caught
-                        pass  # Don't care, as long as it closes.
+                await self._close_socket(socket)
 
                 _log.warning('[Node:%s] WebSocket disconnected with the following: code=%s reason=%s', self._node.name, close_code, close_reason)
                 asyncio.create_task(self._node.manager._handle_node_disconnect(self._node))
                 self.client._dispatch_event(NodeDisconnectedEvent(self._node, close_code, close_reason))
 
                 if cancelled:
-                    # propagate, there is nothing more to be done within this task.
-                    # could probably be implemented a little more elegantly but i've literally spent a couple of hours
-                    # trying to best decide on the design for this.
-                    raise asyncio.CancelledError
+                    break
         except asyncio.CancelledError:
-            # Nothing to do here
             pass
+        finally:
+            await self._close_socket(socket)
 
     async def _dispatch_message_queue(self):
         """ Dispatches all messages in the message queue. """
@@ -252,23 +247,14 @@ class Transport:
 
         self._message_queue.clear()
 
-    async def _listen(self) -> Tuple[Optional[aiohttp.WSCloseCode], Optional[str], bool]:
-        """
-        Listens for websocket messages.
-
-        Raises
-        ------
-        :class:`asyncio.CancelledError`
-        """
+    async def _listen(self, socket: aiohttp.ClientWebSocketResponse) -> Tuple[Optional[aiohttp.WSCloseCode], Optional[str], bool]:
         close_code: Optional[aiohttp.WSCloseCode] = None
         close_reason: Optional[str] = 'Closed without close frame (improper closure)'
         cancelled = False
 
-        assert self._ws is not None
-
         try:
             while True:
-                msg = await self._ws.receive()
+                msg = await socket.receive()
 
                 if msg.type in CLOSE_TYPES:
                     close_code = msg.data
@@ -277,7 +263,7 @@ class Transport:
                     break
 
                 if msg.type == aiohttp.WSMsgType.ERROR:
-                    exc = self._ws.exception()
+                    exc = socket.exception()
                     _log.error('[Node:%s] Exception in WebSocket!', self._node.name, exc_info=exc)
                     break
 
@@ -291,10 +277,8 @@ class Transport:
         except Exception:  # pylint: disable=broad-exception-caught
             _log.exception('[Node:%s] An error occurred while listening to the WebSocket connection.', self._node.name)
 
-        ws = self._ws  # pylint: disable=invalid-name
-
-        if close_code is None and ws is not None:
-            ws_close_code = ws.close_code
+        if close_code is None:
+            ws_close_code = socket.close_code
 
             if ws_close_code is not None:
                 close_code = aiohttp.WSCloseCode(ws_close_code)
