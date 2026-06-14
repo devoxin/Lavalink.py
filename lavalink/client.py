@@ -33,6 +33,7 @@ from typing import (Any, Callable, Dict, Final, Generic, Optional, Sequence,
                     Set, Tuple, Type, TypeVar, Union)
 
 import aiohttp
+from aiohttp.client import DEFAULT_TIMEOUT
 
 from .abc import BasePlayer, Source
 from .common import VoiceServerUpdatePayload, VoiceStateUpdatePayload
@@ -116,7 +117,12 @@ class Client(Generic[PlayerT]):
                             'If the type is None, ensure your bot has fired "on_ready" before instantiating '
                             'the Lavalink client. Alternatively, you can hardcode your user ID.')
 
-        self._session: Final[aiohttp.ClientSession] = aiohttp.ClientSession(timeout=request_timeout)
+        # trying to figure out why the heck websockets are getting stuck on CLOSE_WAIT without being cleaned up
+        # like, leave me alone? i just want this to work? super experimental so if something is broken, remove this maybe lol
+        connector = aiohttp.TCPConnector(force_close=True, enable_cleanup_closed=True)
+
+        self._session: Final[aiohttp.ClientSession] = aiohttp.ClientSession(timeout=request_timeout or DEFAULT_TIMEOUT,
+                                                                            connector=connector)
         self._user_id: Final[int] = int(user_id)
         self._event_hooks: Final[dict[str, list]] = defaultdict(list)
         self.node_manager: Final[NodeManager] = NodeManager(self, regions, connect_back)
@@ -411,11 +417,13 @@ class Client(Generic[PlayerT]):
                     if load_result:
                         return load_result
             except Exception as exc:  # pylint: disable=broad-exception-caught
+                formatted = traceback.format_exception(type(exc), exc, exc.__traceback__)
+
                 error = LoadResultError.create(
                     message='Something went wrong when looking up the track',
                     severity=Severity.FAULT,
                     cause=str(exc),
-                    stacktrace='\n'.join(traceback.format_exception(exc))
+                    stacktrace=''.join(formatted)
                 )
 
                 return LoadResult.from_error(error)
