@@ -33,6 +33,7 @@ from typing import (Any, Callable, Dict, Final, Generic, Optional, Sequence,
                     Set, Tuple, Type, TypeVar, Union)
 
 import aiohttp
+from aiohttp.client import DEFAULT_TIMEOUT
 
 from .abc import BasePlayer, Source
 from .common import VoiceServerUpdatePayload, VoiceStateUpdatePayload
@@ -120,7 +121,8 @@ class Client(Generic[PlayerT]):
         # like, leave me alone? i just want this to work? super experimental so if something is broken, remove this maybe lol
         connector = aiohttp.TCPConnector(force_close=True, enable_cleanup_closed=True)
 
-        self._session: Final[aiohttp.ClientSession] = aiohttp.ClientSession(timeout=request_timeout, connector=connector)
+        self._session: Final[aiohttp.ClientSession] = aiohttp.ClientSession(timeout=request_timeout or DEFAULT_TIMEOUT,
+                                                                            connector=connector)
         self._user_id: Final[int] = int(user_id)
         self._event_hooks: Final[dict[str, list]] = defaultdict(list)
         self.node_manager: Final[NodeManager] = NodeManager(self, regions, connect_back)

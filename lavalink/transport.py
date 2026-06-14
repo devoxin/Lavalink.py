@@ -168,8 +168,11 @@ class Transport:
         if self.destroyed:
             raise IOError('Cannot instantiate any connections with a closed session!')
 
-        if self._connection_task is not None and not self._connection_task.done():
-            raise RuntimeError('Cannot establish a new connection while already connected. Close the existing connection first.')
+        connection_task = self._connection_task
+
+        if connection_task is not None and not connection_task.done():
+            if asyncio.current_task() is not connection_task:
+                raise RuntimeError('Cannot establish a new connection while already connected. Close the existing connection first.')
 
         headers = {
             'Authorization': self._password,
