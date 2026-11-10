@@ -674,7 +674,7 @@ class DefaultPlayer(BasePlayer):
         last_position = self.position
 
         try:
-            await self.node.destroy_player(self._internal_id)
+            await old_node.destroy_player(self._internal_id)
         except (ClientError, RequestError):
             pass
 
