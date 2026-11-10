@@ -368,7 +368,11 @@ class Transport:
                 player.current = player._next
                 player._next = None
 
-            assert player.current is not None
+            if player.current is None:
+                _log.warning('[Node:%s] TrackStartEvent received for guild %s but the player has no current track; skipping event. '
+                             'This can happen when play() is called multiple times in quick succession.', self._node.name, player.guild_id)
+                return
+
             event = TrackStartEvent(player, player.current)
 
             if hasattr(player, '_internal_pause'):
@@ -383,10 +387,18 @@ class Transport:
             cause = exception['cause']
             cause_stacktrace = exception.get('causeStackTrace', '')
 
-            assert player.current is not None
+            if player.current is None:
+                _log.warning('[Node:%s] TrackExceptionEvent received for guild %s but the player has no current track; skipping event.',
+                             self._node.name, player.guild_id)
+                return
+
             event = TrackExceptionEvent(player, player.current, message, severity, cause, cause_stacktrace)
         elif event_type == 'TrackStuckEvent':
-            assert player.current is not None
+            if player.current is None:
+                _log.warning('[Node:%s] TrackStuckEvent received for guild %s but the player has no current track; skipping event.',
+                             self._node.name, player.guild_id)
+                return
+
             event = TrackStuckEvent(player, player.current, data['thresholdMs'])
         elif event_type == 'WebSocketClosedEvent':
             event = WebSocketClosedEvent(player, data['code'], data['reason'], data['byRemote'])
