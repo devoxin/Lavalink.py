@@ -303,7 +303,7 @@ class DefaultPlayer(BasePlayer):
             track = self.queue.pop(pop_at)
 
         if start_time is not MISSING:
-            if not isinstance(start_time, int) or not 0 <= start_time < track.duration:
+            if not isinstance(start_time, int) or start_time < 0 or (not track.is_stream and start_time >= track.duration):
                 raise ValueError('start_time must be an int with a value equal to, or greater than 0, and less than the track duration')
 
             self._last_position = start_time
